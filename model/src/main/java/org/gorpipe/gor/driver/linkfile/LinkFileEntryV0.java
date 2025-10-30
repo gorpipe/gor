@@ -42,4 +42,8 @@ public record LinkFileEntryV0(String url) implements LinkFileEntry {
     public int serial() {
         return 0; // No serial in V0
     }
+
+    public String info() {
+        return ""; // No info in V0
+    }
 }

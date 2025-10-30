@@ -80,7 +80,7 @@ public class UTestTimeTravel {
         // Use the timestamp when query started.
         assertEquals(anew, TestUtils.runGorPipe("""
         create before = gor A.gor.link;
-        create update = gor B.gor.link | join -snpsnp [before] | select 1-3 | write Alatest.gor -vlink A.gor.link;
+        create update = gor B.gor.link | join -snpsnp [before] | select 1-3 | write Alatest.gor -link A.gor.link;
         create after = gor A.gor.link | join -snpsnp [update] | select 1-3;
         gor [after]
         """, "-gorroot", workPath.toString()));
@@ -88,7 +88,7 @@ public class UTestTimeTravel {
         // Force use latest.
         assertEquals(bnew, TestUtils.runGorPipe(String.format("""
         create before = gor A.gor.link;
-        create update = gor B.gor.link | join -snpsnp [before] | select 1-3 | write Alatest.gor -vlink A.gor.link;
+        create update = gor B.gor.link | join -snpsnp [before] | select 1-3 | write Alatest.gor -link A.gor.link;
         create after = gor -time %d A.gor.link | join -snpsnp [update] | select 1-3;
         gor [after]
         """, Long.MAX_VALUE), "-gorroot", workPath.toString()));

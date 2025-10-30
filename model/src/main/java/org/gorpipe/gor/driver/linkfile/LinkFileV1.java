@@ -36,9 +36,9 @@ public class LinkFileV1 extends LinkFile {
     }
 
     @Override
-    public LinkFile appendEntry(String link, String md5, FileReader reader) {
+    public LinkFile appendEntry(String link, String md5, String info, FileReader reader) {
         var latestEntry = getLatestEntry();
-        var entry = new LinkFileEntryV1(link, System.currentTimeMillis(), md5, latestEntry != null ? latestEntry.serial() + 1 : 1);
+        var entry = new LinkFileEntryV1(link, System.currentTimeMillis(), md5, latestEntry != null ? latestEntry.serial() + 1 : 1, info);
         validateEntry(entry, reader);
         entries.add(entry);
         return this;

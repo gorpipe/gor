@@ -343,7 +343,7 @@ public abstract class FileReader {
         DataSource dataSource = resolveUrl(url, true);
         if (dataSource.forceLink()) {
             DataSource linkDataSource = resolveUrl(dataSource.getProjectLinkFile(), true);
-            LinkFile.load((StreamSource) linkDataSource, dataSource.getProjectLinkFileContent()).save();
+            LinkFile.create((StreamSource) linkDataSource, dataSource.getProjectLinkFileContent()).save(getQueryTime());
         }
     }
 

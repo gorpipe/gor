@@ -24,9 +24,9 @@ public class LinkFileTest {
     private final String v1LinkFileContent = """
             ## SERIAL = 0
             ## VERSION = 1
-            #FILE\tTIMESTAMP\tMD5\tSERIAL
-            source/v1/ver1.gorz\t2024-12-15T11:21:30.790Z\tABCDEAF13422\t1
-            source/v1/ver2.gorz\t2024-12-15T23:25:24.533Z\t334DEAF13422\t2
+            #FILE\tTIMESTAMP\tMD5\tSERIAL\tINFO
+            source/v1/ver1.gorz\t2024-12-15T11:21:30.790Z\tABCDEAF13422\t1\t
+            source/v1/ver2.gorz\t2024-12-15T23:25:24.533Z\t334DEAF13422\t2\t
             """;
     // 2024-12-15T11:21:30.790Z  = 1734261690790
     // 2024-12-15T23:25:24.533Z  = 1734305124533L
@@ -43,7 +43,7 @@ public class LinkFileTest {
 
     @Test
     public void testCreateLinkFile() {
-        LinkFile linkFile = LinkFile.load(mockSource, v1LinkFileContent);
+        LinkFile linkFile = LinkFile.create(mockSource, v1LinkFileContent);
         assertNotNull(linkFile);
         assertEquals(2, linkFile.getEntries().size());
         assertEquals(100, linkFile.getEntriesCountMax());
@@ -61,24 +61,24 @@ public class LinkFileTest {
 
     @Test
     public void testAppendEntry() {
-        LinkFile linkFile = LinkFile.load(mockSource, v1LinkFileContent);
-        linkFile.appendEntry(simpleFile, "NEWMD5SUM");
+        LinkFile linkFile = LinkFile.create(mockSource, v1LinkFileContent);
+        linkFile.appendEntry(simpleFile, "NEWMD5SUM", "Test1");
         assertEquals(3, linkFile.getEntries().size());
     }
 
     @Test
     public void testGetLatestPath() {
         when(mockSource.getFullPath()).thenReturn("/mnt/csa/projects/test/x.link");
-        LinkFile linkFile = LinkFile.load(mockSource, v1LinkFileContent);
+        LinkFile linkFile = LinkFile.create(mockSource, v1LinkFileContent);
         assertEquals("/mnt/csa/projects/test/source/v1/ver2.gorz", linkFile.getLatestEntryUrl());
-        linkFile.appendEntry(simpleFile, "NEWMD5SUM");
+        linkFile.appendEntry(simpleFile, "NEWMD5SUM", "");
         assertEquals("/mnt/csa/projects/test/" + simpleFile, linkFile.getLatestEntryUrl());
     }
 
     @Test
     public void testGetTimedPath() {
         when(mockSource.getFullPath()).thenReturn("/mnt/csa/projects/test/x.link");
-        LinkFile linkFile = LinkFile.load(mockSource, v1LinkFileContent);
+        LinkFile linkFile = LinkFile.create(mockSource, v1LinkFileContent);
         linkFile.appendEntry(simpleFile, "NEWMD5SUM");
 
         assertEquals(null, linkFile.getEntryUrl(1734261690790L - 1000));
@@ -125,7 +125,7 @@ public class LinkFileTest {
     public void testSaveLinkFileV0ToV0() throws IOException {
         var linkPath = workPath.resolve("test.link");
         Files.writeString(linkPath, "a/b/c.gorz");
-        LinkFile linkFile = LinkFile.load(new FileSource(linkPath.toString()));
+        LinkFile linkFile = new LinkFileV0(new FileSource(linkPath.toString()));
         linkFile.appendEntry(simpleFile, "NEWMD5SUM");
         linkFile.save();
         String savedContent = Files.readString(linkPath);

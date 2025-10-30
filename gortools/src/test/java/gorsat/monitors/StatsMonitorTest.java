@@ -87,7 +87,7 @@ public class StatsMonitorTest{
 
             var outputOptions = new OutputOptions(false, false, true, false,
                     false,  GorIndexType.NONE, new String[0], new String[0], Option.empty(),  Option.empty(), Deflater.BEST_SPEED,
-                    Option.empty(), false, false, null, "",  0, null, false, false);
+                    Option.empty(), false, false, null, "",  "", null, false, false);
             forkWrite = new ForkWrite(-1, workDirPath.resolve("test.gor").toString(), pipe.getSession(), pipe.getHeader(), outputOptions);
 
             pipe.lastStep().$bar(forkWrite);

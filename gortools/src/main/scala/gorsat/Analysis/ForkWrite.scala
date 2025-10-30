@@ -23,12 +23,13 @@
 package gorsat.Analysis
 
 import java.util.zip.Deflater
-import gorsat.Commands.{Analysis, Output, RowHeader}
+import gorsat.Commands.{Analysis, CommandParseUtilities, Output, RowHeader}
 import gorsat.Outputs.OutFile
 import org.apache.commons.io.FilenameUtils
+import org.apache.commons.lang3.StringUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.driver.linkfile.LinkFile
+import org.gorpipe.gor.driver.linkfile.{LinkFile, LinkFileEntryV1}
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.model.{DriverBackedFileReader, GorMeta, GorOptions, Row}
@@ -36,6 +37,7 @@ import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.model.gor.RowObj
+import org.gorpipe.util.Strings
 
 import java.util.UUID
 import scala.collection.mutable
@@ -57,7 +59,7 @@ case class OutputOptions(remove: Boolean = false,
                             writeMeta: Boolean = true,
                             cardCol: String = null,
                             linkFile: String = "",
-                            linkFileVersion: Int = 1,
+                            linkFileMeta: String = "",
                             command: String = null,
                             infer: Boolean = false,
                             maxseg: Boolean = false
@@ -274,17 +276,17 @@ case class ForkWrite(forkCol: Int,
 
     if (useFork) {
       forkMap.values.foreach(sh => {
-        val (linkFile, linkFileContent, linkFileVersion) = extractLink(sh.fileName)
+        val (linkFile, linkFileUrl, linkFileMeta, linkFileInfo) = extractLink(sh.fileName)
 
         if (linkFile.nonEmpty) {
-          writeLinkFile(linkFile, linkFileContent, linkFileVersion)
+          writeLinkFile(linkFile, linkFileUrl, linkFileMeta, linkFileInfo)
         }
       })
     } else {
-      val (linkFile, linkFileContent, linkFileVersion) = extractLink(fullFileName, options.linkFile, options.linkFileVersion)
+      val (linkFile, linkFileUrl, linkFileMeta, linkFileInfo) = extractLink(fullFileName, options.linkFile, options.linkFileMeta)
 
       if (linkFile.nonEmpty) {
-        writeLinkFile(linkFile, linkFileContent, linkFileVersion, getMd5)
+        writeLinkFile(linkFile, linkFileUrl, linkFileMeta, getMd5, linkFileInfo)
       }
     }
   }
@@ -298,9 +300,8 @@ case class ForkWrite(forkCol: Int,
     }
   }
 
-  private def extractLink(fileName: String, optLinkFile: String = "", optLinkFileVersion: Int = 0) : (String, String, Int) = {
+  private def extractLink(fileName: String, optLinkFile: String = "", optLinkFileMeta: String = "") : (String, String, String, String) = {
     var linkFile = optLinkFile
-    var linkFileVersion = optLinkFileVersion
     var linkFileContent = ""
     if (fileName.nonEmpty) {
       if (linkFile.isEmpty)  {
@@ -308,28 +309,42 @@ case class ForkWrite(forkCol: Int,
         if (dataSource != null && dataSource.forceLink()) {
           linkFile = dataSource.getProjectLinkFile
           linkFileContent = dataSource.getProjectLinkFileContent
-          linkFileVersion = 0
         }
       } else {
         linkFileContent = PathUtils.resolve(session.getProjectContext.getProjectRoot, fileName)
       }
     }
-    (linkFile,linkFileContent,linkFileVersion)
+
+    var linkFileMeta = ""
+    var linkFileInfo = ""
+    if (!Strings.isNullOrEmpty(optLinkFileMeta)) {
+      for (s <- CommandParseUtilities.quoteSafeSplit(StringUtils.strip(optLinkFileMeta, "\"\'"), ',')) {
+        val l = s.trim
+        if (l.startsWith(LinkFileEntryV1.ENTRY_INFO_KEY)) {
+          linkFileInfo =  StringUtils.strip(l.substring(LinkFileEntryV1.ENTRY_INFO_KEY.length  + 1), "\"\'")
+        } else {
+          linkFileMeta += "## " + l + "\n"
+        }
+      }
+    }
+
+    (linkFile, linkFileContent, linkFileMeta, linkFileInfo)
   }
 
   private def writeLinkFile(linkFilePath: String, linkFileContent: String,
-                            linkFileVersion: Int = 0, md5: String = null) : Unit = {
-    val linkFileToWrite = LinkFile.validateAndUpdateLinkFileName(linkFilePath, linkFileVersion)
+                            linkFileMeta: String = "", md5: String = null, linkFileInfo: String = null) : Unit = {
+    val linkFileToWrite = LinkFile.validateAndUpdateLinkFileName(linkFilePath)
 
      // Validate that we can write to the location (skip link extension as writing links is always forbidden).
     session.getProjectContext.getFileReader.resolveUrl(FilenameUtils.removeExtension(linkFileToWrite), true)
 
     // Use the nonsecure driver file reader as this is an exception from the write no links rule.
     val fileReader = new DriverBackedFileReader(session.getProjectContext.getFileReader.getSecurityContext,
-      session.getProjectContext.getProjectRoot)
+      session.getProjectContext.getProjectRoot, session.getProjectContext.getFileReader.getQueryTime)
 
-    LinkFile.load(fileReader.resolveUrl(linkFileToWrite, true).asInstanceOf[StreamSource], linkFileVersion)
-      .appendEntry(linkFileContent, md5, fileReader)
-      .save()
+    LinkFile.load(fileReader.resolveUrl(linkFileToWrite, true).asInstanceOf[StreamSource])
+      .appendMeta(linkFileMeta)
+      .appendEntry(linkFileContent, md5, linkFileInfo, fileReader)
+      .save(session.getProjectContext.getFileReader.getQueryTime)
   }
 }

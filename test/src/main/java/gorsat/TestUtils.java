@@ -46,6 +46,7 @@ import javax.management.ObjectName;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -134,7 +135,7 @@ public class TestUtils {
         return runGorPipe(args, () -> {
             PipeOptions options = new PipeOptions();
             options.parseOptions(args);
-            return new CLISessionFactory(options, null).create();
+            return new TestSessionFactory(options, null, false, null, new String[]{"user_data"}).create();
         });
     }
 

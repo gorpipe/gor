@@ -10,6 +10,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
+import org.gorpipe.util.Strings;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Class to work with link files, read, write and access metadata.
  *
- * Link file format, a valid nor format.   Note, the required fields form the current link file format.
+ * Link file format, a valid nor format.  Example:
  *
  * ## VERSION=<file format version>
  * ## ENTRIES_COUNT_MAX=<max entries to store in this file>
@@ -33,9 +34,23 @@ import java.util.concurrent.TimeUnit;
  * 1. No timestamp or serial is treated as 0 (older).
  * 2. Entries are added to the bottom.
  * 3. If entries have the same timestamp, the appearing later in the file is picked.
+ * 4. Required fields.
+ *     - URL
+ * 5, Optional fields.
+ *     - TIMESTAMP - in ISO data format or milliseconds since epoch, active time.
+ *     - MD5 - md5 checksum of the file or data the link points to.
+ *     - SERIAL - incrementing serial number for the link file entry.
+ * 6, Required meta fields.
+ *     - VERSION - Link file format version.
+ * 7. Optional meta fields.
+ *     - ENTRIES_COUNT_MAX - max entries to store in this file.
+ *     - ENTRIES_AGE_MAX - max age of entries in milliseconds.
+ *     -
  *
  */
 public abstract class LinkFile {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LinkFile.class);
 
     public static final int LINK_FILE_MAX_SIZE = 10000;
 
@@ -46,34 +61,23 @@ public abstract class LinkFile {
 
     public static LinkFile load(StreamSource source) throws IOException {
         var content = loadContentFromSource(source);
-        return load(source, content);
+        return create(source, content);
     }
 
-    public static LinkFile load(StreamSource source, String content) {
+    public static LinkFile create(StreamSource source, String content) {
         var meta = LinkFileMeta.createAndLoad(content);
 
-        if ("1".equals(meta.getVersion())) {
-            return new LinkFileV1(source, meta, content);
-        } else {
+        if ("0".equals(meta.getVersion())) {
             return new LinkFileV0(source, meta, content);
+        } else {
+            return new LinkFileV1(source, meta, content);
         }
     }
 
-    public static LinkFile load(StreamSource source, int linkVersion) throws IOException {
-        switch (linkVersion) {
-            case 0:
-                return new LinkFileV0(source);
-            case 1:
-            default:
-                return new LinkFileV1(source);
-        }
-    }
-
-    public static String validateAndUpdateLinkFileName(String linkFilePath, int linkVersion) {
+    public static String validateAndUpdateLinkFileName(String linkFilePath) {
         if (DataUtil.isLink(linkFilePath)) {
             return linkFilePath;
         } else {
-            //return linkVersion == 0 ? DataUtil.toLink(linkFilePath) : DataUtil.toVersionedLink(linkFilePath);
             return DataUtil.toLink(linkFilePath);
         }
     }
@@ -148,10 +152,16 @@ public abstract class LinkFile {
      * @param timestamp  timestamp to match
      * @return best match entry or null if no entries.
      */
-    LinkFileEntry getEntry(long timestamp) {
+    public LinkFileEntry getEntry(long timestamp) {
         int index = entries.size() - 1;
         while (index >= 0 && entries.get(index).timestamp() > timestamp) {
             index--;
+        }
+        if (index < 0) {
+            log.warn("No entry found for timestamp: %d in link file: %s".formatted(timestamp, source.getFullPath()));
+            for (var entry : entries) {
+                log.warn(" Entry: " + entry.url() + " ts: " + entry.timestamp());
+            }
         }
         return index >= 0 ? entries.get(index) : null;
     }
@@ -160,7 +170,7 @@ public abstract class LinkFile {
      * Get the latest entry.
      * @return the latest entry
      */
-    LinkFileEntry getLatestEntry() {
+    public LinkFileEntry getLatestEntry() {
         return entries != null && !entries.isEmpty() ? entries.get(entries.size() - 1) : null;
     }
 
@@ -181,24 +191,39 @@ public abstract class LinkFile {
     }
 
     public LinkFile appendEntry(String link, String md5) {
-        return appendEntry(link, md5, null);
+        return appendEntry(link, md5, null, null);
     }
 
-    public abstract LinkFile appendEntry(String link, String md5, FileReader reader);
+    public LinkFile appendEntry(String link, String md5, String info) {
+        return appendEntry(link, md5, info, null);
+    }
+
+    public abstract LinkFile appendEntry(String link, String md5, String info, FileReader reader);
+
+    public LinkFile appendMeta(String meta) {
+        if (!Strings.isNullOrEmpty(meta)) {
+            this.meta.loadAndMergeMeta(meta);
+        }
+        return this;
+    }
 
     public void save() {
+        save(-1);
+    }
+
+    public void save(long timestamp) {
         try (OutputStream os = source.getOutputStream()) {
-            save(os);
+            save(os, timestamp);
         } catch (IOException e) {
             throw new GorResourceException("Could not save: " + source.getFullPath(), source.getFullPath(), e);
         }
     }
 
-    private void save(OutputStream os) {
+    private void save(OutputStream os, long timestamp) {
         var content = new StringBuilder(getHeader());
 
         if (!entries.isEmpty()) {
-            var currentTimestamp = System.currentTimeMillis();
+            var currentTimestamp = timestamp > 0 ? timestamp : System.currentTimeMillis();
             entries.stream()
                     .skip(Math.max(0, entries.size() - getEntriesCountMax()))
                     .filter(entry -> entry.timestamp() <= 0 || currentTimestamp - entry.timestamp() <= getEntriesAgeMax())
