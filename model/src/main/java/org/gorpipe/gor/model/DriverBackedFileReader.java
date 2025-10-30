@@ -72,14 +72,14 @@ public class DriverBackedFileReader extends FileReader {
 
     private final String securityContext;
     protected final String commonRoot;
-    protected long queryTime;
+    protected long queryTime = -1;  // -1 means not set, in which case we use current time at time when we query for the queryTime.
 
     public DriverBackedFileReader(String securityContext) {
-        this(securityContext, null, System.currentTimeMillis());
+        this(securityContext, null, -1);
     }
 
     public DriverBackedFileReader(String securityContext, String commonRoot) {
-        this(securityContext, commonRoot, System.currentTimeMillis());
+        this(securityContext, commonRoot, -1);
     }
 
     public DriverBackedFileReader(String securityContext, String commonRoot, long queryTime) {
@@ -99,7 +99,7 @@ public class DriverBackedFileReader extends FileReader {
 
     @Override
     public long getQueryTime() {
-        return queryTime;
+        return queryTime >= 0 ? queryTime : System.currentTimeMillis();
     }
 
     @Override

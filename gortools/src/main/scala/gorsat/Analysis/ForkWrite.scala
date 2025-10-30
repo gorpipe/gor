@@ -340,11 +340,11 @@ case class ForkWrite(forkCol: Int,
 
     // Use the nonsecure driver file reader as this is an exception from the write no links rule.
     val fileReader = new DriverBackedFileReader(session.getProjectContext.getFileReader.getSecurityContext,
-      session.getProjectContext.getProjectRoot)
+      session.getProjectContext.getProjectRoot, session.getProjectContext.getFileReader.getQueryTime)
 
     LinkFile.load(fileReader.resolveUrl(linkFileToWrite, true).asInstanceOf[StreamSource])
       .appendMeta(linkFileMeta)
       .appendEntry(linkFileContent, md5, linkFileInfo, fileReader)
-      .save()
+      .save(session.getProjectContext.getFileReader.getQueryTime)
   }
 }

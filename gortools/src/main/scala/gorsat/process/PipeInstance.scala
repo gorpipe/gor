@@ -37,7 +37,7 @@ import gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
 import process.GorJavaUtilities.CmdParams
 import process.GorPipe.brsConfig
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException, GorUserException}
-import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GenomicIterator}
+import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.{GorContext, GorSession, ProjectContext}
 import org.gorpipe.gor.util.{CommandSubstitutions, StringUtil}
@@ -48,8 +48,6 @@ import java.net.InetAddress
 object PipeInstance {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
-
-  val DEFAULT_REQUEST_ID: String = ""
 
   // Set the dyniterator iterator create function
   DynIterator.createGorIterator = (context: GorContext) => createGorIterator(context)
@@ -221,14 +219,6 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
   }
 
   def getPipeStep : Analysis = thePipeStep
-
-  def createFileReader(gorRoot: String): FileReader = {
-    if (!StringUtil.isEmpty(gorRoot)) {
-      new DriverBackedFileReader(null, gorRoot)
-    } else {
-      ProjectContext.DEFAULT_READER
-    }
-  }
 
   @Deprecated
   def subProcessArguments(pipeOptions: PipeOptions): GenomicIterator = {

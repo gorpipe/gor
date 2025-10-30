@@ -50,6 +50,8 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class LinkFile {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LinkFile.class);
+
     public static final int LINK_FILE_MAX_SIZE = 10000;
 
     private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.cache.link", "true"));
@@ -155,6 +157,12 @@ public abstract class LinkFile {
         while (index >= 0 && entries.get(index).timestamp() > timestamp) {
             index--;
         }
+        if (index < 0) {
+            log.warn("No entry found for timestamp: %d in link file: %s".formatted(timestamp, source.getFullPath()));
+            for (var entry : entries) {
+                log.warn(" Entry: " + entry.url() + " ts: " + entry.timestamp());
+            }
+        }
         return index >= 0 ? entries.get(index) : null;
     }
 
@@ -200,18 +208,22 @@ public abstract class LinkFile {
     }
 
     public void save() {
+        save(-1);
+    }
+
+    public void save(long timestamp) {
         try (OutputStream os = source.getOutputStream()) {
-            save(os);
+            save(os, timestamp);
         } catch (IOException e) {
             throw new GorResourceException("Could not save: " + source.getFullPath(), source.getFullPath(), e);
         }
     }
 
-    private void save(OutputStream os) {
+    private void save(OutputStream os, long timestamp) {
         var content = new StringBuilder(getHeader());
 
         if (!entries.isEmpty()) {
-            var currentTimestamp = System.currentTimeMillis();
+            var currentTimestamp = timestamp > 0 ? timestamp : System.currentTimeMillis();
             entries.stream()
                     .skip(Math.max(0, entries.size() - getEntriesCountMax()))
                     .filter(entry -> entry.timestamp() <= 0 || currentTimestamp - entry.timestamp() <= getEntriesAgeMax())

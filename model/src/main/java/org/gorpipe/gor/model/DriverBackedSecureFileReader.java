@@ -62,7 +62,7 @@ public class DriverBackedSecureFileReader extends DriverBackedFileReader {
      */
     public DriverBackedSecureFileReader(String commonRoot,
                                         String securityContext, AccessControlContext accessControlContext) {
-        this(commonRoot, securityContext, accessControlContext, System.currentTimeMillis());
+        this(commonRoot, securityContext, accessControlContext, -1);
     }
 
     public DriverBackedSecureFileReader(String commonRoot,

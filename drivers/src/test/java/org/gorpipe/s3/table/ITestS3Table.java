@@ -3,7 +3,9 @@ package org.gorpipe.s3.table;
 import gorsat.TestUtils;
 import org.gorpipe.base.security.BundledCredentials;
 import org.gorpipe.base.security.Credentials;
+import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.table.dictionary.DictionaryTable;
 import org.gorpipe.gor.table.lock.NoTableLock;
@@ -224,7 +226,7 @@ public class ITestS3Table {
 
             String localBucketFile = PathUtils.resolve(table.getRootPath(), DataUtil.toFile( bucket, DataType.LINK));
 
-            Assert.assertEquals("s3data://project/" +  bucket + "\n", Files.readString(Path.of(localBucketFile)));
+            Assert.assertEquals("s3data://project/" +  bucket, LinkFile.load(new FileSource(localBucketFile)).getLatestEntryUrl());
 
             String[] bucketResult = runGorPipeServer("gor " + localBucketFile,
                     workDirPath.resolve("some_project").toString(), fileReader.getSecurityContext()).split("\n");

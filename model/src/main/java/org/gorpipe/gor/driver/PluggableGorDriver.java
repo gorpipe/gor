@@ -40,6 +40,7 @@ import org.gorpipe.gor.model.GenomicIterator;
 import org.gorpipe.gor.model.GenomicIteratorBase;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
+import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -227,9 +228,10 @@ public class PluggableGorDriver implements GorDriver {
                 var sourceRef = getSourceRef(source, LinkFile.load((StreamSource)source).getEntryUrl(source.getSourceReference().queryTime), null);
                 sourceRef.setLinkLastModified(source.getSourceMetadata().getLastModified());
                 source.close();
-                DataSource rawLinkSource = resolveDataSource(sourceRef);
+                DataSource rawLinkSource = !Strings.isNullOrEmpty(sourceRef.getUrl()) ? resolveDataSource(sourceRef) : null;
                 if (rawLinkSource == null) {
-                    throw new GorResourceException("Link file content: " + sourceRef.getUrl() + " can not be resolved", sourceRef.getUrl());
+                    throw new GorResourceException("Link file content can not be resolved. Link file: %s, content: %s"
+                            .formatted(source.getName(), sourceRef.getUrl()), sourceRef.getUrl());
                 }
                 DataSource fromLinkSource = wrap(rawLinkSource);
                 fromLinkSource.getSourceReference().setCreatedFromLink(true);
