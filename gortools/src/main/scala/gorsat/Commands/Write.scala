@@ -66,7 +66,9 @@ class Write extends CommandInfo("WRITE",
     val linkOpt = if (hasOption(args, "-link")) stringValueOfOption(args, "-link") else ""
     val linkMetaOpt = if (hasOption(args, "-linkmeta")) stringValueOfOption(args, "-linkmeta") else ""
 
-    if(fileName.isEmpty && useFolder.isEmpty) throw new GorResourceException("No file or folder specified","");
+    if (fileName.isEmpty && useFolder.isEmpty && linkOpt.isEmpty) {
+      throw new GorResourceException("No file or folder specified","")
+    };
 
     val infer = hasOption(args, "-inferschema")
     val maxseg = hasOption(args, "-maxseg")

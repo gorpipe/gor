@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
@@ -24,11 +25,12 @@ import java.util.concurrent.TimeUnit;
  * Link file format, a valid nor format.  Example:
  *
  * ## VERSION=<file format version>
+ * ## SERIAl=<serial number of thislink file>
  * ## ENTRIES_COUNT_MAX=<max entries to store in this file>
  * ## ENTRIES_AGE_MAX=<max age of entries>
- * # FILE\tTIMESTAMP\tMD5\tSERIAL
- * source/var/var.gorz\t1734304890790\tABCDEAF13422\t1
- * source/var/var.gorz\t1734305124533\t334DEAF13422\t2
+ * # FILE\tTIMESTAMP\tMD5\tSERIAL\tINFO
+ * source/var/var.gorz\t1734304890790\tABCDEAF13422\t1\tSome info
+ * source/var/var.gorz\t1734305124533\t334DEAF13422\t2\tSome other info
  *
  * Notes:
  * 1. No timestamp or serial is treated as 0 (older).
@@ -40,12 +42,13 @@ import java.util.concurrent.TimeUnit;
  *     - TIMESTAMP - in ISO data format or milliseconds since epoch, active time.
  *     - MD5 - md5 checksum of the file or data the link points to.
  *     - SERIAL - incrementing serial number for the link file entry.
+ *     - INFO - free text info field.
  * 6, Required meta fields.
  *     - VERSION - Link file format version.
- * 7. Optional meta fields.
+ * 7. Optional meta fields.  See:  LinkFileMeta for complete list.
+ *     - SERIAL - serial number of this link file.
  *     - ENTRIES_COUNT_MAX - max entries to store in this file.
  *     - ENTRIES_AGE_MAX - max age of entries in milliseconds.
- *     -
  *
  */
 public abstract class LinkFile {
@@ -75,11 +78,49 @@ public abstract class LinkFile {
     }
 
     public static String validateAndUpdateLinkFileName(String linkFilePath) {
-        if (DataUtil.isLink(linkFilePath)) {
+        if (Strings.isNullOrEmpty(linkFilePath) || DataUtil.isLink(linkFilePath)) {
             return linkFilePath;
         } else {
             return DataUtil.toLink(linkFilePath);
         }
+    }
+
+    /**
+     * Infer the data file name from the link file name.
+     *
+     * @param linkSource the link file path with the link extension
+     * @return the data file path
+     */
+    public static String inferDataFileNameFromLinkFile(StreamSource linkSource) throws IOException {
+        if (linkSource == null || Strings.isNullOrEmpty(linkSource.getFullPath())) {
+            throw new IllegalArgumentException("Link file path is null or empty.  Can not infer data file name.");
+        }
+
+        var linkPath = linkSource.getSourceReference().getUrl();
+
+        if (PathUtils.isAbsolutePath(linkPath)) {
+            throw new IllegalArgumentException("Link file path is absolute.  Can not infer data file name: " + linkSource.getFullPath());
+        }
+
+        var dataFileRootPath = "";
+
+        if (linkSource.exists()) {
+            var link = load(linkSource);
+            var linkDataFileRootPath = link.getMeta().getProperty(LinkFileMeta.HEADER_CONTENT_LOCATION_MANAGED_KEY);
+            if (!Strings.isNullOrEmpty(linkDataFileRootPath)) {
+                dataFileRootPath = linkDataFileRootPath;
+            }
+        }
+
+        if (Strings.isNullOrEmpty(dataFileRootPath)) {
+            dataFileRootPath = System.getenv(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL);
+        }
+
+        if (Strings.isNullOrEmpty(dataFileRootPath)) {
+            throw new IllegalArgumentException("Link file data root path is not set.  Can not infer data file name from link file: " + linkSource.getFullPath());
+        }
+
+        return PathUtils.resolve(dataFileRootPath, linkPath);
     }
 
     protected final StreamSource source;
