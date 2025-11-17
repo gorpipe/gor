@@ -462,7 +462,6 @@ public class DriverBackedFileReader extends FileReader {
         }
 
         var gorDriverFactory = (PluggableGorDriver)GorDriverFactory.fromConfig();
-        var sourceTypes =  gorDriverFactory.getSupportedSourceTypes();
 
         HashMap<SourceType, List<SourceRef>> sourcesBySourceType = new HashMap<>();
         sources.forEach(source -> {
@@ -472,13 +471,13 @@ public class DriverBackedFileReader extends FileReader {
         });
 
         var outSources = new ArrayList<SourceRef>();
-        for (var sourceType : sourceTypes) {
-            if (!sourceType.supportsPreparation() || !sourcesBySourceType.containsKey(sourceType)) {
-                continue;
+        for (var sourceType : sourcesBySourceType.keySet()) {
+            if (sourceType.supportsPreparation()) {
+                var provider = gorDriverFactory.getSourceProvider(sourceType);
+                outSources.addAll(provider.prepareSources(sourcesBySourceType.get(sourceType).stream()).toList());
+            } else {
+                outSources.addAll(sourcesBySourceType.get(sourceType));
             }
-
-            var provider = gorDriverFactory.getSourceProvider(sourceType);
-            outSources.addAll(provider.prepareSources(sourcesBySourceType.get(sourceType).stream()).toList());
         }
 
         return outSources.stream();
