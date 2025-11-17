@@ -58,6 +58,7 @@ project(':model') {
 
         testImplementation project(':test')
         testImplementation project(':external')
+        testImplementation(testFixtures(project(":drivers")))
 
         testImplementation "ch.qos.logback:logback-classic:_"
 

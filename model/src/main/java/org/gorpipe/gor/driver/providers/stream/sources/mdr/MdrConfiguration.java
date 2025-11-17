@@ -32,10 +32,10 @@ public interface MdrConfiguration extends Config {
 
     @Documentation("URL to the MDR service")
     @Key("GOR_MDR_SERVER")
-    @DefaultValue("https://platform.wuxinextcodedev.com/mdr")
+    @DefaultValue("https://mdr-service.dev.data.oci.genedx.net")
     String mdrServer();
 
-    @Documentation("MDR service timout in seconds")
+    @Documentation("MDR service timeout in seconds")
     @Key("GOR_MDR_TIMEOUT")
     @DefaultValue("60")
     int mdrTimeout();
@@ -57,7 +57,7 @@ public interface MdrConfiguration extends Config {
 
     @Documentation("Keycloak auth server url")
     @Key("GOR_KEYCLOAK_SERVER")
-    @DefaultValue("https://platform.wuxinextcodedev.com/auth/realms/wuxinextcode.com/protocol/openid-connect/token")
+    @DefaultValue("https://auth.dev.engops.genedx.net/realms/genedx-dev/protocol/openid-connect/token")
     String keycloakAuthServer();
 
     @Documentation("Keycloak auth server timout in seconds")
@@ -67,7 +67,7 @@ public interface MdrConfiguration extends Config {
 
     @Documentation("Keycloak client id")
     @Key("GOR_KEYCLOAK_CLIENT_ID")
-    @DefaultValue("gor")
+    @DefaultValue("dp-gor")
     String keycloakClientId();
 
     @Documentation("Keycloak service password")
