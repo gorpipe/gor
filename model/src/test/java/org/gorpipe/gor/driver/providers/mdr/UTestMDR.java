@@ -20,7 +20,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 @Category(IntegrationTests.class)
-//@Ignore("Can not access Keycloak from the the Gitlab build servers.")
+@Ignore("Can not access Keycloak from the the Gitlab build servers.")
 public class UTestMDR {
 
     private static String S3_REGION = "us-ashburn-1";
