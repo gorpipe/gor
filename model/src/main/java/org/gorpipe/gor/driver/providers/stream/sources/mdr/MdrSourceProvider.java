@@ -23,16 +23,16 @@ import java.util.stream.Stream;
  *
  * The MDR url is formatted as:
  *
- * mdr://[<mdr host alias>/]<document_id>[/<filename>][?url_type={direct|presigned}&include_grouped={true|false}]
+ * mdr://<document_id>[/<filename>][?url_type={direct|presigned}&include_grouped={true|false}&env=<env_name>]
  *
- * <mdr host alias = MDR server to use.   'default' means use the default MDR server configured in the system.
  * <document_id> = The MDR document id (UUID format).
  * <filename> = Optional filename to use when the document contains multiple files.
  *
- * Note:  The first iteration allowed mdr://<document_id> only.  This is still supported for backward compatibility,
- * but it is recommended to use mdr://default/<document_id> going forward to avoid confusion.
- *
- * The backward compatibility makes it a little tricky to parse the url, so the following rule is use for parsing
+ * Query parameters:
+ * url_type = Optional url type to request.  Default is direct
+ * include_grouped = Optional flag to include grouped files when requesting presigned urls.  Default is false.
+ * env = Optional MDR environment name/alias to use when resolving the document.  The env parameter must match the
+ *       configured MDR environments.  Default is "default".
  *
  */
 @AutoService(SourceProvider.class)

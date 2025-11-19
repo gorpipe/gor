@@ -7,6 +7,7 @@ import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.SourceRef;
+import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.util.http.keycloak.KeycloakClientAuthRequester;
 import org.gorpipe.util.http.utils.HttpUtils;
 
@@ -30,6 +31,7 @@ public class MdrServer {
     private static final String URL_TYPE_DIRECT = "direct";
     private static final String URL_TYPE_PRESIGNED = "presigned";
     private static final String INCLUDE_GROUPED = "include_grouped";
+    private static final String MDR_ENV = "env";
 
     private static final MdrConfiguration config = ConfigManager.createPrefixConfig("gor.mdr", MdrConfiguration.class);
 
@@ -99,13 +101,13 @@ public class MdrServer {
 
     public static String resolveUrl(String url) {
         URI uri = URI.create(url);
-        return mdrServers.get(extractMdrServerName(uri)).resolveMdrUrl(uri);
+        return mdrServers.get(extractMdrEnvName(uri)).resolveMdrUrl(uri);
     }
 
     public static void cacheUrls(List<SourceRef> sources) {
         HashMap<String, List<SourceRef>> sourcesByMdrServer = new HashMap<>();
         for (SourceRef source : sources) {
-            var mdrServerName  = extractMdrServerName(URI.create(source.file));
+            var mdrServerName  = extractMdrEnvName(URI.create(source.file));
             sourcesByMdrServer.computeIfAbsent(mdrServerName, k -> new java.util.ArrayList<>()).add(source);
         }
         for (var entry : sourcesByMdrServer.keySet()) {
@@ -272,22 +274,18 @@ public class MdrServer {
     }
 
     public static String extractDocumentId(URI mdrUrl) {
-        if (mdrServers.containsKey(mdrUrl.getHost())) {
-            if (mdrUrl.getPath() == null || mdrUrl.getPath().isEmpty() || mdrUrl.getPath().equals("/")) {
-                throw new GorResourceException("No document id specified in MDR url: " + mdrUrl, mdrUrl.toString());
-            }
-            return mdrUrl.getPath().split("/", 3)[1];
-        } else {
-            return mdrUrl.getHost();
-        }
+        return mdrUrl.getHost();
     }
 
-    public static String extractMdrServerName(URI mdrUrl) {
-        if (mdrServers.containsKey(mdrUrl.getHost())) {
-            return mdrUrl.getHost();
-        } else {
-            return DEFAULT_MDR_SERVER_NAME;
+    public static String extractMdrEnvName(URI mdrUrl) {
+        if (mdrUrl != null) {
+            var queryString = mdrUrl.getQuery();
+            if (queryString != null) {
+                return HttpUtils.parseQuery(queryString).getOrDefault(MDR_ENV, DEFAULT_MDR_SERVER_NAME);
+            }
         }
+
+        return DEFAULT_MDR_SERVER_NAME;
     }
 
 }

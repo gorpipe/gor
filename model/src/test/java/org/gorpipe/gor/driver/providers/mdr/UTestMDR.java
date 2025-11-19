@@ -27,8 +27,6 @@ public class UTestMDR {
     private static final String S3_BUCKET = "mdr-genomic-data-dev";
 
     private static MdrConfiguration config;
-
-
     private static String securityContext;
 
     @Rule
@@ -70,18 +68,18 @@ public class UTestMDR {
 
     @Test
     public void testStdUrl() {
-        Assert.assertEquals("default", MdrServer.extractMdrServerName(URI.create("mdr://ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3")));
+        Assert.assertEquals("default", MdrServer.extractMdrEnvName(URI.create("mdr://ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3")));
         Assert.assertEquals("ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3", MdrServer.extractDocumentId(URI.create("mdr://ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3")));
-        Assert.assertEquals("default", MdrServer.extractMdrServerName(URI.create("mdr://ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3/test.txt")));
+        Assert.assertEquals("default", MdrServer.extractMdrEnvName(URI.create("mdr://ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3/test.txt")));
         Assert.assertEquals("ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3", MdrServer.extractDocumentId(URI.create("mdr://ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3/test.txt")));
     }
 
     @Test
     public void tesServerUrl() {
-        Assert.assertEquals("dev", MdrServer.extractMdrServerName(URI.create("mdr://dev/ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3")));
-        Assert.assertEquals("ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3", MdrServer.extractDocumentId(URI.create("mdr://dev/ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3")));
-        Assert.assertEquals("dev", MdrServer.extractMdrServerName(URI.create("mdr://dev/ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3/test.txt")));
-        Assert.assertEquals("ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3", MdrServer.extractDocumentId(URI.create("mdr://dev/ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3/test.txt")));
+        Assert.assertEquals("dev", MdrServer.extractMdrEnvName(URI.create("mdr://ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3?env=dev")));
+        Assert.assertEquals("ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3", MdrServer.extractDocumentId(URI.create("mdr://ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3?env=dev")));
+        Assert.assertEquals("dev", MdrServer.extractMdrEnvName(URI.create("mdr://ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3/test.txt?env=dev")));
+        Assert.assertEquals("ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3", MdrServer.extractDocumentId(URI.create("mdr://ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3/test.txt?env=dev")));
     }
 
     @Test
@@ -95,7 +93,7 @@ public class UTestMDR {
 
     @Test
     public void testReadDocumentServer() {
-        var result = TestUtils.runGorPipe("nor mdr://dev/ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3 | top 1", true, securityContext).split("\n");
+        var result = TestUtils.runGorPipe("nor mdr://ff8e31e0-a9ae-41eb-bb8d-21854a47d8b3?env=dev | top 1", true, securityContext).split("\n");
 
         Assert.assertEquals(2, result.length);
         Assert.assertEquals("ChromNOR\tPosNOR\tcol1", result[0]);
