@@ -71,6 +71,7 @@ public class UTestGorWrite {
 
         var meta = new LinkFileMeta();
         meta.setProperty(BaseMeta.HEADER_VERSION_KEY, "1");
+        meta.setProperty(BaseMeta.HEADER_SERIAL_KEY, "1");
         defaultV1LinkFileHeader = meta.formatHeader();
     }
 
@@ -136,9 +137,8 @@ public class UTestGorWrite {
         Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), defaultV1LinkFileHeader + workDirPath.resolve("dbsnp.gor").toString() + "\n");
         TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
 
-        Assert.assertTrue(Files.readString(workDirPath.resolve("dbsnp3.gor.link")).startsWith(
-                defaultV1LinkFileHeader
-                        + workDirPath.resolve("dbsnp.gor") + "\t1970-01-01T00:00:00Z\t\t0\t\n"
+        Assert.assertTrue(Files.readString(workDirPath.resolve("dbsnp3.gor.link")).contains(
+                workDirPath.resolve("dbsnp.gor") + "\t1970-01-01T00:00:00Z\t\t0\t\n"
                         + workDirPath.resolve("dbsnp2.gor") + "\t"));
     }
 

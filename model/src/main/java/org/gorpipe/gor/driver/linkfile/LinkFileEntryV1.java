@@ -70,6 +70,10 @@ public record LinkFileEntryV1(String url, long timestamp, String md5, int serial
     }
 
     public String format() {
-        return url + "\t" + Instant.ofEpochMilli(timestamp) + "\t" + md5 + "\t" + serial+ "\t" + info;
+        return url +
+                "\t" + Instant.ofEpochMilli(timestamp) +
+                "\t" + (md5 != null ? md5 : "") +
+                "\t" + serial +
+                "\t" + (info != null ? info : "");
     }
 }
