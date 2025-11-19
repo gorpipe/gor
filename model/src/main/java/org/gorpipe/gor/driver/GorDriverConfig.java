@@ -183,7 +183,7 @@ public interface GorDriverConfig extends Config {
     String plinkExecutable();
 
     String GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL = "GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL";
-    @Documentation("Whether to enable link folders.")
+    @Documentation("Root location of managed data files for link files.")
     @Key(GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL)
     @DefaultValue("")
     String managedLinkDataFilesURL();

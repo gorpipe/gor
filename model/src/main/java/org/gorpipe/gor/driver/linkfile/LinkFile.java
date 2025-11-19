@@ -3,6 +3,8 @@ package org.gorpipe.gor.driver.linkfile;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -119,6 +121,19 @@ public abstract class LinkFile {
         if (Strings.isNullOrEmpty(dataFileRootPath)) {
             throw new IllegalArgumentException("Link file data root path is not set.  Can not infer data file name from link file: " + linkSource.getFullPath());
         }
+
+        String randomString = RandomStringUtils.random(8, true, true);
+        var linkPathSplit = linkPath.indexOf('.');
+        if (linkPathSplit > 0) {
+            linkPath = "%s.%s.%s".formatted(
+                    linkPath.substring(0, linkPathSplit),
+                    randomString,
+                    linkPath.substring(linkPathSplit + 1));
+        } else {
+            linkPath = "%s.%s".formatted(linkPath, randomString);
+        }
+
+        linkPath = linkPath.replaceAll("\\.link$", "");
 
         return PathUtils.resolve(dataFileRootPath, linkPath);
     }
