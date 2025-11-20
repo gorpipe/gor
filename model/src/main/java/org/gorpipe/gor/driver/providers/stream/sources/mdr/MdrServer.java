@@ -3,19 +3,15 @@ package org.gorpipe.gor.driver.providers.stream.sources.mdr;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.gorpipe.base.config.ConfigManager;
-import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.SourceRef;
-import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.util.http.keycloak.KeycloakClientAuthRequester;
 import org.gorpipe.util.http.utils.HttpUtils;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -33,70 +29,22 @@ public class MdrServer {
     private static final String INCLUDE_GROUPED = "include_grouped";
     private static final String MDR_ENV = "env";
 
-    private static final MdrConfiguration config = ConfigManager.createPrefixConfig("gor.mdr", MdrConfiguration.class);
+    private static final MdrConfiguration defaultConfig = ConfigManager.createPrefixConfig("gor.mdr", MdrConfiguration.class);
 
     private static HashMap<String, MdrServer> mdrServers;
 
     private static final Cache<MdrDocumentCacheKey, MdrUrlsResultItem> documentCache =
-            CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterAccess(config.mdrCacheDuration(), TimeUnit.MINUTES).build();
+            CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterAccess(defaultConfig.mdrCacheDuration(), TimeUnit.MINUTES).build();
 
     static {
-        loadCredentials();
+        loadMdrServers(defaultConfig);
     }
 
-    /**
-     * Parse MDR credentials from a string.
-     *
-     * The credentials are in the format:
-     *   #name\tMdrUrl\tKeycloakUrl\tKeycloakClientId\tKeycloakClientSecret
-     *   <name>\t<mdr url>\t<keycloakUrl>\t<clientId>\t<clientSecret>
-     *
-     *   # Lines starting with '#' are treated as comments and ignored.
-     *
-     * @param credentialsData The credential data
-     * @return An MdrCredentials object containing the parsed credentials.
-     * @throws IllegalArgumentException if the credential string is not in the expected format.
-     */
-    public static List<MdrServer> parse(String credentialsData, MdrConfiguration config) {
-        List<MdrServer> credentialsList = new java.util.ArrayList<>();
-        for (String credLine : credentialsData.split("\n")) {
-            credLine = credLine.trim();
-            if (credLine.isEmpty() || credLine.startsWith("#")) {
-                continue;
-            }
-
-            String[] parts = credLine.split("\t");
-            if (parts.length != 5) {
-                throw new IllegalArgumentException("Invalid credential line format. Expected format: <mdr url>\\t<keycloakUrl></>\\t<clientId>\\t<clientSecret>");
-            }
-
-            credentialsList.add(new MdrServer(parts[0], parts[1], parts[2], parts[3], parts[4]));
-        }
-
-        return credentialsList;
-    }
-
-    public static HashMap<String, MdrServer> loadCredentials() {
-        mdrServers = new HashMap<>();
-        mdrServers.put(DEFAULT_MDR_SERVER_NAME, new MdrServer(
-                DEFAULT_MDR_SERVER_NAME,
-                config.mdrServer(),
-                config.keycloakAuthServer(),
-                config.keycloakClientId(), config.keycloakClientSecret()));
-
-        final String MDR_CREDENTIALS_PATH = System.getProperty("gor.mdr.credentials");
-
-        if (MDR_CREDENTIALS_PATH != null && !MDR_CREDENTIALS_PATH.isEmpty()) {
-            try {
-                String credentialsData = Files.readString(Path.of(MDR_CREDENTIALS_PATH));
-                for (MdrServer server : parse(credentialsData, config)) {
-                    mdrServers.put(server.getMdrServerName(), server);
-                }
-            } catch (Exception e) {
-                throw new GorParsingException("Failed to read MDR credentials from path: " + MDR_CREDENTIALS_PATH, e);
-            }
-        }
-        return mdrServers;
+    public static void loadMdrServers(MdrConfiguration defaultConfig) {
+        mdrServers = MdrConfiguration.loadMdrConfigurations(defaultConfig).entrySet().stream()
+                .collect(HashMap::new,
+                        (map, entry) -> map.put(entry.getKey(), new MdrServer(entry.getValue())),
+                        HashMap::putAll);
     }
 
     public static String resolveUrl(String url) {
@@ -115,36 +63,20 @@ public class MdrServer {
         }
     }
 
-    private final String mdrServerName;
-    private final String mdrServerUrl;
-    private final String keycloakAuthServer;
-    private final String keycloakClientId;
-    private final String keycloakClientSecret;
+    private MdrConfiguration config;
     private MdrAuthorizedClient authorizedClient;
 
-    public MdrServer(String mdrServerName, String mdrServerUrl, String keycloakAuthServer, String keycloakClientId, String keycloakClientSecret) {
-        this.mdrServerName = mdrServerName;
-        this.mdrServerUrl = mdrServerUrl;
-        this.keycloakAuthServer = keycloakAuthServer;
-        this.keycloakClientId = keycloakClientId;
-        this.keycloakClientSecret = keycloakClientSecret;
-    }
-
-    public String getMdrServerName() {
-        return mdrServerName;
-    }
-
-    public String getMdrServerUrl() {
-        return mdrServerUrl;
+    public MdrServer(MdrConfiguration config) {
+        this.config = config;
     }
 
     public MdrAuthorizedClient getAuthorizedClient() {
         if (this.authorizedClient == null) {
             this.authorizedClient = new MdrAuthorizedClient(
-                    new KeycloakClientAuthRequester(keycloakAuthServer,
-                            Duration.ofSeconds(config.keycloakAuthTimeout()),
-                            keycloakClientId, keycloakClientSecret),
-                    Duration.ofSeconds(config.mdrTimeout()));
+                    new KeycloakClientAuthRequester(config.keycloakAuthServer(),
+                            Duration.ofSeconds(defaultConfig.keycloakAuthTimeout()),
+                            config.keycloakClientId(), config.keycloakClientSecret()),
+                    Duration.ofSeconds(defaultConfig.mdrTimeout()));
         }
         return this.authorizedClient;
     }
@@ -187,14 +119,14 @@ public class MdrServer {
         }
 
         if (!mdrQueryMap.containsKey(URL_TYPE)) {
-            mdrQueryMap.put(URL_TYPE, config.mdrDefaultLinkType());
+            mdrQueryMap.put(URL_TYPE, defaultConfig.mdrDefaultLinkType());
         }
 
         if (!mdrQueryMap.containsKey(INCLUDE_GROUPED)) {
-            mdrQueryMap.put(INCLUDE_GROUPED, config.mdrIncludeGrouped() ? "true" : "false");
+            mdrQueryMap.put(INCLUDE_GROUPED, defaultConfig.mdrIncludeGrouped() ? "true" : "false");
         }
 
-        var baseUri = URI.create(this.mdrServerUrl);
+        var baseUri = URI.create(config.mdrServer());
 
         return new URI( baseUri.getScheme(), baseUri.getHost(), baseUri.getPath() +
                 MDR_PATH, HttpUtils.constructQuery(mdrQueryMap), null);

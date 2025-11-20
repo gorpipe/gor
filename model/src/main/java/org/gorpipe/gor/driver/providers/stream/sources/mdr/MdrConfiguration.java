@@ -23,12 +23,81 @@
 package org.gorpipe.gor.driver.providers.stream.sources.mdr;
 
 import org.aeonbits.owner.Config;
+import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.base.config.annotations.Documentation;
 import org.gorpipe.base.config.converters.DurationConverter;
+import org.gorpipe.exceptions.GorParsingException;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public interface MdrConfiguration extends Config {
+
+    /**
+     * Parse MDR credentials from a string.
+     *
+     * The credentials are in the format:
+     *   #name\tMdrUrl\tKeycloakUrl\tKeycloakClientId\tKeycloakClientSecret
+     *   <name>\t<mdr url>\t<keycloakUrl>\t<clientId>\t<clientSecret>
+     *
+     *   # Lines starting with '#' are treated as comments and ignored.
+     *
+     * @param credentialsData The credential data
+     * @return An MdrConfiguration list containing the parsed credentials.
+     * @throws IllegalArgumentException if the credential string is not in the expected format.
+     */
+    static List<MdrConfiguration> parseConfigurationData(String credentialsData) {
+        List<MdrConfiguration> mdrConfList = new java.util.ArrayList<>();
+        for (String credLine : credentialsData.split("\n")) {
+            credLine = credLine.trim();
+            if (credLine.isEmpty() || credLine.startsWith("#")) {
+                continue;
+            }
+
+            String[] parts = credLine.split("\t");
+            if (parts.length != 5) {
+                throw new IllegalArgumentException("Invalid credential line format. Expected format: <mdr url>\\t<keycloakUrl></>\\t<clientId>\\t<clientSecret>");
+            }
+
+            mdrConfList.add(ConfigManager.createConfig(MdrConfiguration.class, Map.of(
+                    "GOR_MDR_SERVER_NAME", parts[0],
+                "GOR_MDR_SERVER", parts[1],
+                "GOR_KEYCLOAK_SERVER", parts[2],
+                "GOR_KEYCLOAK_CLIENT_ID", parts[3],
+                "GOR_KEYCLOAK_CLIENT_SECRET", parts[4]
+            )));
+        }
+
+        return mdrConfList;
+    }
+
+    static HashMap<String, MdrConfiguration> loadMdrConfigurations(MdrConfiguration defaultConfig) {
+        HashMap<String, MdrConfiguration> mdrConfigurationsMap = new HashMap<>();
+        mdrConfigurationsMap.put(defaultConfig.mdrServerName(), defaultConfig);
+
+        final String MDR_CREDENTIALS_PATH = System.getProperty("gor.mdr.credentials");
+
+        if (MDR_CREDENTIALS_PATH != null && !MDR_CREDENTIALS_PATH.isEmpty()) {
+            try {
+                String credentialsData = Files.readString(Path.of(MDR_CREDENTIALS_PATH));
+                for (MdrConfiguration config : parseConfigurationData(credentialsData)) {
+                    mdrConfigurationsMap.put(config.mdrServerName(), config);
+                }
+            } catch (Exception e) {
+                throw new GorParsingException("Failed to read MDR credentials from path: " + MDR_CREDENTIALS_PATH, e);
+            }
+        }
+        return mdrConfigurationsMap;
+    }
+
+    @Documentation("Name/alias of the MDR server")
+    @Key("GOR_MDR_SERVER_NAME")
+    @DefaultValue("default")
+    String mdrServerName();
 
     @Documentation("URL to the MDR service")
     @Key("GOR_MDR_SERVER")
