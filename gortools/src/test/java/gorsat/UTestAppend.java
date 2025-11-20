@@ -107,7 +107,6 @@ public class UTestAppend {
         }
     }
 
-
     @Test
     public void testWriteAppendNorz() {
         Path file = workPath.resolve("file.norz");

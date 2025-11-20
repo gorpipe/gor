@@ -23,17 +23,20 @@
 package gorsat;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.file.PathUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.driver.linkfile.LinkFileMeta;
-import org.gorpipe.gor.driver.linkfile.LinkFileV1;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.model.BaseMeta;
 import org.gorpipe.gor.util.DataUtil;
 import org.junit.*;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.*;
@@ -56,6 +59,13 @@ public class UTestGorWrite {
     @Rule
     public TemporaryFolder tempRoot = new TemporaryFolder();
     private Path tempRootPath;
+
+    @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+
+    @Rule
+    public final EnvironmentVariables environmentVariables
+            = new EnvironmentVariables();
 
     private String defaultV1LinkFileHeader;
     private String testdbsnpTestLine1 = """
@@ -223,6 +233,23 @@ public class UTestGorWrite {
     }
 
     @Test
+    public void testWriteLinkFileWithInferFileName() throws IOException {
+
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL, workDirPath.resolve("managed_data").toString());
+        TestUtils.runGorPipe("gorrow chr1,1,100 | write -link ltest.gor", "-gorroot", workDirPath.toString());
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("ltest.gor.link").toString()));
+
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertTrue(linkFile.getLatestEntry().url().startsWith(workDirPath.resolve("managed_data/" + workDirPath.getFileName() + "/ltest").toString()));
+        Assert.assertTrue(linkFile.getLatestEntry().url().endsWith(".gor"));
+        Assert.assertTrue(Files.exists(Path.of(linkFile.getLatestEntry().url())));
+        Assert.assertEquals("#chrom\tbpStart\tbpStop\nchr1\t1\t100\n",
+                Files.readString(Path.of(linkFile.getLatestEntry().url())));
+
+    }
+
+    @Test
     public void testTxtWriteServer() throws IOException {
         Path p = Paths.get("../tests/data/nor/simple.nor");
         Files.copy(p, workDirPath.resolve("simple1.nor"));
@@ -239,7 +266,6 @@ public class UTestGorWrite {
         TestUtils.runGorPipeCount(args, true);
     }
 
-    @Ignore
     @Test
     public void testFolderWriteServer() throws IOException {
         Path p = Paths.get("../tests/data/nor/simple.nor");

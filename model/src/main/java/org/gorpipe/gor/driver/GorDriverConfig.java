@@ -181,4 +181,10 @@ public interface GorDriverConfig extends Config {
     @Key("org.gorpipe.gor.driver.plink.executable")
     @DefaultValue("plink2")
     String plinkExecutable();
+
+    String GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL = "GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL";
+    @Documentation("Root location of managed data files for link files.")
+    @Key(GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL)
+    @DefaultValue("")
+    String managedLinkDataFilesURL();
 }
