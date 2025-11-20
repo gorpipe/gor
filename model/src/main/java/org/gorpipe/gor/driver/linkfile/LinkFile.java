@@ -1,10 +1,16 @@
 package org.gorpipe.gor.driver.linkfile;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.RandomStringUtils;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.RandomStringUtils;
+
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -14,12 +20,6 @@ import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.util.Strings;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Class to work with link files, read, write and access metadata.
@@ -263,6 +263,34 @@ public abstract class LinkFile {
         return this;
     }
 
+    /**
+     * Remove the latest entry, if any.
+     *
+     * @return true if an entry was removed, otherwise false.
+     */
+    public boolean rollbackLatestEntry() {
+        if (entries.isEmpty()) {
+            return false;
+        }
+        entries.remove(entries.size() - 1);
+        return true;
+    }
+
+    /**
+     * Remove entries that are newer than the provided timestamp.
+     *
+     * @param timestamp the timestamp to rollback to (inclusive)
+     * @return true if one or more entries were removed, otherwise false.
+     */
+    public boolean rollbackToTimestamp(long timestamp) {
+        boolean removed = false;
+        while (!entries.isEmpty() && entries.get(entries.size() - 1).timestamp() > timestamp) {
+            entries.remove(entries.size() - 1);
+            removed = true;
+        }
+        return removed;
+    }
+
     public void save() {
         save(-1);
     }
@@ -276,6 +304,8 @@ public abstract class LinkFile {
     }
 
     private void save(OutputStream os, long timestamp) {
+        meta.setProperty(meta.HEADER_SERIAL_KEY, Integer.toString(Integer.parseInt(meta.getProperty(meta.HEADER_SERIAL_KEY, "0")) + 1));
+
         var content = new StringBuilder(getHeader());
 
         if (!entries.isEmpty()) {

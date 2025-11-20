@@ -26,6 +26,7 @@ import org.gorpipe.gor.cli.cache.CacheCommand;
 import org.gorpipe.gor.cli.help.HelpCommand;
 import org.gorpipe.gor.cli.index.IndexCommand;
 import org.gorpipe.gor.cli.info.InfoCommand;
+import org.gorpipe.gor.cli.link.LinkCommand;
 import org.gorpipe.gor.cli.manager.ManagerCommand;
 import org.gorpipe.gor.cli.migrator.FolderMigratorCommand;
 import org.gorpipe.gor.cli.query.QueryCommand;
@@ -38,7 +39,8 @@ import picocli.CommandLine;
         version="version 1.0",
         description = "Command line interface for gor query language and processes.",
         subcommands = {QueryCommand.class, HelpCommand.class, ManagerCommand.class, IndexCommand.class,
-                CacheCommand.class, RenderCommand.class, InfoCommand.class, FolderMigratorCommand.class})
+                CacheCommand.class, RenderCommand.class, InfoCommand.class, FolderMigratorCommand.class,
+                LinkCommand.class})
 public class GorCLI extends HelpOptions implements Runnable {
     public static void main(String[] args) {
         GorLogbackUtil.initLog("gor");

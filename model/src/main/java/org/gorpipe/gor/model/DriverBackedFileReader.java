@@ -35,6 +35,7 @@ import org.gorpipe.gor.driver.adapters.StreamSourceRacFile;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceReferenceBuilder;
+import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.rows.RowIteratorSource;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceFile;
 import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
@@ -50,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.*;
@@ -460,20 +462,25 @@ public class DriverBackedFileReader extends FileReader {
         }
 
         var gorDriverFactory = (PluggableGorDriver)GorDriverFactory.fromConfig();
-        var sourceTypes =  gorDriverFactory.getSupportedSourceTypes();
 
-        var resultStream = sources;
-
-        for (var sourceType : sourceTypes) {
-            if (!sourceType.supportsPreparation()) {
-                continue;
+        HashMap<SourceType, List<SourceRef>> sourcesBySourceType = new HashMap<>();
+        sources.forEach(source -> {
+            try (var dataSource = resolveUrl(source.file)) {
+                sourcesBySourceType.computeIfAbsent(dataSource.getSourceType(), k -> new java.util.ArrayList<>()).add(source);
             }
+        });
 
-            var provider =gorDriverFactory.getSourceProvider(sourceType);
-            resultStream = provider.prepareSources(resultStream);
+        var outSources = new ArrayList<SourceRef>();
+        for (var sourceType : sourcesBySourceType.keySet()) {
+            if (sourceType.supportsPreparation()) {
+                var provider = gorDriverFactory.getSourceProvider(sourceType);
+                outSources.addAll(provider.prepareSources(sourcesBySourceType.get(sourceType).stream()).toList());
+            } else {
+                outSources.addAll(sourcesBySourceType.get(sourceType));
+            }
         }
 
-        return resultStream;
+        return outSources.stream();
     }
 
     private Stream<DataSource[]> getDependentDestStream(String source, String dest, DataSource sourceSource) throws IOException {

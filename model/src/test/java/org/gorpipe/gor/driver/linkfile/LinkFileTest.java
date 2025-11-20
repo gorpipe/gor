@@ -22,7 +22,7 @@ public class LinkFileTest {
 
     private StreamSource mockSource;
     private final String v1LinkFileContent = """
-            ## SERIAL = 0
+            ## SERIAL = 1
             ## VERSION = 1
             #FILE\tTIMESTAMP\tMD5\tSERIAL\tINFO
             source/v1/ver1.gorz\t2024-12-15T11:21:30.790Z\tABCDEAF13422\t1\t
@@ -117,7 +117,7 @@ public class LinkFileTest {
         linkFile.appendEntry(simpleFile, "NEWMD5SUM");
         linkFile.save();
         String savedContent = Files.readString(linkPath);
-        assertTrue(savedContent.startsWith(v1LinkFileContent));
+        assertTrue(savedContent.startsWith("## SERIAL = 2"));
         assertTrue(savedContent.contains(simpleFile));
     }
 
