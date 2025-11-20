@@ -135,6 +135,12 @@ public abstract class LinkFile {
 
         linkPath = linkPath.replaceAll("\\.link$", "");
 
+        var project = linkSource.getSourceReference().getCommonRoot() != null
+                ? PathUtils.getFileName(linkSource.getSourceReference().getCommonRoot()) : "";
+        if (!Strings.isNullOrEmpty(project)) {
+            dataFileRootPath = PathUtils.resolve(dataFileRootPath, project);
+        }
+
         return PathUtils.resolve(dataFileRootPath, linkPath);
     }
 
