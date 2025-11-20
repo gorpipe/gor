@@ -23,6 +23,7 @@
 package gorsat;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.file.PathUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.exceptions.GorSystemException;
@@ -240,7 +241,7 @@ public class UTestGorWrite {
         var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("ltest.gor.link").toString()));
 
         Assert.assertEquals(1, linkFile.getEntriesCount());
-        Assert.assertTrue(linkFile.getLatestEntry().url().startsWith(workDirPath.resolve("managed_data/ltest").toString()));
+        Assert.assertTrue(linkFile.getLatestEntry().url().startsWith(workDirPath.resolve("managed_data/" + workDirPath.getFileName() + "/ltest").toString()));
         Assert.assertTrue(linkFile.getLatestEntry().url().endsWith(".gor"));
         Assert.assertTrue(Files.exists(Path.of(linkFile.getLatestEntry().url())));
         Assert.assertEquals("#chrom\tbpStart\tbpStop\nchr1\t1\t100\n",
