@@ -64,8 +64,8 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     private static final Logger log = LoggerFactory.getLogger(ExtendedRangeWrapper.class);
 
     public static final int DEFAULT_SEEK_THRESHOLD = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.seek_threshold", "64 kb")).getBytesAsInt();
-    public static final int DEFAULT_MIN_RANGE = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.min_request_size", "64 kb")).getBytesAsInt();
-    public static final int DEFAULT_MAX_RANGE = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.max_request_size", "1 mb")).getBytesAsInt();
+    public static final int DEFAULT_MIN_RANGE = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.min_request_size", "128 kb")).getBytesAsInt();
+    public static final int DEFAULT_MAX_RANGE = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.max_request_size", "8 mb")).getBytesAsInt();
 
     private final int seekThreshold;
     private final int maxRange;
