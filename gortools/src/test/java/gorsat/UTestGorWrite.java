@@ -250,6 +250,24 @@ public class UTestGorWrite {
     }
 
     @Test
+    public void testWriteLinkFileWithInferFileNameForExistingLink() throws IOException {
+
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL, workDirPath.resolve("managed_data").toString());
+        TestUtils.runGorPipe("gorrow chr1,1,100 | write -link ltest.gor", "-gorroot", workDirPath.toString());
+        TestUtils.runGorPipe("gorrow chr1,1,101 | write -link ltest.gor", "-gorroot", workDirPath.toString());
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("ltest.gor.link").toString()));
+
+        Assert.assertEquals(2, linkFile.getEntriesCount());
+        Assert.assertTrue(linkFile.getLatestEntry().url().startsWith(workDirPath.resolve("managed_data/" + workDirPath.getFileName() + "/ltest").toString()));
+        Assert.assertTrue(linkFile.getLatestEntry().url().endsWith(".gor"));
+        Assert.assertTrue(Files.exists(Path.of(linkFile.getLatestEntry().url())));
+        Assert.assertEquals("#chrom\tbpStart\tbpStop\nchr1\t1\t101\n",
+                Files.readString(Path.of(linkFile.getLatestEntry().url())));
+
+    }
+
+    @Test
     public void testTxtWriteServer() throws IOException {
         Path p = Paths.get("../tests/data/nor/simple.nor");
         Files.copy(p, workDirPath.resolve("simple1.nor"));

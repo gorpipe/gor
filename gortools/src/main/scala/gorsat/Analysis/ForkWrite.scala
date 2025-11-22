@@ -30,7 +30,7 @@ import org.apache.commons.lang3.StringUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.driver.linkfile.{LinkFile, LinkFileEntryV1}
-import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.gor.driver.meta.{DataType, SourceReference}
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.model.{DriverBackedFileReader, Row}
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
@@ -159,8 +159,10 @@ case class ForkWrite(forkCol: Int,
                     fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
                   } else {
                     if (fullFileName.isEmpty && options.linkFile.nonEmpty) {
+                      val linkSourceRef = new SourceReference(options.linkFile, null, projectContext.getFileReader.getCommonRoot, null, null, true);
                       // Infer the full file name from the link (and defautl locations)
-                      LinkFile.inferDataFileNameFromLinkFile(projectContext.getFileReader.resolveUrl(options.linkFile).asInstanceOf[StreamSource])
+                      LinkFile.inferDataFileNameFromLinkFile(
+                        projectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource]);
                     } else {
                       fullFileName
                     }
