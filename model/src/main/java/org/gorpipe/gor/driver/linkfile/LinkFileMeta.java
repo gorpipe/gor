@@ -11,9 +11,9 @@ public class LinkFileMeta extends BaseMeta {
     public static final String HEADER_ENTRIES_COUNT_MAX_KEY = "ENTRIES_COUNT_MAX";
     // Max age of entries to keep track of in the link file.
     public static final String HEADER_ENTRIES_AGE_MAX_KEY = "ENTRIES_AGE_MAX";
-    // Determines if the content data location should be managed.
+    // Path if the managed content data location.
     public static final String HEADER_CONTENT_LOCATION_MANAGED_KEY = "CONTENT_LOCATION_MANAGED";
-    // Should the content lifecycle be managed (data deleted if the link is removed from the link file).
+    // Should the content lifecycle be managed (data deleted if the link is removed from the link file) (true or false).
     public static final String HEADER_CONTENT_LIFECYCLE_MANAGED_KEY = "CONTENT_LIFECYCLE_MANAGED";
 
     public static final String[] DEFAULT_TABLE_HEADER = new String[] {"File", "Timestamp", "MD5", "Serial", "Info"};

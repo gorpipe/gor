@@ -91,9 +91,10 @@ public abstract class LinkFile {
      * Infer the data file name from the link file name.
      *
      * @param linkSource the link file path with the link extension
+     * @param linkFileMeta additional link file meta data
      * @return the data file path
      */
-    public static String inferDataFileNameFromLinkFile(StreamSource linkSource) throws IOException {
+    public static String inferDataFileNameFromLinkFile(StreamSource linkSource, String linkFileMeta) throws IOException {
         if (linkSource == null || Strings.isNullOrEmpty(linkSource.getFullPath())) {
             throw new IllegalArgumentException("Link file path is null or empty.  Can not infer data file name.");
         }
@@ -105,13 +106,12 @@ public abstract class LinkFile {
         }
 
         var dataFileRootPath = "";
-
-        if (linkSource.exists()) {
-            var link = load(linkSource);
-            var linkDataFileRootPath = link.getMeta().getProperty(LinkFileMeta.HEADER_CONTENT_LOCATION_MANAGED_KEY);
-            if (!Strings.isNullOrEmpty(linkDataFileRootPath)) {
-                dataFileRootPath = linkDataFileRootPath;
-            }
+        var link = linkSource.exists()
+                ? load(linkSource).appendMeta(linkFileMeta)
+                : create(linkSource, linkFileMeta);
+        var linkDataFileRootPath = link.getMeta().getProperty(LinkFileMeta.HEADER_CONTENT_LOCATION_MANAGED_KEY);
+        if (!Strings.isNullOrEmpty(linkDataFileRootPath)) {
+            dataFileRootPath = linkDataFileRootPath;
         }
 
         if (Strings.isNullOrEmpty(dataFileRootPath)) {
