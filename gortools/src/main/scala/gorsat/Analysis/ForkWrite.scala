@@ -159,10 +159,11 @@ case class ForkWrite(forkCol: Int,
                     fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
                   } else {
                     if (fullFileName.isEmpty && options.linkFile.nonEmpty) {
+                      val (linkFileMeta, linkFileInfo) = extractLinkMetaInfo(options.linkFileMeta)
                       val linkSourceRef = new SourceReference(options.linkFile, null, projectContext.getFileReader.getCommonRoot, null, null, true);
                       // Infer the full file name from the link (and defautl locations)
                       LinkFile.inferDataFileNameFromLinkFile(
-                        projectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource]);
+                        projectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource], linkFileMeta);
                     } else {
                       fullFileName
                     }
@@ -380,10 +381,15 @@ case class ForkWrite(forkCol: Int,
         linkFileContent = dataSource.getProjectLinkFileContent
       }
     }
+    val (linkFileMeta, linkFileInfo) = extractLinkMetaInfo(optLinkFileMeta)
+    (linkFile, linkFileContent, linkFileMeta, linkFileInfo)
+  }
+
+  private def extractLinkMetaInfo(optLinkFileMeta: String) : (String, String) = {
     var linkFileMeta = ""
     var linkFileInfo = ""
 
-    if (linkFile.nonEmpty && !Strings.isNullOrEmpty(optLinkFileMeta)) {
+    if (!Strings.isNullOrEmpty(optLinkFileMeta)) {
       for (s <- CommandParseUtilities.quoteSafeSplit(StringUtils.strip(optLinkFileMeta, "\"\'"), ',')) {
         val l = s.trim
         if (l.startsWith(LinkFileEntryV1.ENTRY_INFO_KEY)) {
@@ -394,7 +400,7 @@ case class ForkWrite(forkCol: Int,
       }
     }
 
-    (linkFile, linkFileContent, linkFileMeta, linkFileInfo)
+    (linkFileMeta, linkFileInfo)
   }
 
   private def writeLinkFile(linkFilePath: String, linkFileContent: String,
