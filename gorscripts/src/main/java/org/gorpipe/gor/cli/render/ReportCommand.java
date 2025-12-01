@@ -43,7 +43,7 @@ public class ReportCommand extends RenderOptions implements  Runnable{
     @Override
     public void run() {
         if (DataUtil.isYml(input)) {
-            PipeOptions options = PipeOptions.parseInputArguments(this.aliasFile != null ? new String[] {this.input,  "-alias", this.aliasFile.toString()} :
+            PipeOptions options = PipeOptions.parseInputArguments(this.aliasFile != null ? new String[] {this.input,  "-aliases", this.aliasFile.toString()} :
                     new String[] {this.input});
             CLISessionFactory sessionFactory = new CLISessionFactory(options, "");
             GorSession session = sessionFactory.create();

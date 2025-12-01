@@ -15,6 +15,7 @@ import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.Tuple;
+import org.gorpipe.util.Strings;
 
 import java.io.IOException;
 import java.util.*;
@@ -68,15 +69,19 @@ public class BaseScriptExecutionEngine {
         var split = CommandParseUtilities.quoteSafeSplit(lastCommand.substring(6).trim(), ' ');
         var args = write.validateArguments(split);
         String lastField;
-        if (args.length==0) {
-            var writeFilePath = context.getSession().getProjectContext().getFileCache().tempLocation(queryBlock.signature(), DataType.GORD.suffix);
-            writeFilePath = PathUtils.relativize(context.getSession().getProjectContext().getProjectRoot(), writeFilePath);
-            queryBlock.query_$eq(queryBlock.query() + " " + writeFilePath);
-            lastField = writeFilePath;
+        if (args.length == 0) {
+            if (queryBlock.signature() != null) {
+                var writeFilePath = context.getSession().getProjectContext().getFileCache().tempLocation(queryBlock.signature(), DataType.GORD.suffix);
+                writeFilePath = PathUtils.relativize(context.getSession().getProjectContext().getProjectRoot(), writeFilePath);
+                queryBlock.query_$eq(queryBlock.query() + " " + writeFilePath);
+                lastField = writeFilePath;
+            } else {
+                lastField = null;
+            }
         } else {
             lastField = args[0].trim();
         }
-        return !lastField.startsWith("-") ? resolveForkPathParent(lastField) : Optional.empty();
+        return !Strings.isNullOrEmpty(lastField) && !lastField.startsWith("-")  ? resolveForkPathParent(lastField) : Optional.empty();
     }
 
     public Optional<Tuple<String,Boolean>> getExplicitWrite(GorContext context, ExecutionBlock queryBlock) {

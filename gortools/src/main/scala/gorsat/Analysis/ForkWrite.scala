@@ -30,9 +30,9 @@ import org.apache.commons.lang3.StringUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.driver.linkfile.{LinkFile, LinkFileEntryV1}
-import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.gor.driver.meta.{DataType, SourceReference}
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
-import org.gorpipe.gor.model.{DriverBackedFileReader, GorMeta, GorOptions, Row}
+import org.gorpipe.gor.model.{DriverBackedFileReader, Row}
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.gor.util.DataUtil
@@ -42,6 +42,60 @@ import org.gorpipe.util.Strings
 import java.util.UUID
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+
+/*
+
+NOTES:
+1. Write for pgor is generally forbidden, except when writing gord files.
+2. Explict link file writing is not allowed, link files to given data files are allowed using the -link option.
+
+The GOR write has several different "modes" of operation:
+
+1. Single file write
+   gor ... | write output.gor
+
+   In this mode a single file is created with the name output.gor. If the file already exists it will be overwritten.
+
+2. Forked write with variable in filename
+   gor ... | write -f col output_#{fork}.gor
+
+   In this mode a file is created for each fork value with the fork value replacing the #{fork} variable in the filename.
+
+3. GOR dictionary write
+   pgor ... | write output.gord
+
+   In this mode a GOR dictionary file is created (if it does not already exist) and file for each part is created,
+   using fingerprints for the file names.   Additional gord file, thedict.gord, is creaate within the folder.
+
+4. Forked directory write
+   gor ... | write -f col -d output_dir/
+
+   In this mode a directory is created (if it does not already exist) and a subfolders are created for each fork value.
+
+5. Link file write
+   gor ... | write -link output.link
+
+   In this mode a data file with a unique name is created in the default data location and a link file with the specified name
+   is created pointing to the data file.
+
+Modes that do not work:
+
+6. Directory  write
+   gor ... | write -d output_dir/
+
+   In this mode a directory is created (if it does not already exist) and a file with a unique name is created
+   inside the directory. If the directory already exists the file will be created inside the existing directory.
+
+   This works for gor but is kind of pointless.
+   Does not work for pgor, which could make sense to allow gor write.
+
+ 7. Forked link file write
+   gor ... | write -f col -link output_#{fork}.gor
+
+   In this mode a data file with a unique name is created in the default data location for each fork value and link files with the specified name
+   are created pointing to the data files.
+    This mode is not supported.
+ */
 
 case class OutputOptions(remove: Boolean = false,
                             columnCompress: Boolean = false,
@@ -80,13 +134,14 @@ case class ForkWrite(forkCol: Int,
     if(options.useFolder.nonEmpty) {
       val folder = options.useFolder.get
       ensureDir(projectContext, folder)
-      val fn = if(fullFileName.isEmpty) {
-        val uuid = UUID.randomUUID().toString
-        val ending = folder.substring(folder.lastIndexOf('.'))
-        s"$uuid${if(DataUtil.isGord(folder)) DataType.GORZ.suffix else ending}"
-      } else {
-        fullFileName
-      }
+      val fn = if (fullFileName.isEmpty) {
+                val uuid = UUID.randomUUID().toString
+                val folderEnding = FilenameUtils.getExtension(folder)
+                val ending = if (folderEnding.nonEmpty) "." + folderEnding else (if (options.nor) DataType.NOR.suffix else DataType.GORZ.suffix)
+                s"$uuid${if(DataUtil.isGord(folder)) DataType.GORZ.suffix else ending}"
+              } else {
+                fullFileName
+              }
 
       val dir = if(folder.endsWith("/")) folder else folder + "/"
 
@@ -100,9 +155,23 @@ case class ForkWrite(forkCol: Int,
         fileName = dir + fn
       }
     } else {
-      fileName = fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
+      fileName = if (forkCol >= 0) {
+                    fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
+                  } else {
+                    if (fullFileName.isEmpty && options.linkFile.nonEmpty) {
+                      val (linkFileMeta, linkFileInfo) = extractLinkMetaInfo(options.linkFileMeta)
+                      val linkSourceRef = new SourceReference(options.linkFile, null, projectContext.getFileReader.getCommonRoot, null, null, true);
+                      // Infer the full file name from the link (and defautl locations)
+                      LinkFile.inferDataFileNameFromLinkFile(
+                        projectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource], linkFileMeta);
+                    } else {
+                      fullFileName
+                    }
+                  }
+
       ensureDir(projectContext, fileName, parent = true)
     }
+
     var fileOpen = false
     var headerWritten = false
     var rowBuffer = new ArrayBuffer[Row]
@@ -112,11 +181,11 @@ case class ForkWrite(forkCol: Int,
   def ensureDir(projectContext: ProjectContext, path: String, parent: Boolean = false): Unit = {
     val fileReader = projectContext.getFileReader
     val dir = if (parent) {
-      val parent = PathUtils.getParent(path)
-      if (parent != null) parent else null
-    } else {
-      path
-    }
+                val parent = PathUtils.getParent(path)
+                if (parent != null) parent else null
+              } else {
+                path
+              }
 
     if (dir != null && !fileReader.exists(dir)) {
       fileReader.createDirectories(dir)
@@ -283,7 +352,7 @@ case class ForkWrite(forkCol: Int,
         }
       })
     } else {
-      val (linkFile, linkFileUrl, linkFileMeta, linkFileInfo) = extractLink(fullFileName, options.linkFile, options.linkFileMeta)
+      val (linkFile, linkFileUrl, linkFileMeta, linkFileInfo) = extractLink(singleFileHolder.fileName, options.linkFile, options.linkFileMeta)
 
       if (linkFile.nonEmpty) {
         writeLinkFile(linkFile, linkFileUrl, linkFileMeta, getMd5, linkFileInfo)
@@ -300,23 +369,26 @@ case class ForkWrite(forkCol: Int,
     }
   }
 
-  private def extractLink(fileName: String, optLinkFile: String = "", optLinkFileMeta: String = "") : (String, String, String, String) = {
-    var linkFile = optLinkFile
-    var linkFileContent = ""
-    if (fileName.nonEmpty) {
-      if (linkFile.isEmpty)  {
-        val dataSource = session.getProjectContext.getFileReader.resolveUrl(fileName, true)
-        if (dataSource != null && dataSource.forceLink()) {
-          linkFile = dataSource.getProjectLinkFile
-          linkFileContent = dataSource.getProjectLinkFileContent
-        }
-      } else {
-        linkFileContent = PathUtils.resolve(session.getProjectContext.getProjectRoot, fileName)
+  private def extractLink(source: String, optLinkFile: String = "", optLinkFileMeta: String = "") : (String, String, String, String) = {
+    var linkFile = LinkFile.validateAndUpdateLinkFileName(optLinkFile)
+    var linkFileContent = if (linkFile.nonEmpty) PathUtils.resolve(session.getProjectContext.getProjectRoot, source) else ""
+
+    if (linkFile.isEmpty && source.nonEmpty) {
+      // Check if link file is forced from the source
+      val dataSource = session.getProjectContext.getFileReader.resolveUrl(source, true)
+      if (dataSource != null && dataSource.forceLink()) {
+        linkFile = dataSource.getProjectLinkFile
+        linkFileContent = dataSource.getProjectLinkFileContent
       }
     }
+    val (linkFileMeta, linkFileInfo) = extractLinkMetaInfo(optLinkFileMeta)
+    (linkFile, linkFileContent, linkFileMeta, linkFileInfo)
+  }
 
+  private def extractLinkMetaInfo(optLinkFileMeta: String) : (String, String) = {
     var linkFileMeta = ""
     var linkFileInfo = ""
+
     if (!Strings.isNullOrEmpty(optLinkFileMeta)) {
       for (s <- CommandParseUtilities.quoteSafeSplit(StringUtils.strip(optLinkFileMeta, "\"\'"), ',')) {
         val l = s.trim
@@ -328,21 +400,19 @@ case class ForkWrite(forkCol: Int,
       }
     }
 
-    (linkFile, linkFileContent, linkFileMeta, linkFileInfo)
+    (linkFileMeta, linkFileInfo)
   }
 
   private def writeLinkFile(linkFilePath: String, linkFileContent: String,
                             linkFileMeta: String = "", md5: String = null, linkFileInfo: String = null) : Unit = {
-    val linkFileToWrite = LinkFile.validateAndUpdateLinkFileName(linkFilePath)
-
      // Validate that we can write to the location (skip link extension as writing links is always forbidden).
-    session.getProjectContext.getFileReader.resolveUrl(FilenameUtils.removeExtension(linkFileToWrite), true)
+    session.getProjectContext.getFileReader.resolveUrl(FilenameUtils.removeExtension(linkFilePath), true)
 
     // Use the nonsecure driver file reader as this is an exception from the write no links rule.
     val fileReader = new DriverBackedFileReader(session.getProjectContext.getFileReader.getSecurityContext,
       session.getProjectContext.getProjectRoot, session.getProjectContext.getFileReader.getQueryTime)
 
-    LinkFile.load(fileReader.resolveUrl(linkFileToWrite, true).asInstanceOf[StreamSource])
+    LinkFile.load(fileReader.resolveUrl(linkFilePath, true).asInstanceOf[StreamSource])
       .appendMeta(linkFileMeta)
       .appendEntry(linkFileContent, md5, linkFileInfo, fileReader)
       .save(session.getProjectContext.getFileReader.getQueryTime)
