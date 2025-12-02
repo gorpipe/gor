@@ -10,9 +10,9 @@ import java.io.File;
 
 @SuppressWarnings("squid:S106")
 @CommandLine.Command(name = "git",
-        description = "Wrapper for git commands (clone, checkout, pull, push, commit).",
+        description = "Wrapper for git commands (clone, checkout, pull, push, commit, add, config).",
         header = "Git command wrapper.",
-        subcommands = {GitCloneCommand.class, GitCheckoutCommand.class, GitPullCommand.class, GitPushCommand.class, GitCommitCommand.class})
+        subcommands = {GitCloneCommand.class, GitCheckoutCommand.class, GitPullCommand.class, GitPushCommand.class, GitCommitCommand.class, GitAddCommand.class, GitConfigCommand.class})
 public class GitCommand extends HelpOptions implements Runnable {
 
     @CommandLine.ParentCommand
