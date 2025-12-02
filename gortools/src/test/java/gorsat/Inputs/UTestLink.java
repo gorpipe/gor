@@ -2,6 +2,7 @@ package gorsat.Inputs;
 
 import gorsat.Commands.CommandParseUtilities;
 import gorsat.TestUtils;
+import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.junit.Rule;
@@ -22,20 +23,21 @@ public class UTestLink {
     public void testLinkHelp() throws Exception {
         String res = TestUtils.runGorPipe("exec gor link --help ");
 
-        assertEquals("0", res.split("\n")[1].split("\t")[2]);
-        assertTrue(res.split("\n")[1].split("\t")[3].startsWith("Link file management commands."));
+        assertTrue(res.split("\n")[1].split("\t")[2].startsWith("Link file management commands."));
     }
 
     @Test
     public void testUpdateCreatesLinkFileError() throws Exception {
         Path linkFile = temp.getRoot().toPath().resolve("update_test.gor.link");
 
-        String res = TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " data/file1.gor -xxx ENTRIES_COUNT_MAX=5");
-
+        try {
+            String res = TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " data/file1.gor -xxx ENTRIES_COUNT_MAX=5");
+        } catch (GorParsingException e) {
+            String res = e.getMessage();
+            assertTrue(res.contains("Unknown options: '-xxx', 'ENTRIES_COUNT_MAX=5'"));
+        }
         LinkFile link = LinkFile.load(new FileSource(linkFile));
         assertEquals(0, link.getEntriesCount());
-        assertEquals("2", res.split("\n")[1].split("\t")[2]);
-        assertEquals("Unknown options: '-xxx', 'ENTRIES_COUNT_MAX=5'", res.split("\n")[1].split("\t")[3]);
     }
 
     @Test
@@ -45,7 +47,6 @@ public class UTestLink {
         String res = TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " data/file1.gor -h ENTRIES_COUNT_MAX=5");
 
         LinkFile link = LinkFile.load(new FileSource(linkFile));
-        assertEquals("0", res.split("\n")[1].split("\t")[2]);
         assertEquals(1, link.getEntriesCount());
         assertEquals(resolve(linkFile, "data/file1.gor"), link.getLatestEntryUrl());
         assertEquals(5, link.getEntriesCountMax());
@@ -58,7 +59,6 @@ public class UTestLink {
         String res = TestUtils.runGorPipe("exec gor link update update_test.gor.link data/file1.gor -h ENTRIES_COUNT_MAX=5", temp.getRoot().toPath().toString() , true, "dummy");
 
         LinkFile link = LinkFile.load(new FileSource(linkFile));
-        assertEquals("0", res.split("\n")[1].split("\t")[2]);
         assertEquals(1, link.getEntriesCount());
         assertEquals(resolve(linkFile, "data/file1.gor"), link.getLatestEntryUrl());
         assertEquals(5, link.getEntriesCountMax());
@@ -72,7 +72,6 @@ public class UTestLink {
 
         LinkFile link = LinkFile.load(new FileSource(linkFile));
         var latest = link.getLatestEntry();
-        assertEquals("0", res.split("\n")[1].split("\t")[2]);
         assertEquals("abc123", latest.md5());
         assertEquals("'first entry'", latest.info());
     }
@@ -87,7 +86,6 @@ public class UTestLink {
 
         String res = TestUtils.runGorPipe("exec gor link rollback " + linkFile.toString());
 
-        assertEquals("0", res.split("\n")[1].split("\t")[2]);
         LinkFile link = LinkFile.load(new FileSource(linkFile));
         assertEquals(1, link.getEntriesCount());
         assertEquals(resolve(linkFile, "data/file1.gor"), link.getLatestEntryUrl());
@@ -106,7 +104,6 @@ public class UTestLink {
         String rollbackIso = Instant.ofEpochMilli(firstTimestamp).toString();
         String res = TestUtils.runGorPipe("exec gor link rollback " + linkFile.toString() + " -d " + rollbackIso);
 
-        assertEquals("0", res.split("\n")[1].split("\t")[2]);
         LinkFile link = LinkFile.load(new FileSource(linkFile));
         assertEquals(1, link.getEntriesCount());
         assertEquals(resolve(linkFile, "data/file1.gor"), link.getLatestEntryUrl());
@@ -122,8 +119,7 @@ public class UTestLink {
 
         String res = TestUtils.runGorPipe("exec gor link resolve " + linkFile);
 
-        assertEquals("0", res.split("\n")[1].split("\t")[2]);
-        assertEquals(resolve(linkFile, "data/file2.gor"), res.split("\n")[1].split("\t")[3]);
+        assertEquals(resolve(linkFile, "data/file2.gor"), res.split("\n")[1].split("\t")[2]);
     }
 
     @Test
@@ -138,8 +134,7 @@ public class UTestLink {
 
         String res = TestUtils.runGorPipe("exec gor link resolve " + linkFile.toString() + " -d " + Instant.ofEpochMilli(firstTimestamp).toString());
 
-        assertEquals("0", res.split("\n")[1].split("\t")[2]);
-        assertEquals(resolve(linkFile, "data/file1.gor"), res.split("\n")[1].split("\t")[3]);
+        assertEquals(resolve(linkFile, "data/file1.gor"), res.split("\n")[1].split("\t")[2]);
     }
 
     @Test
@@ -154,8 +149,7 @@ public class UTestLink {
 
         String res = TestUtils.runGorPipe("exec gor link resolve " + linkFile.toString() + " -f");
 
-        assertEquals("0", res.split("\n")[1].split("\t")[2]);
-        assertEquals(expectedEntry.replace('\t', ' '), CommandParseUtilities.quoteSafeSplit(res.split("\n")[1], '\t')[3]);
+        assertEquals(expectedEntry.replace('\t', ' '), CommandParseUtilities.quoteSafeSplit(res.split("\n")[1], '\t')[2]);
     }
 
     private String resolve(Path linkFile, String relative) {

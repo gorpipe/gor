@@ -23,7 +23,8 @@
 package gorsat.InputSources
 
 import gorsat.Commands.{CommandArguments, InputSourceInfo, InputSourceParsingResult}
-import gorsat.Iterators.{RowListIterator}
+import gorsat.Iterators.RowListIterator
+import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.cli.GorExecCLI
 import org.gorpipe.gor.model.{NoValidateRowBase, Row}
 import org.gorpipe.gor.session.GorContext
@@ -92,21 +93,17 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, 10, igno
       std_ps.close()
       err_ps.close()
     }
-    var retArray =  Array("Status\tStdOut\tStdErr")
-    val stdLines = std_baos.toString.stripLineEnd.split("\n")
-    val errLines = err_baos.toString.stripLineEnd.split("\n")
-    if (stdLines.length > errLines.length) {
-      for (i <- stdLines.indices) {
-        val errLine = if (i < errLines.length) errLines(i) else ""
-        retArray :+= exitCode + "\t" + stdLines(i) + "\t" + errLine
-      }
+    if (exitCode != 0) {
+      throw new GorParsingException(s"EXEC command: ${argString} failed with exit code: ${exitCode} and output:\n${std_baos.toString}\n${err_baos.toString}")
+    }
+    var stdLines = std_baos.toString.stripLineEnd.split("\n")
+
+    if (stdLines.size == 0 || !stdLines(0).startsWith("#")) {
+      stdLines = stdLines.prepended("Result")
     } else {
-      for (i <- errLines.indices) {
-        val stdLine = if (i < stdLines.length) stdLines(i) else ""
-        retArray :+= exitCode + "\t" + stdLine + "\t" + errLines(i)
-      }
+      stdLines(0) = stdLines(0).substring(1)
     }
 
-    retArray
+    stdLines
   }
 }
