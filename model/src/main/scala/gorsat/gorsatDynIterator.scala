@@ -58,6 +58,8 @@ def addStartSelector(cmd : String, seekChr : String, seekPos : Int, endPos : Int
     else if (cmd.toLowerCase.startsWith("norrows ")) return cmd
     else if (cmd.toLowerCase.startsWith("sdl ")) return cmd
     else if (cmd.toLowerCase.startsWith("norsql ")) return cmd
+    else if (cmd.toLowerCase.startsWith("meta ")) return cmd
+    else if (cmd.toLowerCase.startsWith("exec ")) return cmd
     var cmd2 = cmd
 
     val lcmd = cmd2.toLowerCase

@@ -84,7 +84,12 @@ object GorPrePipe {
             || pipeSteps(0).toUpperCase.trim.startsWith("GORIF")
             || pipeSteps(0).toUpperCase.trim.startsWith("NORIF")
             || pipeSteps(0).toUpperCase.trim.startsWith("SPARK")
-            || pipeSteps(0).toUpperCase.trim.startsWith("SELECT")))
+            || pipeSteps(0).toUpperCase.trim.startsWith("SELECT")
+            || pipeSteps(0).toUpperCase.trim.startsWith("META")
+            || pipeSteps(0).toUpperCase.trim.startsWith("EXEC")
+            || pipeSteps(0).toUpperCase.trim.startsWith("NORROWS")
+            || pipeSteps(0).toUpperCase.trim.startsWith("GORROWS")
+            ))
           "GOR " + pipeSteps(i).trim
         else
           pipeSteps(i).trim

@@ -98,12 +98,12 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, 10, igno
     if (stdLines.length > errLines.length) {
       for (i <- stdLines.indices) {
         val errLine = if (i < errLines.length) errLines(i) else ""
-        retArray :+= exitCode + "\t" + stdLines(i) + "\t\"" + errLine + "\""
+        retArray :+= exitCode + "\t" + stdLines(i) + "\t" + errLine
       }
     } else {
       for (i <- errLines.indices) {
         val stdLine = if (i < stdLines.length) stdLines(i) else ""
-        retArray :+= exitCode + "\t" + stdLine + "\t" + errLines(i) + "\""
+        retArray :+= exitCode + "\t" + stdLine + "\t" + errLines(i)
       }
     }
 
