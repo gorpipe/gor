@@ -40,7 +40,7 @@ public class LinkResolveCommand implements Runnable {
             }
             String output;
             if (returnFullEntry) {
-                output = entry.format();
+                output = entry.format().replace('\t', ' ');
             } else {
                 var resolved = linkFile.getEntryUrl(timestamp);
                 if (Strings.isNullOrEmpty(resolved)) {

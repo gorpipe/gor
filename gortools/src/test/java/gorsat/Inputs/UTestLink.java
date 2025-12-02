@@ -23,7 +23,7 @@ public class UTestLink {
         String res = TestUtils.runGorPipe("exec gor link --help ");
 
         assertEquals("0", res.split("\n")[1].split("\t")[2]);
-        assertTrue(res.split("\n")[1].split("\t")[3].startsWith("\"Link file management commands."));
+        assertTrue(res.split("\n")[1].split("\t")[3].startsWith("Link file management commands."));
     }
 
     @Test
@@ -35,7 +35,7 @@ public class UTestLink {
         LinkFile link = LinkFile.load(new FileSource(linkFile));
         assertEquals(0, link.getEntriesCount());
         assertEquals("2", res.split("\n")[1].split("\t")[2]);
-        assertEquals("\"Unknown options: '-xxx', 'ENTRIES_COUNT_MAX=5'", res.split("\n")[1].split("\t")[3]);
+        assertEquals("Unknown options: '-xxx', 'ENTRIES_COUNT_MAX=5'", res.split("\n")[1].split("\t")[3]);
     }
 
     @Test
@@ -123,7 +123,7 @@ public class UTestLink {
         String res = TestUtils.runGorPipe("exec gor link resolve " + linkFile);
 
         assertEquals("0", res.split("\n")[1].split("\t")[2]);
-        assertEquals("\"" + resolve(linkFile, "data/file2.gor") + "\"", res.split("\n")[1].split("\t")[3]);
+        assertEquals(resolve(linkFile, "data/file2.gor"), res.split("\n")[1].split("\t")[3]);
     }
 
     @Test
@@ -139,7 +139,7 @@ public class UTestLink {
         String res = TestUtils.runGorPipe("exec gor link resolve " + linkFile.toString() + " -d " + Instant.ofEpochMilli(firstTimestamp).toString());
 
         assertEquals("0", res.split("\n")[1].split("\t")[2]);
-        assertEquals("\"" + resolve(linkFile, "data/file1.gor") + "\"", res.split("\n")[1].split("\t")[3]);
+        assertEquals(resolve(linkFile, "data/file1.gor"), res.split("\n")[1].split("\t")[3]);
     }
 
     @Test
@@ -155,7 +155,7 @@ public class UTestLink {
         String res = TestUtils.runGorPipe("exec gor link resolve " + linkFile.toString() + " -f");
 
         assertEquals("0", res.split("\n")[1].split("\t")[2]);
-        assertEquals("\"" + expectedEntry + "\"", CommandParseUtilities.quoteSafeSplit(res.split("\n")[1], '\t')[3]);
+        assertEquals(expectedEntry.replace('\t', ' '), CommandParseUtilities.quoteSafeSplit(res.split("\n")[1], '\t')[3]);
     }
 
     private String resolve(Path linkFile, String relative) {
