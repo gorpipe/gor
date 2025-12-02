@@ -25,8 +25,6 @@ package org.gorpipe.gor.cli.manager;
 import org.gorpipe.gor.manager.TableManager;
 import picocli.CommandLine;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;

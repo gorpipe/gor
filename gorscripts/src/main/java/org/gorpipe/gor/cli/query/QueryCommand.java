@@ -63,9 +63,6 @@ public class QueryCommand extends HelpOptions implements Runnable{
     @CommandLine.Option(names={"-d","--cachedir"}, description = "Path to cache directory for the current gor query.")
     private Path cacheDir = Paths.get(ProjectContext.DEFAULT_CACHE_DIR);
 
-    @CommandLine.Option(defaultValue = "", names={"-p","--projectroot"}, description = "Sets the project root for the current gor query.")
-    private Path projectRoot;
-
     @CommandLine.Option(names={"-r","--requestid"}, description = "Sets a request id for the current gor query, used to identify logs and errors.")
     private String requestId = UUID.randomUUID().toString();
 
@@ -117,7 +114,9 @@ public class QueryCommand extends HelpOptions implements Runnable{
             // Initialize database connections
             DbConnection.initInConsoleApp();
 
-            GorExecutionEngine executionEngine = new CLIGorExecutionEngine(commandlineOptions, null, null);
+            var securityContext = System.getProperty("gor.security.context");
+
+            GorExecutionEngine executionEngine = new CLIGorExecutionEngine(commandlineOptions, null, securityContext);
             executionEngine.execute();
         } catch (GorException ge) {
             consoleLogger.error(ExceptionUtilities.gorExceptionToString(ge));

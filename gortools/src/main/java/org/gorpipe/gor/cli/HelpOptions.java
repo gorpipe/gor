@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.cli;
 
+import org.gorpipe.gor.cli.FormattingOptions;
 import picocli.CommandLine;
 
 public class HelpOptions extends FormattingOptions {

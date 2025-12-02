@@ -228,10 +228,10 @@ public class UTestGorCliManager {
         Path dictFile = workDirPath.resolve(name + ".gord");
 
         //Insert 4 files with tags
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "A", dictFile.toString(), testFiles[0]});
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "B", dictFile.toString(), testFiles[1]});
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "C", dictFile.toString(), testFiles[2]});
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "D", dictFile.toString(), testFiles[3]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "A", dictFile.toString(), testFiles[0]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "B", dictFile.toString(), testFiles[1]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "C", dictFile.toString(), testFiles[2]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "D", dictFile.toString(), testFiles[3]});
 
         TableManager man = new TableManager();
         DictionaryTable<GorDictionaryEntry> table = man.initTable(dictFile);
@@ -242,14 +242,14 @@ public class UTestGorCliManager {
 
         //Insert file 1 again but tag it the same as file 4 using the letter "D".
         //Using the --tagskey flag prevents the same tag to be used twice but instead the new line overwrites the old one.
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "D", "--tagskey", dictFile.toString(), testFiles[0]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "D", "--tagskey", dictFile.toString(), testFiles[0]});
         table.reload();
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[0] + "\tD\n" + testFiles[1] + "\tB\n" + testFiles[2] + "\tC\n", result);
 
         //Insert file 1 once again and tag it the same as file 2 using the letter "B"
         //This should be successful since the --tagskey option is not being used. There should now be two files tagged with "B".
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "B", dictFile.toString(), testFiles[0]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "B", dictFile.toString(), testFiles[0]});
         table.reload();
         //Total count of tags
         Assert.assertEquals(5, table.filter().get().stream().map(l -> l.getFilterTags()).distinct().count());
@@ -266,9 +266,9 @@ public class UTestGorCliManager {
         }
 
         //Delete "B" so now there is only one remaining line with the same tag and it should be possible again to update the single existing line.
-        GorCLI.main(new String[]{"manager", "delete", "--aliases", "B", dictFile.toString(), testFiles[1]});
+        GorExecCLI.main(new String[]{"manager", "delete", "--aliases", "B", dictFile.toString(), testFiles[1]});
         //Insert tag "B" again which should update the current "B" tagged line with this entry.
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "B", "--tagskey", dictFile.toString(), testFiles[3]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "B", "--tagskey", dictFile.toString(), testFiles[3]});
         table.reload();
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[0] + "\tD\n" + testFiles[2] + "\tC\n" + testFiles[3] + "\tB\n", result);
@@ -283,21 +283,21 @@ public class UTestGorCliManager {
         DictionaryTable<GorDictionaryEntry> table = man.initTable(dictFile);
 
         //Check matching list of tags. If the same set of tags can be found it is replaced by the new line of tags.
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "A", "--tags", "GO,RC,OR", "--tagskey", dictFile.toString(), testFiles[0]});
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "A", "--tags", "GO,RC,OR", "--tagskey", dictFile.toString(), testFiles[1]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "A", "--tags", "GO,RC,OR", "--tagskey", dictFile.toString(), testFiles[0]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "A", "--tags", "GO,RC,OR", "--tagskey", dictFile.toString(), testFiles[1]});
         table.reload();
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[1] + "\t\t\t\t\t\tGO,RC,OR,A\n", result);
 
         //Check a single tag against a list of tags to confirm that it is not enough to match a single tag in the list but the whole list must match.
-        GorCLI.main(new String[]{"manager", "insert", "--tags", "GO", "--tagskey", dictFile.toString(), testFiles[1]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--tags", "GO", "--tagskey", dictFile.toString(), testFiles[1]});
         table.reload();
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[1] + "\t\t\t\t\t\tGO,RC,OR,A\n" + testFiles[1] + "\tGO\n", result);
 
         //Confirm the other flags such as range are ignored with the --tagskey flag. The second line "updates" the first line with range being ignored and tags only being used as an identifier.
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "B", "--tags", "GO,RC,OR", "--tagskey", "--range","chr1-chr3", dictFile.toString(), testFiles[2]});
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "B", "--tags", "GO,RC,OR", "--tagskey", dictFile.toString(), testFiles[3]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "B", "--tags", "GO,RC,OR", "--tagskey", "--range","chr1-chr3", dictFile.toString(), testFiles[2]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "B", "--tags", "GO,RC,OR", "--tagskey", dictFile.toString(), testFiles[3]});
         result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         table.reload();
         Assert.assertEquals("Insert failed", testFiles[1] + "\t\t\t\t\t\tGO,RC,OR,A\n" + testFiles[1] + "\tGO\n" + testFiles[3] + "\t\t\t\t\t\tGO,RC,OR,B\n", result);
@@ -308,9 +308,9 @@ public class UTestGorCliManager {
         String name = "testDirectCLI";
         Path dictFile = workDirPath.resolve(name + ".gord");
 
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "A", dictFile.toString(), testFiles[0]});
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "B", dictFile.toString(), testFiles[1]});
-        GorCLI.main(new String[]{"manager", "insert", "--alias", "D", dictFile.toString(), testFiles[3]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "A", dictFile.toString(), testFiles[0]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "B", dictFile.toString(), testFiles[1]});
+        GorExecCLI.main(new String[]{"manager", "insert", "--alias", "D", dictFile.toString(), testFiles[3]});
 
         TableManager man = new TableManager();
         DictionaryTable<GorDictionaryEntry> table = man.initTable(dictFile);
@@ -318,12 +318,12 @@ public class UTestGorCliManager {
         String result = table.selectUninon(table.filter()).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Insert failed", testFiles[0] + "\tA\n" + testFiles[1] + "\tB\n" + testFiles[3] + "\tD\n", result);
 
-        GorCLI.main(new String[]{"manager", "delete", "--tags", "B", dictFile.toString()});
+        GorExecCLI.main(new String[]{"manager", "delete", "--tags", "B", dictFile.toString()});
         table.reload();
         result = table.selectUninon(table.filter().tags("B")).stream().map(l -> l.formatEntry()).sorted().collect(Collectors.joining());
         Assert.assertEquals("Delete failed", "", result);
 
-        GorCLI.main(new String[]{"manager", "bucketize", "-w", "1", "--min_bucket_size", "1", dictFile.toString()});
+        GorExecCLI.main(new String[]{"manager", "bucketize", "-w", "1", "--min_bucket_size", "1", dictFile.toString()});
         table.reload();
         Assert.assertEquals("Not all lines bucketized", 0, table.needsBucketizing().size());
     }

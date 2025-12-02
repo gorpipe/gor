@@ -26,8 +26,6 @@ import org.gorpipe.gor.manager.BucketManager;
 import org.gorpipe.gor.manager.TableManager;
 import picocli.CommandLine;
 
-import java.net.URI;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;

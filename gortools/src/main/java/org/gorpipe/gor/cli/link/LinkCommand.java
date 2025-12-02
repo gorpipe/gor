@@ -1,5 +1,6 @@
 package org.gorpipe.gor.cli.link;
 
+import org.gorpipe.gor.cli.GorExecCLI;
 import org.gorpipe.gor.cli.HelpOptions;
 import picocli.CommandLine;
 
@@ -10,8 +11,19 @@ import picocli.CommandLine;
         subcommands = {LinkUpdateCommand.class, LinkRollbackCommand.class, LinkResolveCommand.class})
 public class LinkCommand extends HelpOptions implements Runnable {
 
+    @CommandLine.ParentCommand
+    private GorExecCLI gorExecCLI;
+
     @Override
     public void run() {
         CommandLine.usage(this, System.err);
+    }
+
+    public String getSecurityContext() {
+        return gorExecCLI.getSecurityContext();
+    }
+
+    public String getProjectRoot() {
+        return gorExecCLI.getProjectRoot();
     }
 }

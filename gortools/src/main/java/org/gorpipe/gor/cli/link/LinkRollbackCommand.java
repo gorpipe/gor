@@ -1,12 +1,12 @@
 package org.gorpipe.gor.cli.link;
 
-import java.io.IOException;
-import java.time.Instant;
-
+import org.gorpipe.gor.cli.GorExecCLI;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.util.DateUtils;
-
 import picocli.CommandLine;
+
+import java.io.IOException;
+import java.time.Instant;
 
 @CommandLine.Command(name = "rollback",
         description = "Rollback the latest entry or rollback entries newer than a given date.")
@@ -19,11 +19,14 @@ public class LinkRollbackCommand implements Runnable {
             description = "ISO-8601 date/time or epoch milliseconds to rollback to (entries newer than this are removed).")
     private String rollbackDate;
 
+    @CommandLine.ParentCommand
+    private LinkCommand mainCmd;
+
     @Override
     public void run() {
         var normalizedLinkPath = LinkFile.validateAndUpdateLinkFileName(linkFilePath);
         try {
-            var linkFile = LinkFile.load(LinkStreamSourceProvider.resolve(normalizedLinkPath, true, this));
+            var linkFile = LinkFile.load(LinkStreamSourceProvider.resolve(normalizedLinkPath, mainCmd.getSecurityContext(), mainCmd.getProjectRoot(),  true, this));
             boolean changed = rollbackDate == null ? linkFile.rollbackLatestEntry() : linkFile.rollbackToTimestamp(parseDate(rollbackDate));
             if (!changed) {
                 throw new CommandLine.ParameterException(new CommandLine(this),
