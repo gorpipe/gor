@@ -12,7 +12,7 @@ import picocli.CommandLine;
 public class LinkCommand extends HelpOptions implements Runnable {
 
     @CommandLine.ParentCommand
-    private GorExecCLI gorExecCLI;
+    private GorExecCLI parentCommand;
 
     @Override
     public void run() {
@@ -20,10 +20,10 @@ public class LinkCommand extends HelpOptions implements Runnable {
     }
 
     public String getSecurityContext() {
-        return gorExecCLI.getSecurityContext();
+        return parentCommand.getSecurityContext();
     }
 
     public String getProjectRoot() {
-        return gorExecCLI.getProjectRoot();
+        return parentCommand.getProjectRoot();
     }
 }

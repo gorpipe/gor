@@ -38,24 +38,17 @@ import picocli.CommandLine;
 @CommandLine.Command(name="gor",
         version="version 1.0",
         description = "Command line interface for gor query language and processes.",
-        subcommands = {QueryCommand.class, HelpCommand.class, ManagerCommand.class, IndexCommand.class,
-                CacheCommand.class, RenderCommand.class, InfoCommand.class, FolderMigratorCommand.class,
-                LinkCommand.class})
+        subcommands = {QueryCommand.class, FolderMigratorCommand.class})
 public class GorCLI extends GorExecCLI implements Runnable {
     public static void main(String[] args) {
         GorLogbackUtil.initLog("gor");
-        CommandLine cmd = new CommandLine(new GorExecCLI());
+        CommandLine cmd = new CommandLine(new GorCLI());
         cmd.parseWithHandlers(
                 new CommandLine.RunLast(),
                 CommandLine.defaultExceptionHandler().andExit(-1),
                 args);
 
     }
-
-    @CommandLine.Option(names = {"-v", "--version"},
-            versionHelp = true,
-            description = "Print version information and exits.")
-    boolean versionHelpRequested;
 
     @Override
     public void run() {

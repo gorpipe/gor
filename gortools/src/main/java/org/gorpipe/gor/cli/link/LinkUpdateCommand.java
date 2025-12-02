@@ -1,6 +1,5 @@
 package org.gorpipe.gor.cli.link;
 
-import org.gorpipe.gor.cli.GorExecCLI;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.util.Strings;
 import picocli.CommandLine;

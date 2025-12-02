@@ -22,17 +22,15 @@
 
 package gorsat.InputSources
 
-import gorsat.Commands.{CommandArguments, CommandParseUtilities, InputSourceInfo, InputSourceParsingResult}
-import gorsat.Iterators.{CountingNorRowIterator, RowListIterator}
+import gorsat.Commands.{CommandArguments, InputSourceInfo, InputSourceParsingResult}
+import gorsat.Iterators.{RowListIterator}
 import org.gorpipe.gor.cli.GorExecCLI
-import org.gorpipe.gor.cli.link.LinkUpdateCommand
-import org.gorpipe.gor.model.{GorCommand, NoValidateRowBase, Row}
+import org.gorpipe.gor.model.{NoValidateRowBase, Row}
 import org.gorpipe.gor.session.GorContext
 import picocli.CommandLine
 
-import java.io.{ByteArrayOutputStream, PrintStream, PrintWriter}
+import java.io.{ByteArrayOutputStream, PrintStream}
 import scala.collection.mutable.ListBuffer
-import scala.util.Using
 
 /**
  * Execute selected gor <command> commands in NOR context.
