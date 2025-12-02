@@ -36,7 +36,7 @@ public class GitCommand extends HelpOptions implements Runnable {
             return repository;
         }
         String user = System.getenv("GOR_GIT_USER");
-        String pass = System.getenv("GOR_GIT_PASS");
+        String pass = System.getenv("GOR_GIT_TOKEN");
         if (user != null && pass != null) {
             var userPass = "%s:%s@".formatted(user, pass);
             return "https://%sgithub.com/GeneDx/%s.git".formatted(userPass, repository);

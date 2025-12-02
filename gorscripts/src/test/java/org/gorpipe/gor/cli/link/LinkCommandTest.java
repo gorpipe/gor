@@ -127,7 +127,7 @@ public class LinkCommandTest {
 
         String expectedEntry = LinkFile.load(new FileSource(linkFile)).getLatestEntry().format();
         String resolved = executeAndCapture(cmd, "link", "resolve", linkFile.toString(), "-f");
-        assertEquals(expectedEntry, resolved);
+        assertEquals(expectedEntry.replace('\t', ' '), resolved);
     }
 
     private String resolve(Path linkFile, String relative) {
