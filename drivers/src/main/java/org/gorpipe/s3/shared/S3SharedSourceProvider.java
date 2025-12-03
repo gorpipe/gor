@@ -106,7 +106,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
 
         String project = Path.of(sourceReference.getCommonRoot()).getFileName().toString();
         String bucket = sharedCreds.getLookupKey();
-        String s3SecurityContext = createS3SecurityContext(sharedCreds);
+        String s3SecurityContext = createS3Credentials(sharedCreds).addToSecurityContext(sourceReference.getSecurityContext());
         String relativePath = getRelativePath(sourceReference.getUrl());
 
         SourceReference s3SourceReference = createS3SourceReference(sourceReference, project, bucket, s3SecurityContext);
@@ -159,14 +159,18 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         return bestMatch;
     }
 
-    private String createS3SecurityContext(Credentials sharedCreds) {
-        BundledCredentials bundledCredentials = new BundledCredentials.Builder().addCredentials(
+    /**
+     * Creates a security context that add credentials for s3 direct access (based on the s3data creds)
+     * @param sharedCreds incoming shared credentials
+     * @return shared credentials with s3 creds added
+     */
+    private BundledCredentials createS3Credentials(Credentials sharedCreds) {
+        BundledCredentials.Builder builder = new BundledCredentials.Builder().addCredentials(
                         new Credentials("s3", sharedCreds.getLookupKey(), sharedCreds.getOwnerType(),
                                 sharedCreds.getOwnerId(), sharedCreds.expires(), sharedCreds.isUserDefault(),
-                                (Map<String, String>) sharedCreds.toMap().get("credential_attributes")))
-                .build();
-        String securityContext = bundledCredentials.addToSecurityContext("");
-        return securityContext;
+                                (Map<String, String>) sharedCreds.toMap().get("credential_attributes")));
+
+        return builder.build();
     }
 
     private SourceReference createS3SourceReference(SourceReference sourceReference, String project, String bucket, String securityContext) {
