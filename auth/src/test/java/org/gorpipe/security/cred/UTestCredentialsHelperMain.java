@@ -30,25 +30,40 @@ public class UTestCredentialsHelperMain {
 
 
     @Test
-    public void testForUserOption() {
+    public void testForUserIdOption() {
         List<String> unparsed = new ArrayList<>();
         CredentialsHelperMain.Options options;
 
-        options = CredentialsHelperMain.Options.parse( new String[]{"--for-user", "123"}, unparsed);
-        Assert.assertEquals("123", options.forUser);
+        options = CredentialsHelperMain.Options.parse( new String[]{"--for-userId", "123"}, unparsed);
+        Assert.assertEquals("123", options.forUserId);
 
-        options = CredentialsHelperMain.Options.parse( new String[]{"--for-user", "abc"}, unparsed);
-        Assert.assertEquals("abc", options.forUser);
+        options = CredentialsHelperMain.Options.parse( new String[]{"--for-userId", "abc"}, unparsed);
+        Assert.assertEquals("abc", options.forUserId);
 
         options = CredentialsHelperMain.Options.parse( new String[]{}, unparsed);
-        Assert.assertEquals(null, options.forUser);
+        Assert.assertEquals(null, options.forUserId);
     }
 
     @Test
-    public void testInvalidForUserOption() {
+    public void testForUserNameOption() {
+        List<String> unparsed = new ArrayList<>();
+        CredentialsHelperMain.Options options;
+
+        options = CredentialsHelperMain.Options.parse( new String[]{"--for-userName", "123"}, unparsed);
+        Assert.assertEquals("123", options.forUserName);
+
+        options = CredentialsHelperMain.Options.parse( new String[]{"--for-userName", "abc"}, unparsed);
+        Assert.assertEquals("abc", options.forUserName);
+
+        options = CredentialsHelperMain.Options.parse( new String[]{}, unparsed);
+        Assert.assertEquals(null, options.forUserName);
+    }
+
+    @Test
+    public void testInvalidForUserIdOption() {
         List<String> unparsed = new ArrayList<>();
         exit.expectSystemExitWithStatus(-1);
-        CredentialsHelperMain.Options.parse(new String[]{"--for-user"}, unparsed);
+        CredentialsHelperMain.Options.parse(new String[]{"--for-userId"}, unparsed);
     }
 
     @Test

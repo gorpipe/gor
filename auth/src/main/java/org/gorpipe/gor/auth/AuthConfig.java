@@ -49,7 +49,7 @@ public interface AuthConfig extends Config {
 
     @Documentation("")
     @Key(PLATFORM_USER_KEY)
-    @DefaultValue("email")
+    @DefaultValue("preferred_username")
     String getPlatformUserKey();
 
     String UPDATE_AUTH_INFO_POLICY = "UPDATE_AUTH_INFO_POLICY";

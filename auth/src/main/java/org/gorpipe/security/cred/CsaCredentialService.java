@@ -62,7 +62,7 @@ public class CsaCredentialService extends CsaBaseService {
         try {
             return credentialsCache.get(key, (k) -> {
                 try {
-                    return getCredentialsBundle(projectName, userId);
+                    return getCredentialsBundle(projectName, userName, userId);
                 } catch (IOException e) {
                     throw new UncheckedExecutionException(e);
                 }
@@ -72,11 +72,11 @@ public class CsaCredentialService extends CsaBaseService {
         }
     }
 
-    private BundledCredentials getCredentialsBundle(String projectName, String userId) throws IOException {
-        return getCredentialsBundle(projectName, userId, null, null);
+    private BundledCredentials getCredentialsBundle(String projectName, String userName, String userId) throws IOException {
+        return getCredentialsBundle(projectName, userName, userId, null, null);
     }
 
-    public BundledCredentials getCredentialsBundle(String projectName, String userId, String service, String lookupKey) throws IOException {
+    public BundledCredentials getCredentialsBundle(String projectName, String userName, String userId, String service, String lookupKey) throws IOException {
         log.debug("get credentials for project: {}, user {}", projectName, userId);
         if (!isConfigured()) {
             log.info("No configuration - returning empty credentials list");
@@ -84,6 +84,9 @@ public class CsaCredentialService extends CsaBaseService {
         }
         initAuth();
         String parms = String.format("find[project_key]=%s", projectName);
+        if (!Strings.isNullOrEmpty(userName)) {
+            parms = parms + String.format("&find[preferred_username]=%s", userName);
+        }
         if (!Strings.isNullOrEmpty(userId)) {
             parms = parms + String.format("&find[user_id]=%s", userId);
         }
