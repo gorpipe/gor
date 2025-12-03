@@ -15,7 +15,8 @@ import java.util.List;
 public class CredentialsHelperMain {
     static class Options {
         public String forProject;
-        public String forUser;
+        public String forUsername;
+        public String forUserid;
         public String forService;
         public String lookupKey;
         public boolean base64;
@@ -90,9 +91,10 @@ public class CredentialsHelperMain {
         public static void help(String message) {
             if (message != null) System.err.println(message);
             System.err.println(
-                    "\nUsage: cred_helper --for-project projectName [--for-user userId] [--for-service service] [--lookup-key lookupKey] [--base64 | --sec] [--api-url apiUrl] [--api-user apiUser] [--api-password apiPassword] \n\n" +
+                    "\nUsage: cred_helper --for-project projectName [--for-userName userName] [--for-userId userId] [--for-service service] [--lookup-key lookupKey] [--base64 | --sec] [--api-url apiUrl] [--api-user apiUser] [--api-password apiPassword] \n\n" +
                             "Fetches credentials from credentials service and prints (default as json object)\n" +
                             "projectName: internal project name of project to query\n" +
+                            "userName: internal user name\n" +
                             "userId: id (numeric) of user to get credentials for\n" +
                             "service: restrict to service (e.g. dx or s3)\n" +
                             "lookupKey: provide a lookup key (e.g. bucket or dna nexus project id)\n" +
@@ -143,7 +145,7 @@ public class CredentialsHelperMain {
             }
         };
         CsaCredentialService service = new CsaCredentialService(config, null, new CredentialsParser(), null);
-        BundledCredentials bundle = service.getCredentialsBundle(options.forProject, options.forUser, options.forService, options.lookupKey);
+        BundledCredentials bundle = service.getCredentialsBundle(options.forProject, options.forUsername, options.forUserid, options.forService, options.lookupKey);
         if (options.sec) {
             System.out.println("cred_bundle=" + bundle.toBase64String());
         } else if (options.base64) {
