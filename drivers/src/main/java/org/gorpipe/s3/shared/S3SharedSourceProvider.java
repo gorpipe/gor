@@ -97,18 +97,19 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
 
         S3SharedSource source = null;
 
-        Credentials sharedCreds = getS3DataCredentials(getService(), sourceReference.getSecurityContext());
+        BundledCredentials bundledCreds = BundledCredentials.fromSecurityContext(sourceReference.securityContext);
+        Credentials sharedCreds = getS3DataCredentials(getService(), bundledCreds );
 
         if (sharedCreds == null) {
             log.warn(String.format("No credentials found for %s. Returning emtpy source.", getService()));
             return source;
         }
 
-        String project = Path.of(sourceReference.getCommonRoot()).getFileName().toString();
-        String bucket = sharedCreds.getLookupKey();
-        String s3SecurityContext = createS3Credentials(sharedCreds).addToSecurityContext(sourceReference.getSecurityContext());
+        String s3SecurityContext = createSecurityContext(createS3CredsFromShared(sharedCreds), bundledCreds);
         String relativePath = getRelativePath(sourceReference.getUrl());
 
+        String project = Path.of(sourceReference.getCommonRoot()).getFileName().toString();
+        String bucket = sharedCreds.getLookupKey();
         SourceReference s3SourceReference = createS3SourceReference(sourceReference, project, bucket, s3SecurityContext);
 
         S3Client client = getClient(s3SecurityContext, bucket);
@@ -135,8 +136,7 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         }
     }
 
-    private Credentials getS3DataCredentials(String service, String securityContext) {
-        BundledCredentials bundledCreds = BundledCredentials.fromSecurityContext(securityContext);
+    private Credentials getS3DataCredentials(String service, BundledCredentials bundledCreds) {
         List<Credentials> credsList = bundledCreds.getCredentialsForService(service);
         return getHighestPriorityCredential(credsList, service);
     }
@@ -159,18 +159,21 @@ public abstract class S3SharedSourceProvider extends S3SourceProvider {
         return bestMatch;
     }
 
-    /**
-     * Creates a security context that add credentials for s3 direct access (based on the s3data creds)
-     * @param sharedCreds incoming shared credentials
-     * @return shared credentials with s3 creds added
-     */
-    private BundledCredentials createS3Credentials(Credentials sharedCreds) {
-        BundledCredentials.Builder builder = new BundledCredentials.Builder().addCredentials(
-                        new Credentials("s3", sharedCreds.getLookupKey(), sharedCreds.getOwnerType(),
-                                sharedCreds.getOwnerId(), sharedCreds.expires(), sharedCreds.isUserDefault(),
-                                (Map<String, String>) sharedCreds.toMap().get("credential_attributes")));
+    private String createSecurityContext(Credentials s3Creds, BundledCredentials bundledCreds) {
+        BundledCredentials.Builder builder = new BundledCredentials.Builder().addCredentials(s3Creds);
+        for (String services : bundledCreds.services()) {
+            for (Credentials cred : bundledCreds.getCredentialsForService(services)) {
+                builder.addCredentials(cred);
+            }
+        }
 
-        return builder.build();
+        return builder.build().addToSecurityContext("");
+    }
+
+    private Credentials createS3CredsFromShared(Credentials sharedCreds) {
+        return new Credentials("s3", sharedCreds.getLookupKey(), sharedCreds.getOwnerType(),
+                sharedCreds.getOwnerId(), sharedCreds.expires(), sharedCreds.isUserDefault(),
+                (Map<String, String>) sharedCreds.toMap().get("credential_attributes"));
     }
 
     private SourceReference createS3SourceReference(SourceReference sourceReference, String project, String bucket, String securityContext) {
