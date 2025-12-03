@@ -15,8 +15,8 @@ import java.util.List;
 public class CredentialsHelperMain {
     static class Options {
         public String forProject;
-        public String forUserName;
-        public String forUserId;
+        public String forUsername;
+        public String forUserid;
         public String forService;
         public String lookupKey;
         public boolean base64;
@@ -145,7 +145,7 @@ public class CredentialsHelperMain {
             }
         };
         CsaCredentialService service = new CsaCredentialService(config, null, new CredentialsParser(), null);
-        BundledCredentials bundle = service.getCredentialsBundle(options.forProject, options.forUserName, options.forUserId, options.forService, options.lookupKey);
+        BundledCredentials bundle = service.getCredentialsBundle(options.forProject, options.forUsername, options.forUserid, options.forService, options.lookupKey);
         if (options.sec) {
             System.out.println("cred_bundle=" + bundle.toBase64String());
         } else if (options.base64) {

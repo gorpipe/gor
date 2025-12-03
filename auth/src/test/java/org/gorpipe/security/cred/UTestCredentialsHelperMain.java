@@ -35,13 +35,13 @@ public class UTestCredentialsHelperMain {
         CredentialsHelperMain.Options options;
 
         options = CredentialsHelperMain.Options.parse( new String[]{"--for-userId", "123"}, unparsed);
-        Assert.assertEquals("123", options.forUserId);
+        Assert.assertEquals("123", options.forUserid);
 
         options = CredentialsHelperMain.Options.parse( new String[]{"--for-userId", "abc"}, unparsed);
-        Assert.assertEquals("abc", options.forUserId);
+        Assert.assertEquals("abc", options.forUserid);
 
         options = CredentialsHelperMain.Options.parse( new String[]{}, unparsed);
-        Assert.assertEquals(null, options.forUserId);
+        Assert.assertEquals(null, options.forUserid);
     }
 
     @Test
@@ -50,13 +50,13 @@ public class UTestCredentialsHelperMain {
         CredentialsHelperMain.Options options;
 
         options = CredentialsHelperMain.Options.parse( new String[]{"--for-userName", "123"}, unparsed);
-        Assert.assertEquals("123", options.forUserName);
+        Assert.assertEquals("123", options.forUsername);
 
         options = CredentialsHelperMain.Options.parse( new String[]{"--for-userName", "abc"}, unparsed);
-        Assert.assertEquals("abc", options.forUserName);
+        Assert.assertEquals("abc", options.forUsername);
 
         options = CredentialsHelperMain.Options.parse( new String[]{}, unparsed);
-        Assert.assertEquals(null, options.forUserName);
+        Assert.assertEquals(null, options.forUsername);
     }
 
     @Test
