@@ -58,6 +58,9 @@ project(':gortools') {
         implementation 'org.apache.parquet:parquet-column:_'
         implementation 'org.apache.parquet:parquet-hadoop:_'
         implementation ('org.apache.hadoop:hadoop-common:_')
+        implementation "info.picocli:picocli:_"
+        implementation "info.picocli:picocli-shell-jline3:_"
+        implementation "org.reflections:reflections:_"
 
         runtimeOnly project(':drivers')
 

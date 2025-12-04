@@ -28,6 +28,8 @@ import gorsat.process.GorExecutionEngine;
 import gorsat.process.PipeOptions;
 import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.exceptions.GorException;
+import org.gorpipe.gor.cli.GorCLI;
+import org.gorpipe.gor.cli.GorExecCLI;
 import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.model.DbConnection;
 import org.gorpipe.gor.session.ProjectContext;
@@ -63,9 +65,6 @@ public class QueryCommand extends HelpOptions implements Runnable{
     @CommandLine.Option(names={"-d","--cachedir"}, description = "Path to cache directory for the current gor query.")
     private Path cacheDir = Paths.get(ProjectContext.DEFAULT_CACHE_DIR);
 
-    @CommandLine.Option(defaultValue = "", names={"-p","--projectroot"}, description = "Sets the project root for the current gor query.")
-    private Path projectRoot;
-
     @CommandLine.Option(names={"-r","--requestid"}, description = "Sets a request id for the current gor query, used to identify logs and errors.")
     private String requestId = UUID.randomUUID().toString();
 
@@ -81,6 +80,9 @@ public class QueryCommand extends HelpOptions implements Runnable{
     @CommandLine.Parameters(index = "0", arity = "1", paramLabel = "InputQuery", description = "Queries to execute. Queries can be direct gor query, files containing gor script or gor report template.")
     private String query;
 
+    @CommandLine.ParentCommand
+    private GorCLI parentCommand;
+
     @Override
     public void run() {
 
@@ -95,8 +97,8 @@ public class QueryCommand extends HelpOptions implements Runnable{
             commandlineOptions.aliasFile_$eq(aliasFile.toString());
         if (configFile != null)
             commandlineOptions.configFile_$eq(configFile.toString());
-        if (projectRoot != null)
-            commandlineOptions.gorRoot_$eq(projectRoot.toString());
+        if (parentCommand.getProjectRoot() != null)
+            commandlineOptions.gorRoot_$eq(parentCommand.getProjectRoot().toString());
         commandlineOptions.requestId_$eq(requestId);
         commandlineOptions.showStackTrace_$eq(showStackTrace);
         commandlineOptions.workers_$eq(workers);
@@ -117,7 +119,9 @@ public class QueryCommand extends HelpOptions implements Runnable{
             // Initialize database connections
             DbConnection.initInConsoleApp();
 
-            GorExecutionEngine executionEngine = new CLIGorExecutionEngine(commandlineOptions, null, null);
+            var securityContext = System.getProperty("gor.security.context");
+
+            GorExecutionEngine executionEngine = new CLIGorExecutionEngine(commandlineOptions, null, securityContext);
             executionEngine.execute();
         } catch (GorException ge) {
             consoleLogger.error(ExceptionUtilities.gorExceptionToString(ge));

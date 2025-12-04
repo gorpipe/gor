@@ -23,26 +23,29 @@
 package org.gorpipe.gor.cli;
 
 import org.gorpipe.gor.cli.cache.CacheCommand;
+import org.gorpipe.gor.cli.git.GitCommand;
 import org.gorpipe.gor.cli.help.HelpCommand;
 import org.gorpipe.gor.cli.index.IndexCommand;
 import org.gorpipe.gor.cli.info.InfoCommand;
 import org.gorpipe.gor.cli.link.LinkCommand;
 import org.gorpipe.gor.cli.manager.ManagerCommand;
-import org.gorpipe.gor.cli.migrator.FolderMigratorCommand;
-import org.gorpipe.gor.cli.query.QueryCommand;
 import org.gorpipe.gor.cli.render.RenderCommand;
 import org.gorpipe.logging.GorLogbackUtil;
 import picocli.CommandLine;
+
+import java.nio.file.Path;
 
 @SuppressWarnings("squid:S106")
 @CommandLine.Command(name="gor",
         version="version 1.0",
         description = "Command line interface for gor query language and processes.",
-        subcommands = {QueryCommand.class, FolderMigratorCommand.class})
-public class GorCLI extends GorExecCLI implements Runnable {
+        subcommands = {HelpCommand.class, ManagerCommand.class, IndexCommand.class,
+                CacheCommand.class, RenderCommand.class, InfoCommand.class,
+                LinkCommand.class, GitCommand.class})
+public class GorExecCLI extends HelpOptions implements Runnable {
     public static void main(String[] args) {
         GorLogbackUtil.initLog("gor");
-        CommandLine cmd = new CommandLine(new GorCLI());
+        CommandLine cmd = new CommandLine(new GorExecCLI());
         cmd.parseWithHandlers(
                 new CommandLine.RunLast(),
                 CommandLine.defaultExceptionHandler().andExit(-1),
@@ -50,8 +53,27 @@ public class GorCLI extends GorExecCLI implements Runnable {
 
     }
 
+    @CommandLine.Option(names = {"-v", "--version"},
+            versionHelp = true,
+            description = "Print version information and exits.")
+    boolean versionHelpRequested;
+
+    @CommandLine.Option(defaultValue = "", names={"-p","--projectRoot"}, description = "Sets the project root for the current gor session.")
+    private Path projectRoot;
+
+    @CommandLine.Option(defaultValue = "", names={"--securityContext"}, description = "Sets the security context for the current gor session.")
+    private String securityContext;
+
     @Override
     public void run() {
         CommandLine.usage(this, System.err);
+    }
+
+    public String getProjectRoot() {
+        return projectRoot.toString();
+    }
+
+    public String getSecurityContext() {
+        return securityContext;
     }
 }

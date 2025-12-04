@@ -48,7 +48,6 @@ project(':gorscripts') {
         implementation "org.apache.commons:commons-lang3:_"
         implementation "de.tototec:de.tototec.cmdoption:_"
         implementation "com.fasterxml.jackson.core:jackson-databind:_"
-        implementation "org.reflections:reflections:_"
         implementation "com.google.guava:guava:_"
 
         runtimeOnly project(':documentation')

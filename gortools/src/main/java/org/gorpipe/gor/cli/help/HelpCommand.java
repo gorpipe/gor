@@ -109,7 +109,7 @@ public class HelpCommand extends HelpOptions implements Runnable{
             Map<String, String> env = new HashMap<>();
             env.put("create", "true");
             try(FileSystem fileSystem = java.nio.file.FileSystems.newFileSystem(helpJarURL, env)) {
-                helpList.addAll(java.nio.file.Files.readAllLines(java.nio.file.Paths.get(helpJarURL), java.nio.charset.Charset.forName("ISO-8859-1")));
+                helpList.addAll(java.nio.file.Files.readAllLines(java.nio.file.Paths.get(helpJarURL), Charset.forName("ISO-8859-1")));
             }
         }
 

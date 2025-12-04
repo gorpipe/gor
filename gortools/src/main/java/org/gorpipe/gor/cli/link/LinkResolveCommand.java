@@ -1,13 +1,12 @@
 package org.gorpipe.gor.cli.link;
 
-import java.io.IOException;
-import java.time.Instant;
-
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.util.DateUtils;
 import org.gorpipe.util.Strings;
-
 import picocli.CommandLine;
+
+import java.io.IOException;
+import java.time.Instant;
 
 @CommandLine.Command(name = "resolve",
         description = "Resolve a link file to the entry active at the current or given time.")
@@ -25,11 +24,14 @@ public class LinkResolveCommand implements Runnable {
             description = "Return the full link file entry instead of only the resolved URL.")
     private boolean returnFullEntry;
 
+    @CommandLine.ParentCommand
+    private LinkCommand mainCmd;
+
     @Override
     public void run() {
         var normalizedLinkPath = LinkFile.validateAndUpdateLinkFileName(linkFilePath);
         try {
-            var linkFile = LinkFile.load(LinkStreamSourceProvider.resolve(normalizedLinkPath, true, this));
+            var linkFile = LinkFile.load(LinkStreamSourceProvider.resolve(normalizedLinkPath, mainCmd.getSecurityContext(), mainCmd.getProjectRoot(),  true, this));
             long timestamp = resolveDate == null ? System.currentTimeMillis() : parseDate(resolveDate);
             var entry = linkFile.getEntry(timestamp);
             if (entry == null) {
@@ -38,7 +40,7 @@ public class LinkResolveCommand implements Runnable {
             }
             String output;
             if (returnFullEntry) {
-                output = entry.format();
+                output = entry.format().replace('\t', ' ');
             } else {
                 var resolved = linkFile.getEntryUrl(timestamp);
                 if (Strings.isNullOrEmpty(resolved)) {

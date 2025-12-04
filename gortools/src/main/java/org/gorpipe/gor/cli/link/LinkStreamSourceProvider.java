@@ -9,8 +9,8 @@ final class LinkStreamSourceProvider {
     private LinkStreamSourceProvider() {
     }
 
-    static StreamSource resolve(String linkPath, boolean writeable, Object commandInstance) {
-        var fileReader = new DriverBackedFileReader("", null);
+    static StreamSource resolve(String linkPath, String securityContext, String commonRoot, boolean writeable, Object commandInstance) {
+        var fileReader = new DriverBackedFileReader(securityContext, commonRoot);
         var dataSource = fileReader.resolveUrl(linkPath, writeable);
         if (dataSource == null) {
             throw new CommandLine.ExecutionException(new CommandLine(commandInstance),
