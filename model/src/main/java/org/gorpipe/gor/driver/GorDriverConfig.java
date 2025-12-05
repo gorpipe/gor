@@ -187,4 +187,10 @@ public interface GorDriverConfig extends Config {
     @Key(GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL)
     @DefaultValue("")
     String managedLinkDataFilesURL();
+
+    String GOR_DRIVER_LINK_INFER_REPLACE = "GOR_DRIVER_LINK_INFER_REPLACE";
+    @Documentation("Replacement patterns when inferring link file paths (<match pattern>[;<replace string>]).")
+    @Key(GOR_DRIVER_LINK_INFER_REPLACE)
+    @DefaultValue("")
+    String linkeInferReplace();
 }
