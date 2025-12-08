@@ -104,7 +104,7 @@ public abstract class LinkFile {
         // Remove common the root if set.
         var pathReplacements = System.getenv("GOR_DRIVER_LINK_INFER_REPLACE");
         if (!Strings.isNullOrEmpty(pathReplacements)) {
-            var parts = pathReplacements.split(";");
+            var parts = pathReplacements.split(";", 2);
             linkPath = linkPath.replaceAll(parts[0], parts.length > 1 ? parts[1] : "");
         }
 
