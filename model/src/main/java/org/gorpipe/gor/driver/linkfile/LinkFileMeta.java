@@ -5,6 +5,8 @@ import org.gorpipe.gor.model.BaseMeta;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.util.Strings;
 
+import java.util.stream.Collectors;
+
 public class LinkFileMeta extends BaseMeta {
 
     // Max number of entries to keep track of in the link file.
@@ -16,24 +18,39 @@ public class LinkFileMeta extends BaseMeta {
     // Should the content lifecycle be managed (data deleted if the link is removed from the link file) (true or false).
     public static final String HEADER_CONTENT_LIFECYCLE_MANAGED_KEY = "CONTENT_LIFECYCLE_MANAGED";
 
-    public static final String[] DEFAULT_TABLE_HEADER = new String[] {"File", "Timestamp", "MD5", "Serial", "Info"};
+    private static final String DEFAULT_VERSION = System.getProperty("gor.driver.link.default.version", "1");
 
     public static final int DEFAULT_ENTRIES_COUNT_MAX = 100;
     public static final long DEFAULT_ENTRIES_AGE_MAX = Long.MAX_VALUE;
 
-    public static LinkFileMeta createAndLoad(String metaContent) {
+    /**
+     * Create or load link file meta from content.
+     * @param content
+     * @param version   version if known, otherwise null.  Only used if content is null or empty.
+     * @param isNew     true if creating new link file meta, false if loading existing.
+     * @return
+     */
+    public static LinkFileMeta createOrLoad(String content, String version, boolean isNew) {
+        var metaContent = !Strings.isNullOrEmpty(content)  ? content.lines().filter(line -> line.startsWith("#")).collect(Collectors.joining("\n")) : "";
         LinkFileMeta meta = new LinkFileMeta();
-        if (Strings.isNullOrEmpty(metaContent)) {
-            meta.loadAndMergeMeta(getDefaultMetaContent());
-        } else {
-            meta.loadAndMergeMeta(metaContent);
+        if (Strings.isNullOrEmpty(metaContent) ) {
+            // No meta, determine version to use
+            if (Strings.isNullOrEmpty(version)) {
+                version = Strings.isNullOrEmpty(content) || isNew ? DEFAULT_VERSION : LinkFileV0.VERSION;
+            }
+
+            metaContent = switch(version) {
+                case "0" -> LinkFileV0.getDefaultMetaContent();
+                case "1" -> LinkFileV1.getDefaultMetaContent();
+                default -> throw new IllegalArgumentException("Unsupported link file version: " + meta.getVersion());
+           };
         }
+        meta.loadAndMergeMeta(metaContent);
         return meta;
     }
 
     public LinkFileMeta() {
         super();
-        setFileHeader(DEFAULT_TABLE_HEADER);
         saveHeaderLine = true;
     }
 
@@ -63,13 +80,8 @@ public class LinkFileMeta extends BaseMeta {
 
     @Override
     public String getVersion() {
-        return getProperty(HEADER_VERSION_KEY, "0");
+        return getProperty(HEADER_VERSION_KEY, DEFAULT_VERSION);
     }
 
-    public static String getDefaultMetaContent() {
-        return String.format("""
-                ## SERIAL = 0
-                ## VERSION = 1
-                """);
-    }
+
 }

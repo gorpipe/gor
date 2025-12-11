@@ -30,6 +30,7 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.driver.linkfile.LinkFileMeta;
+import org.gorpipe.gor.driver.linkfile.LinkFileV1;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.model.BaseMeta;
@@ -80,7 +81,7 @@ public class UTestGorWrite {
         tempRootPath = tempRoot.getRoot().toPath();
 
         var meta = new LinkFileMeta();
-        meta.setProperty(BaseMeta.HEADER_VERSION_KEY, "1");
+        meta.loadAndMergeMeta(LinkFileV1.getDefaultMetaContent());
         meta.setProperty(BaseMeta.HEADER_SERIAL_KEY, "1");
         defaultV1LinkFileHeader = meta.formatHeader();
     }
@@ -158,19 +159,21 @@ public class UTestGorWrite {
         Files.copy(Paths.get("../tests/data/gor/dbsnp_test.gor"), workDirPath.resolve("dbsnp.gor"));
         Files.writeString(link, "");
         TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
-        var linkUrl = LinkFile.load(new FileSource(link)).getLatestEntryUrl();
-        Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString(), linkUrl);
+        var linkFile = LinkFile.load(new FileSource(link));
+        Assert.assertEquals("1", linkFile.getMeta().getVersion());
+        Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString(), linkFile.getLatestEntryUrl());
     }
 
     @Test
     public void testWritePathWithExistingBadVersionedLinkFile() throws IOException {
-        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
-        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
-        Files.writeString(workDirPath.resolve("dbsnp3.gor.link"), "");
+        Path link = workDirPath.resolve("dbsnp3.gor.link");
+        Files.copy(Paths.get("../tests/data/gor/dbsnp_test.gor"), workDirPath.resolve("dbsnp.gor"));
+        Files.writeString(link, "## VERSION = 1");
         TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
 
-        Assert.assertTrue(Files.readString(workDirPath.resolve("dbsnp3.gor.link")).startsWith(
-                defaultV1LinkFileHeader + workDirPath.resolve("dbsnp2.gor") + "\t"));
+        var linkFile = LinkFile.load(new FileSource(link));
+        Assert.assertEquals("1", linkFile.getMeta().getVersion());
+        Assert.assertEquals(workDirPath.resolve("dbsnp2.gor").toString(), linkFile.getLatestEntryUrl());
     }
 
     @Test

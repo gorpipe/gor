@@ -5,9 +5,11 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
@@ -29,6 +31,10 @@ public class LinkFileTest {
     @Rule
     public final EnvironmentVariables environmentVariables
             = new EnvironmentVariables();
+
+    @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+
 
     private StreamSource mockSource;
     private final String v1LinkFileContent = """
@@ -55,7 +61,31 @@ public class LinkFileTest {
     public void testCreateLinkFile() {
         LinkFile linkFile = LinkFile.create(mockSource, v1LinkFileContent);
         assertNotNull(linkFile);
+        assertTrue(linkFile instanceof LinkFileV1);
+        assertEquals("1", linkFile.getMeta().getVersion());
         assertEquals(2, linkFile.getEntries().size());
+        assertEquals(100, linkFile.getEntriesCountMax());
+    }
+
+    @Test
+    public void testCreateLinkFileSimple() {
+        LinkFile linkFile = LinkFile.create(mockSource, "test.gorz");
+        assertNotNull(linkFile);
+        assertTrue(linkFile instanceof LinkFileV1);
+        assertEquals("1", linkFile.getMeta().getVersion());
+        assertEquals(1, linkFile.getEntries().size());
+        assertEquals(100, linkFile.getEntriesCountMax());
+    }
+
+    @Ignore("Fiddly test depending on system properties, ignore for now.  Can run in isolation to verify.")
+    @Test
+    public void testCreateLinkFileSimpleWithDefault0() {
+        System.setProperty("gor.driver.link.default.version", "0");
+        LinkFile linkFile = LinkFile.create(mockSource, "test.gorz");
+        assertNotNull(linkFile);
+        assertTrue(linkFile instanceof LinkFileV0);
+        assertEquals("0", linkFile.getMeta().getVersion());
+        assertEquals(1, linkFile.getEntries().size());
         assertEquals(100, linkFile.getEntriesCountMax());
     }
 
@@ -101,7 +131,7 @@ public class LinkFileTest {
     @Test
     public void testSaveNewV1LinkFile() throws IOException {
         var linkPath = workPath.resolve("test.link");
-        LinkFile linkFile = new LinkFileV1(new FileSource(linkPath.toString()));
+        LinkFile linkFile = LinkFile.createV1(new FileSource(linkPath.toString()), "");
         linkFile.appendEntry(simpleFile, "NEWMD5SUM");
         linkFile.save();
         String savedContent = Files.readString(linkPath);
@@ -112,7 +142,7 @@ public class LinkFileTest {
     @Test
     public void testSaveNewV0LinkFile() throws IOException {
         var linkPath = workPath.resolve("test.link");
-        LinkFile linkFile = new LinkFileV0(new FileSource(linkPath.toString()));
+        LinkFile linkFile = LinkFile.createV0(new FileSource(linkPath.toString()), "");
         linkFile.appendEntry(simpleFile, "NEWMD5SUM");
         linkFile.save();
         String savedContent = Files.readString(linkPath);
@@ -135,7 +165,7 @@ public class LinkFileTest {
     public void testSaveLinkFileV0ToV0() throws IOException {
         var linkPath = workPath.resolve("test.link");
         Files.writeString(linkPath, "a/b/c.gorz");
-        LinkFile linkFile = new LinkFileV0(new FileSource(linkPath.toString()));
+        LinkFile linkFile = LinkFile.load(new FileSource(linkPath.toString()));
         linkFile.appendEntry(simpleFile, "NEWMD5SUM");
         linkFile.save();
         String savedContent = Files.readString(linkPath);
@@ -146,11 +176,12 @@ public class LinkFileTest {
     public void testSaveLinkFileV0ToV1() throws IOException {
         var linkPath = workPath.resolve("test.link");
         Files.writeString(linkPath, "a/b/c.gorz");
-        LinkFile linkFile = new LinkFileV1(new FileSource(linkPath.toString()));
+        LinkFile linkFile = LinkFile.loadV1(new FileSource(linkPath.toString()));
         linkFile.appendEntry(simpleFile, "NEWMD5SUM");
         linkFile.save();
         String savedContent = Files.readString(linkPath);
         assertTrue(savedContent.contains("## VERSION = 1"));
+        assertEquals(2, linkFile.getEntries().size());
         assertTrue(savedContent.contains(simpleFile));
     }
 
@@ -158,13 +189,12 @@ public class LinkFileTest {
     public void testSaveLinkFileV1ToV0() throws IOException {
         var linkPath = workPath.resolve("test.link");
         Files.writeString(linkPath, v1LinkFileContent);
-        LinkFile linkFile = new LinkFileV0(new FileSource(linkPath.toString()));
+        LinkFile linkFile = LinkFile.loadV0(new FileSource(linkPath.toString()));
         linkFile.appendEntry(simpleFile, "NEWMD5SUM");
         linkFile.save();
         String savedContent = Files.readString(linkPath);
         assertEquals(simpleFile, savedContent.trim());
     }
-
 
     @Test(expected = IllegalArgumentException.class)
     public void testInferDataFileNameFromLinkFile_NullOrEmptyPath() throws Exception {
