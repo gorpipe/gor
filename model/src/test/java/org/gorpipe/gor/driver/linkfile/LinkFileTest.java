@@ -35,10 +35,6 @@ public class LinkFileTest {
     public final EnvironmentVariables environmentVariables
             = new EnvironmentVariables();
 
-    @Rule
-    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
-
-
     private StreamSource mockSource;
     private final String v1LinkFileContent = """
             ## SERIAL = 1
