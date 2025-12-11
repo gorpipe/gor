@@ -66,17 +66,39 @@ public abstract class LinkFile {
 
     public static LinkFile load(StreamSource source) throws IOException {
         var content = loadContentFromSource(source);
-        return create(source, content);
+        var meta = LinkFileMeta.createOrLoad(content, null, false);
+        return create(source, meta, content);
     }
 
     public static LinkFile create(StreamSource source, String content) {
-        var meta = LinkFileMeta.createAndLoad(content);
+        var meta = LinkFileMeta.createOrLoad(content, null, true);
+        return create(source, meta, content);
+    }
 
-        if ("0".equals(meta.getVersion())) {
-            return new LinkFileV0(source, meta, content);
-        } else {
-            return new LinkFileV1(source, meta, content);
-        }
+    public static LinkFile create(StreamSource source, LinkFileMeta meta, String content) {
+        return switch (meta.getVersion()) {
+            case "0" -> new LinkFileV0(source, meta, content);
+            case "1" -> new LinkFileV1(source, meta, content);
+            default -> throw new GorResourceException("Unsupported link file version: " + meta.getVersion(), source.getFullPath());
+        };
+    }
+
+    public static LinkFile loadV0(StreamSource source) throws IOException {
+        var content = loadContentFromSource(source);
+        return new LinkFileV0(source, LinkFileMeta.createOrLoad(content, LinkFileV0.VERSION, true), content);
+    }
+
+    public static LinkFile loadV1(StreamSource source) throws IOException {
+        var content = loadContentFromSource(source);
+        return new LinkFileV1(source, LinkFileMeta.createOrLoad(content, LinkFileV1.VERSION, true), content);
+    }
+
+    public static LinkFile createV0(StreamSource source, String content) throws IOException {
+        return new LinkFileV0(source, LinkFileMeta.createOrLoad(content, LinkFileV0.VERSION, true), content);
+    }
+
+    public static LinkFile createV1(StreamSource source, String content) throws IOException {
+        return new LinkFileV1(source, LinkFileMeta.createOrLoad(content, LinkFileV1.VERSION, true), content);
     }
 
     public static String validateAndUpdateLinkFileName(String linkFilePath) {
@@ -161,15 +183,6 @@ public abstract class LinkFile {
     protected final LinkFileMeta meta;
     protected final List<LinkFileEntry> entries;  // Entries sorted by time (oldest first)
 
-    /**
-     * Create a new link file from source and content.
-     *
-     * @param source the source to create the link file from
-     * @param content the content of the link file, can be empty or null to create an empty link file.
-     */
-    protected LinkFile(StreamSource source, String content) {
-        this(source, LinkFileMeta.createAndLoad(content), content);
-    }
 
     protected LinkFile(StreamSource source, LinkFileMeta meta, String content) {
         this.source = source;
@@ -334,6 +347,7 @@ public abstract class LinkFile {
                     .filter(entry -> entry.timestamp() <= 0 || currentTimestamp - entry.timestamp() <= getEntriesAgeMax())
                     .forEach(entry -> content.append(entry.format()).append("\n"));
         }
+
         try {
             os.write(content.toString().getBytes());
         } catch (IOException e) {

@@ -11,14 +11,8 @@ import java.util.List;
  */
 public class LinkFileV0 extends LinkFile {
 
-    /**
-     * Load from a source, if it exists, otherwise create an empty link file.
-     *
-     * @param source the source to load from
-     */
-    public LinkFileV0(StreamSource source) throws IOException {
-        super(source, loadContentFromSource(source));
-    }
+    public static final String VERSION = "0";
+
 
     protected LinkFileV0(StreamSource source, LinkFileMeta meta, String content) {
         super(source, meta, content);
@@ -39,5 +33,11 @@ public class LinkFileV0 extends LinkFile {
         entries.clear(); // V0 does not support multiple entries, so we clear the list
         entries.add(new LinkFileEntryV0(link));
         return this;
+    }
+
+    public static String getDefaultMetaContent() {
+        return String.format("""
+                ## VERSION = 0
+                """);
     }
 }

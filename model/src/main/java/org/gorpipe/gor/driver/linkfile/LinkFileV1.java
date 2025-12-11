@@ -12,18 +12,11 @@ import java.util.List;
  */
 public class LinkFileV1 extends LinkFile {
 
+    public static final String VERSION = "1";
+    public static final String DEFAULT_TABLE_HEADER = "#File\tTimestamp\tMD5\tSerial\tInfo";
+
     private static boolean allowOverwriteOfTargets
             = Boolean.parseBoolean(System.getProperty("gor.link.versioned.allow.overwrite", "false"));
-
-    /**
-     * Load from a source, if it exists, otherwise create an empty link file.
-     *
-     * @param source the source to load from
-     */
-    public LinkFileV1(StreamSource source) throws IOException {
-        super(source, loadContentFromSource(source));
-        checkDefaultMeta();
-    }
 
     protected LinkFileV1(StreamSource source, LinkFileMeta meta, String content) {
         super(source, meta, content);
@@ -79,9 +72,16 @@ public class LinkFileV1 extends LinkFile {
     }
 
     private void checkDefaultMeta() {
-        if (!meta.containsProperty(BaseMeta.HEADER_VERSION_KEY)) {
-            getMeta().loadAndMergeMeta(LinkFileMeta.getDefaultMetaContent());
-            meta.setProperty(BaseMeta.HEADER_VERSION_KEY, "1");
+        if (!meta.getVersion().equals(VERSION)) {
+            meta.loadAndMergeMeta(getDefaultMetaContent());
         }
+    }
+
+    public static String getDefaultMetaContent() {
+        return String.format("""
+                ## SERIAL = 0
+                ## VERSION = %s
+                %s
+                """, VERSION, DEFAULT_TABLE_HEADER);
     }
 }
