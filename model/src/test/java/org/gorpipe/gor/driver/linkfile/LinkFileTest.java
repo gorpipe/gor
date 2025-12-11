@@ -29,6 +29,9 @@ public class LinkFileTest {
     public TemporaryFolder workDir = new TemporaryFolder();
 
     @Rule
+    public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+
+    @Rule
     public final EnvironmentVariables environmentVariables
             = new EnvironmentVariables();
 
@@ -266,5 +269,29 @@ public class LinkFileTest {
         String result = LinkFile.inferDataFileNameFromLinkFile(new FileSource(new SourceReference(linkFilePath)), linkFileMeta);
         assertNotNull(result);
         assertTrue(result.matches((paramroot + "/x\\..*\\.gor").replace("/", "\\/")));
+    }
+
+    @Test
+    public void testInferDataFileNameFromLinkFile_PathReplace() throws Exception {
+        String root = "/managed/root";
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL, root);
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_INFER_REPLACE, "wont;will");
+
+        String result = LinkFile.inferDataFileNameFromLinkFile(new FileSource("wont/x.gor.link"), null);
+
+        assertNotNull(result);
+        assertTrue(result.matches((root + "/will/x\\..*\\.gor").replace("/", "\\/")));
+    }
+
+    @Test
+    public void testInferDataFileNameFromLinkFile_AbsolutePathReplace() throws Exception {
+        String root = "/managed/root";
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL, root);
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_INFER_REPLACE, "\\/abs\\/");
+
+        String result = LinkFile.inferDataFileNameFromLinkFile(new FileSource("/abs/path/x.gor.link"), null);
+
+        assertNotNull(result);
+        assertTrue(result.matches((root + "/path/x\\..*\\.gor").replace("/", "\\/")));
     }
 }

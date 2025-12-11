@@ -59,7 +59,7 @@ public abstract class LinkFile {
 
     public static final int LINK_FILE_MAX_SIZE = 10000;
 
-    private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.cache.link", "true"));
+    private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.link.cache", "true"));
     private static final Cache<StreamSource, String> linkCache = Caffeine.newBuilder()
             .maximumSize(10000)
             .expireAfterWrite(2, TimeUnit.HOURS).build();
@@ -123,11 +123,21 @@ public abstract class LinkFile {
 
         var linkPath = linkSource.getSourceReference().getUrl();
 
+        // Remove common the root if set.
+        var pathReplacements = System.getenv("GOR_DRIVER_LINK_INFER_REPLACE");
+        if (!Strings.isNullOrEmpty(pathReplacements)) {
+            var parts = pathReplacements.split(";", 2);
+            linkPath = linkPath.replaceAll(parts[0], parts.length > 1 ? parts[1] : "");
+        }
+
+        // Adjust link path so it suitable as part of data file path.
         if (PathUtils.isAbsolutePath(linkPath)) {
-            throw new IllegalArgumentException("Link file path is absolute.  Can not infer data file name: " + linkSource.getFullPath());
+            throw new IllegalArgumentException("Link file path is absolute and gor.driver.link.common.root is not set.  Can not infer data file name: " + linkSource.getFullPath());
         }
 
         var dataFileRootPath = "";
+
+        // Get root from the link file
         var link = linkSource.exists()
                 ? load(linkSource).appendMeta(linkFileMeta)
                 : create(linkSource, linkFileMeta);
@@ -136,6 +146,7 @@ public abstract class LinkFile {
             dataFileRootPath = linkDataFileRootPath;
         }
 
+        // Get root from global const
         if (Strings.isNullOrEmpty(dataFileRootPath)) {
             dataFileRootPath = System.getenv(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL);
         }
@@ -144,6 +155,7 @@ public abstract class LinkFile {
             throw new IllegalArgumentException("Link file data root path is not set.  Can not infer data file name from link file: " + linkSource.getFullPath());
         }
 
+        // Create file name
         String randomString = RandomStringUtils.random(8, true, true);
         var linkPathSplit = linkPath.indexOf('.');
         if (linkPathSplit > 0) {
@@ -157,6 +169,7 @@ public abstract class LinkFile {
 
         linkPath = linkPath.replaceAll("\\.link$", "");
 
+        // Insert project
         var project = linkSource.getSourceReference().getCommonRoot() != null
                 ? PathUtils.getFileName(linkSource.getSourceReference().getCommonRoot()) : "";
         if (!Strings.isNullOrEmpty(project)) {
