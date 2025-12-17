@@ -26,7 +26,9 @@ import org.aeonbits.owner.Config;
 import org.gorpipe.base.config.ConfigManager;
 import org.gorpipe.base.config.annotations.Documentation;
 import org.gorpipe.base.config.converters.DurationConverter;
-import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface MdrConfiguration extends Config {
+
+    Logger log = LoggerFactory.getLogger(MdrConfiguration.class);
 
     /**
      * Parse MDR credentials from a string.
@@ -60,7 +64,8 @@ public interface MdrConfiguration extends Config {
 
             String[] parts = credLine.split("\t");
             if (parts.length != 5) {
-                throw new IllegalArgumentException("Invalid credential line format. Expected format: <mdr url>\\t<keycloakUrl></>\\t<clientId>\\t<clientSecret>");
+                log.error("Invalid credential line format. Expected format: <mdr url>\\t<keycloakUrl></>\\t<clientId>\\t<clientSecret>");
+                continue;
             }
 
             mdrConfList.add(ConfigManager.createConfig(MdrConfiguration.class, Map.of(
@@ -81,14 +86,14 @@ public interface MdrConfiguration extends Config {
 
         final String MDR_CREDENTIALS_PATH = System.getProperty("gor.mdr.credentials");
 
-        if (MDR_CREDENTIALS_PATH != null && !MDR_CREDENTIALS_PATH.isEmpty()) {
+        if (!Strings.isNullOrEmpty(MDR_CREDENTIALS_PATH)) {
             try {
                 String credentialsData = Files.readString(Path.of(MDR_CREDENTIALS_PATH));
                 for (MdrConfiguration config : parseConfigurationData(credentialsData)) {
                     mdrConfigurationsMap.put(config.mdrServerName(), config);
                 }
             } catch (Exception e) {
-                throw new GorParsingException("Failed to read MDR credentials from path: " + MDR_CREDENTIALS_PATH, e);
+                log.error("Failed to read MDR credentials from path: " + MDR_CREDENTIALS_PATH, e);
             }
         }
         return mdrConfigurationsMap;

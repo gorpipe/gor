@@ -49,7 +49,11 @@ public class MdrServer {
 
     public static String resolveUrl(String url) {
         URI uri = URI.create(url);
-        return mdrServers.get(extractMdrEnvName(uri)).resolveMdrUrl(uri);
+        MdrServer server = mdrServers.get(extractMdrEnvName(uri));
+        if (server == null) {
+            throw new GorResourceException("Can not resolve MDR url %s, config for env %s not found.".formatted(url, extractMdrEnvName(uri)), url);
+        }
+        return server.resolveMdrUrl(uri);
     }
 
     public static void cacheUrls(List<SourceRef> sources) {
