@@ -27,8 +27,10 @@ import gorsat.Script.{ExecutionBlock, MacroInfo, MacroParsingResult, ScriptParse
 import gorsat.Utilities.MacroUtilities
 import gorsat.process.{GorInputSources, GorJavaUtilities, GorPipeMacros, SourceProvider}
 import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.driver.linkfile.LinkFileUtil
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.util.PathUtils
+import org.gorpipe.util.Strings
 
 import java.util
 
@@ -65,7 +67,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     val inputSource1 = SourceProvider(CommandParseUtilities.stringValueOfOption(options, "-parts"), context, executeNor = true, isNor = false)
     val partsSource = inputSource1.source
     val header = inputSource1.header
-    val extraCommands: String = MacroUtilities.getExtraStepsFromQuery(create.query).trim
+    var extraCommands: String = MacroUtilities.getExtraStepsFromQuery(create.query).trim
     val parGorCommands = new util.LinkedHashMap[String, ExecutionBlock]()
     val theKey = createKey.slice(1, createKey.length - 1)
     var theDependencies: List[String] = Nil
@@ -103,6 +105,10 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
           val srcmd = newCommand.substring(0,i)
           if (GorJavaUtilities.isPGorCmd(srcmd)) newCommand = srcmd+"-gordfolder nodict "+newCommand.substring(i)
         }
+
+        if (hasDictFolderWrite && create.cachePath != null && !extraCommands.contains(create.cachePath)) {
+          extraCommands = extraCommands + " " + create.cachePath
+        }
         if (extraCommands.nonEmpty) newCommand += " " + extraCommands
 
         parGorCommands.put(parKey, ExecutionBlock(create.groupName, newCommand, create.signature, create.dependencies, create.batchGroupName, cachePath, hasForkWrite = hasForkWrite))
@@ -118,7 +124,17 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
       partsSource.close()
     }
 
-    val theCommand = Range(1,parGorCommands.size+1).foldLeft(getDictionaryType(cmdToModify,useGordFolders)) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
+    var theCommand = Range(1,parGorCommands.size+1).foldLeft(getDictionaryType(cmdToModify,useGordFolders)) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
+
+    val linkOptions = LinkFileUtil.extractLinkOptionData(create.query)
+    if (!Strings.isNullOrEmpty(linkOptions)) {
+      theCommand += " -link " + linkOptions
+    }
+
+    val linkMetaOptions = LinkFileUtil.extractLinkMetaOptionData(create.query)
+    if (!Strings.isNullOrEmpty(linkMetaOptions)) {
+      theCommand += " -linkMeta " + linkMetaOptions
+    }
     parGorCommands.put(createKey, ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true, hasForkWrite = hasForkWrite))
 
     MacroParsingResult(parGorCommands, null)

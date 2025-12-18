@@ -14,11 +14,8 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -197,26 +194,27 @@ public class LinkFileTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInferDataFileNameFromLinkFile_NullOrEmptyPath() throws Exception {
-        LinkFile.inferDataFileNameFromLinkFile(new FileSource(""), null);
+        LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource(""), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInferDataFileNameFromLinkFile_AbsolutePath() throws Exception {
-        LinkFile.inferDataFileNameFromLinkFile(new FileSource("/abs/path/x.link"), null);
+        LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource("/abs/path/x.link"), null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testInferDataFileNameFromLinkFile_NoRootConfigured() throws Exception {
-        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL, null);
-        LinkFile.inferDataFileNameFromLinkFile(new FileSource("x.link"), null);
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL, null);
+        var ret = LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource("x.link"), null);
+        assertTrue(ret.startsWith("x."));
     }
 
     @Test
     public void testInferDataFileNameFromLinkFile_FromEnvVariable_WithProject() throws Exception {
         String root = "/managed/root";
-        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL, root);
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL, root);
 
-        String result = LinkFile.inferDataFileNameFromLinkFile(new FileSource(new SourceReference("x.gor.link", null, "/projects/test", -1, null,  null, false, false)), null);
+        String result = LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource(new SourceReference("x.gor.link", null, "/projects/test", -1, null,  null, false, false)), null);
         assertNotNull(result);
         assertTrue(result.matches((root + "/test/x\\..*\\.gor").replace("/", "\\/")));
     }
@@ -224,9 +222,9 @@ public class LinkFileTest {
     @Test
     public void testInferDataFileNameFromLinkFile_FromEnvVariable_WithOutProject() throws Exception {
         String root = "/managed/root";
-        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL, root);
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL, root);
 
-        String result = LinkFile.inferDataFileNameFromLinkFile(new FileSource("x.gor.link"), null);
+        String result = LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource("x.gor.link"), null);
         assertTrue(result.matches((root + "/x\\..*\\.gor").replace("/", "\\/")));
     }
 
@@ -235,20 +233,20 @@ public class LinkFileTest {
         String root = "/managed/fromfile";
         String linkFilePath =  "x.gor.link";
         Files.createDirectory(workPath.resolve("test"));
-        Files.writeString(workPath.resolve("test").resolve(linkFilePath), "## " + LinkFileMeta.HEADER_CONTENT_LOCATION_MANAGED_KEY + " = " + root + "\nsource/y.gorz\n");
+        Files.writeString(workPath.resolve("test").resolve(linkFilePath), "## " + LinkFileMeta.HEADER_DATA_LOCATION_KEY + " = " + root + "\nsource/y.gorz\n");
 
-        String result = LinkFile.inferDataFileNameFromLinkFile(new FileSource(new SourceReference(linkFilePath, null, workPath.resolve("test").toString(), -1, null,  null, false, false)), null);
+        String result = LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource(new SourceReference(linkFilePath, null, workPath.resolve("test").toString(), -1, null,  null, false, false)), null);
         assertNotNull(result);
-        assertTrue(result.matches((root + "/test/x\\..*\\.gor").replace("/", "\\/")));
+        assertTrue(result.matches((root + "/x\\..*\\.gor").replace("/", "\\/")));
     }
 
     @Test
     public void testInferDataFileNameFromLinkFile_FromMetaParam() throws Exception {
         String root = "/managed/fromparam";
         String linkFilePath = "x.gor.link";
-        String linkFileMeta = "## " + LinkFileMeta.HEADER_CONTENT_LOCATION_MANAGED_KEY + " = " + root;
+        String linkFileMeta = "## " + LinkFileMeta.HEADER_DATA_LOCATION_KEY + " = " + root;
 
-        String result = LinkFile.inferDataFileNameFromLinkFile(new FileSource(new SourceReference(linkFilePath)), linkFileMeta);
+        String result = LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource(new SourceReference(linkFilePath)), linkFileMeta);
         assertNotNull(result);
         assertTrue(result.matches((root + "/x\\..*\\.gor").replace("/", "\\/")));
     }
@@ -257,12 +255,12 @@ public class LinkFileTest {
     public void testInferDataFileNameFromLinkFile_FromMetaParam_ExistingFile() throws Exception {
         String fileroot = "/managed/fromfile";
         String linkFilePath = "x.gor.link";
-        Files.writeString(workPath.resolve(linkFilePath), "## " + LinkFileMeta.HEADER_CONTENT_LOCATION_MANAGED_KEY + " = " + fileroot + "\nsource/y.gorz\n");
+        Files.writeString(workPath.resolve(linkFilePath), "## " + LinkFileMeta.HEADER_DATA_LOCATION_KEY + " = " + fileroot + "\nsource/y.gorz\n");
 
         String paramroot = "/managed/fromparam";
-        String linkFileMeta = "## " + LinkFileMeta.HEADER_CONTENT_LOCATION_MANAGED_KEY + " = " + paramroot;
+        String linkFileMeta = "## " + LinkFileMeta.HEADER_DATA_LOCATION_KEY + " = " + paramroot;
 
-        String result = LinkFile.inferDataFileNameFromLinkFile(new FileSource(new SourceReference(linkFilePath)), linkFileMeta);
+        String result = LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource(new SourceReference(linkFilePath)), linkFileMeta);
         assertNotNull(result);
         assertTrue(result.matches((paramroot + "/x\\..*\\.gor").replace("/", "\\/")));
     }
@@ -270,10 +268,10 @@ public class LinkFileTest {
     @Test
     public void testInferDataFileNameFromLinkFile_PathReplace() throws Exception {
         String root = "/managed/root";
-        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL, root);
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL, root);
         environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_INFER_REPLACE, "wont;will");
 
-        String result = LinkFile.inferDataFileNameFromLinkFile(new FileSource("wont/x.gor.link"), null);
+        String result = LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource("wont/x.gor.link"), null);
 
         assertNotNull(result);
         assertTrue(result.matches((root + "/will/x\\..*\\.gor").replace("/", "\\/")));
@@ -282,10 +280,10 @@ public class LinkFileTest {
     @Test
     public void testInferDataFileNameFromLinkFile_AbsolutePathReplace() throws Exception {
         String root = "/managed/root";
-        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL, root);
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL, root);
         environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_INFER_REPLACE, "\\/abs\\/");
 
-        String result = LinkFile.inferDataFileNameFromLinkFile(new FileSource("/abs/path/x.gor.link"), null);
+        String result = LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource("/abs/path/x.gor.link"), null);
 
         assertNotNull(result);
         assertTrue(result.matches((root + "/path/x\\..*\\.gor").replace("/", "\\/")));

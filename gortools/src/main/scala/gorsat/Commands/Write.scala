@@ -28,7 +28,9 @@ import gorsat.Commands.CommandParseUtilities._
 import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.gor.driver.linkfile.LinkFileUtil
+import org.gorpipe.gor.driver.meta.{DataType, SourceReference}
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.util.DataUtil
 
@@ -36,19 +38,41 @@ import org.gorpipe.gor.util.DataUtil
 class Write extends CommandInfo("WRITE",
   CommandArguments("-r -c -m -inferschema -maxseg -noheader", "-d -f -i -t -l -tags -card -prefix -link -linkmeta", 0),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
-  override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
 
+  def parseBaseOptions(context: GorContext, iargs: Array[String], args: Array[String], executeNor: Boolean): (String, Option[String], Boolean) = {
     var fileName = replaceSingleQuotes(iargs.mkString(" "))
+
+    val linkOpt = if (hasOption(args, "-link")) stringValueOfOption(args, "-link") else ""
+    val linkMetaOpt = if (hasOption(args, "-linkmeta")) stringValueOfOption(args, "-linkmeta") else ""
+
+    fileName = if (fileName.isEmpty && linkOpt.nonEmpty) {
+      val linkMetaInfo = LinkFileUtil.extractLinkMetaInfo(linkMetaOpt)
+      val linkSourceRef = new SourceReference(linkOpt, null, context.getSession.getProjectContext.getFileReader.getCommonRoot, null, null, true);
+      // Infer the full file name from the link (and defautl locations)
+      LinkFileUtil.inferDataFileNameFromLinkFile(
+        context.getSession.getProjectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource], linkMetaInfo.linkFileMeta);
+    } else {
+      fileName
+    }
+
     val useFolder = if (hasOption(args, "-d")) {
       Option.apply(stringValueOfOption(args, "-d"))
     } else if(!executeNor && DataUtil.isGord(fileName)) {
       val fn = fileName
-      fileName = ""
       Option.apply(fn)
     } else {
       Option.empty
     }
-    
+
+    val hasFork = hasOption(args, "-f")
+
+    (fileName, useFolder, hasFork)
+  }
+
+  override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
+
+    val (fileName, useFolder,  _) = parseBaseOptions(context, iargs, args, executeNor)
+
     var forkCol = -1
     var remove = false
     var columnCompress: Boolean = false

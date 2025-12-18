@@ -36,6 +36,7 @@ import org.gorpipe.gor.model.FileReader
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.gor.util.DataUtil
+import org.gorpipe.util.Strings
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.nio.file.{Files, Paths}
@@ -464,32 +465,28 @@ object MacroUtilities {
       val inested = nested.substring(2,nested.length-1)
       querySplit = CommandParseUtilities.quoteSafeSplit(inested,'|')
     }
-    val lastCmd = querySplit.last.trim
-    val lastCmdLower = lastCmd.toLowerCase
+    var lastCmd = querySplit.last.trim
     val hasWrite = isCommandWrite(lastCmd)
-    val didx = if(hasWrite) lastCmd.indexOf(" -d ") else 0
-    val lidx = if(hasWrite) {
-      if (DataUtil.isGord(lastCmdLower)) lastCmdLower.length-5
-      else lastCmdLower.indexOf(DataType.GORD.suffix + "/")
-    } else 0
-    val hasForkWrite = isCommandForkWrite(lastCmd)
-    val hasGordFolderWrite = didx > 0 || lidx > 0
-    val writeDir = if (didx>0) {
-      var k = didx+4
-      while (lastCmd.charAt(k)==' ') k += 1
-      val e = lastCmd.indexOf(' ',k)
-      if (e == -1) lastCmd.substring(k).trim else lastCmd.substring(k,e).trim
-    } else if (lidx>0) {
-      val k = lastCmd.lastIndexOf(' ',lidx)+1
-      lastCmd.substring(k,lidx+5)
-    } else null
-    val hasWriteFile = hasWrite & DataUtil.isGord(lastCmdLower)
+
+    if (hasWrite && create.cachePath != null && !lastCmd.contains(create.cachePath)) {
+      lastCmd = lastCmd + " " + create.cachePath
+    }
+    val (writeFile, useFolder, hasForkWrite) = if (hasWrite) {
+      val write = new Write
+      val args = lastCmd.substring("write ".length).split(" ")
+      write.parseBaseOptions(context, write.validateArguments(args), args, false)
+    } else {
+      ("", Option.empty, false)
+    }
+    val writeDir = if (DataUtil.isGord(writeFile)) writeFile else PathUtils.stripTrailingSlash(PathUtils.getParent(writeFile))
+    val hasGordFolderWrite = useFolder.nonEmpty || DataUtil.isGord(writeDir)
+
     val finalQuery = if(hasWrite) querySplit.slice(0,querySplit.length-1).mkString("|") else innerQuery
     if(skipcache) {
       val queryAppend = appendQuery(finalQuery, lastCmd, false)
       (hasGordFolderWrite, false, hasForkWrite, null, queryAppend)
-    } else if(writeDir != null || hasWriteFile) {
-      val cacheRes = if(writeDir!=null) writeDir else lastCmd.split(" ").last
+    } else if(!Strings.isNullOrEmpty(writeDir)) {
+      val cacheRes = if (!Strings.isNullOrEmpty(writeDir)) writeDir else lastCmd.split(" ").last
       val cachepath = Paths.get(cacheRes)
       val cacheFileExists = Files.exists(cachepath) && !Files.isDirectory(cachepath)
       val queryAppend = " <(" + finalQuery + ")" + " | " + lastCmd

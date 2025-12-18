@@ -2,7 +2,6 @@ package org.gorpipe.gor.driver.linkfile;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.gor.model.BaseMeta;
-import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.util.Strings;
 
 import java.util.stream.Collectors;
@@ -13,10 +12,10 @@ public class LinkFileMeta extends BaseMeta {
     public static final String HEADER_ENTRIES_COUNT_MAX_KEY = "ENTRIES_COUNT_MAX";
     // Max age of entries to keep track of in the link file.
     public static final String HEADER_ENTRIES_AGE_MAX_KEY = "ENTRIES_AGE_MAX";
-    // Path if the managed content data location.
-    public static final String HEADER_CONTENT_LOCATION_MANAGED_KEY = "CONTENT_LOCATION_MANAGED";
+    // Path if the managed data location.
+    public static final String HEADER_DATA_LOCATION_KEY = "DATA_LOCATION";
     // Should the content lifecycle be managed (data deleted if the link is removed from the link file) (true or false).
-    public static final String HEADER_CONTENT_LIFECYCLE_MANAGED_KEY = "CONTENT_LIFECYCLE_MANAGED";
+    public static final String HEADER_DATA_LIFECYCLE_MANAGED_KEY = "DATA_LIFECYCLE_MANAGED";
 
     private static final String DEFAULT_VERSION = System.getProperty("gor.driver.link.default.version", "1");
 

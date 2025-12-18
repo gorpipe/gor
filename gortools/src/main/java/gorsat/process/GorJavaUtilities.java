@@ -24,6 +24,7 @@ package gorsat.process;
 
 import org.apache.commons.io.FilenameUtils;
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.linkfile.LinkFileUtil;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.*;
 import org.gorpipe.gor.model.FileReader;
@@ -447,7 +448,7 @@ public class GorJavaUtilities {
         return cacheFile;
     }
 
-    public static void writeDictionaryFromMeta(FileReader fileReader, String outfolderpath, String dictionarypath) throws IOException {
+    public static void writeDictionaryFromMeta(String commandToExecute, FileReader fileReader, String outfolderpath, String dictionarypath) throws IOException {
         FileReader localFileReader = fileReader;
 
         fileReader.updateFileSystemMetaData(outfolderpath);
@@ -487,6 +488,13 @@ public class GorJavaUtilities {
         }
 
         localFileReader.writeLinkIfNeeded(dictionarypath);
+
+        var linkOptions = LinkFileUtil.extractLinkOptionData(commandToExecute);
+        if (!Strings.isNullOrEmpty(linkOptions)) {
+            var linkMetaOption = LinkFileUtil.extractLinkMetaOptionData(commandToExecute);
+            var linkData = LinkFileUtil.extractLink(fileReader, outfolderpath, linkOptions, linkMetaOption, null);
+            LinkFileUtil.writeLinkFile(fileReader, linkData);
+        }
     }
 
     public static Optional<String[]> parseDictionaryColumn(String[] dictList, FileReader fileReader) {
