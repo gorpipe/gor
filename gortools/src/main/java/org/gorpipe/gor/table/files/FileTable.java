@@ -82,17 +82,18 @@ public abstract class FileTable<T extends Row> extends TableInfoBase implements 
         support = new TableTwoPhaseCommitSupport(this) {
             @Override
             public void saveTempMainFile() {
+                var tempMainFileName = getTempMainFileName();
                 // Move our temp file to the standard temp file and clean up.
                 // or if these are links update the link file to point to the new temp file.
                 // Clean up (remove old files and temp files)  s
-                log.debug(String.format("Saving temp file (%s)to temp main file (%s) ",  tempOutFilePath, getTempMainFileName()));
+                log.debug(String.format("Saving temp file (%s)to temp main file (%s) ",  tempOutFilePath, tempMainFileName));
                 try {
                     if (tempOutFilePath != null && getFileReader().exists(tempOutFilePath.toString())) {
-                        updateFromTempFile(tempOutFilePath.toString(), getTempMainFileName());
+                        updateFromTempFile(tempOutFilePath.toString(), tempMainFileName);
                         tempOutFilePath = null;
                         getFileReader().deleteDirectory(getTransactionFolderPath().toString());
                     } else if (!getFileReader().exists(getPath().toString())) {
-                        writeToFile(Path.of(getTempMainFileName()), new ArrayList<>());
+                        writeToFile(Path.of(tempMainFileName), new ArrayList<>());
                     }
                 } catch (IOException e) {
                     throw new GorSystemException("Could not save table", e);
