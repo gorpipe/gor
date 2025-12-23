@@ -30,14 +30,13 @@ import org.apache.commons.lang3.StringUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.driver.linkfile.{LinkFile, LinkFileEntryV1}
-import org.gorpipe.gor.driver.meta.{DataType, SourceReference}
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
-import org.gorpipe.gor.model.{DriverBackedFileReader, Row}
+import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.model.gor.RowObj
-import org.gorpipe.model.gor.iterators.RefSeqFromConfig
 import org.gorpipe.util.Strings
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -163,9 +162,9 @@ case class ForkWrite(forkCol: Int,
                     fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
                   } else {
                     if (fullFileName.isEmpty && options.linkFile.nonEmpty) {
-                      val (linkFileMeta, linkFileInfo) = extractLinkMetaInfo(options.linkFileMeta)
-                      val linkSourceRef = new SourceReference(options.linkFile, null, projectContext.getFileReader.getCommonRoot, null, null, true);
-                      // Infer the full file name from the link (and defautl locations)
+                      val (linkFileMeta, _) = extractLinkMetaInfo(options.linkFileMeta)
+                      val linkSourceRef = projectContext.getFileReader.createSourceReference(options.linkFile, true);
+                      // Infer the full file name from the link (and default locations)
                       LinkFile.inferDataFileNameFromLinkFile(
                         projectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource], linkFileMeta);
                     } else {
@@ -237,7 +236,6 @@ case class ForkWrite(forkCol: Int,
     * @return
     */
   def createOutFile(name: String, skipHeader: Boolean): Output = {
-    log.info("Outfile filereader sec context " + Strings.isNullOrEmpty(session.getProjectContext.getFileReader.getSecurityContext))
     if (rowHeader == null || useFork) {
       OutFile.driver(name, session.getProjectContext.getFileReader, header, skipHeader, options)
     } else {
@@ -417,9 +415,6 @@ case class ForkWrite(forkCol: Int,
     val fileReader = session.getProjectContext.getFileReader.unsecure()
 
     val source = fileReader.resolveUrl(linkFilePath, true)
-    log.info("Filereader Security context: " + Strings.isNullOrEmpty(fileReader.getSecurityContext))
-    log.info("Source Security context: " + Strings.isNullOrEmpty(source.getSourceReference.getSecurityContext))
-    log.info("Orignal filereader  Security context: " + Strings.isNullOrEmpty(session.getProjectContext.getFileReader.getSecurityContext))
 
     LinkFile.load(fileReader.resolveUrl(linkFilePath, true).asInstanceOf[StreamSource])
       .appendMeta(linkFileMeta)
