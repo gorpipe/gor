@@ -37,7 +37,9 @@ import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.model.gor.RowObj
+import org.gorpipe.model.gor.iterators.RefSeqFromConfig
 import org.gorpipe.util.Strings
+import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.UUID
 import scala.collection.mutable
@@ -124,6 +126,8 @@ case class ForkWrite(forkCol: Int,
                      session: GorSession,
                      inHeader: String,
                      options: OutputOptions) extends Analysis {
+
+  private val log: Logger = LoggerFactory.getLogger(ForkWrite.this.getClass)
 
   case class FileHolder(forkValue: String) {
     if (forkCol >= 0 && options.useFolder.isEmpty && !(fullFileName.contains("#{fork}") || fullFileName.contains("""${fork}"""))) {
@@ -233,6 +237,7 @@ case class ForkWrite(forkCol: Int,
     * @return
     */
   def createOutFile(name: String, skipHeader: Boolean): Output = {
+    log.info("Outfile filereader sec context " + Strings.isNullOrEmpty(session.getProjectContext.getFileReader.getSecurityContext))
     if (rowHeader == null || useFork) {
       OutFile.driver(name, session.getProjectContext.getFileReader, header, skipHeader, options)
     } else {
@@ -410,6 +415,11 @@ case class ForkWrite(forkCol: Int,
 
     // Use the nonsecure driver file reader as this is an exception from the write no links rule.
     val fileReader = session.getProjectContext.getFileReader.unsecure()
+
+    val source = fileReader.resolveUrl(linkFilePath, true)
+    log.info("Filereader Security context: " + Strings.isNullOrEmpty(fileReader.getSecurityContext))
+    log.info("Source Security context: " + Strings.isNullOrEmpty(source.getSourceReference.getSecurityContext))
+    log.info("Orignal filereader  Security context: " + Strings.isNullOrEmpty(session.getProjectContext.getFileReader.getSecurityContext))
 
     LinkFile.load(fileReader.resolveUrl(linkFilePath, true).asInstanceOf[StreamSource])
       .appendMeta(linkFileMeta)
