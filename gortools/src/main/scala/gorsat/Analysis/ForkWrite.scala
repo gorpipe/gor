@@ -409,7 +409,7 @@ case class ForkWrite(forkCol: Int,
     session.getProjectContext.getFileReader.resolveUrl(FilenameUtils.removeExtension(linkFilePath), true)
 
     // Use the nonsecure driver file reader as this is an exception from the write no links rule.
-    val fileReader = session.getProjectContext.getSystemFileReader
+    val fileReader = session.getProjectContext.getFileReader.unsecure()
 
     LinkFile.load(fileReader.resolveUrl(linkFilePath, true).asInstanceOf[StreamSource])
       .appendMeta(linkFileMeta)
