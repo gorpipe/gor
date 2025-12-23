@@ -309,6 +309,16 @@ public class UTestPartGor {
         Assert.assertEquals("a,b,c | 'a','b','c' | \"a\",\"b\",\"c\"", result);
     }
 
+    @Test
+    public void partGorWithFileName() throws IOException {
+        String contents = "#col1\tcol2\tcol3\tcol4\tcol5\tcol6\tlis_PN\n" +
+                "data/bucket_1.gorz\tbucket_1\tchr1\t0\tchrZ\t1000000000\tSAMPLE_SIM842_000001\n" +
+                "data/bucket_10.gorz\tbucket_10\tchr1\t0\tchrZ\t1000000000\tSAMPLE_SIM842_000010\n";
 
+        File dictFile = FileTestUtils.createTempFile(workDir.getRoot(), "variants.gord", contents);
+
+        String query = "partgor -dict " + dictFile.getAbsolutePath() + " <(gorrow chr1,1,1 | calc x \"#{tags:q}\" | calc fn 's3://test/test.gor')";
+        String results = TestUtils.runGorPipe(query);
+    }
 
 }
