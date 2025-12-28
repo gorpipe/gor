@@ -43,7 +43,7 @@ object IteratorUtilities {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  private val ALLOW_DUPLICATE_COLUMNS = System.getProperty("gor.iterators.allowDuplicateColumns", "false").toBoolean
+  private val ALLOW_DUPLICATE_COLUMNS = System.getProperty("gor.iterators.allowDuplicateColumns", "true").toBoolean
 
   def getHeader(filename: String, gorRoot: String, context: GorContext): String = {
     val gm: GorMonitor = null

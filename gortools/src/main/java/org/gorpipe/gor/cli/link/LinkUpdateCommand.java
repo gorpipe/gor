@@ -39,7 +39,7 @@ public class LinkUpdateCommand implements Runnable {
     public void run() {
         var normalizedLinkPath = LinkFile.validateAndUpdateLinkFileName(linkFilePath);
         try {
-            var linkFile = LinkFile.load(LinkStreamSourceProvider.resolve(normalizedLinkPath, mainCmd.getSecurityContext(), mainCmd.getProjectRoot(),  true, this));
+            var linkFile = LinkFile.loadV1(LinkStreamSourceProvider.resolve(normalizedLinkPath, mainCmd.getSecurityContext(), mainCmd.getProjectRoot(),  true, this));
             applyHeaders(linkFile);
             linkFile.appendEntry(linkValue, entryMd5, entryInfo);
             linkFile.save();

@@ -64,8 +64,8 @@ public class LinkFileTest {
     }
 
     @Test
-    public void testCreateLinkFileSimple() {
-        LinkFile linkFile = LinkFile.create(mockSource, "test.gorz");
+    public void testCreateLinkFileSimple() throws IOException {
+        LinkFile linkFile = LinkFile.createV1(mockSource, "test.gorz");
         assertNotNull(linkFile);
         assertTrue(linkFile instanceof LinkFileV1);
         assertEquals("1", linkFile.getMeta().getVersion());

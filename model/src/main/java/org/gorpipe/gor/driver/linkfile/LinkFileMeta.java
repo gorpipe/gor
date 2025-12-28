@@ -18,7 +18,7 @@ public class LinkFileMeta extends BaseMeta {
     // Should the content lifecycle be managed (data deleted if the link is removed from the link file) (true or false).
     public static final String HEADER_DATA_LIFECYCLE_MANAGED_KEY = "DATA_LIFECYCLE_MANAGED";
 
-    private static final String DEFAULT_VERSION = System.getProperty("gor.driver.link.default.version", "1");
+    private static final String DEFAULT_VERSION = System.getProperty("gor.driver.link.default.version", LinkFileV0.VERSION);
 
     public static final int DEFAULT_ENTRIES_COUNT_MAX = 100;
     public static final long DEFAULT_ENTRIES_AGE_MAX = Long.MAX_VALUE;
