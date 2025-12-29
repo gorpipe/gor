@@ -121,62 +121,41 @@ public abstract class LinkFile {
             throw new IllegalArgumentException("Link file path is null or empty.  Can not infer data file name.");
         }
 
-        var linkPath = linkSource.getSourceReference().getUrl();
-
-        // Remove common the root if set.
-        var pathReplacements = System.getenv("GOR_DRIVER_LINK_INFER_REPLACE");
-        if (!Strings.isNullOrEmpty(pathReplacements)) {
-            var parts = pathReplacements.split(";", 2);
-            linkPath = linkPath.replaceAll(parts[0], parts.length > 1 ? parts[1] : "");
-        }
-
-        // Adjust link path so it suitable as part of data file path.
-        if (PathUtils.isAbsolutePath(linkPath)) {
-            throw new IllegalArgumentException("Link file path is absolute and gor.driver.link.common.root is not set.  Can not infer data file name: " + linkSource.getFullPath());
-        }
-
-        var dataFileRootPath = "";
+        var dataFileParentPath = "";
 
         // Get root from the link file
         var link = linkSource.exists()
-                ? load(linkSource).appendMeta(linkFileMeta)
-                : create(linkSource, linkFileMeta);
-        var linkDataFileRootPath = link.getMeta().getProperty(LinkFileMeta.HEADER_CONTENT_LOCATION_MANAGED_KEY);
-        if (!Strings.isNullOrEmpty(linkDataFileRootPath)) {
-            dataFileRootPath = linkDataFileRootPath;
+                ? LinkFile.load(linkSource).appendMeta(linkFileMeta)
+                : LinkFile.create(linkSource, linkFileMeta);
+
+        var linkDataFileParentPath = link.getMeta().getProperty(LinkFileMeta.HEADER_DATA_LOCATION_KEY);
+        if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
+            dataFileParentPath = linkDataFileParentPath;
+        } else if (link.getLatestEntry() != null) {
+            dataFileParentPath = PathUtils.getParent(link.getLatestEntryUrl());
+        }
+
+        if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
+            dataFileParentPath = linkDataFileParentPath;
         }
 
         // Get root from global const
-        if (Strings.isNullOrEmpty(dataFileRootPath)) {
-            dataFileRootPath = System.getenv(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL);
+        if (Strings.isNullOrEmpty(dataFileParentPath)) {
+            dataFileParentPath = System.getenv(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL);
+
+            // Insert project, only if we use global and global is set
+            if (!Strings.isNullOrEmpty(dataFileParentPath)) {
+                var project = linkSource.getSourceReference().getCommonRoot() != null
+                        ? PathUtils.getFileName(linkSource.getSourceReference().getCommonRoot()) : "";
+                if (!Strings.isNullOrEmpty(project)) {
+                    dataFileParentPath = PathUtils.resolve(dataFileParentPath, project);
+                }
+            }
         }
 
-        if (Strings.isNullOrEmpty(dataFileRootPath)) {
-            throw new IllegalArgumentException("Link file data root path is not set.  Can not infer data file name from link file: " + linkSource.getFullPath());
-        }
+        var dataFileName = PathUtils.injectRandomStringIntoFileName(PathUtils.getFileName(linkSource.getFullPath()));
 
-        // Create file name
-        String randomString = RandomStringUtils.random(8, true, true);
-        var linkPathSplit = linkPath.indexOf('.');
-        if (linkPathSplit > 0) {
-            linkPath = "%s.%s.%s".formatted(
-                    linkPath.substring(0, linkPathSplit),
-                    randomString,
-                    linkPath.substring(linkPathSplit + 1));
-        } else {
-            linkPath = "%s.%s".formatted(linkPath, randomString);
-        }
-
-        linkPath = linkPath.replaceAll("\\.link$", "");
-
-        // Insert project
-        var project = linkSource.getSourceReference().getCommonRoot() != null
-                ? PathUtils.getFileName(linkSource.getSourceReference().getCommonRoot()) : "";
-        if (!Strings.isNullOrEmpty(project)) {
-            dataFileRootPath = PathUtils.resolve(dataFileRootPath, project);
-        }
-
-        return PathUtils.resolve(dataFileRootPath, linkPath);
+        return PathUtils.resolve(dataFileParentPath, dataFileName);
     }
 
     protected final StreamSource source;

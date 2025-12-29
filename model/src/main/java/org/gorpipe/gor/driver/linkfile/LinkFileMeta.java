@@ -14,11 +14,11 @@ public class LinkFileMeta extends BaseMeta {
     // Max age of entries to keep track of in the link file.
     public static final String HEADER_ENTRIES_AGE_MAX_KEY = "ENTRIES_AGE_MAX";
     // Path if the managed content data location.
-    public static final String HEADER_CONTENT_LOCATION_MANAGED_KEY = "CONTENT_LOCATION_MANAGED";
+    public static final String HEADER_DATA_LOCATION_KEY = "DATA_LOCATION";
     // Should the content lifecycle be managed (data deleted if the link is removed from the link file) (true or false).
-    public static final String HEADER_CONTENT_LIFECYCLE_MANAGED_KEY = "CONTENT_LIFECYCLE_MANAGED";
+    public static final String HEADER_DATA_LIFECYCLE_MANAGED_KEY = "DATA_LIFECYCLE_MANAGED";
 
-    private static final String DEFAULT_VERSION = System.getProperty("gor.driver.link.default.version", "1");
+    private static final String DEFAULT_VERSION = System.getProperty("gor.driver.link.default.version", LinkFileV0.VERSION);
 
     public static final int DEFAULT_ENTRIES_COUNT_MAX = 100;
     public static final long DEFAULT_ENTRIES_AGE_MAX = Long.MAX_VALUE;

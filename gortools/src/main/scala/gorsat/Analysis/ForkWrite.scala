@@ -30,14 +30,15 @@ import org.apache.commons.lang3.StringUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.driver.linkfile.{LinkFile, LinkFileEntryV1}
-import org.gorpipe.gor.driver.meta.{DataType, SourceReference}
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
-import org.gorpipe.gor.model.{DriverBackedFileReader, Row}
+import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.model.gor.RowObj
 import org.gorpipe.util.Strings
+import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.UUID
 import scala.collection.mutable
@@ -125,6 +126,8 @@ case class ForkWrite(forkCol: Int,
                      inHeader: String,
                      options: OutputOptions) extends Analysis {
 
+  private val log: Logger = LoggerFactory.getLogger(ForkWrite.this.getClass)
+
   case class FileHolder(forkValue: String) {
     if (forkCol >= 0 && options.useFolder.isEmpty && !(fullFileName.contains("#{fork}") || fullFileName.contains("""${fork}"""))) {
       throw new GorResourceException("WRITE error: #{fork} of ${fork}missing from filename.", fullFileName)
@@ -159,9 +162,9 @@ case class ForkWrite(forkCol: Int,
                     fullFileName.replace("#{fork}", forkValue).replace("""${fork}""", forkValue)
                   } else {
                     if (fullFileName.isEmpty && options.linkFile.nonEmpty) {
-                      val (linkFileMeta, linkFileInfo) = extractLinkMetaInfo(options.linkFileMeta)
-                      val linkSourceRef = new SourceReference(options.linkFile, null, projectContext.getFileReader.getCommonRoot, null, null, true);
-                      // Infer the full file name from the link (and defautl locations)
+                      val (linkFileMeta, _) = extractLinkMetaInfo(options.linkFileMeta)
+                      val linkSourceRef = projectContext.getFileReader.createSourceReference(options.linkFile, true);
+                      // Infer the full file name from the link (and default locations)
                       LinkFile.inferDataFileNameFromLinkFile(
                         projectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource], linkFileMeta);
                     } else {
@@ -409,12 +412,11 @@ case class ForkWrite(forkCol: Int,
     session.getProjectContext.getFileReader.resolveUrl(FilenameUtils.removeExtension(linkFilePath), true)
 
     // Use the nonsecure driver file reader as this is an exception from the write no links rule.
-    val fileReader = new DriverBackedFileReader(session.getProjectContext.getFileReader.getSecurityContext,
-      session.getProjectContext.getProjectRoot, session.getProjectContext.getFileReader.getQueryTime)
+    val fileReader = session.getProjectContext.getFileReader.unsecure()
 
-    LinkFile.load(fileReader.resolveUrl(linkFilePath, true).asInstanceOf[StreamSource])
+    LinkFile.loadV1(fileReader.resolveUrl(linkFilePath, true).asInstanceOf[StreamSource])
       .appendMeta(linkFileMeta)
       .appendEntry(linkFileContent, md5, linkFileInfo, fileReader)
-      .save(session.getProjectContext.getFileReader.getQueryTime)
+      .save(fileReader.getQueryTime)
   }
 }

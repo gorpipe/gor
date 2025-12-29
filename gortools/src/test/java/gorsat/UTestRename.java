@@ -25,6 +25,7 @@ package gorsat;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -139,7 +140,16 @@ public class UTestRename {
     }
 
     @Test
-    public void renameToExisting() {
+    public void renameToExistingAllowDup() {
+        String query = "gorrow chr1,1 | calc Foo 0 | calc Bar 1 | rename Foo Bar | top 0";
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals("chrom\tpos\tBar\tBarx\n", result);
+    }
+
+    @Ignore("Only works if run alone, as the property is read only on class load")
+    @Test
+    public void renameToExistingNotAllowDup() {
+        System.setProperty("gor.iterators.allowDuplicateColumns", "false");
         String query = "gorrow chr1,1 | calc Foo 0 | calc Bar 1 | rename Foo Bar | top 0";
         Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe(query));
     }
