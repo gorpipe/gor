@@ -37,6 +37,7 @@ public abstract class TableCache<T extends Table> {
     }
 
     public synchronized T getTable(String path, FileReader fileReader, boolean useCache) {
+        // The dict is lazy loaded so the only cost is finding the id.
         T dict = createTable(path, fileReader);
 
         if (useCache) {
