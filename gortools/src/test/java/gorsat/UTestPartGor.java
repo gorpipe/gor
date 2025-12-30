@@ -309,6 +309,4 @@ public class UTestPartGor {
         Assert.assertEquals("a,b,c | 'a','b','c' | \"a\",\"b\",\"c\"", result);
     }
 
-
-
 }

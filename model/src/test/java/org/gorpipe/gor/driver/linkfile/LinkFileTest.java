@@ -4,10 +4,7 @@ import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
@@ -64,8 +61,8 @@ public class LinkFileTest {
     }
 
     @Test
-    public void testCreateLinkFileSimple() {
-        LinkFile linkFile = LinkFile.create(mockSource, "test.gorz");
+    public void testCreateLinkFileSimple() throws IOException {
+        LinkFile linkFile = LinkFile.createV1(mockSource, "test.gorz");
         assertNotNull(linkFile);
         assertTrue(linkFile instanceof LinkFileV1);
         assertEquals("1", linkFile.getMeta().getVersion());
@@ -266,7 +263,7 @@ public class LinkFileTest {
     }
 
     @Test
-    public void testInferDataFileNameFromLinkFile_PathReplace() throws Exception {
+    public void testInferDataFileNameFromLinkFile_AbsolutePath() throws Exception {
         String root = "/managed/root";
         environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL, root);
         environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_INFER_REPLACE, "wont;will");
@@ -286,6 +283,6 @@ public class LinkFileTest {
         String result = LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource("/abs/path/x.gor.link"), null);
 
         assertNotNull(result);
-        assertTrue(result.matches((root + "/path/x\\..*\\.gor").replace("/", "\\/")));
+        assertTrue(result.matches((root + "/x\\..*\\.gor").replace("/", "\\/")));
     }
 }

@@ -29,23 +29,14 @@ public abstract class TableCache<T extends Table> {
     }
 
     public T getOrCreateTable(String path, FileReader fileReader, boolean useCache) throws IOException {
-        try {
-            return getTable(path, fileReader, useCache);
-        } catch (NoSuchFileException e) {
-            return createTable(path, fileReader);
-        }
-    }
-
-    public synchronized T getTable(String path, FileReader fileReader) throws IOException {
         return getTable(path, fileReader, useCache);
     }
 
-    public synchronized T getTable(String path, FileReader fileReader, boolean useCache) throws IOException {
-        // TODO:  To make fewer calls to exists consider caching it in metadata.  Should not need this as getSourceMetaData should throw
-        //        exception if file does not exists.
-        if (!fileReader.exists(path)) {
-            throw new NoSuchFileException(path);
-        }
+    public synchronized T getTable(String path, FileReader fileReader) {
+        return getTable(path, fileReader, useCache);
+    }
+
+    public synchronized T getTable(String path, FileReader fileReader, boolean useCache) {
         // The dict is lazy loaded so the only cost is finding the id.
         T dict = createTable(path, fileReader);
 

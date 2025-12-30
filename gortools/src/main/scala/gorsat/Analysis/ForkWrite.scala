@@ -28,13 +28,16 @@ import gorsat.Outputs.OutFile
 import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.driver.linkfile.LinkFileUtil
+import org.gorpipe.gor.driver.linkfile.{LinkFile, LinkFileEntryV1}
 import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.model.gor.RowObj
+import org.gorpipe.util.Strings
+import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.UUID
 import scala.collection.mutable
@@ -121,6 +124,8 @@ case class ForkWrite(forkCol: Int,
                      session: GorSession,
                      inHeader: String,
                      options: OutputOptions) extends Analysis {
+
+  private val log: Logger = LoggerFactory.getLogger(ForkWrite.this.getClass)
 
   case class FileHolder(forkValue: String) {
     if (forkCol >= 0 && options.useFolder.isEmpty && !(fullFileName.contains("#{fork}") || fullFileName.contains("""${fork}"""))) {

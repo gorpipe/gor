@@ -83,16 +83,17 @@ public class UTestHeaderFlags {
         Assert.assertFalse(systemErrRule.getLog().contains("Duplicate column name 'order'"));
     }
 
+    @Ignore("Only works if run alone, as the property is read only on class load")
     @Test
     public void testValidHeaderUsedKeywordsWithDupNotAllowingDup() {
+        System.setProperty("gor.iterators.allowDuplicateColumns", "false");
         String testHeader = "#abc\tstart\tfrom\tselect\tmax\tmin\tfrom\tgroup\trange\torder\trank\torder";
         Assert.assertThrows(GorDataException.class, () -> IteratorUtilities.validHeader(testHeader, false));
     }
 
-    @Ignore("Only works if run alone, as the property is read only on class load")
+
     @Test
     public void testValidHeaderUsedKeywordsWithDupAllowingDupOnlyGlobal() {
-        System.setProperty("gor.iterators.allowDuplicateColumns", "true");
         String testHeader = "#abc\tstart\tfrom\tselect\tmax\tmin\tfrom\tgroup\trange\torder\trank\torder";
         String resultingHeader = IteratorUtilities.validHeader(testHeader, false);
         Assert.assertEquals("#abc\tstart\tfrom\tselect\tmax\tmin\tfromx\tgroup\trange\torder\trank\torderx", resultingHeader);

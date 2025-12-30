@@ -343,6 +343,22 @@ public class PathUtils {
         return tempFileName;
     }
 
+    public static String injectRandomStringIntoFileName(String fileName) {
+        var tempFileName = "";
+        String uniqId = RandomStringUtils.insecure().next(8, true, true);
+        var linkPathSplit = fileName.indexOf('.', fileName.indexOf("/"));
+        if (linkPathSplit > 0) {
+            tempFileName = "%s.%s.%s".formatted(
+                    fileName.substring(0, linkPathSplit),
+                    uniqId,
+                    fileName.substring(linkPathSplit + 1));
+        } else {
+            tempFileName = "%s.%s".formatted(fileName, uniqId);
+        }
+
+        return tempFileName.replaceAll("\\.link$", "");
+    }
+
     public static boolean pathEquals(String path1, String path2) {
         if (path1 == null && path2 == null) {
             return true;

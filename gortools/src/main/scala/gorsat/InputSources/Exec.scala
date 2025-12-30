@@ -36,7 +36,7 @@ import scala.collection.mutable.ListBuffer
 /**
  * Execute selected gor <command> commands in NOR context.
  */
-class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, 100, ignoreIllegalArguments=true), isNorCommand = true) {
+class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, ignoreIllegalArguments=true), isNorCommand = true) {
 
   override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                 args: Array[String]): InputSourceParsingResult = {
