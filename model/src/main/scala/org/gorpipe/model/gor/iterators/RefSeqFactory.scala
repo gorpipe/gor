@@ -24,5 +24,6 @@ package org.gorpipe.model.gor.iterators
 
 import org.gorpipe.gor.session.GenericFactory
 
-abstract class RefSeqFactory extends GenericFactory[RefSeq]{
+abstract class RefSeqFactory extends GenericFactory[RefSeq] {
+  def create(altPath: String): RefSeq
 }

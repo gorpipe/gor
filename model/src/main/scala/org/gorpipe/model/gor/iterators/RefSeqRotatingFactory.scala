@@ -24,4 +24,6 @@ package org.gorpipe.model.gor.iterators
 
 class RefSeqRotatingFactory extends RefSeqFactory {
   override def create(): RefSeq = new RefSeqRotating()
+
+  override def create(altPath: String): RefSeq = new RefSeqRotating()
 }
