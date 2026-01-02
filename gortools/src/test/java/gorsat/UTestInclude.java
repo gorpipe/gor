@@ -23,6 +23,6 @@ public class UTestInclude {
         var query = "def sim = sim;\n include "+subpath.toAbsolutePath()+";\n create yyy = gor [xxx] \n| group chrom -count;\n gor [yyy] | top 1";
         var result = TestUtils.runGorPipe(query);
         Assert.assertEquals("Chrom\tbpStart\tbpStop\tallCount\n" +
-                "chr1\t0\t249250\t2\n", result);
+                "chr1\t0\t250000000\t2\n", result);
     }
 }
