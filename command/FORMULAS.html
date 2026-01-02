@@ -571,41 +571,44 @@ based on the build specified in the gor_config.txt file.</p></td>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">REFBASES(str,int,int)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>The reference bases, based on the build specified in the gor_config.txt file.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BAMTAG(col,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REFBASES_WITH_BUILD(str,int,int,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<td><p>The reference bases, based on the build supplied.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BAMTAG(col,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Extract a single substring from an attribute value TAG_VALUE-like field (as in BAM files).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TAG(col,str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TAG(col,str,sep)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Extract a single substring from an attribute value field (as in GFF or VCF files, e.g. use semicolon ‘;’ as separator).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IHA(str,str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IHA(str,str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
 <td><p>Returns 1 if IUPAC genotype string contains SNP allele str, zero otherwise.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IUPAC2GT(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IUPAC2GT(str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Converts IUPAC genotype to ‘A1/A2’ genotype.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IUPACGTSTAT(str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IUPACGTSTAT(str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Input IUPAC genotypes for subject, father and mother. Returns ‘0’ if IHE, ‘1’ if OK, and ‘2’ if OK and phase-able.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IUPACFA(str,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IUPACFA(str,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Returns the SNP allele of the father.  Only valid if IUPACGTSTAT returns 2.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IUPACMA(str,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IUPACMA(str,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Returns the SNP allele of the mother.  Only valid if IUPACGTSTAT returns 2.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GTSHARE(str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GTSHARE(str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">int</span></code></p></td>
 <td><p>Input two (pos,Ref,Alleles) genotypes where Alleles = ‘All1,All2,..’ or ‘All1/All2/..’ or ‘All1|All2’
 Returns the number of identical allels based on all pairwise comparisons between Alleles1 and Alleles2. First parameter is chr.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GTSTAT(int,str,str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GTSTAT(int,str,str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Input (pos,Ref,Alt) genotypes for subject, father and mother. Returns ‘0’ if IHE, ‘1’ if OK, and ‘2’ if OK and phase-able.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GTFA(int,str,str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GTFA(int,str,str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Returns the Alt allele of the father.  Only valid if GTSTAT returns ‘2’.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GTMA(int,str,str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GTMA(int,str,str,int,str,str,int,str,str)</span> <span class="pre">:</span> <span class="pre">str</span></code></p></td>
 <td><p>Returns the Alt allele of the mother.  Only valid if GTSTAT returns ‘2’.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">INDAG(dag</span> <span class="pre">file,str-cont)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">INDAG(dag</span> <span class="pre">file,str-cont)</span> <span class="pre">:</span> <span class="pre">bool</span></code></p></td>
 <td><p>Not a standard function.  Should be used as | where go_id INDAG(‘go.txt’,’GO:111111’) or INDAG([#temp#],’GO:111111’)</p></td>
 </tr>
 </tbody>

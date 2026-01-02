@@ -468,6 +468,9 @@ Genomic-Specific Functions
    * - ``REFBASES(str,int,int) : str``
      - The reference bases, based on the build specified in the gor_config.txt file.
      - :ref:`refbases`
+   * - ``REFBASES_WITH_BUILD(str,int,int,str) : str``
+     - The reference bases, based on the build specified.
+     - :ref:`refbases_with_build`
    * - ``BAMTAG(col,str) : str``
      - Extract a single substring from an attribute value TAG_VALUE-like field (as in BAM files).
      - :ref:`bamtag`
