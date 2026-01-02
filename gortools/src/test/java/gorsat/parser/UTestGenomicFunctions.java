@@ -86,7 +86,19 @@ public class UTestGenomicFunctions {
 
     @Test
     public void testRefBases() {
-        TestUtils.assertCalculated("refbases('', 0, 0)", "N");
+        Assert.assertEquals("cct", TestUtils.getCalculatedWithArgs("refbases('chr1', 10101, 10103)", new String[]{"-config", "../tests/data/ref_mini/gor_config.txt"}));
+    }
+
+    @Test
+    public void testRefBasesWithBuild() {
+        TestUtils.assertCalculated("refbases_with_build('chr1', 10101, 10103, '../tests/data/ref_mini/chromSeq')", "cct");
+        // todo test with meaningful input
+    }
+
+    @Ignore("Read from full build, outside what is in ref_mini, skip as full build is not normally available")
+    @Test
+    public void testRefBasesWithBuild2() {
+        TestUtils.assertCalculated("refbases_with_build('chr1', 1010101, 1010103, '/private/gorkube-mount/csa/ref/hg19/chromSeq')", "ACC");
         // todo test with meaningful input
     }
 

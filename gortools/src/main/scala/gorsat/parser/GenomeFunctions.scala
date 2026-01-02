@@ -63,6 +63,7 @@ object GenomeFunctions {
     functions.register("CHARSPHASED2GT", getSignatureStringDouble2String(charsPhased2Gt), charsPhased2Gt _)
     functions.registerWithOwner("REFBASE", getSignatureStringInt2String(removeOwner(refBase)), refBase _)
     functions.registerWithOwner("REFBASES", getSignatureStringIntInt2String(removeOwner(refBases)), refBases _)
+    functions.registerWithOwner("REFBASES_WITH_BUILD", getSignatureStringIntIntString2String(removeOwner(refBases_with_build)), refBases_with_build _)
     functions.registerWithOwner("GTFA", "String:Int:String:String:Int:String:String:Int:String:String2String", gtfa _ )
     functions.registerWithOwner("GTMA", "String:Int:String:String:Int:String:String:Int:String:String2String", gtma _ )
     functions.registerWithOwner("GTSTAT", "String:Int:String:String:Int:String:String:Int:String:String2String", gtstat _ )
@@ -96,6 +97,12 @@ object GenomeFunctions {
   def refBases(owner: ParseArith, ex1: sFun, ex2: iFun, ex3: iFun): sFun = {
     cvp => {
       owner.refSeq.getBases(ex1(cvp), ex2(cvp), ex3(cvp))
+    }
+  }
+
+  def refBases_with_build(owner: ParseArith, ex1: sFun, ex2: iFun, ex3: iFun, ex4: sFun): sFun = {
+    cvp => {
+      owner.context.getSession.getProjectContext.createRefSeq(ex4(cvp)).getBases(ex1(cvp), ex2(cvp), ex3(cvp))
     }
   }
 

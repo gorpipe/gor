@@ -36,15 +36,12 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import java.nio.file.{Files, Path, Paths}
 
-object RefSeqFromConfig {
-  var download_triggered = false
-}
-
-class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
+class RefSeqFromChromSeq(ipath : String, fileReader : FileReader) extends RefSeq {
+  protected var download_triggered = false
   private val GOR_REFSEQ_CACHE_FOLDER = System.getProperty("gor.refseq.cache.folder")
   private val GOR_REFSEQ_CACHE_DOWNLOAD = Option(System.getProperty("gor.refseq.cache.download", "true")).exists(_.toBoolean)
 
-  private val log: Logger = LoggerFactory.getLogger(RefSeqFromConfig.this.getClass)
+  private val log: Logger = LoggerFactory.getLogger(RefSeqFromChromSeq.this.getClass)
 
   lazy val path: String = getBuildPath(ipath)
   val buffLength = 10000
@@ -69,8 +66,8 @@ class RefSeqFromConfig(ipath : String, fileReader : FileReader) extends RefSeq {
       if (Files.exists(fullCachePath)) {
         log.debug("Using cached reference build {}", fullCachePath.toString)
         return fullCachePath.toString
-      } else if (GOR_REFSEQ_CACHE_DOWNLOAD && !RefSeqFromConfig.download_triggered) {
-        RefSeqFromConfig.download_triggered = true  // Only trigger download once per client
+      } else if (GOR_REFSEQ_CACHE_DOWNLOAD && !download_triggered) {
+        download_triggered = true  // Only trigger download once per client
         triggerRefSeqDownload(fullRefPath, fullCachePath)
       }
     }
