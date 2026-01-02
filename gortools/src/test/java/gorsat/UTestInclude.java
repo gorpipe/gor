@@ -21,7 +21,7 @@ public class UTestInclude {
         var subpath = workDir.getRoot().toPath().resolve(DataUtil.toFile("subquery", DataType.GORQ));
         Files.writeString(subpath, subquery);
         var query = "def sim = sim;\n include "+subpath.toAbsolutePath()+";\n create yyy = gor [xxx] \n| group chrom -count;\n gor [yyy] | top 1";
-        var result = TestUtils.runGorPipe(query);
+        var result = TestUtils.runGorPipe(new String[]{query, "-cachedir", workDir.getRoot().toString()}, true);
         Assert.assertEquals("Chrom\tbpStart\tbpStop\tallCount\n" +
                 "chr1\t0\t250000000\t2\n", result);
     }
