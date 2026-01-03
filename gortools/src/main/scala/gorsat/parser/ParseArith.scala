@@ -105,7 +105,6 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
   }
 
   def close(): Unit = {
-    if (refSeq != null) refSeq.close()
     subFilters.forEach(f => f.close())
   }
 

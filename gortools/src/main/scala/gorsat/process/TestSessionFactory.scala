@@ -56,10 +56,10 @@ class TestSessionFactory(pipeOptions: PipeOptions, whitelistedCmdFiles:String, s
     val projectContext = projectContextBuilder
       .setAliasFile(pipeOptions.aliasFile)
       .setCacheDir(pipeOptions.cacheDir)
-      .setConfigFile(pipeOptions.configFile)
       .setLogDirectory(pipeOptions.logDir)
       .setConfigFile(pipeOptions.configFile)
       .setRoot(pipeOptions.gorRoot)
+      //.setConfigFile(if (pipeOptions.configFile != null) pipeOptions.configFile else "../tests/config/gor_unittests_config.txt")
       .setProjectName("project_10004")
       .setFileReader(fileReader)
       .setFileCache(new LocalFileCacheClient(fileReader, pipeOptions.cacheDir, useSubFolder, subFolderSize))

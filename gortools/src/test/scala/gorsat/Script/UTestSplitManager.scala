@@ -168,6 +168,13 @@ class UTestSplitManager extends AnyFunSuite {
     assertResult(SplitManager.SPLIT_REPLACEMENT_PATTERN)(manager.replacementPattern)
     assertResult(142)(manager.chromosomeSplits.size)
   }
+
+  test("Create splitmanager from command: pgor split size") {
+    val query = "pgor " + SplitManager.SPLIT_REPLACEMENT_PATTERN + " -split 10000000 #dbsnp# | top 10"
+    val manager = createSplitManagerFromCommand(query)
+    assertResult(SplitManager.SPLIT_REPLACEMENT_PATTERN)(manager.replacementPattern)
+    assertResult(396)(manager.chromosomeSplits.size)
+  }
   
   test("Create splitmanager from command: pgor force whole chrom") {
     val query = "pgor " + SplitManager.REGULAR_REPLACEMENT_PATTERN + " #dbsnp# | rank 1000000 pos"

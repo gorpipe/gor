@@ -174,6 +174,15 @@ public class ProjectContext {
         return refSeqFactory.create();
     }
 
+    public RefSeq createRefSeq(String chromSeqPath) {
+        if (refSeqFactory == null) {
+            createRefSeqFactory();
+        }
+
+        // Lets create the default behaviour if it is not set
+        return refSeqFactory.create(chromSeqPath);
+    }
+
     public String getProjectRoot() {
         return root.split("[ \t]+")[0];
     }

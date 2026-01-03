@@ -28,6 +28,7 @@ import gorsat.Utilities.AnalysisUtilities;
 import gorsat.Utilities.MacroUtilities;
 import gorsat.process.*;
 import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.GenomicIterator;
@@ -464,6 +465,12 @@ public class TestUtils {
     public static String getCalculated(String expression) {
         String query = "gor 1.mem | select 1,2 | top 1 | calc NEWCOL " + expression + " | top 1";
         String[] result = runGorPipe(query, true).split("\t");
+        return result[result.length - 1].replace("\n", "");
+    }
+
+    public static String getCalculatedWithArgs(String expression, String[] args) {
+        String query = "gor 1.mem | select 1,2 | top 1 | calc NEWCOL " + expression + " | top 1";
+        String[] result = runGorPipe(ArrayUtils.addFirst(args, query), true).split("\t");
         return result[result.length - 1].replace("\n", "");
     }
 

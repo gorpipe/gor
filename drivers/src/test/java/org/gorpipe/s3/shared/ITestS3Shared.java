@@ -538,8 +538,9 @@ public class ITestS3Shared {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
         String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = "user_data/dummy2.gor";
+        Files.createDirectories(Path.of(gorRoot).resolve("result_cache"));
 
-        String result = runGorPipeCLI(String.format("create #x = gorrow chr1,1 | write s3data://shared/%s;\n" +
+        String result = runGorPipeServer(String.format("create #x = gorrow chr1,1 | write s3data://shared/%s;\n" +
                 "create #y = gor [#x] | calc x 4;\n" +
                 "gor [#y]\n", dataPath), gorRoot, securityContext);
 

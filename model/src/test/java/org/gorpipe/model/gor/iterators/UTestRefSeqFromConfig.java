@@ -37,7 +37,7 @@ public class UTestRefSeqFromConfig {
     @Test
     public void testGetRefbase() {
 
-        RefSeqFromConfig refseq = new RefSeqFromConfig("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+        RefSeqFromChromSeq refseq = new RefSeqFromChromSeq("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
 
         Assert.assertEquals('C', refseq.getBase("chr1", 101000));
 
@@ -48,7 +48,7 @@ public class UTestRefSeqFromConfig {
         Assert.assertEquals( 'N', refseq.getBase("chr1", 250000));
 
         // Outside from same buffer, with fresh refseq
-        refseq = new RefSeqFromConfig("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+        refseq = new RefSeqFromChromSeq("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
         Assert.assertEquals( 'N', refseq.getBase("chr1", 250001));
     }
 
@@ -56,7 +56,7 @@ public class UTestRefSeqFromConfig {
     @Test
     public void testGetRefbases() {
 
-        RefSeqFromConfig refseq = new RefSeqFromConfig("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+        RefSeqFromChromSeq refseq = new RefSeqFromChromSeq("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
 
         Assert.assertEquals("C", refseq.getBases("chr1", 101000, 101000));
 
@@ -74,7 +74,7 @@ public class UTestRefSeqFromConfig {
         Assert.assertEquals( "NN", refseq.getBases("chr1", 250001, 250002));
 
         // Outside from same buffer, with fresh refseq
-        refseq = new RefSeqFromConfig("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+        refseq = new RefSeqFromChromSeq("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
         Assert.assertEquals( "NN", refseq.getBases("chr1", 250001, 250002));
 
     }
@@ -83,7 +83,7 @@ public class UTestRefSeqFromConfig {
     @Test
     public void testGetRefbasesPerformance() {
         long startTime;
-        RefSeqFromConfig refseq = new RefSeqFromConfig("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+        RefSeqFromChromSeq refseq = new RefSeqFromChromSeq("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
 
         // Prep buffers.
         refseq.getBase("chr1", 100001);
@@ -107,7 +107,7 @@ public class UTestRefSeqFromConfig {
     public void testGetFullCachePath() {
         var refPath = "../tests/data/ref_mini/chromSeq";
         var fullRefPath = Path.of(refPath).toAbsolutePath();
-        RefSeqFromConfig refseq = new RefSeqFromConfig(refPath, new DriverBackedFileReader(""));
+        RefSeqFromChromSeq refseq = new RefSeqFromChromSeq(refPath, new DriverBackedFileReader(""));
         Assert.assertEquals("/tmp/cache/ref_mini/chromSeq", refseq.getFullCachePath(fullRefPath).toString());
     }
 
@@ -118,9 +118,11 @@ public class UTestRefSeqFromConfig {
 
         System.setProperty("gor.refseq.cache.download", "True");
         System.setProperty("gor.refseq.cache.folder", workDirPath.resolve("cache").toString());
-        RefSeqFromConfig.download_triggered_$eq(false);
 
-        RefSeqFromConfig refseq = new RefSeqFromConfig("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+        RefSeqFromChromSeq refseq = new RefSeqFromChromSeq("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+
+        refseq.download_triggered_$eq(false);
+
 
         Assert.assertEquals('C', refseq.getBase("chr1", 101000));
 
