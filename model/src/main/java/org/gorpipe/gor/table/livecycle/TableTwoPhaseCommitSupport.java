@@ -1,6 +1,10 @@
 package org.gorpipe.gor.table.livecycle;
 
 import org.gorpipe.exceptions.GorSystemException;
+import org.gorpipe.gor.driver.linkfile.LinkFile;
+import org.gorpipe.gor.driver.meta.DataType;
+import org.gorpipe.gor.driver.meta.SourceReference;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.slf4j.Logger;
@@ -41,10 +45,27 @@ public abstract class TableTwoPhaseCommitSupport extends TableLifeCycleSupport i
     @Override
     public void commit() {
         try {
-            if (!table.isUseEmbeddedHeader()) {
-                updateFromTempFile(getTempMetaFileName(), table.getMetaPath());
+            if (this.table.getLinkPath() != null ||  TableInfoBase.USE_LINKS) {
+                var newVersionPath = PathUtils.resolve(table.getFolderPath(), table.getNewVersionedFileName());
+
+                if (!table.isUseEmbeddedHeader()) {
+                    updateFromTempFile(getTempMetaFileName(),
+                            newVersionPath + DataType.META.suffix);
+                }
+                updateFromTempFile(getTempMainFileName(), newVersionPath);
+                this.table.setPath(newVersionPath);
+
+                LinkFile.load((StreamSource) table.fileReader.resolveDataSource(new SourceReference(table.getLinkPath())))
+                    .appendEntry(table.getPath(), "")
+                    .save();
+
+            } else {
+                if (!table.isUseEmbeddedHeader()) {
+                    updateFromTempFile(getTempMetaFileName(), table.getMetaPath());
+                }
+                updateFromTempFile(getTempMainFileName(), table.getPath());
             }
-            updateFromTempFile(getTempMainFileName(), table.getPath());
+
         } catch (IOException e) {
             throw new GorSystemException("Could not commit " + table.getPath(), e);
         }
@@ -84,7 +105,7 @@ public abstract class TableTwoPhaseCommitSupport extends TableLifeCycleSupport i
     }
 
     protected String getTempMetaFileName() {
-        return getTempFileName(table.getMetaPath());
+        return getTempMainFileName() + DataType.META.suffix;
     }
 
     protected String getTempFileName(String pathString) {
@@ -95,7 +116,7 @@ public abstract class TableTwoPhaseCommitSupport extends TableLifeCycleSupport i
 
     private String insertTableFolderIntoFilePath(String pathString) {
         String fileName = PathUtils.getFileName(pathString);
-        return PathUtils.resolve(table.getFolderPath(), (fileName));
+        return PathUtils.resolve(table.getFolderPath(), fileName);
     }
 
     private String insertTempIntoFileName(String pathString) {

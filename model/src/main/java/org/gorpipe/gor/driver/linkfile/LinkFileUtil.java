@@ -2,11 +2,9 @@ package org.gorpipe.gor.driver.linkfile;
 
 import gorsat.Commands.CommandParseUtilities;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
-import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.util.Strings;
@@ -29,69 +27,42 @@ public class LinkFileUtil {
             throw new IllegalArgumentException("Link file path is null or empty.  Can not infer data file name.");
         }
 
-        var linkPath = linkSource.getSourceReference().getUrl();
-
-        // Remove common the root if set.
-        var pathReplacements = System.getenv("GOR_DRIVER_LINK_INFER_REPLACE");
-        if (!Strings.isNullOrEmpty(pathReplacements)) {
-            var parts = pathReplacements.split(";", 2);
-            linkPath = linkPath.replaceAll(parts[0], parts.length > 1 ? parts[1] : "");
-        }
-
-        // Adjust the link path so it suitable as part of the data file path.
-        if (PathUtils.isAbsolutePath(linkPath)) {
-            throw new IllegalArgumentException("Link file path is absolute.  Can not infer data file name: " + linkSource.getFullPath());
-        }
-
-        var dataFileRootPath = "";
+        var dataFileParentPath = "";
 
         // Get root from the link file
         var link = linkSource.exists()
                 ? LinkFile.load(linkSource).appendMeta(linkFileMeta)
                 : LinkFile.create(linkSource, linkFileMeta);
 
-        var linkDataFileRootPath = link.getMeta().getProperty(LinkFileMeta.HEADER_DATA_LOCATION_KEY);
-        if (!Strings.isNullOrEmpty(linkDataFileRootPath)) {
-            dataFileRootPath = linkDataFileRootPath;
+        var linkDataFileParentPath = link.getMeta().getProperty(LinkFileMeta.HEADER_DATA_LOCATION_KEY);
+        if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
+            dataFileParentPath = linkDataFileParentPath;
         } else if (link.getLatestEntry() != null) {
-            dataFileRootPath = PathUtils.getParent(link.getLatestEntryUrl());
+            dataFileParentPath = PathUtils.getParent(link.getLatestEntryUrl());
         }
 
-        if (!Strings.isNullOrEmpty(linkDataFileRootPath)) {
-            dataFileRootPath = linkDataFileRootPath;
+        if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
+            dataFileParentPath = linkDataFileParentPath;
         }
 
         // Get root from global const
-        if (Strings.isNullOrEmpty(dataFileRootPath)) {
-            dataFileRootPath = System.getenv(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL);
+        if (Strings.isNullOrEmpty(dataFileParentPath)) {
+            dataFileParentPath = System.getenv(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL);
 
             // Insert project, only if we use global and global is set
-            if (!Strings.isNullOrEmpty(dataFileRootPath)) {
+            if (!Strings.isNullOrEmpty(dataFileParentPath)) {
                 var project = linkSource.getSourceReference().getCommonRoot() != null
                         ? PathUtils.getFileName(linkSource.getSourceReference().getCommonRoot()) : "";
                 if (!Strings.isNullOrEmpty(project)) {
-                    dataFileRootPath = PathUtils.resolve(dataFileRootPath, project);
+                    dataFileParentPath = PathUtils.resolve(dataFileParentPath, project);
                 }
             }
         }
 
-        // Create a file name
-        String uniqId = RandomStringUtils.insecure().next(8, true, true);
-        var linkPathSplit = linkPath.indexOf('.');
-        if (linkPathSplit > 0) {
-            linkPath = "%s.%s.%s".formatted(
-                    linkPath.substring(0, linkPathSplit),
-                    uniqId,
-                    linkPath.substring(linkPathSplit + 1));
-        } else {
-            linkPath = "%s.%s".formatted(linkPath, uniqId);
-        }
+        var dataFileName = PathUtils.injectRandomStringIntoFileName(PathUtils.getFileName(linkSource.getFullPath()));
 
-        linkPath = linkPath.replaceAll("\\.link$", "");
-
-        return PathUtils.resolve(dataFileRootPath, linkPath);
+        return PathUtils.resolve(dataFileParentPath, dataFileName);
     }
-
 
     private static Pattern linkPattern = Pattern.compile(".* -link ([^\\s]*) ?.*", Pattern.CASE_INSENSITIVE);
     private static Pattern linkMetaPattern = Pattern.compile(".* -linkMeta [\"']([^\\s]*)[\"'] ?.*", Pattern.CASE_INSENSITIVE);
@@ -114,6 +85,17 @@ public class LinkFileUtil {
 
     public record LinkData(String linkFile, String linkFileContent, String linkFileMeta, String linkFileInfo, String md5) {}
 
+
+    /**
+     * Extract link data from a linkfile and link options.
+     *
+     * @param fileReader        filereader
+     * @param source            the link file source
+     * @param optLinkFile       linkfile option string
+     * @param optLinkFileMeta   linkfilemeta option string
+     * @param md5               md5 for the data file
+     * @return linkData record with link info.
+     */
     public static LinkData extractLink(FileReader fileReader, String source, String optLinkFile, String optLinkFileMeta, String md5) {
         var linkFile = LinkFile.validateAndUpdateLinkFileName(optLinkFile);
         var linkFileContent = !Strings.isNullOrEmpty(linkFile) ? PathUtils.resolve(fileReader.getCommonRoot(), source) : "";
@@ -153,12 +135,11 @@ public class LinkFileUtil {
         fileReader.resolveUrl(FilenameUtils.removeExtension(linkData.linkFile), true);
 
         // Use the nonsecure driver file reader as this is an exception from the write no links rule.
-        var unsecureFileReader = new DriverBackedFileReader(fileReader.getSecurityContext(),
-                fileReader.getCommonRoot(), fileReader.getQueryTime());
+        var unsecureFileReader = fileReader.unsecure();
 
-        LinkFile.load((StreamSource)unsecureFileReader.resolveUrl(linkData.linkFile, true))
+        LinkFile.loadV1((StreamSource)unsecureFileReader.resolveUrl(linkData.linkFile, true))
                 .appendMeta(linkData.linkFileMeta)
-                .appendEntry(linkData.linkFileContent, linkData.md5, linkData.linkFileInfo, fileReader)
-                .save(fileReader.getQueryTime());
+                .appendEntry(linkData.linkFileContent, linkData.md5, linkData.linkFileInfo, unsecureFileReader)
+                .save(unsecureFileReader.getQueryTime());
     }
 }

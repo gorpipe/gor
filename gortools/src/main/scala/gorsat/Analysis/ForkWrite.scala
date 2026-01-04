@@ -28,15 +28,13 @@ import gorsat.Outputs.OutFile
 import org.apache.commons.io.FilenameUtils
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.driver.linkfile.{LinkFile, LinkFileEntryV1}
+import org.gorpipe.gor.driver.linkfile.LinkFileUtil
 import org.gorpipe.gor.driver.meta.DataType
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.{GorSession, ProjectContext}
 import org.gorpipe.gor.table.util.PathUtils
 import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.model.gor.RowObj
-import org.gorpipe.util.Strings
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.util.UUID
@@ -341,7 +339,8 @@ case class ForkWrite(forkCol: Int,
       })
     }
 
-    if (options.linkFile.nonEmpty) {
+    // Only write links for files that are NOT inside gord
+    if (options.useFolder.isEmpty && !singleFileHolder.fileName.contains(".gord/")) {
       if (useFork) {
         forkMap.values.foreach(sh => {
           val linkData = LinkFileUtil.extractLink(session.getProjectContext.getFileReader, sh.fileName,
@@ -351,7 +350,7 @@ case class ForkWrite(forkCol: Int,
             LinkFileUtil.writeLinkFile(session.getProjectContext.getFileReader, linkData)
           }
         })
-      } else if (options.useFolder.isEmpty && !singleFileHolder.fileName.contains(".gord/")) {
+      } else {
         val linkData = LinkFileUtil.extractLink(session.getProjectContext.getFileReader, singleFileHolder.fileName, options.linkFile, options.linkFileMeta, getMd5)
 
         if (linkData.linkFile().nonEmpty) {
