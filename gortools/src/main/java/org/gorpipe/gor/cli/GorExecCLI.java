@@ -22,7 +22,10 @@
 
 package org.gorpipe.gor.cli;
 
+import java.nio.file.Path;
+
 import org.gorpipe.gor.cli.cache.CacheCommand;
+import org.gorpipe.gor.cli.files.FilesCommand;
 import org.gorpipe.gor.cli.git.GitCommand;
 import org.gorpipe.gor.cli.help.HelpCommand;
 import org.gorpipe.gor.cli.index.IndexCommand;
@@ -31,9 +34,8 @@ import org.gorpipe.gor.cli.link.LinkCommand;
 import org.gorpipe.gor.cli.manager.ManagerCommand;
 import org.gorpipe.gor.cli.render.RenderCommand;
 import org.gorpipe.logging.GorLogbackUtil;
-import picocli.CommandLine;
 
-import java.nio.file.Path;
+import picocli.CommandLine;
 
 @SuppressWarnings("squid:S106")
 @CommandLine.Command(name="gor",
@@ -41,7 +43,7 @@ import java.nio.file.Path;
         description = "Command line interface for gor query language and processes.",
         subcommands = {HelpCommand.class, ManagerCommand.class, IndexCommand.class,
                 CacheCommand.class, RenderCommand.class, InfoCommand.class,
-                LinkCommand.class, GitCommand.class})
+                LinkCommand.class, GitCommand.class, FilesCommand.class})
 public class GorExecCLI extends HelpOptions implements Runnable {
     public static void main(String[] args) {
         GorLogbackUtil.initLog("gor");

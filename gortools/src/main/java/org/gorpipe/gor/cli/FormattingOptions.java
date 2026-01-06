@@ -30,6 +30,6 @@ import picocli.CommandLine;
         optionListHeading    = "%nOptions:%n%n",
         commandListHeading   = "%nCommands:%n%n",
         header="GOR Command Line",
-        footer="%n(c) WuxiNextcode 2019")
+        footer="%n(c) GeneDX 2026")
 public class FormattingOptions {
 }
