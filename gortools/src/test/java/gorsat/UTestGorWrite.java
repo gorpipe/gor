@@ -23,7 +23,6 @@
 package gorsat;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.file.PathUtils;
 import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.exceptions.GorSecurityException;
 import org.gorpipe.exceptions.GorSystemException;
@@ -34,6 +33,7 @@ import org.gorpipe.gor.driver.linkfile.LinkFileV1;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.model.BaseMeta;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -238,7 +238,7 @@ public class UTestGorWrite {
     @Test
     public void testWriteLinkFileWithInferFileName() throws IOException {
 
-        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL, workDirPath.resolve("managed_data").toString());
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL, workDirPath.resolve("managed_data").toString());
         TestUtils.runGorPipe("gorrow chr1,1,100 | write -link ltest.gor", "-gorroot", workDirPath.toString());
 
         var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("ltest.gor.link").toString()));
@@ -255,7 +255,7 @@ public class UTestGorWrite {
     @Test
     public void testWriteLinkFileWithInferFileNameForExistingLink() throws IOException {
 
-        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL, workDirPath.resolve("managed_data").toString());
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL, workDirPath.resolve("managed_data").toString());
         TestUtils.runGorPipe("gorrow chr1,1,100 | write -link ltest.gor", "-gorroot", workDirPath.toString());
         TestUtils.runGorPipe("gorrow chr1,1,101 | write -link ltest.gor", "-gorroot", workDirPath.toString());
 
@@ -268,6 +268,102 @@ public class UTestGorWrite {
         Assert.assertEquals("#chrom\tbpStart\tbpStop\nchr1\t1\t101\n",
                 Files.readString(Path.of(linkFile.getLatestEntry().url())));
 
+    }
+
+    @Test
+    public void testWriteLinkFileForGordFolder() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("pgor dbsnp.gor | write -link dbsnp3.gord dbsnp2.gord ", "-gorroot", workDirPath.toString());
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
+
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertEquals(workDirPath.resolve("dbsnp2.gord"), Path.of(linkFile.getLatestEntry().url()));
+
+        String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor| top 1000", "-gorroot", workDirPath.toString());
+        String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 1000", "-gorroot", workDirPath.toString());
+        Assert.assertEquals(linkresult1, linkresult3);
+    }
+
+    @Test
+    public void testWriteLinkFileForGordFolderParallel() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("parallel -parts <(nor dbsnp.gor | select chrom | distinct) <(gor -p #{col:Chrom} dbsnp.gor) | write -link dbsnp3.gord dbsnp2.gord ", "-gorroot", workDirPath.toString());
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
+
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertEquals(workDirPath.resolve("dbsnp2.gord"), Path.of(linkFile.getLatestEntry().url()));
+
+        String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor| top 1000", "-gorroot", workDirPath.toString());
+        String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 1000", "-gorroot", workDirPath.toString());
+        Assert.assertEquals(linkresult1, linkresult3);
+    }
+
+    @Test
+    public void testWriteLinkFileForGordFolderInferFilename() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("pgor dbsnp.gor | write -link dbsnp3.gord", "-gorroot", workDirPath.toString());
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
+
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertTrue(linkFile.getLatestEntry().url().matches(".*?dbsnp3\\..*?\\.gord/"));
+
+        String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor| top 1000", "-gorroot", workDirPath.toString());
+        String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 1000", "-gorroot", workDirPath.toString());
+        Assert.assertEquals(linkresult1, linkresult3);
+    }
+
+    @Test
+    public void testWriteLinkFileForGordFolderInferFilenameParallel() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("parallel -parts <(nor dbsnp.gor | select chrom | distinct) <(gor -p #{col:Chrom} dbsnp.gor) | write -link dbsnp3.gord", "-gorroot", workDirPath.toString());
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
+
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertTrue(linkFile.getLatestEntry().url().matches(".*?dbsnp3\\..*?\\.gord/"));
+
+        String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor | top 500", "-gorroot", workDirPath.toString());
+        String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 500", "-gorroot", workDirPath.toString());
+        Assert.assertEquals(linkresult1, linkresult3);
+    }
+
+    @Test
+    public void testWriteLinkFileForForkWrite() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("gor dbsnp.gor | write -f chrom -link dbsnp-#{fork}-link.gor.link  dbsnp-#{fork}-data.gor ", "-gorroot", workDirPath.toString());
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp-chr1-link.gor.link").toString()));
+
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertEquals("dbsnp-chr1-data.gor", PathUtils.getFileName(linkFile.getLatestEntry().url()));
+
+        var countLinkFiles = Files.list(workDirPath).map(f -> f.getFileName().toString()).filter(f -> f.endsWith(".link")).count();
+        Assert.assertEquals(24, countLinkFiles);
+
+    }
+
+    @Ignore
+    @Test
+    public void testWriteLinkFileForForkWriteWrongLinkName() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("gor dbsnp.gor | write -f chrom -link dbsnp-link.gor.link  dbsnp-#{fork}-data.gor ", "-gorroot", workDirPath.toString());
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
+
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertEquals("dbsnp-chr1-data.gor", linkFile.getLatestEntry().url());
+
+        var countLinkFiles = Files.list(workDirPath).filter(f -> f.endsWith(".link")).count();
+        Assert.assertEquals(10, countLinkFiles);
     }
 
     @Test

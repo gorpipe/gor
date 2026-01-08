@@ -5,14 +5,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.RandomStringUtils;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
@@ -27,7 +24,7 @@ import org.gorpipe.util.Strings;
  * Link file format, a valid nor format.  Example:
  *
  * ## VERSION=<file format version>
- * ## SERIAl=<serial number of thislink file>
+ * ## SERIAl=<serial number of this link file>
  * ## ENTRIES_COUNT_MAX=<max entries to store in this file>
  * ## ENTRIES_AGE_MAX=<max age of entries>
  * # FILE\tTIMESTAMP\tMD5\tSERIAL\tINFO
@@ -93,11 +90,11 @@ public abstract class LinkFile {
         return new LinkFileV1(source, LinkFileMeta.createOrLoad(content, LinkFileV1.VERSION, true), content);
     }
 
-    public static LinkFile createV0(StreamSource source, String content) throws IOException {
+    public static LinkFile createV0(StreamSource source, String content) {
         return new LinkFileV0(source, LinkFileMeta.createOrLoad(content, LinkFileV0.VERSION, true), content);
     }
 
-    public static LinkFile createV1(StreamSource source, String content) throws IOException {
+    public static LinkFile createV1(StreamSource source, String content) {
         return new LinkFileV1(source, LinkFileMeta.createOrLoad(content, LinkFileV1.VERSION, true), content);
     }
 
@@ -109,54 +106,7 @@ public abstract class LinkFile {
         }
     }
 
-    /**
-     * Infer the data file name from the link file name.
-     *
-     * @param linkSource the link file path with the link extension
-     * @param linkFileMeta additional link file meta data
-     * @return the data file path
-     */
-    public static String inferDataFileNameFromLinkFile(StreamSource linkSource, String linkFileMeta) throws IOException {
-        if (linkSource == null || Strings.isNullOrEmpty(linkSource.getFullPath())) {
-            throw new IllegalArgumentException("Link file path is null or empty.  Can not infer data file name.");
-        }
 
-        var dataFileParentPath = "";
-
-        // Get root from the link file
-        var link = linkSource.exists()
-                ? LinkFile.load(linkSource).appendMeta(linkFileMeta)
-                : LinkFile.create(linkSource, linkFileMeta);
-
-        var linkDataFileParentPath = link.getMeta().getProperty(LinkFileMeta.HEADER_DATA_LOCATION_KEY);
-        if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
-            dataFileParentPath = linkDataFileParentPath;
-        } else if (link.getLatestEntry() != null) {
-            dataFileParentPath = PathUtils.getParent(link.getLatestEntryUrl());
-        }
-
-        if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
-            dataFileParentPath = linkDataFileParentPath;
-        }
-
-        // Get root from global const
-        if (Strings.isNullOrEmpty(dataFileParentPath)) {
-            dataFileParentPath = System.getenv(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_FILES_URL);
-
-            // Insert project, only if we use global and global is set
-            if (!Strings.isNullOrEmpty(dataFileParentPath)) {
-                var project = linkSource.getSourceReference().getCommonRoot() != null
-                        ? PathUtils.getFileName(linkSource.getSourceReference().getCommonRoot()) : "";
-                if (!Strings.isNullOrEmpty(project)) {
-                    dataFileParentPath = PathUtils.resolve(dataFileParentPath, project);
-                }
-            }
-        }
-
-        var dataFileName = PathUtils.injectRandomStringIntoFileName(PathUtils.getFileName(linkSource.getFullPath()));
-
-        return PathUtils.resolve(dataFileParentPath, dataFileName);
-    }
 
     protected final StreamSource source;
     protected final LinkFileMeta meta;
@@ -192,7 +142,7 @@ public abstract class LinkFile {
             linkUrl = PathUtils.resolve(PathUtils.getParent(this.source.getFullPath()), linkUrl);
         }
 
-        // Handle link sub-path if needed.
+        // Handle the link sub-path if needed.
         SourceReference sourceReference = source.getSourceReference();
         if (sourceReference != null) {
             String linkSubPath = sourceReference.getLinkSubPath();
@@ -290,7 +240,7 @@ public abstract class LinkFile {
     /**
      * Remove entries that are newer than the provided timestamp.
      *
-     * @param timestamp the timestamp to rollback to (inclusive)
+     * @param timestamp the timestamp to roll back to (inclusive)
      * @return true if one or more entries were removed, otherwise false.
      */
     public boolean rollbackToTimestamp(long timestamp) {
@@ -315,7 +265,7 @@ public abstract class LinkFile {
     }
 
     private void save(OutputStream os, long timestamp) {
-        meta.setProperty(meta.HEADER_SERIAL_KEY, Integer.toString(Integer.parseInt(meta.getProperty(meta.HEADER_SERIAL_KEY, "0")) + 1));
+        meta.setProperty(LinkFileMeta.HEADER_SERIAL_KEY, Integer.toString(Integer.parseInt(meta.getProperty(LinkFileMeta.HEADER_SERIAL_KEY, "0")) + 1));
 
         var content = new StringBuilder(getHeader());
 
@@ -338,7 +288,7 @@ public abstract class LinkFile {
 
 
     /**
-     * Load content from the source, if it exists.
+     * Load content from the source if it exists.
      *
      * @param source the source to load from
      * @return the content of the link file or null if it does not exist (empty indicates version 0 link file).

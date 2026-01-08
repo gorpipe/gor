@@ -310,7 +310,7 @@ object GeneralQueryHandler {
     }
   }
 
-  private def writeOutGorDictionaryFolder(fileReader: FileReader, outfolderpath: String, useTheDict: Boolean): Unit = {
+  private def writeOutGorDictionaryFolder(commandToExecute: String, fileReader: FileReader, outfolderpath: String, useTheDict: Boolean): Unit = {
     val outpath = if(useTheDict) {
       if (outfolderpath.endsWith("/")) s"$outfolderpath${GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME}" else s"$outfolderpath/${GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME}";
     } else {
@@ -324,7 +324,7 @@ object GeneralQueryHandler {
         s"$outfolderpath/${outfolderpath.substring(idx+1)}"
       }
     }
-    GorJavaUtilities.writeDictionaryFromMeta(fileReader, outfolderpath, outpath)
+    GorJavaUtilities.writeDictionaryFromMeta(commandToExecute, fileReader, outfolderpath, outpath)
   }
 
   def dictRangeFromSeekRange(inp: String, prefix: String): String = {
@@ -382,7 +382,7 @@ object GeneralQueryHandler {
 
   private def writeOutGorDictionary(commandToExecute: String, fileReader: FileReader, outfile: String, useTheDict: Boolean): String = {
     if(fileReader.isDirectory(outfile)) {
-      if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(fileReader, outfile, useTheDict)
+      if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(commandToExecute, fileReader, outfile, useTheDict)
     } else {
       val w = commandToExecute.split(' ')
       var dictFiles: List[String] = Nil
@@ -441,7 +441,7 @@ object GeneralQueryHandler {
 
   private def writeOutGorDictionaryPart(commandToExecute: String, fileReader: FileReader, outfile: String, useTheDict: Boolean): String = {
     if(fileReader.isDirectory(outfile)) {
-      if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(fileReader, outfile, useTheDict)
+      if (!commandToExecute.toLowerCase.contains("-nodict")) writeOutGorDictionaryFolder(commandToExecute, fileReader, outfile, useTheDict)
     } else {
       val w = commandToExecute.split(' ')
       var dictFiles: List[String] = Nil

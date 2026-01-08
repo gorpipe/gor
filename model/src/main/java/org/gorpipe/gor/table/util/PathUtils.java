@@ -246,6 +246,10 @@ public class PathUtils {
         return path;
     }
 
+    public static boolean isMarkedAsFolder(String path) {
+        return path.endsWith("/");
+    }
+
     public static URI toRealPath(URI uri) {
         if (isLocal(uri)) {
             try {

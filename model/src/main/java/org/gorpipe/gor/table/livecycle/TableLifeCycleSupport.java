@@ -4,6 +4,7 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.table.TableHeader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.table.util.TableLog;
+import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +76,9 @@ public abstract class TableLifeCycleSupport  implements TableLifeCycle {
                 table.header.setProperty(TableHeader.HEADER_CREATED_KEY, new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date()));
             }
 
-            table.getFileReader().createDirectories(table.getFolderPath(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
+            if (!Strings.isNullOrEmpty(table.getFolderPath())) {
+                table.getFileReader().createDirectories(table.getFolderPath(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
+            }
 
             if (table.isUseHistory()) {
                 table.getFileReader().createDirectories(tableLog.getLogDir(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));

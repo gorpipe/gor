@@ -36,15 +36,18 @@ public abstract class TableInfoBase implements TableInfo {
 
     private static final Logger log = LoggerFactory.getLogger(TableInfoBase.class);
 
+    public static boolean USE_LINKS = Boolean.parseBoolean(System.getProperty("gor.table.use.links", "false"));
+
     protected static final boolean FORCE_SAME_COLUMN_NAMES = Boolean.parseBoolean(System.getProperty("gor.table.validate.columnNames", "true"));
     public static final String HISTORY_DIR_NAME = "history";
 
-    private final String path;        // Path to the table (currently absolute instead of real for compatibility with older code).
+    private String path;                // Path to the tables gord file (currently absolute instead of real for compatibility with older code).
     private final String folderPath;    // Path to the table folder.  The table folder is hidden folder that sits next to the
                                         // table and contains various files related to it.
+    private final String linkPath;      // Path to the link file.
     private final String rootUri;       // uri to table root (just to improve performance when working with uri's).
-    private final String name;          // Name of the table.
-    protected String id = null;           // Unique id (based on full path (and possibly timestamp), just so we don't always have to refer to full path).
+    private String name;          // Name of the table.
+    protected String id = null;         // Unique id (based on full path (and possibly timestamp), just so we don't always have to refer to full path).
 
     protected TableHeader header; // Header info.
 
@@ -56,7 +59,7 @@ public abstract class TableInfoBase implements TableInfo {
     /**
      * Main constructor.
      *
-     * @param uri              path to the dictionary file.
+     * @param uri              path to the dictionary file or folder.
      */
     protected TableInfoBase(String uri, FileReader inputFileReader, TableHeader header) {
         this.header = header;
@@ -69,22 +72,34 @@ public abstract class TableInfoBase implements TableInfo {
         var fileName = PathUtils.getFileName(source.getFullPath());
         this.name = FilenameUtils.removeExtension(fileName);
 
-        if (GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME.equals(fileName)) {
-            // thedict passed in (gord folder content)
-            this.rootUri = normalize(PathUtils.getParent(realUri));
-            this.path = PathUtils.resolve(rootUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
+        if (safeCheckExists(PathUtils.resolve(realUri, DataUtil.toLink(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)))) {
+            // Not all data sources support isDirectory (so just check for the dict file)
+            // GORDFOLDER VERSIONED:  with folder (containing versioned link file) passed in.
+            this.rootUri = realUri;
             this.folderPath = rootUri;
+            this.linkPath = PathUtils.resolve(rootUri, DataUtil.toLink(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME));
+            try (var linkFileSource = fileReader.resolveUrl(linkPath)) {
+                this.path = linkFileSource != null ? linkFileSource.getFullPath() : getNewVersionedFileName();
+            }
         } else if (safeCheckExists(PathUtils.resolve(realUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
             // Not all data sources support isDirectory (so just check for the dict file)
-            // Gord folder passed in.
+            // GORDFOLDER:  with std thedict passed in (gord folder).
             this.rootUri = realUri;
-            this.path =  PathUtils.resolve(rootUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
             this.folderPath = rootUri;
-        } else {
-            // Old school dict or file
+            this.path = PathUtils.resolve(rootUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME);
+            this.linkPath = null;
+        } else if (safeCheckExists(realUri) || (!PathUtils.isMarkedAsFolder(realUri) && !USE_LINKS)) {
+            // STD GORD:  Existing old school dict file OR new dict (not folder and not with USE_LINKS=true).
             this.rootUri = normalize(PathUtils.getParent(realUri));
-            this.path = PathUtils.resolve(rootUri, fileName);
             this.folderPath = PathUtils.resolve(rootUri, "." + this.name);
+            this.linkPath = null;
+            this.path = PathUtils.resolve(rootUri, fileName);
+        } else {
+            // GORDFOLDER VERSIONED: New dict with USE_LINKS=true (versioned).
+            this.rootUri = realUri;
+            this.folderPath = rootUri;
+            this.linkPath = PathUtils.resolve(rootUri, DataUtil.toLink(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME));
+            this.path = getNewVersionedFileName();
         }
     }
 
@@ -98,6 +113,10 @@ public abstract class TableInfoBase implements TableInfo {
         return this.path;
     }
 
+    protected void setPath(String path) {
+        this.path = path;
+    }
+
     @Override
     public String getRootPath() {
         return rootUri;
@@ -106,6 +125,10 @@ public abstract class TableInfoBase implements TableInfo {
     @Override
     public String getFolderPath() {
         return folderPath;
+    }
+
+    public String getLinkPath() {
+        return linkPath;
     }
 
     @Override
@@ -325,5 +348,10 @@ public abstract class TableInfoBase implements TableInfo {
         }
 
         return newHeader;
+    }
+
+    protected String getNewVersionedFileName() {
+        return PathUtils.resolve(getFolderPath(),
+                PathUtils.injectRandomStringIntoFileName("version" + DataType.GORD.suffix));
     }
 }
