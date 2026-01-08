@@ -56,6 +56,7 @@ public class UTestNorDictFile {
         var nordDict = new NorDictionaryTable( Path.of(path, "test.nord").toString(), ProjectContext.DEFAULT_READER);
         Assert.assertEquals(10, nordDict.getEntries().size());
         Assert.assertEquals("phenotype", nordDict.getSourceColumn());
+        Assert.assertEquals(100, TestUtils.runGorPipeCount("nor " + Path.of(path, "test.nord")));
     }
 
     @Test()

@@ -26,8 +26,10 @@ import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script
 import gorsat.Script._
 import gorsat.Utilities.MacroUtilities.getCachePath
+import org.gorpipe.gor.driver.linkfile.LinkFileUtil
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.util.PathUtils
+import org.gorpipe.util.Strings
 import java.util
 
 /***
@@ -112,6 +114,16 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
     var gordict = if (useGordFolder) CommandParseUtilities.GOR_DICTIONARY_FOLDER else CommandParseUtilities.GOR_DICTIONARY
     if (noDict) {
       gordict += " -nodict"
+    }
+
+    val linkOptions = LinkFileUtil.extractLinkOptionData(queryAppend)
+    if (!Strings.isNullOrEmpty(linkOptions)) {
+      gordict += " -link " + linkOptions
+    }
+
+    val linkMetaOptions = LinkFileUtil.extractLinkMetaOptionData(queryAppend)
+    if (!Strings.isNullOrEmpty(linkMetaOptions)) {
+      gordict += " -linkMeta " + linkMetaOptions
     }
 
     val cmd = splitManager.chromosomeSplits.keys.foldLeft(gordict)((x, y) => x + " [" + theKey + "_" + y + "] " +

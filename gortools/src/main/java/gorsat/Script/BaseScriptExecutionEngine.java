@@ -66,22 +66,20 @@ public class BaseScriptExecutionEngine {
 
     private Optional<Tuple<String,Boolean>> resolveCache(GorContext context, String lastCommand, ExecutionBlock queryBlock) {
         var write = new Write();
-        var split = CommandParseUtilities.quoteSafeSplit(lastCommand.substring(6).trim(), ' ');
-        var args = write.validateArguments(split);
-        String lastField;
-        if (args.length == 0) {
+        var args = lastCommand.substring("write ".length()).split(" ");
+        var options = write.parseBaseOptions(context, write.validateArguments(args), args, false);
+        var outFile = options._1();
+        if (Strings.isNullOrEmpty(outFile)) {
             if (queryBlock.signature() != null) {
                 var writeFilePath = context.getSession().getProjectContext().getFileCache().tempLocation(queryBlock.signature(), DataType.GORD.suffix);
                 writeFilePath = PathUtils.relativize(context.getSession().getProjectContext().getProjectRoot(), writeFilePath);
                 queryBlock.query_$eq(queryBlock.query() + " " + writeFilePath);
-                lastField = writeFilePath;
+                outFile = writeFilePath;
             } else {
-                lastField = null;
+                outFile = null;
             }
-        } else {
-            lastField = args[0].trim();
         }
-        return !Strings.isNullOrEmpty(lastField) && !lastField.startsWith("-")  ? resolveForkPathParent(lastField) : Optional.empty();
+        return !Strings.isNullOrEmpty(outFile) ? resolveForkPathParent(outFile) : Optional.empty();
     }
 
     public Optional<Tuple<String,Boolean>> getExplicitWrite(GorContext context, ExecutionBlock queryBlock) {

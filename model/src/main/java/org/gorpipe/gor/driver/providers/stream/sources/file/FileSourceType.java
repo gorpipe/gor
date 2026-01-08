@@ -40,6 +40,6 @@ public class FileSourceType extends SourceType {
     @Override
     public boolean match(String file) {
         // TODO: Until we get better matching strategy we must exclude mem here.
-        return !DataUtil.isMem(file) && (file.startsWith("file:") || !file.contains(":/"));
+        return !DataUtil.isMem(file) && (file.startsWith("file:") || !file.matches("^\\p{Alnum}+:/.*"));
     }
 }
