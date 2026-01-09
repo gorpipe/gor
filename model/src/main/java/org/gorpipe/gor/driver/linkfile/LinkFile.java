@@ -293,7 +293,7 @@ public abstract class LinkFile {
      * @param source the source to load from
      * @return the content of the link file or null if it does not exist (empty indicates version 0 link file).
      */
-    protected static String loadContentFromSource(StreamSource source) throws IOException {
+    public static String loadContentFromSource(StreamSource source) throws IOException {
         if (source == null || !source.exists()) {
             return null;
         }
