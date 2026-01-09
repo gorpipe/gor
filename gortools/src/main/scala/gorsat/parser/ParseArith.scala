@@ -27,6 +27,7 @@ import java.util
 import gorsat.Analysis.DagMapAnalysis
 import gorsat.Commands.RowHeader
 import gorsat.parser.FunctionTypes._
+import gorsat.parser.GenomeFunctions.refBases_with_build
 import gorsat.parser.ParseUtilities._
 import org.gorpipe.exceptions.{GorParsingException, GorSystemException}
 import org.gorpipe.gor.SyntaxChecker
@@ -993,6 +994,11 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
   def sfunction: Parser[sFun] =
     stringIfMatcher |
     genericFunction[sFun](FunctionTypes.StringFun) |
+    "REFBASES_WITH_BUILD".ignoreCase ~ "(" ~ sexpr ~ "," ~ iexpr ~ "," ~ iexpr ~ "," ~ myStringLiteralFilename ~ ")" ^^ {
+      case _ ~ "(" ~ ex1 ~ "," ~ ex2 ~ "," ~ ex3 ~ "," ~ ex4 ~ ")" => (line: ColumnValueProvider) => {
+        refBases_with_build(this, ex1, ex2, ex3, (line: ColumnValueProvider) => ex4)(line)
+      }
+    } |
     "GTSTAT".ignoreCase ~ "(" ~ sexpr ~ "," ~ iexpr ~ "," ~ sexpr ~ "," ~ sexpr ~ "," ~ iexpr ~ "," ~ sexpr ~ "," ~ sexpr ~ "," ~ iexpr ~ "," ~ sexpr ~ "," ~ sexpr ~ ")" ^^ {
       case _ ~ "(" ~ ex1 ~ "," ~ ex2 ~ "," ~ ex3 ~ "," ~ ex4 ~ "," ~ ex5 ~ "," ~ ex6 ~ "," ~ ex7 ~ "," ~ ex8 ~ "," ~ ex9 ~ "," ~ ex10 ~ ")" => (line: ColumnValueProvider) => {
         ParseUtilities.gtStatVCF(ex2(line), ex3(line), ex4(line), ex5(line), ex6(line), ex7(line), ex8(line), ex9(line), ex10(line), refSeq, ex1(line))
