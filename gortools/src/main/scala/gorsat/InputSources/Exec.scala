@@ -31,6 +31,7 @@ import org.gorpipe.gor.session.GorContext
 import picocli.CommandLine
 
 import java.io.{ByteArrayOutputStream, PrintStream}
+import java.util.stream.{Collectors, IntStream}
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -41,9 +42,18 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, ignoreIl
   override def processArguments(context: GorContext, argString: String, iargs: Array[String],
                                 args: Array[String]): InputSourceParsingResult = {
 
-    val result = processExec(context, argString, iargs.slice(1, iargs.length), args)
+    var result = processExec(context, argString, iargs.slice(1, iargs.length), args)
 
-    val header = "ChromNor\tPosNor\t" + result(0)
+    if (result.size == 0 || !result(0).startsWith("#")) {
+      val columns = result(0).split("\t")
+      val header = IntStream.rangeClosed(1, columns.length).mapToObj((i: Int) => "col" + i).collect(Collectors.joining("\t"))
+      result = result.prepended(header)
+    } else {
+      // Remove the leading '#' from the header line
+      result(0) = result(0).substring(1)
+    }
+
+    val header = "ChromNor\tPosNor\t" +  result(0)
     val myHeaderLength = header.split("\t").length
     val lineList = new ListBuffer[Row]()
     for (row <- result.slice(1, result.length)) {
@@ -97,12 +107,6 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, ignoreIl
       throw new GorParsingException(s"EXEC command: ${argString} failed with exit code: ${exitCode} and output:\n${std_baos.toString}\n${err_baos.toString}")
     }
     var stdLines = std_baos.toString.stripLineEnd.split("\n")
-
-    if (stdLines.size == 0 || !stdLines(0).startsWith("#")) {
-      stdLines = stdLines.prepended("Result")
-    } else {
-      stdLines(0) = stdLines(0).substring(1)
-    }
 
     stdLines
   }
