@@ -33,13 +33,18 @@ import org.gorpipe.gor.driver.meta.{DataType, SourceReference}
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.util.DataUtil
+import org.slf4j.{Logger, LoggerFactory}
 
+object Write {
+    val log: Logger = LoggerFactory.getLogger(this.getClass)
+}
 
 class Write extends CommandInfo("WRITE",
   CommandArguments("-r -c -m -inferschema -maxseg -noheader", "-d -f -i -t -l -tags -card -prefix -link -linkmeta", 0),
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
 
   def parseBaseOptions(context: GorContext, iargs: Array[String], args: Array[String], executeNor: Boolean): (String, Option[String], Boolean) = {
+    Write.log.warn("Entering parseBaseOptions", new Exception("Getting stracktrace"))
     var fileName = replaceSingleQuotes(iargs.mkString(" "))
 
     val linkOpt = if (hasOption(args, "-link")) stringValueOfOption(args, "-link") else ""
