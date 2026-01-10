@@ -26,7 +26,6 @@ import java.util.zip.Deflater
 import gorsat.Analysis.{ForkWrite, OutputOptions}
 import gorsat.Commands.CommandParseUtilities._
 import org.apache.commons.io.FilenameUtils
-import org.gorpipe.base.security.{BundledCredentials, Credentials}
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.driver.linkfile.LinkFileUtil
@@ -35,9 +34,6 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.util.DataUtil
 import org.slf4j.{Logger, LoggerFactory}
-
-import java.util
-import java.util.List
 
 object Write {
     val log: Logger = LoggerFactory.getLogger(this.getClass)
