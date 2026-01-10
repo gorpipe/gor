@@ -26,6 +26,7 @@ import java.util.zip.Deflater
 import gorsat.Analysis.{ForkWrite, OutputOptions}
 import gorsat.Commands.CommandParseUtilities._
 import org.apache.commons.io.FilenameUtils
+import org.gorpipe.base.security.{BundledCredentials, Credentials}
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.driver.linkfile.LinkFileUtil
@@ -34,6 +35,9 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.util.DataUtil
 import org.slf4j.{Logger, LoggerFactory}
+
+import java.util
+import java.util.List
 
 object Write {
     val log: Logger = LoggerFactory.getLogger(this.getClass)
@@ -44,7 +48,13 @@ class Write extends CommandInfo("WRITE",
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
 
   def parseBaseOptions(context: GorContext, iargs: Array[String], args: Array[String], executeNor: Boolean): (String, Option[String], Boolean) = {
-    Write.log.warn("Entering parseBaseOptions", new Exception("Getting stracktrace"))
+    Write.log.warn("Entering parseBaseOptions ", new Exception("Getting stracktrace"))
+    val creds: BundledCredentials = BundledCredentials.fromSecurityContext(context.getSession.getProjectContext.getFileReader.getSecurityContext)
+    val cred: util.List[Credentials] = creds.getCredentials("s3", "clinops-reference-data")
+    if (cred == null || cred.isEmpty) Write.log.warn("pbo No S3 credentials found in security")
+    else Write.log.info("pbo Found S3 credentials, stuff: {}",  cred.get(0).getLookupKey)
+
+
     var fileName = replaceSingleQuotes(iargs.mkString(" "))
 
     val linkOpt = if (hasOption(args, "-link")) stringValueOfOption(args, "-link") else ""
