@@ -48,13 +48,6 @@ class Write extends CommandInfo("WRITE",
   CommandOptions(gorCommand = true, norCommand = true, verifyCommand = true)) {
 
   def parseBaseOptions(context: GorContext, iargs: Array[String], args: Array[String], executeNor: Boolean): (String, Option[String], Boolean) = {
-    Write.log.warn("Entering parseBaseOptions ", new Exception("Getting stracktrace"))
-    val creds: BundledCredentials = BundledCredentials.fromSecurityContext(context.getSession.getProjectContext.getFileReader.getSecurityContext)
-    val cred: util.List[Credentials] = creds.getCredentials("s3", "clinops-reference-data")
-    if (cred == null || cred.isEmpty) Write.log.warn("pbo No S3 credentials found in security")
-    else Write.log.info("pbo Found S3 credentials, stuff: {}",  cred.get(0).getLookupKey)
-
-
     var fileName = replaceSingleQuotes(iargs.mkString(" "))
 
     val linkOpt = if (hasOption(args, "-link")) stringValueOfOption(args, "-link") else ""
@@ -62,7 +55,9 @@ class Write extends CommandInfo("WRITE",
 
     fileName = if (fileName.isEmpty && linkOpt.nonEmpty) {
       val linkMetaInfo = LinkFileUtil.extractLinkMetaInfo(linkMetaOpt)
-      val linkSourceRef = new SourceReference(linkOpt, null, context.getSession.getProjectContext.getFileReader.getCommonRoot, null, null, true);
+      val linkSourceRef = new SourceReference(linkOpt,
+        context.getSession.getProjectContext.getFileReader.getSecurityContext,
+        context.getSession.getProjectContext.getFileReader.getCommonRoot, null, null, true);
       // Infer the full file name from the link (and defautl locations)
       LinkFileUtil.inferDataFileNameFromLinkFile(
         context.getSession.getProjectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource], linkMetaInfo.linkFileMeta);
