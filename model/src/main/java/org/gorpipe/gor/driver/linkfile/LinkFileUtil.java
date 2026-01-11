@@ -8,12 +8,15 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.util.Strings;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LinkFileUtil {
+
+    private static Logger log = org.slf4j.LoggerFactory.getLogger(LinkFileUtil.class);
 
     /**
      * Infer the data file name from the link file name.
@@ -66,6 +69,9 @@ public class LinkFileUtil {
         var fileName = PathUtils.getFileName(linkSource.getFullPath());
         var extraFolder = PathUtils.removeExtensions(fileName);
         var uniqueFileName = PathUtils.injectStringIntoFileName(fileName, Integer.toString(link.getSerial() + 1));
+
+        log.warn("Inferred file name for link file {} is {}", linkSource.getFullPath(),
+                PathUtils.resolve(PathUtils.resolve(dataFileParentPath, extraFolder), uniqueFileName));
 
         return PathUtils.resolve(PathUtils.resolve(dataFileParentPath, extraFolder), uniqueFileName);
     }
