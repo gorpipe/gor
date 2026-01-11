@@ -430,19 +430,30 @@ public class GorJavaUtilities {
      *        to the filecache integrity, but as the data pointed to might be on external source (s3, http)
      *        and we might not have access to data (to check timestamps) in the FileCache.
      */
-    public static String verifyLinkFileLastModified(ProjectContext projectContext, String cacheFile) {
+    public static String verifyLinkFileLastModified2(ProjectContext projectContext, String cacheFile) {
         if (cacheFile != null && DataUtil.isLink(cacheFile)) {
+            var invalidCacheFile = false;
             try {
                 var ds = projectContext.getFileReader().resolveUrl(cacheFile);
                 var linkLastModified = ds.getSourceMetadata().getLinkLastModified();
                 var lastModified = ds.getSourceMetadata().getLastModified();
                 if (linkLastModified != null && lastModified > linkLastModified) {
-                    // Delete the link file (from the cache).
+                    // Outdated link file.
+                    invalidCacheFile = true;
+                }
+            } catch (Exception e) {
+                // Can not resolve the file or other errors.
+                invalidCacheFile = true;
+            }
+
+            if (invalidCacheFile) {
+                log.debug("Link file {} is out of date and will be re-created.", cacheFile);
+                try {
                     Files.delete(Paths.get(cacheFile));
                     cacheFile = null;
+                } catch (IOException ioException) {
+                    // Ignore
                 }
-            } catch (IOException e) {
-                // Ignore
             }
         }
         return cacheFile;

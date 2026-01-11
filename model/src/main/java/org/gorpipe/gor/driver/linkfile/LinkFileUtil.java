@@ -18,6 +18,10 @@ public class LinkFileUtil {
     /**
      * Infer the data file name from the link file name.
      *
+     * Notes: The path returned must be idempotent as this is called
+     *        from multiple different places in the code (meaning we
+     *        can not use random or time in the path).
+     *
      * @param linkSource the link file path with the link extension
      * @param linkFileMeta additional link file meta data
      * @return the data file path
@@ -61,7 +65,7 @@ public class LinkFileUtil {
 
         var fileName = PathUtils.getFileName(linkSource.getFullPath());
         var extraFolder = PathUtils.removeExtensions(fileName);
-        var uniqueFileName = PathUtils.injectRandomStringIntoFileName(fileName);
+        var uniqueFileName = PathUtils.injectStringIntoFileName(fileName, Integer.toString(link.getSerial() + 1));
 
         return PathUtils.resolve(PathUtils.resolve(dataFileParentPath, extraFolder), uniqueFileName);
     }
