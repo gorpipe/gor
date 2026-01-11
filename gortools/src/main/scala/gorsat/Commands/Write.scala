@@ -51,7 +51,7 @@ class Write extends CommandInfo("WRITE",
 
     fileName = if (fileName.isEmpty && linkOpt.nonEmpty) {
       val linkMetaInfo = LinkFileUtil.extractLinkMetaInfo(linkMetaOpt)
-      val linkSourceRef = new SourceReference(linkOpt,
+      val linkSourceRef = new SourceReference(DataUtil.toLink(linkOpt),
         context.getSession.getProjectContext.getFileReader.getSecurityContext,
         context.getSession.getProjectContext.getFileReader.getCommonRoot, null, null, true);
       // Infer the full file name from the link (and defautl locations)

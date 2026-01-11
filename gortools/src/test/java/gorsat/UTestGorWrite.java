@@ -311,7 +311,7 @@ public class UTestGorWrite {
         var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
 
         Assert.assertEquals(1, linkFile.getEntriesCount());
-        Assert.assertTrue(linkFile.getLatestEntry().url().matches(".*?dbsnp3\\..*?\\.gord/"));
+        Assert.assertTrue(linkFile.getLatestEntry().url().matches(".*?dbsnp3_.*?\\.gord/"));
 
         String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor| top 1000", "-gorroot", workDirPath.toString());
         String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 1000", "-gorroot", workDirPath.toString());
@@ -327,7 +327,7 @@ public class UTestGorWrite {
         var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
 
         Assert.assertEquals(1, linkFile.getEntriesCount());
-        Assert.assertTrue(linkFile.getLatestEntry().url().matches(".*?dbsnp3\\..*?\\.gord/"));
+        Assert.assertTrue(linkFile.getLatestEntry().url().matches(".*?dbsnp3_.*?\\.gord/"));
 
         String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor | top 500", "-gorroot", workDirPath.toString());
         String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 500", "-gorroot", workDirPath.toString());
