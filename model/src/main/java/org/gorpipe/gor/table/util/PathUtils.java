@@ -352,12 +352,12 @@ public class PathUtils {
         String uniqId = RandomStringUtils.insecure().next(8, true, true);
         var linkPathSplit = fileName.indexOf('.', fileName.indexOf("/"));
         if (linkPathSplit > 0) {
-            tempFileName = "%s.%s.%s".formatted(
+            tempFileName = "%s_%s.%s".formatted(
                     fileName.substring(0, linkPathSplit),
                     uniqId,
                     fileName.substring(linkPathSplit + 1));
         } else {
-            tempFileName = "%s.%s".formatted(fileName, uniqId);
+            tempFileName = "%s_%s".formatted(fileName, uniqId);
         }
 
         return tempFileName.replaceAll("\\.link$", "");

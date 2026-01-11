@@ -38,7 +38,7 @@ public class LinkFileUtil {
         if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
             dataFileParentPath = linkDataFileParentPath;
         } else if (link.getLatestEntry() != null) {
-            dataFileParentPath = PathUtils.getParent(link.getLatestEntryUrl());
+            dataFileParentPath = PathUtils.getParent(PathUtils.getParent(link.getLatestEntryUrl()));
         }
 
         if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
@@ -59,9 +59,11 @@ public class LinkFileUtil {
             }
         }
 
-        var dataFileName = PathUtils.injectRandomStringIntoFileName(PathUtils.getFileName(linkSource.getFullPath()));
+        var fileName = PathUtils.getFileName(linkSource.getFullPath());
+        var extraFolder = PathUtils.removeExtensions(fileName);
+        var uniqueFileName = PathUtils.injectRandomStringIntoFileName(fileName);
 
-        return PathUtils.resolve(dataFileParentPath, dataFileName);
+        return PathUtils.resolve(PathUtils.resolve(dataFileParentPath, extraFolder), uniqueFileName);
     }
 
     private static Pattern linkPattern = Pattern.compile(".* -link ([^\\s]*) ?.*", Pattern.CASE_INSENSITIVE);
