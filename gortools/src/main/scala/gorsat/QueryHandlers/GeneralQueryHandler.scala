@@ -148,7 +148,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
           } else {
             generateDictionaryFile(commandToExecute, fileRoot, fileReader, useMd5, cacheFile)
             nested.cached(cacheFile)
-            cacheFile
+            "" //cacheFile
           }
         } catch {
           case gue: GorUserException =>
