@@ -8,6 +8,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.util.Strings;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.regex.Matcher;
@@ -15,8 +16,14 @@ import java.util.regex.Pattern;
 
 public class LinkFileUtil {
 
+    private static Logger log = org.slf4j.LoggerFactory.getLogger(LinkFileUtil.class);
+
     /**
      * Infer the data file name from the link file name.
+     *
+     * Notes: The path returned must be idempotent as this is called
+     *        from multiple different places in the code (meaning we
+     *        can not use random or time in the path).
      *
      * @param linkSource the link file path with the link extension
      * @param linkFileMeta additional link file meta data
@@ -38,7 +45,7 @@ public class LinkFileUtil {
         if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
             dataFileParentPath = linkDataFileParentPath;
         } else if (link.getLatestEntry() != null) {
-            dataFileParentPath = PathUtils.getParent(link.getLatestEntryUrl());
+            dataFileParentPath = PathUtils.getParent(PathUtils.getParent(link.getLatestEntryUrl()));
         }
 
         if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
@@ -59,9 +66,14 @@ public class LinkFileUtil {
             }
         }
 
-        var dataFileName = PathUtils.injectRandomStringIntoFileName(PathUtils.getFileName(linkSource.getFullPath()));
+        var fileName = PathUtils.getFileName(linkSource.getFullPath());
+        var extraFolder = PathUtils.removeExtensions(fileName);
+        var uniqueFileName = PathUtils.injectStringIntoFileName(fileName, Integer.toString(link.getSerial() + 1));
 
-        return PathUtils.resolve(dataFileParentPath, dataFileName);
+        log.warn("Inferred file name for link file {} is {}", linkSource.getFullPath(),
+                PathUtils.resolve(PathUtils.resolve(dataFileParentPath, extraFolder), uniqueFileName));
+
+        return PathUtils.resolve(PathUtils.resolve(dataFileParentPath, extraFolder), uniqueFileName);
     }
 
     private static Pattern linkPattern = Pattern.compile(".* -link ([^\\s]*) ?.*", Pattern.CASE_INSENSITIVE);

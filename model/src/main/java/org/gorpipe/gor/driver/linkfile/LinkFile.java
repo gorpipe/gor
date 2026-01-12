@@ -123,6 +123,10 @@ public abstract class LinkFile {
         return meta;
     }
 
+    public int getSerial() {
+        return meta.getPropertyInt(LinkFileMeta.HEADER_SERIAL_KEY, 0);
+    }
+
     public String getPath() {
         return source.getFullPath();
     }

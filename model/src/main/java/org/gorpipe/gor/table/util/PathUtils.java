@@ -348,16 +348,19 @@ public class PathUtils {
     }
 
     public static String injectRandomStringIntoFileName(String fileName) {
+        return injectStringIntoFileName(fileName, RandomStringUtils.insecure().next(8, true, true));
+    }
+
+    public static String injectStringIntoFileName(String fileName, String injectString) {
         var tempFileName = "";
-        String uniqId = RandomStringUtils.insecure().next(8, true, true);
         var linkPathSplit = fileName.indexOf('.', fileName.indexOf("/"));
         if (linkPathSplit > 0) {
-            tempFileName = "%s.%s.%s".formatted(
+            tempFileName = "%s_%s.%s".formatted(
                     fileName.substring(0, linkPathSplit),
-                    uniqId,
+                    injectString,
                     fileName.substring(linkPathSplit + 1));
         } else {
-            tempFileName = "%s.%s".formatted(fileName, uniqId);
+            tempFileName = "%s_%s".formatted(fileName, injectString);
         }
 
         return tempFileName.replaceAll("\\.link$", "");

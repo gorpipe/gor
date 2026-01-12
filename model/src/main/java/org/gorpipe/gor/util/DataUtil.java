@@ -126,7 +126,7 @@ public class DataUtil {
     }
 
     public static String toLink(String path) {
-        return PathUtils.stripTrailingSlash(path) + DataType.LINK.suffix;
+        return DataUtil.isLink(path) ? path : PathUtils.stripTrailingSlash(path) + DataType.LINK.suffix;
     }
 
     public static String toVersionedLink(String path) {
