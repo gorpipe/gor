@@ -95,7 +95,7 @@ public class LinkFileUtil {
         return "";
     }
 
-    public record LinkData(String linkFile, String linkFileContent, String linkFileMeta, String linkFileInfo, String md5) {}
+    public record LinkData(String linkFile, String linkFileContent, String linkFileMeta, String linkFileInfo, String md5, String version) {}
 
 
     /**
@@ -111,6 +111,7 @@ public class LinkFileUtil {
     public static LinkData extractLink(FileReader fileReader, String source, String optLinkFile, String optLinkFileMeta, String md5) {
         var linkFile = LinkFile.validateAndUpdateLinkFileName(optLinkFile);
         var linkFileContent = !Strings.isNullOrEmpty(linkFile) ? PathUtils.resolve(fileReader.getCommonRoot(), source) : "";
+        var version = LinkFileV1.VERSION; // Default to V1
 
         if (Strings.isNullOrEmpty(linkFile) && !Strings.isNullOrEmpty(source)) {
             // Check if link file is forced from the source
@@ -118,10 +119,11 @@ public class LinkFileUtil {
             if (dataSource != null && dataSource.forceLink()) {
                 linkFile = dataSource.getProjectLinkFile();
                 linkFileContent = dataSource.getProjectLinkFileContent();
+                version = LinkFileMeta.DEFAULT_VERSION; // Use default version when forced from source.
             }
         }
         var metaInfo = extractLinkMetaInfo(optLinkFileMeta);
-        return new LinkData(linkFile, linkFileContent, metaInfo.linkFileMeta, metaInfo.linkFileInfo, md5);
+        return new LinkData(linkFile, linkFileContent, metaInfo.linkFileMeta, metaInfo.linkFileInfo, md5, version);
     }
 
     public static LinkData extractLinkMetaInfo(String optLinkFileMeta) {
@@ -139,7 +141,7 @@ public class LinkFileUtil {
             }
         }
 
-        return new LinkData("", "", linkFileMeta, linkFileInfo, "");
+        return new LinkData("", "", linkFileMeta, linkFileInfo, "", "");
     }
 
     public static void writeLinkFile(FileReader fileReader, LinkData linkData) throws IOException {
@@ -149,7 +151,7 @@ public class LinkFileUtil {
         // Use the nonsecure driver file reader as this is an exception from the write no links rule.
         var unsecureFileReader = fileReader.unsecure();
 
-        LinkFile.loadV1((StreamSource)unsecureFileReader.resolveUrl(linkData.linkFile, true))
+        LinkFile.createOrLoad((StreamSource)unsecureFileReader.resolveUrl(linkData.linkFile, true), linkData.version)
                 .appendMeta(linkData.linkFileMeta)
                 .appendEntry(linkData.linkFileContent, linkData.md5, linkData.linkFileInfo, unsecureFileReader)
                 .save(unsecureFileReader.getQueryTime());

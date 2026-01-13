@@ -67,6 +67,12 @@ public abstract class LinkFile {
         return create(source, meta, content);
     }
 
+    public static LinkFile createOrLoad(StreamSource source, String version) throws IOException {
+        var content = loadContentFromSource(source);
+        var meta = LinkFileMeta.createOrLoad(content, version, false);
+        return create(source, meta, content);
+    }
+
     public static LinkFile create(StreamSource source, String content) {
         var meta = LinkFileMeta.createOrLoad(content, null, true);
         return create(source, meta, content);
