@@ -55,6 +55,7 @@ public enum DataType {
     GORQ(REPORT, ".gorq"),
     LINK(REFERENCE, ".link"),
     VERSIONED_LINK(REFERENCE, ".versioned.link"),
+    GORD_INTERNAL_LINK(REFERENCE, ".internal.link"),  // Gord internal link type
     CRAM(VARIANTS, ".cram", true),
     CRAI(INDEX, ".crai"),
     SPEC(VARIANTS, ".spec"),
@@ -112,7 +113,7 @@ public enum DataType {
     private static boolean isLinkToType(String file, DataType type) {
         var base = PathUtils.stripTrailingSlash(file.trim()).toLowerCase();
         return base.endsWith(type.suffix + DataType.LINK.suffix)
-                || base.endsWith(type.suffix + DataType.VERSIONED_LINK.suffix);
+                || base.endsWith(type.suffix + DataType.GORD_INTERNAL_LINK.suffix);
     }
 
     public static boolean isOfTypeOrLinksToType(String file, DataType type) {

@@ -498,13 +498,13 @@ public class GorJavaUtilities {
             } else writeDummyHeader(dictionarypathwriter);
         }
 
-        localFileReader.writeLinkIfNeeded(dictionarypath);
-
         var linkOptions = LinkFileUtil.extractLinkOptionData(commandToExecute);
         if (!Strings.isNullOrEmpty(linkOptions)) {
             var linkMetaOption = LinkFileUtil.extractLinkMetaOptionData(commandToExecute);
             var linkData = LinkFileUtil.extractLink(fileReader, outfolderpath, linkOptions, linkMetaOption, null);
             LinkFileUtil.writeLinkFile(fileReader, linkData);
+        } else {
+            localFileReader.writeLinkIfNeeded(dictionarypath);
         }
     }
 

@@ -128,7 +128,7 @@ public class ITestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3://gdb-unit-test-data/projects/some_project/BVL_FATHER_SLC52A2/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
-        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+        try (GenomicIterator iterator = PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART", iterator.getHeader());
         }
     }
@@ -144,7 +144,7 @@ public class ITestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3://gdb-unit-test-data/projects/some_project/user_data/BVL_INDEX_SLC52A2/BVL_INDEX_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
-        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+        try (GenomicIterator iterator = PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNVKUKNN", iterator.getHeader());
         }
     }
@@ -161,7 +161,7 @@ public class ITestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
-        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+        try (GenomicIterator iterator = PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNKHARLQ", iterator.getHeader());
         }
     }
@@ -177,7 +177,7 @@ public class ITestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
-        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+        try (GenomicIterator iterator = PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNKHARLQ", iterator.getHeader());
         }
     }
@@ -193,7 +193,7 @@ public class ITestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_MOTHER_SLC52A2/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
-        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+        try (GenomicIterator iterator = PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNKHARLQ", iterator.getHeader());
         }
     }
@@ -209,7 +209,7 @@ public class ITestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3://gdb-unit-test-data/projects/some_project/BVL_MOTHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
-        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+        try (GenomicIterator iterator = PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNKHARLQ", iterator.getHeader());
         }
     }
@@ -225,7 +225,7 @@ public class ITestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
-        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+        try (GenomicIterator iterator = PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART", iterator.getHeader());
         }
     }
@@ -241,7 +241,7 @@ public class ITestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
-        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+        try (GenomicIterator iterator = PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART", iterator.getHeader());
         }
     }
@@ -257,14 +257,14 @@ public class ITestS3Shared {
         Assert.assertEquals("S3", source.getSourceType().getName());
         Assert.assertEquals("s3://gdb-unit-test-data/shared/BVL_FATHER_SLC52A2.vcf.gz.gorz", source.getFullPath());
 
-        try(GenomicIterator iterator =  PluggableGorDriver.instance().createIterator(source)) {
+        try (GenomicIterator iterator = PluggableGorDriver.instance().createIterator(source)) {
             Assert.assertEquals("CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tHUUUART", iterator.getHeader());
         }
     }
 
     @Test
     public void testReadWithLinkFile() throws IOException {
-        Path gorRoot  = workDirPath.resolve("some_project");
+        Path gorRoot = workDirPath.resolve("some_project");
         Path linkFile = gorRoot.resolve(DataUtil.toLinkFile("a", DataType.GORZ));
         Files.createDirectory(gorRoot);
         Files.writeString(linkFile, DataUtil.toFile(DataUtil.toFile("s3data://project/user_data/BVL_INDEX_SLC52A2", DataType.VCFGZ), DataType.GORZ));
@@ -290,7 +290,7 @@ public class ITestS3Shared {
 
     @Test
     public void testReadWithUnaccessableLinkFile() throws IOException {
-        Path gorRoot  = workDirPath.resolve("some_project");
+        Path gorRoot = workDirPath.resolve("some_project");
         Path linkFile = workDirPath.resolve(DataUtil.toLinkFile("a", DataType.GORZ));
         Files.createDirectory(gorRoot);
         Files.writeString(linkFile, DataUtil.toFile(DataUtil.toFile("s3data://project/user_data/BVL_INDEX_SLC52A2", DataType.VCFGZ), DataType.GORZ));
@@ -303,12 +303,12 @@ public class ITestS3Shared {
 
         var e2 = Assert.assertThrows("Should not be resolved, link outside project", GorSecurityException.class, () -> fileReader.resolveUrl(DataUtil.toLinkFile("../a", DataType.GORZ)));
         Assert.assertTrue(e2.getMessage().contains("File paths must be within project scope"));
-     }
+    }
 
     @Test
     @Ignore("Slow test, meant to be manually run")
     public void testReadServer() throws IOException {
-        Path gorRoot  = workDirPath.resolve("some_project");
+        Path gorRoot = workDirPath.resolve("some_project");
         Path linkFile = gorRoot.resolve(DataUtil.toLinkFile("a", DataType.GORZ));
         Files.createDirectory(gorRoot);
         //Files.write(linkFile, "s3data://project/user_data/BVL_INDEX_SLC52A2.vcf.gz.gorz".getBytes(StandardCharsets.UTF_8));
@@ -324,7 +324,7 @@ public class ITestS3Shared {
     @Test
     public void testProjectWriteRootCLI() throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
-        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = DataUtil.toFile("dummy", DataType.GOR);
 
         runGorPipeCLI("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
@@ -341,7 +341,7 @@ public class ITestS3Shared {
     @Test
     public void testProjectWriteUserDataCLI() throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
-        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = DataUtil.toFile("user_data/dummy", DataType.GOR);
 
         runGorPipeCLI("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
@@ -358,7 +358,7 @@ public class ITestS3Shared {
     @Test
     public void testProjectWriteRootServer() {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
-        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = DataUtil.toFile("dummy", DataType.GOR);
 
         var e = Assert.assertThrows("Server context should not allow write to root", GorSecurityException.class, () -> runGorPipeServer("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext));
@@ -368,7 +368,7 @@ public class ITestS3Shared {
     @Test
     public void testProjectWriteUserDataServer() throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
-        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = DataUtil.toFile("user_data/dummy", DataType.GOR);
 
         runGorPipeServer("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
@@ -385,7 +385,7 @@ public class ITestS3Shared {
     @Test
     public void testProjectWriteUserDataWithIndexServer() throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
-        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = "user_data/dummy.gorz";
 
         runGorPipeServer("gorrow 1,2,3 | write s3data://project/" + dataPath, gorRoot, securityContext);
@@ -408,7 +408,7 @@ public class ITestS3Shared {
     @Test
     public void testSharedWriteRootServer() {
         String securityContext = createSecurityContext("s3region", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
-        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = DataUtil.toFile("dummy", DataType.GOR);
 
 
@@ -419,7 +419,7 @@ public class ITestS3Shared {
     @Test
     public void testSharedWriteUserDataServer() throws IOException {
         String securityContext = createSecurityContext("s3region", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
-        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
         String dataPath = DataUtil.toFile("user_data/dummy", DataType.GOR);
 
         runGorPipeServer("gorrow 1,2,3 | write s3region://shared/" + dataPath, gorRoot, securityContext);
@@ -433,6 +433,51 @@ public class ITestS3Shared {
         Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath, DataType.LINK))));
     }
 
+    @Test
+    public void testSharedWriteUserDataServerTeeed() throws IOException {
+        String securityContext = createSecurityContext("s3region", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
+        String gorRoot = Path.of(workDir.getRoot().toString(), "some_project").toString();
+        String dataPath = DataUtil.toFile("user_data/dummy", DataType.GOR);
+        String dataPath2 = DataUtil.toFile("user_data/dummy2", DataType.GOR);
+        String dataPath3 = DataUtil.toFile("user_data/dummy3", DataType.GOR);
+
+        runGorPipeServer("gorrows -p chr1:10000-10005| tee >(where 1 = 1 | write -c s3region://shared/" + dataPath
+                        + ") | tee >(where 1 = 1 | write -c s3region://shared/" + dataPath2
+                        + ") | where 1 = 1 | write -c s3region://shared/" + dataPath3
+                , gorRoot, securityContext);
+
+        runGorPipeServer("gorrows -p chr1:10000-10005| tee >(where 1 = 1 | write -c s3region://shared/" + dataPath
+                        + ") | tee >(where 1 = 1 | write -c s3region://shared/" + dataPath2
+                        + ") | where 1 = 1 | write -c s3region://shared/" + dataPath3
+                , gorRoot, securityContext);
+
+    Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath, DataType.LINK))));
+    Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath2, DataType.LINK))));
+    Assert.assertTrue(Files.exists(Path.of(gorRoot, DataUtil.toFile(dataPath3, DataType.LINK))));
+
+    // Clean up..
+    S3SharedSourceProvider provider = new S3RegionSharedSourceProvider();
+        provider.setConfig(ConfigManager.getPrefixConfig("gor",GorDriverConfig .class));
+        try(
+    DataSource source = getDataSourceFromProvider(provider, dataPath, Credentials.OwnerType.System, "some_env"))
+
+    {
+        source.delete();
+    }
+        try(
+    DataSource source = getDataSourceFromProvider(provider, dataPath2, Credentials.OwnerType.System, "some_env"))
+
+    {
+        source.delete();
+    }
+}
+
+
+
+/*
+        | tee >(where depth >= 4 | segspan -maxseg 10000 | write -c ${OUTPUT_WGS_SEG_GOODCOV_4})
+            | tee >(where depth >= 4 | segspan -maxseg 10000 | hide segCount | join -segseg ${JOIN_EXONS} | write -c ${OUTPUT_WES_SEG_GOODCOV_4})
+*/
     @Test
     public void testProjecSharedProjecttWriteUserDataServer() throws IOException {
         String securityContext = createSecurityContext("s3data", Credentials.OwnerType.Project, "some_project", S3_KEY, S3_SECRET);
