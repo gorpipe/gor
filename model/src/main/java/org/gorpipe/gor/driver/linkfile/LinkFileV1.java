@@ -15,8 +15,8 @@ public class LinkFileV1 extends LinkFile {
     public static final String VERSION = "1";
     public static final String DEFAULT_TABLE_HEADER = "#File\tTimestamp\tMD5\tSerial\tInfo";
 
-    private static boolean allowOverwriteOfTargets
-            = Boolean.parseBoolean(System.getProperty("gor.link.versioned.allow.overwrite", "false"));
+    public static boolean allowOverwriteOfTargets
+            = Boolean.parseBoolean(System.getProperty("gor.link.versioned.allow.overwrite", "true"));
 
     protected LinkFileV1(StreamSource source, LinkFileMeta meta, String content) {
         super(source, meta, content);
