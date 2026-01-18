@@ -19,13 +19,13 @@ class GitCommandExecutor {
      * @param args additional arguments to pass to git
      * @param workingDir the working directory for the command (null for current directory)
      * @param commandSpec the CommandLine spec for error reporting
-     * @param stdOut the PrintStream for standard output
-     * @param stdErr the PrintStream for standard error
+     * @param out the Print for standard output
+     * @param err the PrintStream for standard error
      * @return the exit code of the git command
      */
     static int executeGitCommand(String gitSubcommand, List<String> args, File workingDir, 
                                   CommandLine.Model.CommandSpec commandSpec,
-                                 PrintStream stdOut, PrintStream stdErr) {
+                                 PrintWriter out, PrintWriter err) {
         List<String> command = new ArrayList<>();
         command.add("git");
         command.add(gitSubcommand);
@@ -40,9 +40,9 @@ class GitCommandExecutor {
 
             Process process = pb.start();
 
-            streamOutput(process.getInputStream(), stdOut);
+            streamOutput(process.getInputStream(), out);
 
-            streamOutput(process.getErrorStream(), stdErr);
+            streamOutput(process.getErrorStream(), err);
 
             int exitCode = process.waitFor();
 
@@ -60,13 +60,13 @@ class GitCommandExecutor {
         }
     }
 
-    private static void streamOutput(InputStream inputStream, java.io.PrintStream outputStream) {
+    private static void streamOutput(InputStream inputStream, PrintWriter out) {
         new Thread(() -> {
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    outputStream.println(line);
+                    out.println(line);
                 }
             } catch (Exception e) {
                 // Ignore errors in output streaming

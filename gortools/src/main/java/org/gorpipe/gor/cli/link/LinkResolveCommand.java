@@ -48,7 +48,7 @@ public class LinkResolveCommand extends BaseSubCommand implements Runnable {
                 }
                 output = resolved;
             }
-            getStdOut().println(output);
+            out().println(output);
         } catch (IOException e) {
             throw new CommandLine.ExecutionException(new CommandLine(this),
                     "Failed to load link file: " + normalizedLinkPath, e);

@@ -66,7 +66,7 @@ public class SelectCommand extends FilterOptions implements Runnable{
         final List<? extends DictionaryEntry> lines = filter.get();
 
         for (DictionaryEntry line : lines) {
-            getStdOut().print(line.formatEntry());
+            out().print(line.formatEntry());
         }
     }
 }

@@ -32,8 +32,6 @@ import picocli.CommandLine;
         header="Test table manager.",
         subcommands = {TestReadLockCommand.class, TestWriteLockCommand.class,
             TestIsLockCommand.class})
-public class TestCommand extends BaseSubCommand implements Runnable{
+public class TestCommand extends BaseSubCommand{
 
-    @Override
-    public void run() { CommandLine.usage(new TestCommand(), getStdErr()); }
 }

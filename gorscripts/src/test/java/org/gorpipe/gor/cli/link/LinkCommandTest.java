@@ -2,10 +2,12 @@ package org.gorpipe.gor.cli.link;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.time.Instant;
 
 import org.gorpipe.gor.cli.GorCLI;
+import org.gorpipe.gor.cli.GorExecCLI;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import static org.junit.Assert.assertEquals;
@@ -97,7 +99,7 @@ public class LinkCommandTest {
         Thread.sleep(5);
         cmd.execute("link", "update", linkFile.toString(), "data/file2.gor");
 
-        String resolved = executeAndCapture(cmd, "link", "resolve", linkFile.toString());
+        String resolved = executeAndCapture( "link", "resolve", linkFile.toString());
         assertEquals(resolve(linkFile, "data/file2.gor"), resolved);
     }
 
@@ -111,7 +113,7 @@ public class LinkCommandTest {
         Thread.sleep(5);
         cmd.execute("link", "update", linkFile.toString(), "data/file2.gor");
 
-        String resolved = executeAndCapture(cmd, "link", "resolve", linkFile.toString(),
+        String resolved = executeAndCapture( "link", "resolve", linkFile.toString(),
                 "-d", Instant.ofEpochMilli(firstTimestamp).toString());
         assertEquals(resolve(linkFile, "data/file1.gor"), resolved);
     }
@@ -126,7 +128,7 @@ public class LinkCommandTest {
         cmd.execute("link", "update", linkFile.toString(), "data/file2.gor");
 
         String expectedEntry = LinkFile.load(new FileSource(linkFile)).getLatestEntry().format();
-        String resolved = executeAndCapture(cmd, "link", "resolve", linkFile.toString(), "-f");
+        String resolved = executeAndCapture("link", "resolve", linkFile.toString(), "-f");
         assertEquals(expectedEntry.replace('\t', ' '), resolved);
     }
 
@@ -134,16 +136,12 @@ public class LinkCommandTest {
         return linkFile.getParent().resolve(relative).toAbsolutePath().normalize().toString();
     }
 
-    private String executeAndCapture(CommandLine cmd, String... args) {
-        PrintStream originalOut = System.out;
+    private String executeAndCapture(String... args) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(baos, true));
-        try {
-            int exitCode = cmd.execute(args);
-            assertEquals(0, exitCode);
-        } finally {
-            System.setOut(originalOut);
-        }
+        CommandLine cmd = new CommandLine(new GorExecCLI());
+        cmd.setOut(new PrintWriter(baos, true));
+        int exitCode = cmd.execute(args);
+        assertEquals(0, exitCode);
         String output = baos.toString();
         if (output.endsWith("\r\n")) {
             output = output.substring(0, output.length() - 2);

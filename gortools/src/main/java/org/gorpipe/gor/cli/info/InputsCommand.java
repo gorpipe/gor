@@ -36,10 +36,10 @@ public class InputsCommand extends BaseSubCommand {
     public void run() {
         try {
             GorInputSources.register();
-            getStdOut().print(GorInputSources.getInputSourceInfoTable());
+            out().print(GorInputSources.getInputSourceInfoTable());
         } catch (Exception e) {
-            getStdErr().println("Error: \n");
-            getStdErr().println(e.getMessage());
+            err().println("Error: \n");
+            err().println(e.getMessage());
         }
     }
 }

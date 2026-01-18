@@ -2,13 +2,9 @@ package org.gorpipe.gor.cli.link;
 
 import org.gorpipe.gor.cli.BaseSubCommand;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
-import org.gorpipe.util.Strings;
 import picocli.CommandLine;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 
 @CommandLine.Command(name = "list",
         description = "List the raw content of a link file without resolving entries.")
@@ -29,13 +25,13 @@ public class LinkListCommand extends BaseSubCommand implements Runnable {
             var source = LinkStreamSourceProvider.resolve(normalizedLinkPath, getSecurityContext(), getProjectRoot(),  true, this);
             var content = LinkFile.loadContentFromSource(source);
             if (rawOutput) {
-                getStdOut().println(content.replace("\t", "    "));
+                out().println(content.replace("\t", "    "));
             } else {
                 for (var line : content.split("\n")) {
                     if (line.startsWith("##")) {
                         continue;
                     }
-                    getStdOut().println(line);
+                    out().println(line);
                 }
             }
         } catch (IOException e) {

@@ -30,7 +30,7 @@ public class LinkRollbackCommand extends BaseSubCommand implements Runnable {
                         "No entries were removed. Link file may already be at the requested state.");
             }
             linkFile.save();
-            getStdErr().printf("Rolled back link file %s%n", normalizedLinkPath);
+            err().printf("Rolled back link file %s%n", normalizedLinkPath);
         } catch (IOException e) {
             throw new CommandLine.ExecutionException(new CommandLine(this),
                     "Failed to load link file: " + normalizedLinkPath, e);

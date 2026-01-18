@@ -36,10 +36,10 @@ public class MacrosCommand extends BaseSubCommand {
     public void run() {
         try {
             GorPipeMacros.register();
-            getStdOut().print(GorPipeMacros.getMacroInfoTable());
+            out().print(GorPipeMacros.getMacroInfoTable());
         } catch (Exception e) {
-            getStdErr().println("Error: \n");
-            getStdErr().println(e.getMessage());
+            err().println("Error: \n");
+            err().println(e.getMessage());
         }
     }
 }

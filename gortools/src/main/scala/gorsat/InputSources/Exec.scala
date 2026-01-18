@@ -30,7 +30,7 @@ import org.gorpipe.gor.model.{NoValidateRowBase, Row}
 import org.gorpipe.gor.session.GorContext
 import picocli.CommandLine
 
-import java.io.{ByteArrayOutputStream, PrintStream}
+import java.io.{ByteArrayOutputStream, PrintStream, PrintWriter}
 import java.util.stream.{Collectors, IntStream}
 import scala.collection.mutable.ListBuffer
 
@@ -71,19 +71,21 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, ignoreIl
 
     val std_baos = new ByteArrayOutputStream()
     val err_baos = new ByteArrayOutputStream()
-    val std_ps = new PrintStream(std_baos, true)
-    val err_ps = new PrintStream(std_baos, true)
+    val std_pw = new PrintWriter(std_baos, true)
+    val err_pw = new PrintWriter(std_baos, true)
     var exitCode = -128
 
     try {
-       exitCode = new CommandLine(new GorExecCLI(std_ps, err_ps))
-        .setExitCodeExceptionMapper(new CommandLine.IExitCodeExceptionMapper {
-          override def getExitCode(e: Throwable): Int = {
-            // Don't map exist codes.
-            throw new IllegalArgumentException(s"EXEC command: ${argString} failed: ${e.getMessage}", e)
-          }
-        })
-        .setDefaultValueProvider((argSpec: CommandLine.Model.ArgSpec) => {
+       exitCode = new CommandLine(new GorExecCLI())
+         .setExitCodeExceptionMapper(new CommandLine.IExitCodeExceptionMapper {
+           override def getExitCode(e: Throwable): Int = {
+             // Don't map exist codes.
+             throw new GorParsingException(s"EXEC command: ${argString} failed: ${e.getMessage}", e)
+            }
+         })
+         .setOut(std_pw)
+         .setErr(err_pw)
+         .setDefaultValueProvider((argSpec: CommandLine.Model.ArgSpec) => {
           if (argSpec.paramLabel() == "<securityContext>") {
             context.getSession.getProjectContext.getFileReader.getSecurityContext
           } else if (argSpec.paramLabel() == "<projectRoot>") {
@@ -94,17 +96,13 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, ignoreIl
         })
         .execute(args.slice(1, args.length): _*)
     } finally {
-      std_ps.close()
-      err_ps.close()
+      std_pw.close()
+      err_pw.close()
     }
     if (exitCode != 0) {
       throw new GorParsingException(s"EXEC command: ${argString} failed with exit code: ${exitCode} and output:\n${std_baos.toString}\n${err_baos.toString}")
     }
 
-    var rawLines = std_baos.toString
-    var stdLines = if (rawLines.nonEmpty) rawLines.substring(rawLines.indexOf("#"), rawLines.length).stripLineEnd.split("\n")
-                   else Array[String]()
-
-    stdLines
+    std_baos.toString.stripLineEnd.split("\n")
   }
 }

@@ -49,8 +49,8 @@ public class ScriptCommand extends RenderOptions implements Runnable{
             try {
                 query = FileUtils.readFileToString(scriptFile, Charset.defaultCharset());
             } catch (IOException e) {
-                getStdErr().println("Failed to load script file: " + this.input);
-                if (System.err.equals(getStdErr())) {
+                err().println("Failed to load script file: " + this.input);
+                if (System.err.equals(err())) {
                     System.exit(-1);
                 }
             }
@@ -62,6 +62,6 @@ public class ScriptCommand extends RenderOptions implements Runnable{
                 new String[] {this.input});
         CLISessionFactory sessionFactory = new CLISessionFactory(options, "");
         GorSession session = sessionFactory.create();
-        ReportCommand.renderQuery(session, query, this.pretty, getStdOut());
+        ReportCommand.renderQuery(session, query, this.pretty, out());
     }
 }

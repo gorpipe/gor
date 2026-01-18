@@ -1,15 +1,21 @@
 package org.gorpipe.gor.cli;
 
 import picocli.CommandLine;
-import java.io.PrintStream;
+
+import java.io.PrintWriter;
 
 public abstract class BaseSubCommand extends HelpOptions implements CommandSupport, Runnable {
+
+    @CommandLine.Spec
+    CommandLine.Model.CommandSpec spec;
 
     @CommandLine.ParentCommand
     protected CommandSupport parentSupport;
 
     @Override
-    public void run() { CommandLine.usage(this, getStdErr()); }
+    public void run() {
+        spec.commandLine().usage(spec.commandLine().getOut());
+    }
 
     public String getSecurityContext() {
         return parentSupport != null ? parentSupport.getSecurityContext() : "";
@@ -19,12 +25,12 @@ public abstract class BaseSubCommand extends HelpOptions implements CommandSuppo
         return parentSupport != null ? parentSupport.getProjectRoot() : "";
     }
 
-    public PrintStream getStdOut() {
-        return parentSupport != null ? parentSupport.getStdOut() : System.out;
+    public PrintWriter out() {
+        return spec.commandLine().getOut();
     }
 
-    public PrintStream getStdErr() {
-        return parentSupport != null ? parentSupport.getStdErr() : System.err;
+    public PrintWriter err() {
+        return spec.commandLine().getErr();
     }
 
     public void exit(int status) {

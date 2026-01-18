@@ -56,7 +56,7 @@ public class TestReadLockCommand extends ManagerOptions implements Runnable{
         try (TableLock lock = TableLock.acquireRead(tm.getLockType(), table, lockName, lockTimeoutDuration)) {
             Thread.sleep(period);
         } catch (InterruptedException e) {
-            e.printStackTrace(getStdErr());
+            e.printStackTrace(err());
         }
     }
 }

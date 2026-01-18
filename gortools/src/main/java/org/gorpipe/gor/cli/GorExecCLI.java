@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.cli;
 
-import java.io.PrintStream;
 import java.nio.file.Path;
 
 import org.gorpipe.gor.cli.cache.CacheCommand;
@@ -47,6 +46,9 @@ import picocli.CommandLine;
                 LinkCommand.class, GitCommand.class, FilesCommand.class})
 public class GorExecCLI extends HelpOptions implements CommandSupport, Runnable {
 
+    @CommandLine.Spec
+    CommandLine.Model.CommandSpec spec;
+
     public static void main(String[] args) {
         GorLogbackUtil.initLog("gor");
         CommandLine cmd = new CommandLine(new GorExecCLI());
@@ -55,9 +57,6 @@ public class GorExecCLI extends HelpOptions implements CommandSupport, Runnable 
                 CommandLine.defaultExceptionHandler().andExit(-1),
                 args);
     }
-
-    private PrintStream stdOut;
-    private PrintStream stdErr;
 
     @CommandLine.Option(names = {"-v", "--version"},
             versionHelp = true,
@@ -70,19 +69,9 @@ public class GorExecCLI extends HelpOptions implements CommandSupport, Runnable 
     @CommandLine.Option(defaultValue = "", names={"--securityContext"}, description = "Sets the security context for the current gor session.")
     private String securityContext;
 
-    public GorExecCLI() {
-        stdOut = System.out;
-        stdErr = System.err;
-    }
-
-    public GorExecCLI(PrintStream out, PrintStream err) {
-        this.stdOut = out;
-        this.stdErr = err;
-    }
-
     @Override
     public void run() {
-        CommandLine.usage(this, System.err);
+        spec.commandLine().usage(spec.commandLine().getOut());
     }
 
     public String getProjectRoot() {
@@ -93,17 +82,9 @@ public class GorExecCLI extends HelpOptions implements CommandSupport, Runnable 
         return securityContext;
     }
 
-    public PrintStream getStdOut() {
-        return stdOut;
-    }
-
-    public PrintStream getStdErr() {
-        return stdErr;
-    }
-
     @Override
     public void exit(int status) {
-        if (System.err.equals(getStdErr())) {
+        if (System.err.equals(spec.commandLine().getErr())) {
             System.exit(status);
         } else {
             throw new CommandLine.ExecutionException(new CommandLine(this),

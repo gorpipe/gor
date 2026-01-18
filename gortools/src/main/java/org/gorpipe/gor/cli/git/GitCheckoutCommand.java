@@ -71,7 +71,7 @@ public class GitCheckoutCommand implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(directory);
 
-        GitCommandExecutor.executeGitCommand("checkout", args, workingDir, spec, parentCommand.getStdOut(), parentCommand.getStdErr());
+        GitCommandExecutor.executeGitCommand("checkout", args, workingDir, spec, parentCommand.out(), parentCommand.err());
     }
 }
 

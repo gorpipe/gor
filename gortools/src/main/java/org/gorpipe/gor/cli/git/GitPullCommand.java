@@ -90,7 +90,7 @@ public class GitPullCommand implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(directory);
 
-        GitCommandExecutor.executeGitCommand("pull", args, workingDir, spec, parentCommand.getStdOut(), parentCommand.getStdErr());
+        GitCommandExecutor.executeGitCommand("pull", args, workingDir, spec, parentCommand.out(), parentCommand.err());
     }
 }
 

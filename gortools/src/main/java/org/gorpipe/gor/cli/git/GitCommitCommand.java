@@ -83,7 +83,7 @@ public class GitCommitCommand implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(directory);
 
-        GitCommandExecutor.executeGitCommand("commit", args, workingDir, spec, parentCommand.getStdOut(), parentCommand.getStdErr());
+        GitCommandExecutor.executeGitCommand("commit", args, workingDir, spec, parentCommand.out(), parentCommand.err());
     }
 }
 

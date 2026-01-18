@@ -27,12 +27,12 @@ import gorsat.Commands.CommandParseUtilities;
 import gorsat.Utilities.MacroUtilities;
 import gorsat.process.CLISessionFactory;
 import gorsat.process.PipeOptions;
-import org.gorpipe.gor.cli.files.FilesCommand;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.util.DataUtil;
 import picocli.CommandLine;
 
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Map;
 
 @SuppressWarnings("squid:S106")
@@ -50,13 +50,13 @@ public class ReportCommand extends RenderOptions {
             CLISessionFactory sessionFactory = new CLISessionFactory(options, "");
             GorSession session = sessionFactory.create();
             String query = CommandParseUtilities.cleanupQuery(session.getSystemContext().getReportBuilder().parse(this.input));
-            renderQuery(session, query, this.pretty, getStdOut());
+            renderQuery(session, query, this.pretty, out());
         } else {
-            getStdErr().println("Input is not a yml report.");
+            err().println("Input is not a yml report.");
         }
     }
 
-    static void renderQuery(GorSession session, String query, boolean pretty, PrintStream stdOut) {
+    static void renderQuery(GorSession session, String query, boolean pretty, PrintWriter out) {
         String[] commands = CommandParseUtilities.quoteSafeSplitAndTrim(query, ';');
         Map<String,String> defines = MacroUtilities.extractAliases(commands);
         commands = MacroUtilities.applyAliases(commands, defines);
@@ -66,7 +66,7 @@ public class ReportCommand extends RenderOptions {
             Map<String, String> aliases = AnalysisUtilities.loadAliases(session.getProjectContext().getGorAliasFile(), session, "gor_aliases.txt");
             finalQuery = MacroUtilities.replaceAllAliases(finalQuery, aliases);
         }
-        stdOut.println(pretty ? CommandParseUtilities.cleanupQueryWithFormat(finalQuery) :
+        out.println(pretty ? CommandParseUtilities.cleanupQueryWithFormat(finalQuery) :
                 CommandParseUtilities.cleanupQuery(finalQuery));
     }
 }

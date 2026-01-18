@@ -85,7 +85,7 @@ public class HelpCommand extends BaseSubCommand {
             message.append("Failed to load help for command ").append(command);
         }
 
-        getStdOut().println(message);
+        out().println(message);
     }
 
     private List<String> loadHelpList(File helpFile) throws IOException, URISyntaxException {

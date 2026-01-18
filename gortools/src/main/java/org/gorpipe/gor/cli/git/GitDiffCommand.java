@@ -90,6 +90,6 @@ public class GitDiffCommand implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(directory);
 
-        GitCommandExecutor.executeGitCommand("diff", cmdArgs, workingDir, spec, parentCommand.getStdOut(), parentCommand.getStdErr());
+        GitCommandExecutor.executeGitCommand("diff", cmdArgs, workingDir, spec, parentCommand.out(), parentCommand.err());
     }
 }

@@ -55,8 +55,8 @@ public class PurgeCommand extends FilterOptions implements  Runnable{
     public void run() {
 
         if (!cachePath.exists() || !cachePath.isDirectory()){
-            getStdErr().printf("Cache path %1$s does not exist!", cachePath.toString());
-            if (System.err.equals(getStdErr())) {
+            err().printf("Cache path %1$s does not exist!", cachePath.toString());
+            if (System.err.equals(err())) {
                 System.exit(-1);
             }
         }
@@ -94,7 +94,7 @@ public class PurgeCommand extends FilterOptions implements  Runnable{
                     FileTime time = attrs.lastAccessTime();
                     lastAccessTime = time.toMillis();
                 } catch (Exception e) {
-                    getStdErr().println("!!Failed to get last access time for: " + file.toString());
+                    err().println("!!Failed to get last access time for: " + file.toString());
                 }
 
                 this.fileCounter++;
@@ -106,7 +106,7 @@ public class PurgeCommand extends FilterOptions implements  Runnable{
                         result.process(file.toPath());
                     }
                 }
-                getStdErr().print("Processing files: " + this.fileCounter + "\r");
+                err().print("Processing files: " + this.fileCounter + "\r");
             } else if (file.isDirectory()) {
                 listFiles(file);
             }
@@ -116,15 +116,15 @@ public class PurgeCommand extends FilterOptions implements  Runnable{
     private void verifyAndDeleteFromCache() {
 
         if (this.result.getFileList().size() == 0) {
-            getStdErr().println("No files to remove. Exiting.");
-            if (System.err.equals(getStdErr())) {
+            err().println("No files to remove. Exiting.");
+            if (System.err.equals(err())) {
                 System.exit(0);
             }
         }
 
         if (!noVerification) {
             Scanner user_input = new Scanner(System.in);
-            getStdErr().print("Remove files from cache? [y/n]:");
+            err().print("Remove files from cache? [y/n]:");
             while (true) {
                 String answer = user_input.next().trim().toLowerCase();
 
@@ -134,10 +134,10 @@ public class PurgeCommand extends FilterOptions implements  Runnable{
                     System.exit(0);
                 }
             }
-            getStdErr().println();
+            err().println();
         }
 
-        getStdErr().println("Removing files from cache at " + this.cachePath);
+        err().println("Removing files from cache at " + this.cachePath);
 
         List<String> fileNames = this.result.getFileList();
         int fileRemovalCounter = 0;
@@ -147,38 +147,38 @@ public class PurgeCommand extends FilterOptions implements  Runnable{
             File fileToDelete = new File(cachePath, filename);
 
             if (verbose) {
-                getStdErr().println("Removing: " + filename + extra );
+                err().println("Removing: " + filename + extra );
             }
 
             if (!dryRun) {
                 try {
                     if (!fileToDelete.delete()) {
-                        getStdErr().println("Failed to delete file: " + filename);
+                        err().println("Failed to delete file: " + filename);
                     }
                     fileRemovalCounter++;
                 } catch (Exception e) {
-                    getStdErr().println("An error occurred when deleting file: " + filename);
-                    getStdErr().println(e.getMessage());
+                    err().println("An error occurred when deleting file: " + filename);
+                    err().println(e.getMessage());
                 }
             } else {
                 fileRemovalCounter++;
             }
         }
 
-        getStdErr().printf("Removed %1$d from cache%2$s%n", fileRemovalCounter, extra);
+        err().printf("Removed %1$d from cache%2$s%n", fileRemovalCounter, extra);
     }
 
     private void displayResult() {
-        getStdErr().println("Processed files: " + this.fileCounter + "       ");
-        getStdErr().println("Files to remove: " + result.getFileList().size());
+        err().println("Processed files: " + this.fileCounter + "       ");
+        err().println("Files to remove: " + result.getFileList().size());
 
         if (result.getFileList().size() > 0) {
-            getStdErr().println("Summary by extension:");
+            err().println("Summary by extension:");
             Map<String, Integer> extensionMap = result.getExtensionCountMap();
             for (Map.Entry<String, Integer> entry : extensionMap.entrySet()) {
-                getStdErr().printf("\t%1$s\t%2$d%n", entry.getKey(), entry.getValue());
+                err().printf("\t%1$s\t%2$d%n", entry.getKey(), entry.getValue());
             }
-            getStdErr().println();
+            err().println();
         }
     }
 }

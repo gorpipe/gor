@@ -41,7 +41,7 @@ public class LinkUpdateCommand extends BaseSubCommand {
             applyHeaders(linkFile);
             linkFile.appendEntry(linkValue, entryMd5, entryInfo);
             linkFile.save();
-            getStdOut().printf("Updated link file %s with %s%n", normalizedLinkPath, linkValue);
+            out().printf("Updated link file %s with %s%n", normalizedLinkPath, linkValue);
         } catch (IOException e) {
             throw new CommandLine.ExecutionException(new CommandLine(this),
                     "Failed to load or create link file: " + normalizedLinkPath, e);

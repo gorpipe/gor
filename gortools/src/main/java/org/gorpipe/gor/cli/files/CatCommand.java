@@ -20,7 +20,7 @@ public class CatCommand implements Runnable {
     public void run() {
         var reader = parent.getFileReader();
         try (var stream = reader.readFile(path)) {
-            stream.forEach(parent.getStdOut()::println);
+            stream.forEach(parent.out()::println);
         } catch (IOException e) {
             throw new CommandLine.ExecutionException(spec.commandLine(), e.getMessage(), e);
         }

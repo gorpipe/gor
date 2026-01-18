@@ -48,7 +48,7 @@ public class TestIsLockCommand extends ManagerOptions implements Runnable {
         DictionaryTable table = tm.initTable(dictionaryFile.toString());
 
         try (TableLock lock = TableLock.acquireWrite(tm.getLockType(), table, lockName, Duration.ZERO)) {
-            getStdOut().println(lock.isValid() ? "Unlocked" : "Locked " + lock.reservedTo());
+            out().println(lock.isValid() ? "Unlocked" : "Locked " + lock.reservedTo());
         }
     }
 }

@@ -36,10 +36,10 @@ public class CommandsCommand extends BaseSubCommand {
     public void run() {
         try {
             GorPipeCommands.register();
-            getStdOut().print(GorPipeCommands.getCommandInfoTable());
+            out().print(GorPipeCommands.getCommandInfoTable());
         } catch (Exception e) {
-            getStdErr().println("Error: \n");
-            getStdErr().println(e.getMessage());
+            err().println("Error: \n");
+            err().println(e.getMessage());
         }
     }
 }
