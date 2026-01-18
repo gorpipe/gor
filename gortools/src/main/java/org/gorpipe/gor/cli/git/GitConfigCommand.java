@@ -98,7 +98,7 @@ public class GitConfigCommand implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(directory);
 
-        GitCommandExecutor.executeGitCommand("config", args, workingDir, spec);
+        GitCommandExecutor.executeGitCommand("config", args, workingDir, spec, parentCommand.getStdOut(), parentCommand.getStdErr());
     }
 }
 

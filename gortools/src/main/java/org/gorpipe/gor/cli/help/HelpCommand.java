@@ -23,7 +23,7 @@
 package org.gorpipe.gor.cli.help;
 
 import org.apache.commons.io.FileUtils;
-import org.gorpipe.gor.cli.HelpOptions;
+import org.gorpipe.gor.cli.BaseSubCommand;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -42,7 +42,7 @@ import java.util.Map;
         aliases = {"h"},
         description="Gives help on gor commands and functions.",
         header="Gives help on gor commands and functions.")
-public class HelpCommand extends HelpOptions implements Runnable{
+public class HelpCommand extends BaseSubCommand {
 
     @CommandLine.Option(names = {"-f", "--helpfile"},
             description = "File containing the help text for all commands and functions.")
@@ -85,7 +85,7 @@ public class HelpCommand extends HelpOptions implements Runnable{
             message.append("Failed to load help for command ").append(command);
         }
 
-        System.out.println(message);
+        getStdOut().println(message);
     }
 
     private List<String> loadHelpList(File helpFile) throws IOException, URISyntaxException {

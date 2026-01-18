@@ -45,7 +45,7 @@ public class TouchCommand extends FilterOptions implements  Runnable{
     private void touchCache(File cachePath) {
         touchFiles(cachePath);
 
-        System.err.printf("Touched %1$d files%2$s%n", fileCounter, extra);
+        getStdErr().printf("Touched %1$d files%2$s%n", fileCounter, extra);
     }
 
     private void touchFiles(File parentFile) {
@@ -63,7 +63,7 @@ public class TouchCommand extends FilterOptions implements  Runnable{
                 if (type != null && file.setLastModified(timestamp)) {
                     fileCounter++;
                     if (verbose) {
-                        System.err.println("Touching file: " + file.toString() + this.extra);
+                        getStdErr().println("Touching file: " + file.toString() + this.extra);
                     }
                 }
             } else if (file.isDirectory()) {

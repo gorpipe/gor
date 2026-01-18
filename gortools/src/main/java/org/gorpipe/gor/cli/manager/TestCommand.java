@@ -22,7 +22,7 @@
 
 package org.gorpipe.gor.cli.manager;
 
-import org.gorpipe.gor.cli.HelpOptions;
+import org.gorpipe.gor.cli.BaseSubCommand;
 import picocli.CommandLine;
 
 @SuppressWarnings("squid:S106")
@@ -32,8 +32,8 @@ import picocli.CommandLine;
         header="Test table manager.",
         subcommands = {TestReadLockCommand.class, TestWriteLockCommand.class,
             TestIsLockCommand.class})
-public class TestCommand extends HelpOptions implements Runnable{
+public class TestCommand extends BaseSubCommand implements Runnable{
 
     @Override
-    public void run() { CommandLine.usage(new TestCommand(), System.err); }
+    public void run() { CommandLine.usage(new TestCommand(), getStdErr()); }
 }

@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.cli.cache;
 
+import org.gorpipe.gor.cli.BaseSubCommand;
 import org.gorpipe.gor.cli.FormattingOptions;
 import picocli.CommandLine;
 
@@ -31,10 +32,6 @@ import picocli.CommandLine;
         header = "Cache management",
         subcommands = {PurgeCommand.class, TouchCommand.class},
         description="Purge or touch a cache directory.")
-public class CacheCommand extends FormattingOptions implements  Runnable{
+public class CacheCommand extends BaseSubCommand {
 
-    @Override
-    public void run() {
-        CommandLine.usage(this, System.err);
-    }
 }

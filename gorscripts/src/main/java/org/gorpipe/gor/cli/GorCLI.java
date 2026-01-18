@@ -22,15 +22,8 @@
 
 package org.gorpipe.gor.cli;
 
-import org.gorpipe.gor.cli.cache.CacheCommand;
-import org.gorpipe.gor.cli.help.HelpCommand;
-import org.gorpipe.gor.cli.index.IndexCommand;
-import org.gorpipe.gor.cli.info.InfoCommand;
-import org.gorpipe.gor.cli.link.LinkCommand;
-import org.gorpipe.gor.cli.manager.ManagerCommand;
 import org.gorpipe.gor.cli.migrator.FolderMigratorCommand;
 import org.gorpipe.gor.cli.query.QueryCommand;
-import org.gorpipe.gor.cli.render.RenderCommand;
 import org.gorpipe.logging.GorLogbackUtil;
 import picocli.CommandLine;
 

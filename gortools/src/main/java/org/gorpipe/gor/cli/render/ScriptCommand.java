@@ -38,7 +38,7 @@ import java.nio.charset.Charset;
         aliases = {"s"},
         header = "Renders gor script",
         description="Renders gor script to its final executable form")
-public class ScriptCommand extends RenderOptions implements  Runnable{
+public class ScriptCommand extends RenderOptions implements Runnable{
 
     @Override
     public void run() {
@@ -49,8 +49,10 @@ public class ScriptCommand extends RenderOptions implements  Runnable{
             try {
                 query = FileUtils.readFileToString(scriptFile, Charset.defaultCharset());
             } catch (IOException e) {
-                System.err.println("Failed to load script file: " + this.input);
-                System.exit(-1);
+                getStdErr().println("Failed to load script file: " + this.input);
+                if (System.err.equals(getStdErr())) {
+                    System.exit(-1);
+                }
             }
         }
 
@@ -60,6 +62,6 @@ public class ScriptCommand extends RenderOptions implements  Runnable{
                 new String[] {this.input});
         CLISessionFactory sessionFactory = new CLISessionFactory(options, "");
         GorSession session = sessionFactory.create();
-        ReportCommand.renderQuery(session, query, this.pretty);
+        ReportCommand.renderQuery(session, query, this.pretty, getStdOut());
     }
 }

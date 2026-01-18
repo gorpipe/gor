@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.cli.manager;
 
+import org.gorpipe.gor.cli.BaseSubCommand;
 import org.gorpipe.gor.cli.FormattingOptions;
 import picocli.CommandLine;
 
@@ -33,8 +34,6 @@ import picocli.CommandLine;
         subcommands = {InsertCommand.class, MultiInsertCommand.class,
                 DeleteCommand.class, BucketizeCommand.class, DeleteBucketCommand.class,
                 SelectCommand.class, TestCommand.class})
-public class ManagerCommand extends FormattingOptions implements Runnable{
+public class ManagerCommand extends BaseSubCommand {
 
-    @Override
-    public void run() { CommandLine.usage(this, System.err); }
 }

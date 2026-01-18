@@ -23,23 +23,23 @@
 package org.gorpipe.gor.cli.info;
 
 import gorsat.process.GorPipeCommands;
-import org.gorpipe.gor.cli.HelpOptions;
+import org.gorpipe.gor.cli.BaseSubCommand;
 import picocli.CommandLine;
 
 @SuppressWarnings("squid:S106")
 @CommandLine.Command(name = "commands",
         header = "List gor commands",
         description="List all commands in gor and their options")
-public class CommandsCommand extends HelpOptions implements  Runnable{
+public class CommandsCommand extends BaseSubCommand {
 
     @Override
     public void run() {
         try {
             GorPipeCommands.register();
-            System.out.print(GorPipeCommands.getCommandInfoTable());
+            getStdOut().print(GorPipeCommands.getCommandInfoTable());
         } catch (Exception e) {
-            System.err.println("Error: \n");
-            System.err.println(e.getMessage());
+            getStdErr().println("Error: \n");
+            getStdErr().println(e.getMessage());
         }
     }
 }

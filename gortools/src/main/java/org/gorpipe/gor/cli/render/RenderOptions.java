@@ -22,12 +22,12 @@
 
 package org.gorpipe.gor.cli.render;
 
-import org.gorpipe.gor.cli.HelpOptions;
+import org.gorpipe.gor.cli.BaseSubCommand;
 import picocli.CommandLine;
 
 import java.io.File;
 
-public abstract class RenderOptions extends HelpOptions {
+public abstract class RenderOptions extends BaseSubCommand {
 
     @CommandLine.Option(names={"-a","--aliases"}, description = "Loads aliases from external file.")
     protected File aliasFile;

@@ -1,5 +1,6 @@
 package org.gorpipe.gor.cli.link;
 
+import org.gorpipe.gor.cli.BaseSubCommand;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.util.Strings;
 import picocli.CommandLine;
@@ -11,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 
 @CommandLine.Command(name = "list",
         description = "List the raw content of a link file without resolving entries.")
-public class LinkListCommand implements Runnable {
+public class LinkListCommand extends BaseSubCommand implements Runnable {
 
     @CommandLine.Parameters(index = "0", paramLabel = "LINK_FILE",
             description = "Path to the link file to list.")
@@ -21,23 +22,20 @@ public class LinkListCommand implements Runnable {
             description = "Return the full link file content without any processing, include header")
     private boolean rawOutput;
 
-    @CommandLine.ParentCommand
-    private LinkCommand mainCmd;
-
     @Override
     public void run() {
         var normalizedLinkPath = LinkFile.validateAndUpdateLinkFileName(linkFilePath);
         try {
-            var source = LinkStreamSourceProvider.resolve(normalizedLinkPath, mainCmd.getSecurityContext(), mainCmd.getProjectRoot(),  true, this);
+            var source = LinkStreamSourceProvider.resolve(normalizedLinkPath, getSecurityContext(), getProjectRoot(),  true, this);
             var content = LinkFile.loadContentFromSource(source);
             if (rawOutput) {
-                System.out.println(content.replace("\t", "    "));
+                getStdOut().println(content.replace("\t", "    "));
             } else {
                 for (var line : content.split("\n")) {
                     if (line.startsWith("##")) {
                         continue;
                     }
-                    System.out.println(line);
+                    getStdOut().println(line);
                 }
             }
         } catch (IOException e) {

@@ -23,7 +23,7 @@ public class LsCommand implements Runnable {
     public void run() {
         var reader = parent.getFileReader();
         try (var stream = recursive ? reader.walk(path) : reader.list(path)) {
-            stream.forEach(System.out::println);
+            stream.forEach(parent.getStdOut()::println);
         } catch (IOException e) {
             throw new CommandLine.ExecutionException(spec.commandLine(), e.getMessage(), e);
         }

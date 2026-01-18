@@ -2,10 +2,7 @@ package org.gorpipe.gor.cli.git;
 
 import picocli.CommandLine;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,10 +19,13 @@ class GitCommandExecutor {
      * @param args additional arguments to pass to git
      * @param workingDir the working directory for the command (null for current directory)
      * @param commandSpec the CommandLine spec for error reporting
+     * @param stdOut the PrintStream for standard output
+     * @param stdErr the PrintStream for standard error
      * @return the exit code of the git command
      */
     static int executeGitCommand(String gitSubcommand, List<String> args, File workingDir, 
-                                  CommandLine.Model.CommandSpec commandSpec) {
+                                  CommandLine.Model.CommandSpec commandSpec,
+                                 PrintStream stdOut, PrintStream stdErr) {
         List<String> command = new ArrayList<>();
         command.add("git");
         command.add(gitSubcommand);
@@ -40,11 +40,9 @@ class GitCommandExecutor {
 
             Process process = pb.start();
 
-            // Stream stdout to System.out
-            streamOutput(process.getInputStream(), System.out);
+            streamOutput(process.getInputStream(), stdOut);
 
-            // Stream stderr to System.err
-            streamOutput(process.getErrorStream(), System.err);
+            streamOutput(process.getErrorStream(), stdErr);
 
             int exitCode = process.waitFor();
 

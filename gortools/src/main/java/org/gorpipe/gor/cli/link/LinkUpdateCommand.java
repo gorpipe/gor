@@ -1,5 +1,6 @@
 package org.gorpipe.gor.cli.link;
 
+import org.gorpipe.gor.cli.BaseSubCommand;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.util.Strings;
 import picocli.CommandLine;
@@ -10,7 +11,7 @@ import java.util.Map;
 
 @CommandLine.Command(name = "update",
         description = "Append a new entry to a link file, creating the file if needed.")
-public class LinkUpdateCommand implements Runnable {
+public class LinkUpdateCommand extends BaseSubCommand {
 
     @CommandLine.Parameters(index = "0", paramLabel = "LINK_FILE", description = "Path to the link file to update.")
     private String linkFilePath;
@@ -32,18 +33,15 @@ public class LinkUpdateCommand implements Runnable {
             mapFallbackValue = "")
     private final Map<String, String> headerParams = new LinkedHashMap<>();
 
-    @CommandLine.ParentCommand
-    private LinkCommand mainCmd;
-
     @Override
     public void run() {
         var normalizedLinkPath = LinkFile.validateAndUpdateLinkFileName(linkFilePath);
         try {
-            var linkFile = LinkFile.loadV1(LinkStreamSourceProvider.resolve(normalizedLinkPath, mainCmd.getSecurityContext(), mainCmd.getProjectRoot(),  true, this));
+            var linkFile = LinkFile.loadV1(LinkStreamSourceProvider.resolve(normalizedLinkPath, getSecurityContext(), getProjectRoot(),  true, this));
             applyHeaders(linkFile);
             linkFile.appendEntry(linkValue, entryMd5, entryInfo);
             linkFile.save();
-            System.err.printf("Updated link file %s with %s%n", normalizedLinkPath, linkValue);
+            getStdOut().printf("Updated link file %s with %s%n", normalizedLinkPath, linkValue);
         } catch (IOException e) {
             throw new CommandLine.ExecutionException(new CommandLine(this),
                     "Failed to load or create link file: " + normalizedLinkPath, e);

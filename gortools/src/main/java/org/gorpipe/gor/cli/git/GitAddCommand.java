@@ -82,7 +82,7 @@ public class GitAddCommand implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(directory);
 
-        GitCommandExecutor.executeGitCommand("add", args, workingDir, spec);
+        GitCommandExecutor.executeGitCommand("add", args, workingDir, spec, parentCommand.getStdOut(), parentCommand.getStdErr());
     }
 }
 

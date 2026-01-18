@@ -23,23 +23,23 @@
 package org.gorpipe.gor.cli.info;
 
 import gorsat.process.GorInputSources;
-import org.gorpipe.gor.cli.HelpOptions;
+import org.gorpipe.gor.cli.BaseSubCommand;
 import picocli.CommandLine;
 
 @SuppressWarnings("squid:S106")
 @CommandLine.Command(name = "inputs",
         header = "List gor input soures",
         description="List all inputs in gor and their options")
-public class InputsCommand extends HelpOptions implements  Runnable{
+public class InputsCommand extends BaseSubCommand {
 
     @Override
     public void run() {
         try {
             GorInputSources.register();
-            System.out.print(GorInputSources.getInputSourceInfoTable());
+            getStdOut().print(GorInputSources.getInputSourceInfoTable());
         } catch (Exception e) {
-            System.err.println("Error: \n");
-            System.err.println(e.getMessage());
+            getStdErr().println("Error: \n");
+            getStdErr().println(e.getMessage());
         }
     }
 }

@@ -53,7 +53,7 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, ignoreIl
       result(0) = result(0).substring(1)
     }
 
-    val header = "ChromNor\tPosNor\t" +  result(0)
+    val header = "ChromNOR\tPosNOR\t" +  result(0)
     val myHeaderLength = header.split("\t").length
     val lineList = new ListBuffer[Row]()
     for (row <- result.slice(1, result.length)) {
@@ -69,8 +69,6 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, ignoreIl
                     args: Array[String]): Array[String] = {
 
 
-    val oldOut = System.out
-    val oldErr = System.err
     val std_baos = new ByteArrayOutputStream()
     val err_baos = new ByteArrayOutputStream()
     val std_ps = new PrintStream(std_baos, true)
@@ -78,9 +76,7 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, ignoreIl
     var exitCode = -128
 
     try {
-      System.setOut(std_ps)
-      System.setErr(err_ps)
-       exitCode = new CommandLine(new GorExecCLI)
+       exitCode = new CommandLine(new GorExecCLI(std_ps, err_ps))
         .setExitCodeExceptionMapper(new CommandLine.IExitCodeExceptionMapper {
           override def getExitCode(e: Throwable): Int = {
             // Don't map exist codes.
@@ -98,15 +94,16 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, ignoreIl
         })
         .execute(args.slice(1, args.length): _*)
     } finally {
-      System.setOut(oldOut)
-      System.setErr(oldErr)
       std_ps.close()
       err_ps.close()
     }
     if (exitCode != 0) {
       throw new GorParsingException(s"EXEC command: ${argString} failed with exit code: ${exitCode} and output:\n${std_baos.toString}\n${err_baos.toString}")
     }
-    var stdLines = std_baos.toString.stripLineEnd.split("\n")
+
+    var rawLines = std_baos.toString
+    var stdLines = if (rawLines.nonEmpty) rawLines.substring(rawLines.indexOf("#"), rawLines.length).stripLineEnd.split("\n")
+                   else Array[String]()
 
     stdLines
   }

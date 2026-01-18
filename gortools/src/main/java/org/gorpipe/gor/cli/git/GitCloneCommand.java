@@ -78,7 +78,7 @@ public class GitCloneCommand implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(".");
 
-        GitCommandExecutor.executeGitCommand("clone", args, workingDir, spec);
+        GitCommandExecutor.executeGitCommand("clone", args, workingDir, spec, parentCommand.getStdOut(), parentCommand.getStdErr());
     }
 }
 

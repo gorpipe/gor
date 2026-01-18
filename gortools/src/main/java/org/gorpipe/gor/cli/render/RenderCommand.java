@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.cli.render;
 
+import org.gorpipe.gor.cli.BaseSubCommand;
 import org.gorpipe.gor.cli.FormattingOptions;
 import picocli.CommandLine;
 
@@ -31,8 +32,6 @@ import picocli.CommandLine;
         description="Renders reports and gor scripts to its runnable form.",
         header="Render reports and scripts",
         subcommands = {ReportCommand.class, ScriptCommand.class})
-public class RenderCommand extends FormattingOptions implements Runnable{
+public class RenderCommand extends BaseSubCommand implements Runnable{
 
-    @Override
-    public void run() { CommandLine.usage(this, System.err); }
 }

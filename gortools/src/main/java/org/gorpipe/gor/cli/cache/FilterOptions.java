@@ -22,12 +22,12 @@
 
 package org.gorpipe.gor.cli.cache;
 
-import org.gorpipe.gor.cli.HelpOptions;
+import org.gorpipe.gor.cli.BaseSubCommand;
 import picocli.CommandLine;
 
 import java.io.File;
 
-abstract class FilterOptions extends HelpOptions {
+abstract class FilterOptions extends BaseSubCommand {
 
     @CommandLine.Option(names = {"-v", "--verbose"},
             description = "Display path of all files touched or purged.")

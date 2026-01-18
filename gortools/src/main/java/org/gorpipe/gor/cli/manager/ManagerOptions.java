@@ -22,13 +22,13 @@
 
 package org.gorpipe.gor.cli.manager;
 
-import org.gorpipe.gor.cli.HelpOptions;
+import org.gorpipe.gor.cli.BaseSubCommand;
 import org.gorpipe.gor.manager.TableManager;
 import picocli.CommandLine;
 
 import java.io.File;
 
-public abstract class ManagerOptions extends HelpOptions {
+public abstract class ManagerOptions extends BaseSubCommand {
 
     @CommandLine.Option(names = {"--lock_timeout"},
             description = "Maximum time (in seconds) we will wait for acquiring lock an a resource.  Default: 1800 sec.")

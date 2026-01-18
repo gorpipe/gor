@@ -23,23 +23,23 @@
 package org.gorpipe.gor.cli.info;
 
 import gorsat.process.GorPipeMacros;
-import org.gorpipe.gor.cli.HelpOptions;
+import org.gorpipe.gor.cli.BaseSubCommand;
 import picocli.CommandLine;
 
 @SuppressWarnings("squid:S106")
 @CommandLine.Command(name = "macros",
         header = "List gor macros",
         description="List all macros in gor and their options")
-public class MacrosCommand extends HelpOptions implements  Runnable{
+public class MacrosCommand extends BaseSubCommand {
 
     @Override
     public void run() {
         try {
             GorPipeMacros.register();
-            System.out.print(GorPipeMacros.getMacroInfoTable());
+            getStdOut().print(GorPipeMacros.getMacroInfoTable());
         } catch (Exception e) {
-            System.err.println("Error: \n");
-            System.err.println(e.getMessage());
+            getStdErr().println("Error: \n");
+            getStdErr().println(e.getMessage());
         }
     }
 }

@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.cli.info;
 
+import org.gorpipe.gor.cli.BaseSubCommand;
 import org.gorpipe.gor.cli.FormattingOptions;
 import picocli.CommandLine;
 
@@ -30,8 +31,6 @@ import picocli.CommandLine;
         description="Information about commands, input sopurces and macros",
         header="List general gor information",
         subcommands = {CommandsCommand.class, InputsCommand.class, MacrosCommand.class})
-public class InfoCommand extends FormattingOptions implements Runnable{
+public class InfoCommand extends BaseSubCommand {
 
-    @Override
-    public void run() { CommandLine.usage(this, System.err); }
 }

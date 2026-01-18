@@ -56,7 +56,7 @@ public class TestWriteLockCommand extends ManagerOptions implements Runnable{
         try (TableLock lock = TableLock.acquireWrite(tm.getLockType(), table, lockName, lockTimeoutDuration)) {
             Thread.sleep(period);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            e.printStackTrace(getStdErr());
         }
     }
 }

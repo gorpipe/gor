@@ -1,5 +1,6 @@
 package org.gorpipe.gor.cli.link;
 
+import org.gorpipe.gor.cli.BaseSubCommand;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.util.DateUtils;
 import picocli.CommandLine;
@@ -9,7 +10,7 @@ import java.time.Instant;
 
 @CommandLine.Command(name = "rollback",
         description = "Rollback the latest entry or rollback entries newer than a given date.")
-public class LinkRollbackCommand implements Runnable {
+public class LinkRollbackCommand extends BaseSubCommand implements Runnable {
 
     @CommandLine.Parameters(index = "0", paramLabel = "LINK_FILE", description = "Path to the link file to rollback.")
     private String linkFilePath;
@@ -18,21 +19,18 @@ public class LinkRollbackCommand implements Runnable {
             description = "ISO-8601 date/time or epoch milliseconds to rollback to (entries newer than this are removed).")
     private String rollbackDate;
 
-    @CommandLine.ParentCommand
-    private LinkCommand mainCmd;
-
     @Override
     public void run() {
         var normalizedLinkPath = LinkFile.validateAndUpdateLinkFileName(linkFilePath);
         try {
-            var linkFile = LinkFile.load(LinkStreamSourceProvider.resolve(normalizedLinkPath, mainCmd.getSecurityContext(), mainCmd.getProjectRoot(),  true, this));
+            var linkFile = LinkFile.load(LinkStreamSourceProvider.resolve(normalizedLinkPath, getSecurityContext(), getProjectRoot(),  true, this));
             boolean changed = rollbackDate == null ? linkFile.rollbackLatestEntry() : linkFile.rollbackToTimestamp(parseDate(rollbackDate));
             if (!changed) {
                 throw new CommandLine.ParameterException(new CommandLine(this),
                         "No entries were removed. Link file may already be at the requested state.");
             }
             linkFile.save();
-            System.err.printf("Rolled back link file %s%n", normalizedLinkPath);
+            getStdErr().printf("Rolled back link file %s%n", normalizedLinkPath);
         } catch (IOException e) {
             throw new CommandLine.ExecutionException(new CommandLine(this),
                     "Failed to load link file: " + normalizedLinkPath, e);

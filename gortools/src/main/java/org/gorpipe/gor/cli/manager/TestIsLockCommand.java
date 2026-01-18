@@ -33,7 +33,7 @@ import java.time.Duration;
 @CommandLine.Command(name = "islock",
         description="Test the atate of lock with lock name. Returns 'Locked' og 'Unlocked' based on lock state.",
         header="Test state of names lock.")
-public class TestIsLockCommand extends ManagerOptions implements Runnable{
+public class TestIsLockCommand extends ManagerOptions implements Runnable {
 
     @CommandLine.Parameters(index = "1",
             arity = "1",
@@ -48,7 +48,7 @@ public class TestIsLockCommand extends ManagerOptions implements Runnable{
         DictionaryTable table = tm.initTable(dictionaryFile.toString());
 
         try (TableLock lock = TableLock.acquireWrite(tm.getLockType(), table, lockName, Duration.ZERO)) {
-            System.out.println(lock.isValid() ? "Unlocked" : "Locked " + lock.reservedTo());
+            getStdOut().println(lock.isValid() ? "Unlocked" : "Locked " + lock.reservedTo());
         }
     }
 }

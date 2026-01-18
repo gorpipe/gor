@@ -1,7 +1,6 @@
 package org.gorpipe.gor.cli.git;
 
-import org.gorpipe.gor.cli.GorExecCLI;
-import org.gorpipe.gor.cli.HelpOptions;
+import org.gorpipe.gor.cli.BaseSubCommand;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.util.Strings;
 import picocli.CommandLine;
@@ -13,23 +12,7 @@ import java.io.File;
         description = "Wrapper for git commands (clone, checkout, pull, push, commit, add, config, diff).",
         header = "Git command wrapper.",
         subcommands = {GitCloneCommand.class, GitCheckoutCommand.class, GitPullCommand.class, GitPushCommand.class, GitCommitCommand.class, GitAddCommand.class, GitConfigCommand.class, GitDiffCommand.class})
-public class GitCommand extends HelpOptions implements Runnable {
-
-    @CommandLine.ParentCommand
-    private GorExecCLI parentCommand;
-
-    @Override
-    public void run() {
-        CommandLine.usage(this, System.err);
-    }
-
-    public String getSecurityContext() {
-        return parentCommand != null ? parentCommand.getSecurityContext() : "";
-    }
-
-    public String getProjectRoot() {
-        return parentCommand != null ? parentCommand.getProjectRoot() : "";
-    }
+public class GitCommand extends BaseSubCommand {
 
     public String getFullRepositoryPath(String repository) {
         if (repository.equals("origin")) {
@@ -49,8 +32,8 @@ public class GitCommand extends HelpOptions implements Runnable {
         File workingDir = null;
         if (!Strings.isNullOrEmpty(directory)) {
 
-            if (!Strings.isNullOrEmpty(parentCommand.getProjectRoot())) {
-                workingDir = new File(PathUtils.resolve(parentCommand.getProjectRoot(), directory).toString());
+            if (!Strings.isNullOrEmpty(getProjectRoot())) {
+                workingDir = new File(PathUtils.resolve(getProjectRoot(), directory).toString());
             } else {
                 workingDir = new File(directory);
             }
