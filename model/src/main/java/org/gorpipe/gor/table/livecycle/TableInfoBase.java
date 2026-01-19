@@ -72,12 +72,12 @@ public abstract class TableInfoBase implements TableInfo {
         var fileName = PathUtils.getFileName(source.getFullPath());
         this.name = FilenameUtils.removeExtension(fileName);
 
-        if (safeCheckExists(PathUtils.resolve(realUri, DataUtil.toLink(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME)))) {
+        if (safeCheckExists(PathUtils.resolve(realUri, DataUtil.toFile(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME, DataType.GORD_INTERNAL_LINK)))) {
             // Not all data sources support isDirectory (so just check for the dict file)
             // GORDFOLDER VERSIONED:  with folder (containing versioned link file) passed in.
             this.rootUri = realUri;
             this.folderPath = rootUri;
-            this.linkPath = PathUtils.resolve(rootUri, DataUtil.toLink(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME));
+            this.linkPath = PathUtils.resolve(rootUri, DataUtil.toFile(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME, DataType.GORD_INTERNAL_LINK));
             try (var linkFileSource = fileReader.resolveUrl(linkPath)) {
                 this.path = linkFileSource != null ? linkFileSource.getFullPath() : getNewVersionedFileName();
             }
@@ -98,7 +98,7 @@ public abstract class TableInfoBase implements TableInfo {
             // GORDFOLDER VERSIONED: New dict with USE_LINKS=true (versioned).
             this.rootUri = realUri;
             this.folderPath = rootUri;
-            this.linkPath = PathUtils.resolve(rootUri, DataUtil.toLink(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME));
+            this.linkPath = PathUtils.resolve(rootUri, DataUtil.toFile(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME, DataType.GORD_INTERNAL_LINK));
             this.path = getNewVersionedFileName();
         }
     }

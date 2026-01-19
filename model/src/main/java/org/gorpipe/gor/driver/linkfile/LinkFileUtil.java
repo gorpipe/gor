@@ -8,6 +8,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.util.Strings;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.regex.Matcher;
@@ -15,8 +16,14 @@ import java.util.regex.Pattern;
 
 public class LinkFileUtil {
 
+    private static Logger log = org.slf4j.LoggerFactory.getLogger(LinkFileUtil.class);
+
     /**
      * Infer the data file name from the link file name.
+     *
+     * Notes: The path returned must be idempotent as this is called
+     *        from multiple different places in the code (meaning we
+     *        can not use random or time in the path).
      *
      * @param linkSource the link file path with the link extension
      * @param linkFileMeta additional link file meta data
@@ -38,7 +45,7 @@ public class LinkFileUtil {
         if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
             dataFileParentPath = linkDataFileParentPath;
         } else if (link.getLatestEntry() != null) {
-            dataFileParentPath = PathUtils.getParent(link.getLatestEntryUrl());
+            dataFileParentPath = PathUtils.getParent(PathUtils.getParent(link.getLatestEntryUrl()));
         }
 
         if (!Strings.isNullOrEmpty(linkDataFileParentPath)) {
@@ -59,9 +66,14 @@ public class LinkFileUtil {
             }
         }
 
-        var dataFileName = PathUtils.injectRandomStringIntoFileName(PathUtils.getFileName(linkSource.getFullPath()));
+        var fileName = PathUtils.getFileName(linkSource.getFullPath());
+        var extraFolder = PathUtils.removeExtensions(fileName);
+        var uniqueFileName = PathUtils.injectStringIntoFileName(fileName, Integer.toString(link.getSerial() + 1));
 
-        return PathUtils.resolve(dataFileParentPath, dataFileName);
+        log.warn("Inferred file name for link file {} is {}", linkSource.getFullPath(),
+                PathUtils.resolve(PathUtils.resolve(dataFileParentPath, extraFolder), uniqueFileName));
+
+        return PathUtils.resolve(PathUtils.resolve(dataFileParentPath, extraFolder), uniqueFileName);
     }
 
     private static Pattern linkPattern = Pattern.compile(".* -link ([^\\s]*) ?.*", Pattern.CASE_INSENSITIVE);
@@ -83,7 +95,7 @@ public class LinkFileUtil {
         return "";
     }
 
-    public record LinkData(String linkFile, String linkFileContent, String linkFileMeta, String linkFileInfo, String md5) {}
+    public record LinkData(String linkFile, String linkFileContent, String linkFileMeta, String linkFileInfo, String md5, String version) {}
 
 
     /**
@@ -99,6 +111,7 @@ public class LinkFileUtil {
     public static LinkData extractLink(FileReader fileReader, String source, String optLinkFile, String optLinkFileMeta, String md5) {
         var linkFile = LinkFile.validateAndUpdateLinkFileName(optLinkFile);
         var linkFileContent = !Strings.isNullOrEmpty(linkFile) ? PathUtils.resolve(fileReader.getCommonRoot(), source) : "";
+        var version = LinkFileV1.VERSION; // Default to V1
 
         if (Strings.isNullOrEmpty(linkFile) && !Strings.isNullOrEmpty(source)) {
             // Check if link file is forced from the source
@@ -106,10 +119,11 @@ public class LinkFileUtil {
             if (dataSource != null && dataSource.forceLink()) {
                 linkFile = dataSource.getProjectLinkFile();
                 linkFileContent = dataSource.getProjectLinkFileContent();
+                version = LinkFileMeta.DEFAULT_VERSION; // Use default version when forced from source.
             }
         }
         var metaInfo = extractLinkMetaInfo(optLinkFileMeta);
-        return new LinkData(linkFile, linkFileContent, metaInfo.linkFileMeta, metaInfo.linkFileInfo, md5);
+        return new LinkData(linkFile, linkFileContent, metaInfo.linkFileMeta, metaInfo.linkFileInfo, md5, version);
     }
 
     public static LinkData extractLinkMetaInfo(String optLinkFileMeta) {
@@ -127,7 +141,7 @@ public class LinkFileUtil {
             }
         }
 
-        return new LinkData("", "", linkFileMeta, linkFileInfo, "");
+        return new LinkData("", "", linkFileMeta, linkFileInfo, "", "");
     }
 
     public static void writeLinkFile(FileReader fileReader, LinkData linkData) throws IOException {
@@ -137,7 +151,7 @@ public class LinkFileUtil {
         // Use the nonsecure driver file reader as this is an exception from the write no links rule.
         var unsecureFileReader = fileReader.unsecure();
 
-        LinkFile.loadV1((StreamSource)unsecureFileReader.resolveUrl(linkData.linkFile, true))
+        LinkFile.createOrLoad((StreamSource)unsecureFileReader.resolveUrl(linkData.linkFile, true), linkData.version)
                 .appendMeta(linkData.linkFileMeta)
                 .appendEntry(linkData.linkFileContent, linkData.md5, linkData.linkFileInfo, unsecureFileReader)
                 .save(unsecureFileReader.getQueryTime());

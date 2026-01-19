@@ -178,23 +178,30 @@ public class UTestGorWrite {
 
     @Test
     public void testOverwritePathWithExistingVersionedLinkFile() throws IOException {
-        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
-        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        var oldAllow = LinkFileV1.allowOverwriteOfTargets;
+        LinkFileV1.allowOverwriteOfTargets = false;
 
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
-        LinkFile linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gor.link").toString()));
-        Assert.assertEquals(1, linkFile.getEntriesCount());
+        try {
+            Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+            Files.copy(p, workDirPath.resolve("dbsnp.gor"));
 
-        // Test with same file.
-        TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
-        linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gor.link").toString()));
-        Assert.assertEquals(2, linkFile.getEntriesCount());
+            TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
+            LinkFile linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gor.link").toString()));
+            Assert.assertEquals(1, linkFile.getEntriesCount());
 
-        // Test with different file
-        Assert.assertThrows( "Overwriting link with same path, throws exception",
-                GorSystemException.class,
-                () -> TestUtils.runGorPipe("gor dbsnp.gor | top 1 | write dbsnp2.gor -link dbsnp3.gor",
-                        "-gorroot", workDirPath.toString()));
+            // Test with same file.
+            TestUtils.runGorPipe("gor dbsnp.gor | write dbsnp2.gor -link dbsnp3.gor", "-gorroot", workDirPath.toString());
+            linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gor.link").toString()));
+            Assert.assertEquals(2, linkFile.getEntriesCount());
+
+            // Test with different file
+            Assert.assertThrows("Overwriting link with same path, throws exception",
+                    GorSystemException.class,
+                    () -> TestUtils.runGorPipe("gor dbsnp.gor | top 1 | write dbsnp2.gor -link dbsnp3.gor",
+                            "-gorroot", workDirPath.toString()));
+        } finally {
+            LinkFileV1.allowOverwriteOfTargets = oldAllow;
+        }
     }
 
     @Test
@@ -311,7 +318,7 @@ public class UTestGorWrite {
         var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
 
         Assert.assertEquals(1, linkFile.getEntriesCount());
-        Assert.assertTrue(linkFile.getLatestEntry().url().matches(".*?dbsnp3\\..*?\\.gord/"));
+        Assert.assertTrue(linkFile.getLatestEntry().url().matches(".*?dbsnp3_.*?\\.gord/"));
 
         String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor| top 1000", "-gorroot", workDirPath.toString());
         String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 1000", "-gorroot", workDirPath.toString());
@@ -327,7 +334,7 @@ public class UTestGorWrite {
         var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
 
         Assert.assertEquals(1, linkFile.getEntriesCount());
-        Assert.assertTrue(linkFile.getLatestEntry().url().matches(".*?dbsnp3\\..*?\\.gord/"));
+        Assert.assertTrue(linkFile.getLatestEntry().url().matches(".*?dbsnp3_.*?\\.gord/"));
 
         String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor | top 500", "-gorroot", workDirPath.toString());
         String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 500", "-gorroot", workDirPath.toString());

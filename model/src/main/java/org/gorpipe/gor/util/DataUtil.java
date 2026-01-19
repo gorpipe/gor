@@ -118,19 +118,15 @@ public class DataUtil {
     }
 
     public static String toFile(String name, DataType type) {
-        return name + type.suffix;
+        return PathUtils.stripTrailingSlash(name) + type.suffix;
     }
 
     public static String toLinkFile(String name, DataType type) {
-        return name + type.suffix + DataType.LINK.suffix;
+        return PathUtils.stripTrailingSlash(name) + type.suffix + DataType.LINK.suffix;
     }
 
     public static String toLink(String path) {
-        return PathUtils.stripTrailingSlash(path) + DataType.LINK.suffix;
-    }
-
-    public static String toVersionedLink(String path) {
-        return PathUtils.stripTrailingSlash(path) + DataType.VERSIONED_LINK.suffix;
+        return DataUtil.isLink(path) ? path : PathUtils.stripTrailingSlash(path) + DataType.LINK.suffix;
     }
 
     public static String toTempTempFile(String file) {

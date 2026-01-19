@@ -33,7 +33,11 @@ import org.gorpipe.gor.driver.meta.{DataType, SourceReference}
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.util.DataUtil
+import org.slf4j.{Logger, LoggerFactory}
 
+object Write {
+    val log: Logger = LoggerFactory.getLogger(this.getClass)
+}
 
 class Write extends CommandInfo("WRITE",
   CommandArguments("-r -c -m -inferschema -maxseg -noheader", "-d -f -i -t -l -tags -card -prefix -link -linkmeta", 0),
@@ -47,7 +51,9 @@ class Write extends CommandInfo("WRITE",
 
     fileName = if (fileName.isEmpty && linkOpt.nonEmpty) {
       val linkMetaInfo = LinkFileUtil.extractLinkMetaInfo(linkMetaOpt)
-      val linkSourceRef = new SourceReference(linkOpt, null, context.getSession.getProjectContext.getFileReader.getCommonRoot, null, null, true);
+      val linkSourceRef = new SourceReference(DataUtil.toLink(linkOpt),
+        context.getSession.getProjectContext.getFileReader.getSecurityContext,
+        context.getSession.getProjectContext.getFileReader.getCommonRoot, null, null, true);
       // Infer the full file name from the link (and defautl locations)
       LinkFileUtil.inferDataFileNameFromLinkFile(
         context.getSession.getProjectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource], linkMetaInfo.linkFileMeta);

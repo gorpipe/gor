@@ -67,6 +67,12 @@ public abstract class LinkFile {
         return create(source, meta, content);
     }
 
+    public static LinkFile createOrLoad(StreamSource source, String version) throws IOException {
+        var content = loadContentFromSource(source);
+        var meta = LinkFileMeta.createOrLoad(content, version, false);
+        return create(source, meta, content);
+    }
+
     public static LinkFile create(StreamSource source, String content) {
         var meta = LinkFileMeta.createOrLoad(content, null, true);
         return create(source, meta, content);
@@ -121,6 +127,10 @@ public abstract class LinkFile {
 
     public LinkFileMeta getMeta() {
         return meta;
+    }
+
+    public int getSerial() {
+        return meta.getPropertyInt(LinkFileMeta.HEADER_SERIAL_KEY, 0);
     }
 
     public String getPath() {
@@ -293,7 +303,7 @@ public abstract class LinkFile {
      * @param source the source to load from
      * @return the content of the link file or null if it does not exist (empty indicates version 0 link file).
      */
-    protected static String loadContentFromSource(StreamSource source) throws IOException {
+    public static String loadContentFromSource(StreamSource source) throws IOException {
         if (source == null || !source.exists()) {
             return null;
         }
