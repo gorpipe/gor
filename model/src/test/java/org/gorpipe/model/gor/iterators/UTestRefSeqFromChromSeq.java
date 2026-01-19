@@ -13,7 +13,7 @@ import org.junit.rules.TemporaryFolder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class UTestRefSeqFromConfig {
+public class UTestRefSeqFromChromSeq {
 
     @Rule
     public final ProvideSystemProperty cacheFolder
@@ -121,8 +121,7 @@ public class UTestRefSeqFromConfig {
 
         RefSeqFromChromSeq refseq = new RefSeqFromChromSeq("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
 
-        refseq.download_triggered_$eq(false);
-
+        RefSeqFromChromSeq.downloadTriggered().clear();
 
         Assert.assertEquals('C', refseq.getBase("chr1", 101000));
 
