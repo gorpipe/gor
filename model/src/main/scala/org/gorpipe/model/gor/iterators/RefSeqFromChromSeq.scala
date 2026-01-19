@@ -35,9 +35,14 @@ import org.gorpipe.gor.util.DataUtil
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.nio.file.{Files, Path, Paths}
+import scala.collection.mutable
+
+object RefSeqFromConfig {
+  var downloadTriggered : util.Map[String, java.lang.Boolean] =
+    new java.util.concurrent.ConcurrentHashMap[String, java.lang.Boolean]
+}
 
 class RefSeqFromChromSeq(ipath : String, fileReader : FileReader) extends RefSeq {
-  protected var download_triggered = false
   private val GOR_REFSEQ_CACHE_FOLDER = System.getProperty("gor.refseq.cache.folder")
   private val GOR_REFSEQ_CACHE_DOWNLOAD = Option(System.getProperty("gor.refseq.cache.download", "true")).exists(_.toBoolean)
 
@@ -66,8 +71,8 @@ class RefSeqFromChromSeq(ipath : String, fileReader : FileReader) extends RefSeq
       if (Files.exists(fullCachePath)) {
         log.debug("Using cached reference build {}", fullCachePath.toString)
         return fullCachePath.toString
-      } else if (GOR_REFSEQ_CACHE_DOWNLOAD && !download_triggered) {
-        download_triggered = true  // Only trigger download once per client
+      } else if (GOR_REFSEQ_CACHE_DOWNLOAD && (RefSeqFromConfig.downloadTriggered.putIfAbsent(fullRefPath.toString, true) == null)) {
+        // Only trigger download once per client
         triggerRefSeqDownload(fullRefPath, fullCachePath)
       }
     }

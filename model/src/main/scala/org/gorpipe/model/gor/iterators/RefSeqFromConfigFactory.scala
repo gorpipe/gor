@@ -24,19 +24,13 @@ package org.gorpipe.model.gor.iterators
 
 import org.gorpipe.gor.model.FileReader
 
-import java.util
-import java.util.Collections
-
 class RefSeqFromConfigFactory(path: String, reader: FileReader) extends RefSeqFactory {
-  var refSeqMap = Collections.synchronizedMap(new util.HashMap[String, RefSeq]())
 
   override def create(): RefSeq = {
-    refSeqMap.computeIfAbsent(path, _ => {
-      new RefSeqFromChromSeq(path, reader)})
+      new RefSeqFromChromSeq(path, reader)
   }
 
   def create(altPath: String): RefSeq = {
-    refSeqMap.computeIfAbsent(altPath, _ => {
-      new RefSeqFromChromSeq(altPath, reader)})
+      new RefSeqFromChromSeq(altPath, reader)
   }
 }
