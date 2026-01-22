@@ -1,11 +1,14 @@
 package org.gorpipe.gor.driver.providers.stream.sources.mdr;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.gorpipe.exceptions.GorSystemException;
 
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record MdrUrlsResult(String url_type, List<MdrUrlsResultItem> urls) {
     public static MdrUrlsResult fromJSON(String json) {
         ObjectMapper objectMapper = new ObjectMapper();
