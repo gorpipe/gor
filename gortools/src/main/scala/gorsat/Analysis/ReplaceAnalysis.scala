@@ -72,18 +72,20 @@ case class ReplaceAnalysis(context: GorContext, executeNor: Boolean, paramString
   }
 
   override def process(r: Row): Unit = {
-    val cvp = ReplaceCvp(r)
-    try {
-       val columnValues = columnsToReplace.indices.map(i => {
-         cvp.replaceCol = columnsToReplace(i)
-         val exIx = if(i > expressions.length - 1) 0 else i
-         evalFunction(cvp, expressions(exIx), expressionTypes(exIx))
-       })
-      r.setColumns(columnsToReplace, columnValues.toArray)
-    } catch {
-      case e: GorParsingException =>
-        val msg = s"Error in step: REPLACE $paramString\n${e.getMessage}"
-        throw new GorDataException(msg, -1, header, r.getAllCols.toString, e)
+    if (!columnsToReplace.isEmpty) {
+      val cvp = ReplaceCvp(r)
+      try {
+        val columnValues = columnsToReplace.indices.map(i => {
+          cvp.replaceCol = columnsToReplace(i)
+          val exIx = if (i > expressions.length - 1) 0 else i
+          evalFunction(cvp, expressions(exIx), expressionTypes(exIx))
+        })
+        r.setColumns(columnsToReplace, columnValues.toArray)
+      } catch {
+        case e: GorParsingException =>
+          val msg = s"Error in step: REPLACE $paramString\n${e.getMessage}"
+          throw new GorDataException(msg, -1, header, r.getAllCols.toString, e)
+      }
     }
     super.process(r)
   }

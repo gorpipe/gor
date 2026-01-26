@@ -97,4 +97,13 @@ public class UTestReplace {
                 "chrN\t0\t42\t42\t42\t42\n";
         Assert.assertEquals(expected, res);
     }
+
+    @Test
+    public void replaceNoExistingColumns() {
+        String query = "gorrow chr1,1 " +
+                "| replace Foo_* if(#rc='0','wt',#rc)";
+        String result = TestUtils.runGorPipe(query);
+        Assert.assertEquals("chrom\tpos\nchr1\t1\n", result);
+    }
+
 }

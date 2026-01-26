@@ -38,7 +38,7 @@ class Replace extends CommandInfo("REPLACE",
     val colNums = columnsFromHeader(colName, forcedInputHeader, executeNor).toArray
 
     val filteredColNums = colNums.filter(i => i>= 2)
-    if(filteredColNums.isEmpty) {
+    if(!colNums.isEmpty && filteredColNums.isEmpty) {
       throw new GorParsingException("REPLACE is not allowed on Chrom/Pos columns")
     }
     CommandParsingResult(ReplaceAnalysis(context, executeNor, formula, forcedInputHeader, filteredColNums), forcedInputHeader)
