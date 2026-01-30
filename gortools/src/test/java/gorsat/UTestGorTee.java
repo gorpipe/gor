@@ -53,7 +53,7 @@ public class UTestGorTee {
 
     @Test
     public void testGorTee() throws IOException {
-        Path p = Files.createTempFile("gortee", "test");
+        Path p = workDir.getRoot().toPath().resolve("testGorTee.gor");
         String gorcmd = "gor ../tests/data/gor/dbsnp_test.gor | top 5 | tee >(group genome -count | write " + p.toAbsolutePath().toString() + ")";
         TestUtils.runGorPipeCount(gorcmd);
 
@@ -65,7 +65,7 @@ public class UTestGorTee {
 
     @Test
     public void testNorTee() throws IOException {
-        Path p = Files.createTempFile("nortee", "test");
+        Path p = workDir.getRoot().toPath().resolve("testNorTee.nor");
         String gorcmd = "nor " + gorFile.getCanonicalPath() + " | top 15 | tee >(group -count| write " + p.toAbsolutePath().toString() + ")";
         TestUtils.runGorPipeCount(gorcmd);
 
@@ -77,8 +77,8 @@ public class UTestGorTee {
 
     @Test
     public void testDoesNotSwallow() throws IOException {
-        final File teeOut = workDir.newFile("teeOut.gor");
-        final File otherOut = workDir.newFile("outherOut.gor");
+        final File teeOut = workDir.newFile("testDoesNotSwallow_teeOut.gor");
+        final File otherOut = workDir.newFile("testDoesNotSwallow_outherOut.gor");
         final String query = "gor ../tests/data/gor/dbsnp_test.gor | tee >(write " + teeOut.getAbsolutePath() + " ) | write " + otherOut.getAbsolutePath();
         TestUtils.runGorPipe(query);
 

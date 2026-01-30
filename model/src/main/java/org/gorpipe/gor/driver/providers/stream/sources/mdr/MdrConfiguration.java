@@ -84,7 +84,7 @@ public interface MdrConfiguration extends Config {
         HashMap<String, MdrConfiguration> mdrConfigurationsMap = new HashMap<>();
         mdrConfigurationsMap.put(defaultConfig.mdrServerName(), defaultConfig);
 
-        final String MDR_CREDENTIALS_PATH = System.getProperty("gor.mdr.credentials");
+        final String MDR_CREDENTIALS_PATH = System.getProperty("gor.mdr.credentials", "/mnt/csa/config/gor-mdr-config.tsv");
 
         if (!Strings.isNullOrEmpty(MDR_CREDENTIALS_PATH)) {
             try {
