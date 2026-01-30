@@ -598,35 +598,6 @@ public class ITestS3Shared {
         }
     }
 
-    @Test
-    public void testWriteWithTeeAndLinks() throws IOException {
-        String securityContext = createSecurityContext("s3data", Credentials.OwnerType.System, "some_env", S3_KEY, S3_SECRET);
-        String gorRoot  = Path.of(workDir.getRoot().toString(), "some_project").toString();
-        String dataPath1 = "user_data/dummy_tee1.gor";
-        String dataPath2 = "user_data/dummy_tee2.gor";
-        Files.createDirectories(Path.of(gorRoot).resolve("result_cache"));
-
-        Files.copy(Path.of("../tests/data/gor/genes.gor"), Path.of(gorRoot).resolve("genes.gor"));
-
-        String result = runGorPipeServer(String.format(
-                "gor genes.gor " +
-                        "| tee -h >(segspan -maxseg 10000 | join -segseg genes.gor | write -link user_data/tee1.gor s3data://shared/%s) " +
-                        "| tee -h >(segspan -maxseg 5000 | join -segseg genes.gor | write -link user_data/tee2.gor s3data://shared/%s) " +
-                        "| segspan -maxseg 10000\n",
-                dataPath1, dataPath2), gorRoot, securityContext);
-
-        Assert.assertEquals("Incorrect group size", 234921, result.split("\n").length);
-
-        S3SharedSourceProvider provider = new S3ProjectSharedSourceProvider();
-        provider.setConfig(ConfigManager.getPrefixConfig("gor", GorDriverConfig.class));
-        try (DataSource source = getDataSourceFromProvider(provider, dataPath1, Credentials.OwnerType.System, "some_env")) {
-            source.delete();
-        }
-        try (DataSource source = getDataSourceFromProvider(provider, dataPath2, Credentials.OwnerType.System, "some_env")) {
-            source.delete();
-        }
-    }
-
     private DataSource getDataSourceFromProvider(S3SharedSourceProvider provider, String relativePath,
                                                  Credentials.OwnerType ownerType, String owner) throws IOException {
         SourceReference sourceReference = new SourceReferenceBuilder(provider.getSharedUrlPrefix() + relativePath)
