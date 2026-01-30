@@ -29,6 +29,7 @@ public class MdrServer {
     private static final String INCLUDE_GROUPED = "include_grouped";
     private static final String MDR_ENV = "env";
 
+    /* Default configuration from env vars. Includes config that is same for all MDR servers.*/
     private static final MdrConfiguration defaultConfig = ConfigManager.createPrefixConfig("gor.mdr", MdrConfiguration.class);
 
     private static HashMap<String, MdrServer> mdrServers;
@@ -36,10 +37,18 @@ public class MdrServer {
     private static final Cache<MdrDocumentCacheKey, MdrUrlsResultItem> documentCache =
             CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterAccess(defaultConfig.mdrCacheDuration(), TimeUnit.MINUTES).build();
 
-    static {
-        loadMdrServers(defaultConfig);
+    /* Lazy load the mdr servers */
+    private static HashMap<String, MdrServer> getMdrServers() {
+        if (mdrServers != null) {
+            loadMdrServers(defaultConfig);
+        }
+        return mdrServers;
     }
 
+    /**
+     * Populate MDR servers, by reading the MDR server config from disk.
+     * @param defaultConfig   the default MDR server config. The default config is set directly from env vars.
+     */
     public static void loadMdrServers(MdrConfiguration defaultConfig) {
         mdrServers = MdrConfiguration.loadMdrConfigurations(defaultConfig).entrySet().stream()
                 .collect(HashMap::new,
@@ -49,21 +58,21 @@ public class MdrServer {
 
     public static String resolveUrl(String url) {
         URI uri = URI.create(url);
-        MdrServer server = mdrServers.get(extractMdrEnvName(uri));
+        MdrServer server = getMdrServers().get(extractMdrEnvName(uri));
         if (server == null) {
             throw new GorResourceException("Can not resolve MDR url %s, config for env %s not found.".formatted(url, extractMdrEnvName(uri)), url);
         }
         return server.resolveMdrUrl(uri);
     }
 
-    public static void cacheUrls(List<SourceRef> sources) {
+    static void cacheUrls(List<SourceRef> sources) {
         HashMap<String, List<SourceRef>> sourcesByMdrServer = new HashMap<>();
         for (SourceRef source : sources) {
             var mdrServerName  = extractMdrEnvName(URI.create(source.file));
             sourcesByMdrServer.computeIfAbsent(mdrServerName, k -> new java.util.ArrayList<>()).add(source);
         }
         for (var entry : sourcesByMdrServer.keySet()) {
-            mdrServers.get(entry).cacheMdrUrls(sourcesByMdrServer.get(entry));
+            getMdrServers().get(entry).cacheMdrUrls(sourcesByMdrServer.get(entry));
         }
     }
 
