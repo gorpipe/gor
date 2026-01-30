@@ -39,7 +39,7 @@ public class MdrServer {
 
     /* Lazy load the mdr servers */
     private static HashMap<String, MdrServer> getMdrServers() {
-        if (mdrServers != null) {
+        if (mdrServers == null) {
             loadMdrServers(defaultConfig);
         }
         return mdrServers;
