@@ -63,7 +63,6 @@ public class UTestMDR {
                 dev\t%s\t%s\t%s\t%s
                 """.formatted(config.mdrServer(), config.keycloakAuthServer(), config.keycloakClientId(), secret));
         System.setProperty("gor.mdr.credentials", credFile.toString());
-        MdrServer.loadMdrServers(config);
     }
 
     @Test
@@ -156,7 +155,7 @@ public class UTestMDR {
 
     @Test
     @Ignore
-    public void test1000EntryDictionary() {
+    public void test10000EntryDictionary() {
         var result = TestUtils.runGorPipe("gor ../tests/data/mdr/genes_mdr_1000.gord | top 10000", true, securityContext).split("\n");
         Assert.assertEquals(10001, result.length);
     }
