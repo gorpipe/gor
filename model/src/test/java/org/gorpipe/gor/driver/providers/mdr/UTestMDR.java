@@ -63,7 +63,6 @@ public class UTestMDR {
                 dev\t%s\t%s\t%s\t%s
                 """.formatted(config.mdrServer(), config.keycloakAuthServer(), config.keycloakClientId(), secret));
         System.setProperty("gor.mdr.credentials", credFile.toString());
-        MdrServer.loadMdrServers(config);
     }
 
     @Test
