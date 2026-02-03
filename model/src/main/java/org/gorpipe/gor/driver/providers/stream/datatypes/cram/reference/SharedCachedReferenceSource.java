@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.model;
+package org.gorpipe.gor.driver.providers.stream.datatypes.cram.reference;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;

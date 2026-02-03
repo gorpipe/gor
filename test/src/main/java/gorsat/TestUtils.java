@@ -304,6 +304,8 @@ public class TestUtils {
             options.add("-cachedir");
             options.add(cacheDir);
         }
+//        options.add("-config");
+//        options.add("../tests/data/ref_mini/gor_config.txt");
         return PipeInstance.createGorIterator(new GorContext(createSession(options.toArray(String[]::new), null, server, securityContext, writeLocations)));
     }
 

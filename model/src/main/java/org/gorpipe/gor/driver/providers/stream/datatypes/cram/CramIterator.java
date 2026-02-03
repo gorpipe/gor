@@ -32,17 +32,19 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.exceptions.GorResourceException;
-import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.driver.providers.stream.datatypes.bam.BamIterator;
+import org.gorpipe.gor.driver.providers.stream.datatypes.cram.reference.CompositeReferenceSource;
+import org.gorpipe.gor.driver.providers.stream.datatypes.cram.reference.EBIReferenceSource;
+import org.gorpipe.gor.driver.providers.stream.datatypes.cram.reference.FolderReferenceSource;
+import org.gorpipe.gor.driver.providers.stream.datatypes.cram.reference.SharedFastaReferenceSource;
 import org.gorpipe.gor.model.ChromoLookup;
 import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.driver.adapters.StreamSourceSeekableStream;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.table.util.PathUtils;
-import org.gorpipe.gor.util.DataUtil;
-import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.gor.model.Row;
-import org.gorpipe.gor.model.SharedFastaReferenceSource;
+import org.gorpipe.model.gor.iterators.RefSeq;
+import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,8 +68,9 @@ import java.util.List;
  */
 public class CramIterator extends BamIterator {
 
-    private final static String KEY_GENERATEMISSINGATTRIBUTES = "gor.driver.cram.generatemissingattributes";
-    private final static String KEY_FASTAREFERENCESOURCE = "gor.driver.cram.fastareferencesource";
+    public final static String KEY_GENERATEMISSINGATTRIBUTES = "gor.driver.cram.generatemissingattributes";
+    public final static String KEY_FASTAREFERENCESOURCE = "gor.driver.cram.fastareferencesource";
+    public final static String KEY_REFERENCE_FORCE_FOLDER = "gor.driver.cram.reference.force.folder.";
 
     private static final Logger log = LoggerFactory.getLogger(CramIterator.class);
 
@@ -75,10 +78,11 @@ public class CramIterator extends BamIterator {
     private int[] columns;
     ChromoLookup lookup;
     private String fileName;
-    private String cramReferencePath = "";
-    private CRAMFileReader cramFileReader;
-    private ReferenceSequenceFile referenceSequenceFile;
+    private String projectCramReferencePath;  // Cram reference path from project context.
+    private RefSeq projectRefSeq;  // RefSeq from project context, used for MD tag calculation.
+    private ReferenceSequenceFile referenceSequenceFile; // Handle to cram reference file, fallback for MD tag calculation.
     private CRAMReferenceSource referenceSource;
+    private CRAMFileReader cramFileReader;
     private boolean generateMissingCramAttributes;
 
     /**
@@ -94,35 +98,6 @@ public class CramIterator extends BamIterator {
         this.lookup = lookup;
     }
 
-
-    /**
-     * Construct a CramIterator
-     *
-     * @param lookup  The lookup service for chromosome name to ids
-     * @param file    The CRAM File to iterate through
-     */
-    public CramIterator(ChromoLookup lookup, String file, String index, String reference, boolean generateMissingAttributes) {
-
-        fileName = file;
-        generateMissingCramAttributes = generateMissingAttributes;
-        File cramfile = new File(file);
-        File cramindex = new File(index);
-        if (!cramindex.exists()) {
-            cramindex = new File(DataUtil.toFile(file, DataType.CRAI));
-        }
-
-        referenceSequenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(new File(reference));
-        referenceSource = createReferenceSource(fileName, "");
-
-        try {
-            cramFileReader = new CRAMFileReader(cramfile, new FileInputStream(cramindex), referenceSource);
-        } catch (FileNotFoundException e) {
-            throw new GorResourceException("Cram file not found.", file, e);
-        }
-        SamReader samreader = new SamReader.PrimitiveSamReaderToSamReaderAdapter(cramFileReader, null);
-        init(lookup, samreader, true);
-    }
-
     @Override
     public Row next() {
         Row row = super.next();
@@ -135,8 +110,16 @@ public class CramIterator extends BamIterator {
             boolean calculateNM = record.getIntegerAttribute(SAMTag.NM.name()) == null;
 
             if (calculateMD) {
-                byte[] referenceBytes = referenceSequenceFile.getSubsequenceAt(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd()).getBases();
-                CramUtils.calculateMdAndNmTags(record, referenceBytes, calculateMD, calculateNM);
+                byte[] referenceBytes = null;
+                if (projectRefSeq != null) {
+                    referenceBytes = projectRefSeq.getBases(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd()).getBytes();
+                } else if (referenceSequenceFile != null) {
+                    // Fallback to the reference file used by the CRAM reader
+                    referenceBytes = referenceSequenceFile.getSubsequenceAt(record.getContig(), record.getAlignmentStart(), record.getAlignmentEnd()).getBases();
+                }
+                if (referenceBytes != null) {
+                    CramUtils.calculateMdAndNmTags(record, referenceBytes, calculateMD, calculateNM);
+                }
             } else if (calculateNM) {
                 SequenceUtil.calculateSamNmTagFromCigar(record);
             }
@@ -170,7 +153,10 @@ public class CramIterator extends BamIterator {
             return;
         }
 
-        cramReferencePath = session.getProjectContext().getReferenceBuild().getCramReferencePath();
+        projectCramReferencePath = session.getProjectContext().getReferenceBuild().getCramReferencePath();
+        if (!Strings.isNullOrEmpty(session.getProjectContext().getGorConfigFile())) {
+            projectRefSeq = session.getProjectContext().createRefSeq();
+        }
 
         if (cramFile != null) {
             // I read this property here through System.getProperty as there is no other way to pass properties to the driver
@@ -237,7 +223,7 @@ public class CramIterator extends BamIterator {
         }
 
         // This reference should be fasta but we let the htsjdk library decide
-        return createFileReference(file.toString());
+        return createFileReference(file);
     }
 
     private File getReferenceFromGorOptions(File file) {
@@ -252,8 +238,8 @@ public class CramIterator extends BamIterator {
     }
 
     private File getReferenceFromGorConfig(File file, String root) {
-        if (!file.exists() && !StringUtil.isEmpty(cramReferencePath)) {
-            return PathUtils.resolve(Paths.get(root), Paths.get(cramReferencePath)).toFile();
+        if (!file.exists() && !Strings.isNullOrEmpty(projectCramReferencePath)) {
+            return PathUtils.resolve(Paths.get(root), Paths.get(projectCramReferencePath)).toFile();
         }
         return file;
     }
@@ -277,10 +263,22 @@ public class CramIterator extends BamIterator {
         return file;
     }
 
-    private CRAMReferenceSource createFileReference(String ref) {
-        String referenceKey = FilenameUtils.removeExtension(FilenameUtils.getBaseName(ref));
-        referenceSequenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(new File(ref));
-        return new SharedFastaReferenceSource(referenceSequenceFile, referenceKey);
+    private CRAMReferenceSource createFileReference(File refFile) {
+        if (refFile.isDirectory()) {
+            return new CompositeReferenceSource(List.of(
+                    new FolderReferenceSource(refFile.getPath()),
+                    new EBIReferenceSource(refFile.getPath())));
+        } else if (Boolean.getBoolean(System.getProperty(KEY_REFERENCE_FORCE_FOLDER, "true"))) {
+            return new CompositeReferenceSource(List.of(
+                    new FolderReferenceSource(refFile.getParent()),
+                    new EBIReferenceSource(refFile.getParent())));
+        } else {
+            referenceSequenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(refFile);
+
+            String referenceKey = FilenameUtils.removeExtension(refFile.getName());
+            var referenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(refFile);
+            return new SharedFastaReferenceSource(referenceFile, referenceKey);
+        }
     }
 
 }

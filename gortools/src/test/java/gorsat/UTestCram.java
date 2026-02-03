@@ -31,12 +31,17 @@ import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.RestoreSystemProperties;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
+import java.util.List;
+
+import static gorsat.TestUtils.LINE_SPLIT_PATTERN;
+import static org.gorpipe.gor.driver.providers.stream.datatypes.cram.CramIterator.KEY_REFERENCE_FORCE_FOLDER;
 
 public class UTestCram {
 
@@ -44,6 +49,9 @@ public class UTestCram {
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
+
+    @Rule
+    public RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
     public static File createWrongConfigFile(File directory) throws IOException {
         return FileTestUtils.createTempFile(directory, "generic.gor",
@@ -106,7 +114,7 @@ public class UTestCram {
     public void readCramWithFastaReferenceFromConfigException() throws IOException {
         File wrongConfigFile = createWrongConfigFile(workDir.getRoot());
         System.clearProperty("gor.driver.cram.fastareferencesource");
-        String[] args = new String[]{
+        String[] args = new String[] {
                 "gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM),
                 "-config",
                 wrongConfigFile.getCanonicalPath()};
@@ -120,24 +128,29 @@ public class UTestCram {
 
     @Test
     public void readCramWithFastaReferenceAndGenerateMissingAttributes() {
-        try {
-            System.setProperty("gor.driver.cram.fastareferencesource", DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.FASTA));
-            System.setProperty("gor.driver.cram.generatemissingattributes", "false");
-            String[] linesWithoutMissingAttributes = TestUtils.runGorPipeLines("gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM));
-            System.setProperty("gor.driver.cram.generatemissingattributes", "true");
-            String[] linesWithMissingAttributes = TestUtils.runGorPipeLines("gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM));
+        System.setProperty("gor.driver.cram.fastareferencesource", DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.FASTA));
+        System.setProperty(KEY_REFERENCE_FORCE_FOLDER, "false");
 
-            Assert.assertEquals(8, linesWithoutMissingAttributes.length);
-            Assert.assertEquals(8, linesWithMissingAttributes.length);
-            // See if we have the missing entry in the last column.
-            Assert.assertFalse(linesWithoutMissingAttributes[1].contains("NM="));
-            Assert.assertTrue(linesWithMissingAttributes[1].contains("NM="));
+        String[] args = new String[] {"gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM)};
 
-        } finally {
-            System.clearProperty("gor.driver.cram.fastareferencesource");
-            System.clearProperty("gor.driver.cram.generatemissingattributes");
-        }
+        System.setProperty("gor.driver.cram.generatemissingattributes", "false");
+        String[] linesWithoutMissingAttributes = TestUtils.runGorPipe(args, false).split(LINE_SPLIT_PATTERN);
 
+        System.setProperty("gor.driver.cram.generatemissingattributes", "true");
+        String[] linesWithMissingAttributesCramRef = TestUtils.runGorPipe(args, false).split(LINE_SPLIT_PATTERN);
+
+        args = new String[] {
+                "gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM)
+                , "-config", "../tests/data/ref_mini/gor_config.txt"};
+        String[] linesWithMissingAttributesProjectRef = TestUtils.runGorPipe(args, false).split(LINE_SPLIT_PATTERN);
+
+        Assert.assertEquals(8, linesWithoutMissingAttributes.length);
+        Assert.assertEquals(8, linesWithMissingAttributesCramRef.length);
+        Assert.assertEquals(8, linesWithMissingAttributesProjectRef.length);
+        // See if we have the missing entry in the last column.
+        Assert.assertFalse(linesWithoutMissingAttributes[1].contains("NM="));
+        Assert.assertTrue(linesWithMissingAttributesCramRef[1].contains("NM="));
+        Assert.assertTrue(linesWithMissingAttributesProjectRef[1].contains("NM="));
     }
 
     @Test(expected = GorResourceException.class)
