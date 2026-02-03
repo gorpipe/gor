@@ -20,7 +20,7 @@
  *  END_COPYRIGHT
  */
 
-package org.gorpipe.gor.model;
+package org.gorpipe.gor.driver.providers.stream.datatypes.cram.reference;
 
 import htsjdk.samtools.SAMSequenceRecord;
 import org.gorpipe.gor.driver.meta.DataType;

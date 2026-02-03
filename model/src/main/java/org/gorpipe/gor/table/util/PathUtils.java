@@ -232,6 +232,10 @@ public class PathUtils {
         return fileName.contains(".") ? fileName.substring(0, fileName.indexOf('.')) : fileName;
     }
 
+    public static String removeLastExtension(String fileName) {
+        return fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+    }
+
     public static String markAsFolder(String path) {
         if (!path.endsWith("/")) {
             return path + "/";
@@ -335,6 +339,11 @@ public class PathUtils {
         return Path.of("").toAbsolutePath().toString();
     }
 
+    /**
+     * Get a temporary file path in the same folder and with similar name as the given file path.
+     * @param filePath  the file path to base the temp file path on.
+     * @return the temporary file path.
+     */
     public static Path getTempFilePath(Path filePath) {
         var baseName = filePath.getFileName().toString();
         var dotIndex = baseName.indexOf('.');
