@@ -2,6 +2,8 @@ package org.gorpipe.gor.driver.providers.stream.datatypes.cram.reference;
 
 import htsjdk.samtools.Defaults;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.cram.io.InputStreamUtils;
+import htsjdk.samtools.util.SequenceUtil;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.table.util.PathUtils;
@@ -9,13 +11,13 @@ import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +35,8 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
     private static final String REFBASES_EXT = ".txt";
 
     protected static Map<String, Path> md5ToRefbases = new ConcurrentHashMap<>();
+
+    private static final int DOWNLOAD_TRIES_BEFORE_FAILING = 2;
 
     private Path referenceFolder;  // If null we do not download.
 
@@ -98,8 +102,7 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
         }
 
         // Load from EBI service.
-        if (Boolean.parseBoolean(System.getProperty(KEY_USE_CRAM_REF_DOWNLOAD, "True" /*Boolean.toString(Defaults.USE_CRAM_REF_DOWNLOAD)*/))) {
-
+        if (Boolean.parseBoolean(System.getProperty(KEY_USE_CRAM_REF_DOWNLOAD, "True"))) {
             try {
                 // Just use mem, this is going into mem cache anyway.
                 byte[] bases =  downloadFromEBI(md5);
@@ -107,7 +110,7 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
                     saveRefbasesToDisk(md5, bases);
                 }
                 return bases;
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.warn("Could not download/save reference sequence for md5 " + md5, e);
             }
         }
@@ -119,28 +122,35 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
      * Download reference sequence from EBI by MD5 and store it in the reference folder.
      * @param md5
      * @return bytes of the reference sequence, null if not found.
-     * @throws IOException
+     * @throws IOException    if the sequence is not found or the download fails.
      */
-    private byte[] downloadFromEBI(String md5) throws IOException {
-        log.info("Downloading reference {} from ENA", md5);
-        URL url = new URL(String.format(Defaults.EBI_REFERENCE_SERVICE_URL_MASK, md5));
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setConnectTimeout(15000);
-        conn.setReadTimeout(30000);
-        conn.setRequestMethod("GET");
+    private byte[] downloadFromEBI(final String md5) throws IOException {
+        final String url = String.format(Locale.US, Defaults.EBI_REFERENCE_SERVICE_URL_MASK, md5);
 
-        if (conn.getResponseCode() != 200) {
-            log.warn("ENA returned {} for {}", conn.getResponseCode(), md5);
-            return null;
+        for (int i = 0; i < DOWNLOAD_TRIES_BEFORE_FAILING; i++) {
+            try (final InputStream is = new URL(url).openStream()) {
+                if (is == null)
+                    return null;
+
+                log.info("Downloading reference sequence: {}", url);
+                final byte[] bases = InputStreamUtils.readFully(is);
+                log.info("Downloaded {} bytes for md5 {}", bases.length, md5);
+
+                final String downloadedMD5 = SequenceUtil.calculateMD5String(bases);
+                if (md5.equals(downloadedMD5)) {
+                    return bases;
+                } else {
+                    log.error("Downloaded sequence is corrupt: requested md5={}, received md5={}",
+                            md5, downloadedMD5);
+                }
+                return bases;
+            }
+            catch (final IOException e) {
+                log.warn("Failed to download reference sequence for md5 {} on try {}/{}",
+                        md5, (i + 1), DOWNLOAD_TRIES_BEFORE_FAILING, e);
+            }
         }
-
-        byte[] bases;
-        try (BufferedInputStream in = new BufferedInputStream(conn.getInputStream())) {
-            bases = in.readAllBytes();
-        }
-        if (bases.length == 0) return null;
-
-        return bases;
+        throw new IOException("Giving up on downloading sequence for md5 %s".formatted(md5));
     }
 
     private void saveRefbasesToDisk(String md5, byte[] bases) throws IOException {

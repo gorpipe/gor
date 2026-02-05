@@ -265,17 +265,17 @@ public class CramIterator extends BamIterator {
 
     private CRAMReferenceSource createFileReference(File refFile) {
         if (refFile.isDirectory()) {
-            log.info("Using folder reference for CRAM: {}", refFile.getPath());
+            log.debug("Using folder reference for CRAM: {}", refFile.getPath());
             return new CompositeReferenceSource(List.of(
                     new FolderReferenceSource(refFile.getPath()),
                     new EBIReferenceSource(refFile.getPath())));
         } else if (Boolean.parseBoolean(System.getProperty(KEY_REFERENCE_FORCE_FOLDER, "true"))) {
-            log.info("Using folder reference for CRAM: {}", refFile.getParent());
+            log.debug("Using folder reference for CRAM: {}", refFile.getParent());
             return new CompositeReferenceSource(List.of(
                     new FolderReferenceSource(refFile.getParent()),
                     new EBIReferenceSource(refFile.getParent())));
         } else {
-            log.info("Using fasta reference file for CRAM: {}", refFile.getPath());
+            log.debug("Using fasta reference file for CRAM: {}", refFile.getPath());
             referenceSequenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(refFile);
 
             String referenceKey = FilenameUtils.removeExtension(refFile.getName());

@@ -54,17 +54,15 @@ public abstract class MD5CachedReferenceSource implements CRAMReferenceSource, C
                     log.debug("Loading reference for md5 {}", md5);
                     bases = loadReference(record);
                     if (bases != null) {
+                        // Normalize to upper case (that is what HTSJDK impl does).
+                        StringUtil.toUpperCase(bases);
                         md5BasesCache.put(md5, bases);
                     }
                 }
             }
         }
 
-        if (bases != null) {
-            StringUtil.toUpperCase(bases);
-        }
         return bases;
-
     }
 
     @Override
