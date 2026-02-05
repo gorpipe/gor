@@ -77,7 +77,7 @@ public class FolderReferenceSource extends MD5CachedReferenceSource {
             return rsFile.getSequence(referencePath.contig()).getBases();
         }
 
-        return EMPTY_BASES;
+        return null;
     }
 
     private void scanReferenceFolder() {

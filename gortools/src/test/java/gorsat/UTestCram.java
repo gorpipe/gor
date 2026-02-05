@@ -38,10 +38,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
-import java.util.List;
 
 import static gorsat.TestUtils.LINE_SPLIT_PATTERN;
-import static org.gorpipe.gor.driver.providers.stream.datatypes.cram.CramIterator.KEY_REFERENCE_FORCE_FOLDER;
+import static org.gorpipe.gor.driver.providers.stream.datatypes.cram.CramIterator.KEY_REFERENCE_PREFER_FOLDER;
 
 public class UTestCram {
 
@@ -121,7 +120,7 @@ public class UTestCram {
         try {
             TestUtils.runGorPipeCount(args);
         } catch (GorResourceException e) {
-            Assert.assertTrue(e.getMessage().startsWith("Reference does not exist."));
+            Assert.assertTrue(e.getMessage().startsWith("No cram reference found"));
             Assert.assertTrue(e.getUri().endsWith("cram_query_sorted2.fasta"));
         }
     }
@@ -129,7 +128,7 @@ public class UTestCram {
     @Test
     public void readCramWithFastaReferenceAndGenerateMissingAttributes() {
         System.setProperty("gor.driver.cram.fastareferencesource", DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.FASTA));
-        System.setProperty(KEY_REFERENCE_FORCE_FOLDER, "false");
+        System.setProperty(KEY_REFERENCE_PREFER_FOLDER, "false");
 
         String[] args = new String[] {"gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM)};
 
