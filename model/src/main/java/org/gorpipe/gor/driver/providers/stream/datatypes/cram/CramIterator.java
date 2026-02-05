@@ -70,7 +70,7 @@ public class CramIterator extends BamIterator {
 
     public final static String KEY_GENERATEMISSINGATTRIBUTES = "gor.driver.cram.generatemissingattributes";
     public final static String KEY_FASTAREFERENCESOURCE = "gor.driver.cram.fastareferencesource";
-    public final static String KEY_REFERENCE_FORCE_FOLDER = "gor.driver.cram.reference.force.folder.";
+    public final static String KEY_REFERENCE_FORCE_FOLDER = "gor.driver.cram.reference.force.folder";
 
     private static final Logger log = LoggerFactory.getLogger(CramIterator.class);
 
@@ -265,14 +265,17 @@ public class CramIterator extends BamIterator {
 
     private CRAMReferenceSource createFileReference(File refFile) {
         if (refFile.isDirectory()) {
+            log.info("Using folder reference for CRAM: {}", refFile.getPath());
             return new CompositeReferenceSource(List.of(
                     new FolderReferenceSource(refFile.getPath()),
                     new EBIReferenceSource(refFile.getPath())));
         } else if (Boolean.getBoolean(System.getProperty(KEY_REFERENCE_FORCE_FOLDER, "true"))) {
+            log.info("Using folder reference for CRAM: {}", refFile.getParent());
             return new CompositeReferenceSource(List.of(
                     new FolderReferenceSource(refFile.getParent()),
                     new EBIReferenceSource(refFile.getParent())));
         } else {
+            log.info("Using fasta reference file for CRAM: {}", refFile.getPath());
             referenceSequenceFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(refFile);
 
             String referenceKey = FilenameUtils.removeExtension(refFile.getName());
