@@ -81,8 +81,10 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
 
     @Override
     protected byte[] loadReference(final SAMSequenceRecord record) {
+        var md5 = record.getMd5();
+
         // Load from refbases file.
-        Path refbasesPath = md5ToRefbases.get(record.getMd5());
+        Path refbasesPath = md5ToRefbases.get(md5);
         if (refbasesPath != null) {
             try {
                 byte[] bases = Files.readAllBytes(refbasesPath);
@@ -96,21 +98,21 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
         }
 
         // Load from EBI service.
-        if (Boolean.parseBoolean(System.getProperty(KEY_USE_CRAM_REF_DOWNLOAD,
-                Boolean.toString(Defaults.USE_CRAM_REF_DOWNLOAD)))) {
-            try {
+        if (Boolean.parseBoolean(System.getProperty(KEY_USE_CRAM_REF_DOWNLOAD, "True" /*Boolean.toString(Defaults.USE_CRAM_REF_DOWNLOAD)*/))) {
 
-                byte[] bases =  downloadFromEBI(record.getMd5());
-                if (bases != EMPTY_BASES) {
-                    saveRefbasesToDisk(record.getMd5(), bases);
+            try {
+                // Just use mem, this is going into mem cache anyway.
+                byte[] bases =  downloadFromEBI(md5);
+                if (bases != null) {
+                    saveRefbasesToDisk(md5, bases);
                 }
                 return bases;
             } catch (IOException e) {
-                log.warn("Could not download/save reference sequence for md5 " + record.getMd5(), e);
+                log.warn("Could not download/save reference sequence for md5 " + md5, e);
             }
         }
 
-        return EMPTY_BASES;
+        return null;
     }
 
     /**
@@ -129,14 +131,14 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
 
         if (conn.getResponseCode() != 200) {
             log.warn("ENA returned {} for {}", conn.getResponseCode(), md5);
-            return EMPTY_BASES;
+            return null;
         }
 
         byte[] bases;
         try (BufferedInputStream in = new BufferedInputStream(conn.getInputStream())) {
             bases = in.readAllBytes();
         }
-        if (bases.length == 0) return EMPTY_BASES;
+        if (bases.length == 0) return null;
 
         return bases;
     }

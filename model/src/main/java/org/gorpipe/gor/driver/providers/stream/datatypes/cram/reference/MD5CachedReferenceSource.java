@@ -15,13 +15,10 @@ import org.slf4j.LoggerFactory;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public abstract class MD5CachedReferenceSource implements CRAMReferenceSource, Closeable {
     private static final Logger log = LoggerFactory.getLogger(MD5CachedReferenceSource.class);
-
-    public static final byte[] EMPTY_BASES = new byte[0];
 
     private static final Cache<String, byte[]> md5BasesCache = createMd5BasesCache();
 
@@ -46,13 +43,28 @@ public abstract class MD5CachedReferenceSource implements CRAMReferenceSource, C
             throw new GorDataException("Can not load reference bases as SAMSequenceRecord does not contain MD5");
         }
 
-        try {
-            var bases = md5BasesCache.get(md5, () -> loadReference(record));
-            StringUtil.toUpperCase(bases);
-            return bases != EMPTY_BASES ? bases : null;
-        }catch (ExecutionException e) {
-            throw new GorDataException("Failed to load CRAM reference: " + md5, e);
+        byte[] bases = md5BasesCache.getIfPresent(md5);
+
+        if (bases == null) {
+            // Syncrhonize on md5 string to avoid multiple threads loading the same reference at the same time.
+            synchronized (md5) {
+                // Double check if another thread has loaded the reference while we were waiting for the lock.
+                bases = md5BasesCache.getIfPresent(md5);
+                if (bases == null) {
+                    log.debug("Loading reference for md5 {}", md5);
+                    bases = loadReference(record);
+                    if (bases != null) {
+                        md5BasesCache.put(md5, bases);
+                    }
+                }
+            }
         }
+
+        if (bases != null) {
+            StringUtil.toUpperCase(bases);
+        }
+        return bases;
+
     }
 
     @Override
@@ -77,7 +89,7 @@ public abstract class MD5CachedReferenceSource implements CRAMReferenceSource, C
     /**
      * Load reference by MD5 from disk, downloading from EBI ENA if needed.
      * @param record       SAM record with the sequence detail (must include MD5).
-     * @return the bases, or EMPTY_BASES if no bases where found on disk and on EBI.
+     * @return the bases, or null if no bases where found on disk and on EBI.
      */
     protected abstract byte[] loadReference(SAMSequenceRecord record);
 
