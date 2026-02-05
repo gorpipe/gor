@@ -269,7 +269,7 @@ public class CramIterator extends BamIterator {
             return new CompositeReferenceSource(List.of(
                     new FolderReferenceSource(refFile.getPath()),
                     new EBIReferenceSource(refFile.getPath())));
-        } else if (Boolean.getBoolean(System.getProperty(KEY_REFERENCE_FORCE_FOLDER, "true"))) {
+        } else if (Boolean.parseBoolean(System.getProperty(KEY_REFERENCE_FORCE_FOLDER, "true"))) {
             log.info("Using folder reference for CRAM: {}", refFile.getParent());
             return new CompositeReferenceSource(List.of(
                     new FolderReferenceSource(refFile.getParent()),
