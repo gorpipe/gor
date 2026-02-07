@@ -80,6 +80,7 @@ public class UTestNorif {
                 {"Nested query started with norif", "norif <(nor " + testTsvFile1 + ")",
                     expectedHeader + "chrN\t0\tA\t1\tA\n", null},
                 {"Invalid file path", "norif -dh col1,col2 not_exists.tsv", HEADER_PREFIX+ "col1\tcol2\n", null},
+                {"Invalid nested file path", "norif -dh col1,col2 some/not_exists.tsv", HEADER_PREFIX+ "col1\tcol2\n", null},
                 {"Invalid file path missing -dh", "norif not_exists.tsv", null, GorParsingException.class},
                 {"Empty file missing -dh", "norif " + testEmptyFile, null, GorParsingException.class},
                 {"Invalid file path with invalid -dh value", "norif -dh col1 not_exists.tsv", null, GorParsingException.class},
