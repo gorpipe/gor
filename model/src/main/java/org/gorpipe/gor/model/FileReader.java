@@ -23,6 +23,7 @@
 package org.gorpipe.gor.model;
 
 import com.google.common.base.Strings;
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.meta.SourceReference;
@@ -364,7 +365,6 @@ public abstract class FileReader {
      * NOTE: This can be expensive, so it should be used with care.  This is only needed for
      *       (shared)filesystems (not object storage).
      * @param path
-     * @throws IOException
      */
     public void updateFileSystemMetaData(String path) throws IOException {
         if (PathUtils.isLocal(path)) {
@@ -389,7 +389,7 @@ public abstract class FileReader {
             try {
                 // If the file does not exist, we try to update the metadata.
                 updateFileSystemMetaData(path);
-            } catch (IOException e) {
+            } catch (IOException | GorException e) {
                 log.warn("Could not update file system metadata for path: {}", path, e);
                 return false;
             }
