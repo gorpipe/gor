@@ -56,12 +56,20 @@ object Utilities {
       // return an iterator that only delivers the header defined with -dh.
       val header = stringValueOfOption(args, "-dh")
       val headerCols = header.split(",")
-      if (headerCols.length < 2 || headerCols(0).isEmpty || headerCols(1).isEmpty) {
-        throw new GorParsingException("-dh requires at least 2 non-empty comma-separated values")
-      }
       val inputSource = RowListIterator(List())
-      if (isNor) inputSource.setHeader(HEADER_PREFIX + headerCols.mkString("\t")) else inputSource.setHeader(headerCols.mkString("\t"))
-      InputSourceParsingResult(inputSource, header, isNorContext = false)
+      if (isNor) {
+        if (headerCols.length < 1 || headerCols(0).isEmpty) {
+          throw new GorParsingException("For NOR -dh requires at least 1 non-empty value")
+        }
+        inputSource.setHeader(HEADER_PREFIX + headerCols.mkString("\t"))
+      } else {
+        if (headerCols.length < 2 || headerCols(0).isEmpty || headerCols(1).isEmpty) {
+          throw new GorParsingException("For GOR -dh requires at least 2 non-empty comma-separated values")
+        }
+        inputSource.setHeader(headerCols.mkString("\t"))
+      }
+
+      InputSourceParsingResult(inputSource, header, isNorContext = isNor)
     }
   }
 
