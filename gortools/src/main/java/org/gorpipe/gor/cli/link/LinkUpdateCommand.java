@@ -1,6 +1,8 @@
 package org.gorpipe.gor.cli.link;
 
 import org.gorpipe.gor.driver.linkfile.LinkFile;
+import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.util.Strings;
 import picocli.CommandLine;
 
@@ -39,10 +41,11 @@ public class LinkUpdateCommand implements Runnable {
     public void run() {
         var normalizedLinkPath = LinkFile.validateAndUpdateLinkFileName(linkFilePath);
         try {
+            var reader = new DriverBackedFileReader(mainCmd.getSecurityContext(), mainCmd.getProjectRoot());
             var linkFile = LinkFile.loadV1(LinkStreamSourceProvider.resolve(normalizedLinkPath, mainCmd.getSecurityContext(), mainCmd.getProjectRoot(),  true, this));
             applyHeaders(linkFile);
-            linkFile.appendEntry(linkValue, entryMd5, entryInfo);
-            linkFile.save();
+            linkFile.appendEntry(linkValue, entryMd5, StringUtil.trimQuotes(entryInfo), reader);
+            linkFile.save(reader);
             System.err.printf("Updated link file %s with %s%n", normalizedLinkPath, linkValue);
         } catch (IOException e) {
             throw new CommandLine.ExecutionException(new CommandLine(this),

@@ -3,6 +3,7 @@ package org.gorpipe.gor.driver.linkfile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -13,10 +14,13 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.util.Strings;
+
+import static org.gorpipe.gor.driver.linkfile.LinkFileMeta.HEADER_DATA_LIFECYCLE_MANAGED_KEY;
 
 /**
  * Class to work with link files, read, write and access metadata.
@@ -54,12 +58,13 @@ public abstract class LinkFile {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LinkFile.class);
 
-    public static final int LINK_FILE_MAX_SIZE = 10000;
-
+    // Approx max size of link file content to read or write. Stopp adding lines if exceeded. Dont load if twice this size.
+    public static final int LINK_FILE_MAX_SIZE = Integer.parseInt(System.getProperty("gor.driver.link.maxfilesize", "10000"));
     private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.link.cache", "true"));
+
     private static final Cache<StreamSource, String> linkCache = Caffeine.newBuilder()
             .maximumSize(10000)
-            .expireAfterWrite(2, TimeUnit.HOURS).build();
+            .expireAfterWrite(15, TimeUnit.MINUTES).build();
 
     public static LinkFile load(StreamSource source) throws IOException {
         var content = loadContentFromSource(source);
@@ -111,8 +116,6 @@ public abstract class LinkFile {
             return DataUtil.toLink(linkFilePath);
         }
     }
-
-
 
     protected final StreamSource source;
     protected final LinkFileMeta meta;
@@ -166,7 +169,7 @@ public abstract class LinkFile {
         return meta.formatHeader();
     }
 
-    List<LinkFileEntry> getEntries() {
+    public List<LinkFileEntry> getEntries() {
         return entries;
     }
 
@@ -222,7 +225,7 @@ public abstract class LinkFile {
     }
 
     public LinkFile appendEntry(String link, String md5, String info) {
-        return appendEntry(link, md5, info, null);
+        return appendEntry(link, md5, info, new DriverBackedFileReader(null, "."));
     }
 
     public abstract LinkFile appendEntry(String link, String md5, String info, FileReader reader);
@@ -262,29 +265,37 @@ public abstract class LinkFile {
         return removed;
     }
 
-    public void save() {
-        save(-1);
+    public void save(FileReader reader) {
+        save(-1, reader);
     }
 
-    public void save(long timestamp) {
+    public void save(long timestamp, FileReader reader) {
         try (OutputStream os = source.getOutputStream()) {
-            save(os, timestamp);
+            save(os, timestamp, reader);
         } catch (IOException e) {
             throw new GorResourceException("Could not save: " + source.getFullPath(), source.getFullPath(), e);
         }
     }
 
-    private void save(OutputStream os, long timestamp) {
+
+    private void save(OutputStream os, long timestamp, FileReader reader) {
         meta.setProperty(LinkFileMeta.HEADER_SERIAL_KEY, Integer.toString(Integer.parseInt(meta.getProperty(LinkFileMeta.HEADER_SERIAL_KEY, "0")) + 1));
 
-        var content = new StringBuilder(getHeader());
+        var currentTimestamp = timestamp > 0 ? timestamp : System.currentTimeMillis();
+        var header = getHeader();
+        var content = new StringBuilder(header);
 
-        if (!entries.isEmpty()) {
-            var currentTimestamp = timestamp > 0 ? timestamp : System.currentTimeMillis();
-            entries.stream()
-                    .skip(Math.max(0, entries.size() - getEntriesCountMax()))
-                    .filter(entry -> entry.timestamp() <= 0 || currentTimestamp - entry.timestamp() <= getEntriesAgeMax())
-                    .forEach(entry -> content.append(entry.format()).append("\n"));
+        for (var i = 0; i < entries.size(); i++) {
+            var entry = entries.get(entries.size() - 1 - i);
+
+            if ((i >= getEntriesCountMax())
+                    || (entry.timestamp() > 0 && currentTimestamp - entry.timestamp() > getEntriesAgeMax())
+                    || (content.length() > LINK_FILE_MAX_SIZE)) {
+                checkAndGCEntries(0, entries.size() - 1 - i, reader);
+                break;
+            }
+
+            content.insert(header.length(), entry.format() + "\n");
         }
 
         try {
@@ -296,6 +307,53 @@ public abstract class LinkFile {
 
     protected abstract List<LinkFileEntry> parseEntries(String content);
 
+    // Check if we can garbage collect entries between fromIndex and toIndex (inclusive).
+
+    /**
+     * Check if we can garbage collect entries between fromIndex and toIndex (inclusive), if so do it.
+     * @param fromIndex     fromIndex (inclusive)
+     * @param toIndex       toIndex (inclusive)
+     */
+    protected void checkAndGCEntries(int fromIndex, int toIndex, FileReader reader) {
+        if (meta.getPropertyBool(HEADER_DATA_LIFECYCLE_MANAGED_KEY, false)) {
+            List<String> dataUrlsToDelete = new ArrayList<>();
+            // Have managed link file.
+            for (int i = fromIndex; i <= toIndex; i++) {
+                var entry = entries.get(i);
+                if (!matchEntryUrls(entry, toIndex + 1, entries.size() - 1)) {
+                     // This entry url is not used by newer entries, can be deleted.
+                     dataUrlsToDelete.add(getUrlFromEntry(entry));
+                }
+            }
+
+            new Thread(() -> gcEntries(dataUrlsToDelete, reader)).start();
+
+        }
+    }
+
+    private boolean matchEntryUrls(LinkFileEntry entry, int fromIndex, int toIndex) {
+        for (int i = fromIndex; i <= toIndex; i++) {
+            if (entries.get(i).url().equals(entry.url())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void gcEntries(List<String> dataUrlsToDelete, FileReader reader) {
+        var sourceLinkFielUrl = source.getFullPath();
+        for (String linkUrl : dataUrlsToDelete) {
+            var linkSource = reader.resolveUrl(linkUrl);
+            if (linkSource != null && linkSource.exists()) {
+                log.info("Garbage collecting link file {}, entry data for {}", sourceLinkFielUrl, linkUrl);
+                try {
+                    linkSource.delete();
+                } catch (Exception e) {
+                    log.warn("Failed to garbage collect link file {} entry data for {}", sourceLinkFielUrl, linkUrl, e);
+                }
+            }
+        }
+    }
 
     /**
      * Load content from the source if it exists.
@@ -330,8 +388,8 @@ public abstract class LinkFile {
 
     private static String readLimitedLinkContent(StreamSource source) {
         try (InputStream is = source.open()) {
-            var content =  StreamUtils.readString(is, LINK_FILE_MAX_SIZE);
-            if (content.length() == LINK_FILE_MAX_SIZE) {
+            var content =  StreamUtils.readString(is, 2 * LINK_FILE_MAX_SIZE);
+            if (content.length() > 2 * LINK_FILE_MAX_SIZE) {
                 throw new GorResourceException(String.format("Link file '%s' too large (> %d bytes).",
                         source.getFullPath(), LINK_FILE_MAX_SIZE), source.getFullPath());
             }

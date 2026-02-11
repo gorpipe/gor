@@ -24,6 +24,10 @@ public class LinkResolveCommand implements Runnable {
             description = "Return the full link file entry instead of only the resolved URL.")
     private boolean returnFullEntry;
 
+    @CommandLine.Option(names = {"-i", "--info-only"},
+            description = "Return the link entry info only.")
+    private boolean returnInfoOnly;
+
     @CommandLine.ParentCommand
     private LinkCommand mainCmd;
 
@@ -41,8 +45,10 @@ public class LinkResolveCommand implements Runnable {
             String output;
             if (returnFullEntry) {
                 output = entry.format().replace('\t', ' ');
+            } else if (returnInfoOnly)  {
+                output = entry.info();
             } else {
-                var resolved = linkFile.getEntryUrl(timestamp);
+                var resolved = entry.url();
                 if (Strings.isNullOrEmpty(resolved)) {
                     throw new CommandLine.ParameterException(new CommandLine(this),
                             "No link entry found for the requested time.");

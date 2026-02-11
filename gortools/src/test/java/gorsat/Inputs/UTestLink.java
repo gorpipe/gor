@@ -10,10 +10,12 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.time.Instant;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 public class UTestLink {
     @Rule
@@ -152,7 +154,146 @@ public class UTestLink {
         assertEquals(expectedEntry.replace('\t', ' '), CommandParseUtilities.quoteSafeSplit(res.split("\n")[1], '\t')[2]);
     }
 
+    @Test
+    public void testResolveEntryInfoOnly() throws Exception {
+        Path linkFile = temp.getRoot().toPath().resolve("resolve_full.gor.link");
+
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " data/file1.gor -i 'info more'");
+        String expectedEntry = LinkFile.load(new FileSource(linkFile)).getLatestEntry().format();
+        String res = TestUtils.runGorPipe("exec gor link resolve " + linkFile.toString() + " -i");
+
+        assertEquals("ChromNor\tPosNor\tcol1\nchrN\t0\tinfo more\n", res);
+    }
+
     private String resolve(Path linkFile, String relative) {
         return linkFile.getParent().resolve(relative).toAbsolutePath().normalize().toString();
+    }
+
+    @Test
+    public void testLinkLimitedByNumberEntries() throws Exception {
+        Path linkFile = temp.getRoot().toPath().resolve("limit_count.gor.link");
+        Path file1 = temp.newFile("file1.gor").toPath();
+        Path file2 = temp.newFile("file2.gor").toPath();
+        Path file3 = temp.newFile("file3.gor").toPath();
+
+        // Create link with max 2 entries
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString() + " ENTRIES_COUNT_MAX=2");
+        Thread.sleep(10);
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file2.toString());
+        Thread.sleep(10);
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file3.toString());
+
+        LinkFile link = LinkFile.load(new FileSource(linkFile));
+        assertEquals(2, link.getEntriesCount());
+        // The entries are sorted oldest first. So index 0 is file2, index 1 is file3.
+        assertEquals(resolve(linkFile, file2.getFileName().toString()), link.getEntries().get(0).url());
+        assertEquals(resolve(linkFile, file3.getFileName().toString()), link.getEntries().get(1).url());
+    }
+
+    @Test
+    public void testLinkLimitedByTimestamp() throws Exception {
+        Path linkFile = temp.getRoot().toPath().resolve("limit_age.gor.link");
+        Path file1 = temp.newFile("file1.gor").toPath();
+        Path file2 = temp.newFile("file2.gor").toPath();
+
+        // Max age 200ms
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString() + " ENTRIES_AGE_MAX=200");
+
+        Thread.sleep(300); // Wait > 200ms
+
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file2.toString());
+
+        LinkFile link = LinkFile.load(new FileSource(linkFile));
+        // file1 should be expired.
+        assertEquals(1, link.getEntriesCount());
+        assertEquals(resolve(linkFile, file2.getFileName().toString()), link.getLatestEntryUrl());
+    }
+
+    @Test
+    public void testLinkLimitedBySize() throws Exception {
+        Path linkFile = temp.getRoot().toPath().resolve("limit_size.gor.link");
+
+        // Construct a large info string (~4KB)
+        StringBuilder largeInfo = new StringBuilder();
+        for(int i=0; i<4000; i++) largeInfo.append("a");
+
+        Path file1 = temp.newFile("file1.gor").toPath();
+        Path file2 = temp.newFile("file2.gor").toPath();
+        Path file3 = temp.newFile("file3.gor").toPath();
+
+        // Use LinkFile API directly to allow large inputs easily and control saving
+        LinkFile link = LinkFile.create(new FileSource(linkFile), "");
+        link.setEntriesCountMax(100);
+
+        // Add entries. Total size will exceed default 10000 bytes.
+        link.appendEntry(file1.toString(), "md5_1", largeInfo.toString());
+        link.save(null);
+
+        link.appendEntry(file2.toString(), "md5_2", largeInfo.toString());
+        link.save(null);
+
+        link.appendEntry(file3.toString(), "md5_3", largeInfo.toString());
+        link.save(null);
+
+        LinkFile reload = LinkFile.load(new FileSource(linkFile));
+        // Should have dropped oldest entries to stay under size limit.
+        // 3 entries * 4KB > 10KB. Expect < 3 entries.
+        assertTrue("Link file should have less than 3 entries due to size limit", reload.getEntriesCount() < 3);
+        assertEquals(file3.toString(), reload.getLatestEntryUrl());
+    }
+
+    @Test
+    public void testGarbageCollectionManaged() throws Exception {
+        Path linkFile = temp.getRoot().toPath().resolve("gc_managed.gor.link");
+        Path file1 = temp.newFile("file1.gor").toPath();
+        Path file2 = temp.newFile("file2.gor").toPath();
+        Path file3 = temp.newFile("file3.gor").toPath();
+
+        Files.write(file1, "data1".getBytes());
+        Files.write(file2, "data2".getBytes());
+        Files.write(file3, "data3".getBytes());
+
+        // ENTRIES_COUNT_MAX=2, DATA_LIFECYCLE_MANAGED=true
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString() + " ENTRIES_COUNT_MAX=2 DATA_LIFECYCLE_MANAGED=true");
+        Thread.sleep(10);
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file2.toString());
+
+        assertTrue(file1.toFile().exists());
+
+        Thread.sleep(10);
+        // This update pushes file1 out.
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file3.toString());
+
+        // Wait for async GC
+        long start = System.currentTimeMillis();
+        while(file1.toFile().exists() && System.currentTimeMillis() - start < 5000) {
+            Thread.sleep(50);
+        }
+
+        assertFalse("File1 should be deleted (Managed GC)", file1.toFile().exists());
+        assertTrue("File2 should exist", file2.toFile().exists());
+        assertTrue("File3 should exist", file3.toFile().exists());
+    }
+
+    @Test
+    public void testGarbageCollectionUnmanaged() throws Exception {
+        Path linkFile = temp.getRoot().toPath().resolve("gc_unmanaged.gor.link");
+        Path file1 = temp.newFile("file1.gor").toPath();
+        Path file2 = temp.newFile("file2.gor").toPath();
+        Path file3 = temp.newFile("file3.gor").toPath();
+
+        // ENTRIES_COUNT_MAX=2, DATA_LIFECYCLE_MANAGED=false
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString() + " ENTRIES_COUNT_MAX=2 DATA_LIFECYCLE_MANAGED=false");
+        Thread.sleep(10);
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file2.toString());
+        Thread.sleep(10);
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file3.toString());
+
+        // file1 pushed out. Should NOT be deleted.
+        Thread.sleep(500);
+
+        assertTrue("File1 should exist (Unmanaged GC)", file1.toFile().exists());
+        assertTrue("File2 should exist", file2.toFile().exists());
+        assertTrue("File3 should exist", file3.toFile().exists());
     }
 }

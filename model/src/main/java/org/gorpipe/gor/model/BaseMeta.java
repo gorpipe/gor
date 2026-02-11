@@ -95,6 +95,17 @@ public class BaseMeta {
     }
 
     /**
+     * Get header property.
+     *
+     * @param key name of the property.
+     * @param defValue default value
+     * @return the header property identified with [key]
+     */
+    public boolean getPropertyBool(String key, boolean defValue) {
+        return headerProps.containsKey(key) ? Boolean.parseBoolean(headerProps.get(key)) : defValue;
+    }
+
+    /**
      * Set header property.
      *
      * @param key   name of the property.

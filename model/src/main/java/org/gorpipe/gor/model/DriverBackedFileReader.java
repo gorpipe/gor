@@ -51,7 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.URI;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.*;
@@ -70,7 +69,7 @@ public class DriverBackedFileReader extends FileReader {
 
     final static int GZIP_BUFFER_SIZE = Integer.parseInt(System.getProperty("gor.gzip.buffer.size", "2046"));
 
-    private final boolean DEPENDENTS = System.getProperty("gor.filereader.dependents", "true").equalsIgnoreCase("true");
+    private final boolean DEPENDENTS = Boolean.parseBoolean(System.getProperty("gor.filereader.dependents", "true"));
 
     private final String securityContext;
     protected final String commonRoot;
