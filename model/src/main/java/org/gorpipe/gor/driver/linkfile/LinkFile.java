@@ -148,7 +148,7 @@ public abstract class LinkFile {
         return getUrlFromEntry(getLatestEntry());
     }
 
-    private String getUrlFromEntry(LinkFileEntry entry) {
+    public String getUrlFromEntry(LinkFileEntry entry) {
         var linkUrl = entry != null ? entry.url() : null;
         if (linkUrl != null && !PathUtils.isAbsolutePath(linkUrl) && this.source != null) {
             // Allow relative links:

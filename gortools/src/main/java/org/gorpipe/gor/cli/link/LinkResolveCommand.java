@@ -48,7 +48,7 @@ public class LinkResolveCommand implements Runnable {
             } else if (returnInfoOnly)  {
                 output = entry.info();
             } else {
-                var resolved = entry.url();
+                var resolved = linkFile.getUrlFromEntry(entry);
                 if (Strings.isNullOrEmpty(resolved)) {
                     throw new CommandLine.ParameterException(new CommandLine(this),
                             "No link entry found for the requested time.");

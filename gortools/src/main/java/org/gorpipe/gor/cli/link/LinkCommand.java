@@ -6,7 +6,7 @@ import picocli.CommandLine;
 
 @SuppressWarnings("squid:S106")
 @CommandLine.Command(name = "link",
-        description = "Manage link files (create, update, rollback, list).",
+        description = "Manage link files (create, update, resolve, rollback, list).",
         header = "Link file management commands.",
         subcommands = {LinkUpdateCommand.class, LinkRollbackCommand.class, LinkResolveCommand.class, LinkListCommand.class})
 public class LinkCommand extends HelpOptions implements Runnable {
