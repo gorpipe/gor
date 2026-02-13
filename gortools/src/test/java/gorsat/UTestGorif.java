@@ -118,6 +118,7 @@ public class UTestGorif {
                 {"Invalid file path missing -dh", "gorif not_exists.gor", null, GorParsingException.class},
                 {"Empty file missing -dh", "gorif " + testEmptyFile, null, GorParsingException.class},
                 {"Invalid file path with -dh", "gorif -dh col1,col2 not_exists.gor", "col1\tcol2\n", null},
+                {"Invalid nested file path with -dh", "gorif -dh col1,col2 some/not_exists.gor", "col1\tcol2\n", null},
                 {"Invalid file path with invalid -dh value", "gorif -dh col1 not_exists.gor", null, GorParsingException.class},
                 {"Both invalid and valid file path", "gorif " + testFileGor1 + " not_exists.gor",
                 """
