@@ -344,7 +344,7 @@ public abstract class FileReader {
         DataSource dataSource = resolveUrl(url, true);
         if (dataSource.forceLink()) {
             DataSource linkDataSource = resolveUrl(dataSource.getProjectLinkFile(), true);
-            LinkFile.create((StreamSource) linkDataSource, dataSource.getProjectLinkFileContent()).save(getQueryTime());
+            LinkFile.create((StreamSource) linkDataSource, dataSource.getProjectLinkFileContent()).save(getQueryTime(), this);
         }
     }
 

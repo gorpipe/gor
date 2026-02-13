@@ -95,6 +95,15 @@ public class LinkFileUtil {
         return "";
     }
 
+    /**
+     * Data record for link data.
+     * @param linkFile          filename of the link file
+     * @param linkFileContent   file the link points to
+     * @param linkFileMeta      meta data / header
+     * @param linkFileInfo      entry info
+     * @param md5               entry md5
+     * @param version           Link file version (V0, V1, etc)
+     */
     public record LinkData(String linkFile, String linkFileContent, String linkFileMeta, String linkFileInfo, String md5, String version) {}
 
 
@@ -134,7 +143,7 @@ public class LinkFileUtil {
             for (String s : CommandParseUtilities.quoteSafeSplit(StringUtils.strip(optLinkFileMeta, "\"\'"), ',')) {
                 var l = s.trim();
                 if (l.startsWith(LinkFileEntryV1.ENTRY_INFO_KEY)) {
-                    linkFileInfo =  StringUtils.strip(l.substring(LinkFileEntryV1.ENTRY_INFO_KEY.length()  + 1), "\"\'");
+                    linkFileInfo = StringUtils.strip(l.substring(LinkFileEntryV1.ENTRY_INFO_KEY.length() + 1), "\"\'");
                 } else {
                     linkFileMeta += "## " + l + "\n";
                 }
@@ -154,6 +163,6 @@ public class LinkFileUtil {
         LinkFile.createOrLoad((StreamSource)unsecureFileReader.resolveUrl(linkData.linkFile, true), linkData.version)
                 .appendMeta(linkData.linkFileMeta)
                 .appendEntry(linkData.linkFileContent, linkData.md5, linkData.linkFileInfo, unsecureFileReader)
-                .save(unsecureFileReader.getQueryTime());
+                .save(unsecureFileReader.getQueryTime(), unsecureFileReader);
     }
 }
