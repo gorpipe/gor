@@ -70,13 +70,13 @@ public class S3Source implements StreamSource {
 
     // software.amazon.nio.s3..aws-java-nio-spi-for-s3 only uses credentials from the default provider chain (can not specify creds
     // in the driver as we can for Carlspring).  So we can not use it for multiple accounts (if using key and secret).
-    private static final boolean USE_S3_CARLSPRING_FILESYSTEM = Boolean.parseBoolean(System.getProperty("gor.s3.use.carlspring.filesystem", "true"));
-    private static final boolean USE_S3_FILESYSTEM_OUTPUTSTREAM = Boolean.parseBoolean(System.getProperty("gor.s3.use.filesystem.outputstream", "false"));
+    private static final boolean USE_S3_CARLSPRING_FILESYSTEM = Boolean.parseBoolean(System.getProperty("gor.s3.carlspring.filesystem", "true"));
+    private static final boolean USE_S3_FILESYSTEM_OUTPUTSTREAM = Boolean.parseBoolean(System.getProperty("gor.s3.filesystem.outputstream", "false"));
     // Use NIO filesystem where possible.  Some S3 operations using the NIO filesystem are not supported by the OCI S3 compatibility layer.
     // TODP:  Maybe we should create a OCIS3CompatSource.
     private static final boolean OCI_S3_COMPATIBLE = Boolean.parseBoolean(System.getProperty("gor.oci.s3.compatible", "true"));
 
-    private static final boolean USE_META_CACHE = true ;
+    private static final boolean USE_META_CACHE = Boolean.parseBoolean(System.getProperty("gor.s3.meta.cache", "true")) ;
     protected final SourceReference sourceReference;
     protected final String bucket;
     protected final String key;
