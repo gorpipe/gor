@@ -78,7 +78,6 @@ public class S3Source implements StreamSource {
     private static final boolean USE_META_CACHE = Boolean.parseBoolean(System.getProperty("gor.s3.meta.cache", "true")) ;
     private static final boolean USE_META_CACHE_SESSION = Boolean.parseBoolean(System.getProperty("gor.s3.meta.cache.session", "true")) ;
 
-
     protected final SourceReference sourceReference;
     protected final String bucket;
     protected final String key;
