@@ -16,7 +16,7 @@ import org.junit.rules.TemporaryFolder;
 
 import picocli.CommandLine;
 
-public class LinkCommandTest {
+public class UTestLinkCommand {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();

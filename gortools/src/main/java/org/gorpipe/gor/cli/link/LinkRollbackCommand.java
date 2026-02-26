@@ -1,6 +1,7 @@
 package org.gorpipe.gor.cli.link;
 
 import org.gorpipe.gor.driver.linkfile.LinkFile;
+import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.util.DateUtils;
 import picocli.CommandLine;
 
@@ -31,7 +32,7 @@ public class LinkRollbackCommand implements Runnable {
                 throw new CommandLine.ParameterException(new CommandLine(this),
                         "No entries were removed. Link file may already be at the requested state.");
             }
-            linkFile.save();
+            linkFile.save(new DriverBackedFileReader(mainCmd.getSecurityContext(), mainCmd.getProjectRoot()));
             System.err.printf("Rolled back link file %s%n", normalizedLinkPath);
         } catch (IOException e) {
             throw new CommandLine.ExecutionException(new CommandLine(this),

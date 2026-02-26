@@ -57,7 +57,7 @@ public abstract class TableTwoPhaseCommitSupport extends TableLifeCycleSupport i
 
                 LinkFile.load((StreamSource) table.fileReader.resolveDataSource(new SourceReference(table.getLinkPath())))
                     .appendEntry(table.getPath(), "")
-                    .save();
+                    .save(table.fileReader);
 
             } else {
                 if (!table.isUseEmbeddedHeader()) {

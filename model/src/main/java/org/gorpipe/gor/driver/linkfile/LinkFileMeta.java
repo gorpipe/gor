@@ -16,6 +16,8 @@ public class LinkFileMeta extends BaseMeta {
     public static final String HEADER_DATA_LOCATION_KEY = "DATA_LOCATION";
     // Should the content lifecycle be managed (data deleted if the link is removed from the link file) (true or false).
     public static final String HEADER_DATA_LIFECYCLE_MANAGED_KEY = "DATA_LIFECYCLE_MANAGED";
+    // Override reuse strategy for versioned links (REUSE, REUSE_DATA, NO_REUSE).
+    public static final String HEADER_REUSE_STRATEGY_KEY = "REUSE_STRATEGY";
 
     static final String DEFAULT_VERSION = System.getProperty("gor.driver.link.default.version", LinkFileV0.VERSION);
 
