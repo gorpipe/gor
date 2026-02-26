@@ -22,9 +22,8 @@
 
 package org.gorpipe.s3.driver;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.apache.commons.lang3.StringUtils;
 import org.carlspring.cloud.storage.s3fs.S3FileSystem;
 import org.carlspring.cloud.storage.s3fs.S3Path;
@@ -39,6 +38,7 @@ import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.meta.SourceType;
 import org.gorpipe.gor.driver.providers.stream.RequestRange;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.util.PathUtils;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -57,7 +57,6 @@ import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -70,13 +69,15 @@ public class S3Source implements StreamSource {
 
     // software.amazon.nio.s3..aws-java-nio-spi-for-s3 only uses credentials from the default provider chain (can not specify creds
     // in the driver as we can for Carlspring).  So we can not use it for multiple accounts (if using key and secret).
-    private static final boolean USE_S3_CARLSPRING_FILESYSTEM = Boolean.parseBoolean(System.getProperty("gor.s3.use.carlspring.filesystem", "true"));
-    private static final boolean USE_S3_FILESYSTEM_OUTPUTSTREAM = Boolean.parseBoolean(System.getProperty("gor.s3.use.filesystem.outputstream", "false"));
+    private static final boolean USE_S3_CARLSPRING_FILESYSTEM = Boolean.parseBoolean(System.getProperty("gor.s3.carlspring.filesystem", "true"));
+    private static final boolean USE_S3_FILESYSTEM_OUTPUTSTREAM = Boolean.parseBoolean(System.getProperty("gor.s3.filesystem.outputstream", "false"));
     // Use NIO filesystem where possible.  Some S3 operations using the NIO filesystem are not supported by the OCI S3 compatibility layer.
     // TODP:  Maybe we should create a OCIS3CompatSource.
     private static final boolean OCI_S3_COMPATIBLE = Boolean.parseBoolean(System.getProperty("gor.oci.s3.compatible", "true"));
 
-    private static final boolean USE_META_CACHE = true ;
+    private static final boolean USE_META_CACHE = Boolean.parseBoolean(System.getProperty("gor.s3.meta.cache", "true")) ;
+    private static final boolean USE_META_CACHE_SESSION = Boolean.parseBoolean(System.getProperty("gor.s3.meta.cache.session", "true")) ;
+
     protected final SourceReference sourceReference;
     protected final String bucket;
     protected final String key;
@@ -84,8 +85,9 @@ public class S3Source implements StreamSource {
     protected final S3AsyncClient asyncClient;
     private static final Map<S3Client, S3FileSystem> s3fsCache = new ConcurrentHashMap<>();
     private S3SourceMetadata meta;
-    private static final Cache<String, S3SourceMetadata> metadataCache = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(5, TimeUnit.MINUTES).build();
-
+    private static final Cache<String, Object> staticMetadataCache =
+            Caffeine.newBuilder().maximumSize(10000).expireAfterWrite(5, TimeUnit.MINUTES).build();
+    private Cache<String, Object> metadataCache;
     private Path path;
 
     private final static int MAX_S3_CHUNKS = 10000;
@@ -115,6 +117,15 @@ public class S3Source implements StreamSource {
         this.sourceReference = sourceReference;
         this.bucket = url.getBucket();
         this.key = url.getPath();
+
+        if (USE_META_CACHE) {
+            if (GorSession.currentSession.get() != null && USE_META_CACHE_SESSION) {
+                this.metadataCache = GorSession.currentSession.get().getCache().getS3MetadataCache();
+            } else {
+                log.warn("No session available, can not use metadata cache for " + bucket + "/" + key);
+                this.metadataCache = staticMetadataCache;
+            }
+        }
     }
 
     @Override
@@ -226,11 +237,12 @@ public class S3Source implements StreamSource {
 
     private S3SourceMetadata loadMetadataFromCache(String bucket, String key) {
         try {
-            return metadataCache.get(bucket + key, () -> {
+            // We can not use the cache if the session is not available, as the cache needs to be cleared when the session ends.
+            return (S3SourceMetadata)metadataCache.get(bucket + key, k -> {
                 // TODO:  If the object does not exists we don't cache.  This method will throw exception and the loader will exit.
                 return createMetaData(bucket, key);
             });
-        } catch (ExecutionException | UncheckedExecutionException e) {
+        } catch (Exception e) {
             var cause = e.getCause() != null ? e.getCause() : e;
             throw new GorResourceException("Failed to load metadata from cache for " + bucket + "/" + key, getPath().toString(), cause).retry();
         }
@@ -393,7 +405,7 @@ public class S3Source implements StreamSource {
 
     private void invalidateMeta() {
         meta = null;
-        metadataCache.invalidate(bucket + key);
+        if (metadataCache != null) metadataCache.invalidate(bucket + key);
     }
 
     public String copy(S3Source dest) throws IOException {

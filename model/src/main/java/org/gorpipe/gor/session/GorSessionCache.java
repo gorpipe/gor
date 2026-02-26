@@ -22,12 +22,16 @@
 
 package org.gorpipe.gor.session;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.util.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Object that stores cache associated with a session.
@@ -44,6 +48,8 @@ public class GorSessionCache {
     private final Map<String, Object> objectHashMap = new ConcurrentHashMap<>();
     private final Map<String, Integer> fileSegMap = new ConcurrentHashMap<>();
     private final Map<String, Set<String>> sets = new HashMap<>();  // Synchronized on access
+    private final Cache<String, Object> s3MetadataCache = Caffeine.newBuilder().build();
+    private static final Cache<StreamSource, String> linkCache = Caffeine.newBuilder().maximumSize(10000).build();
 
 
     public Map<String, Long> getSeekTimes() {
@@ -85,4 +91,12 @@ public class GorSessionCache {
     public Map<String, Set<String>> getSets() {
         return sets;
     }
+
+    public Cache<String, Object> getS3MetadataCache() {
+        return s3MetadataCache;
+    }
+    public Cache<StreamSource, String> getLinkCache() {
+        return linkCache;
+    }
+
 }

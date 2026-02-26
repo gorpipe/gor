@@ -146,9 +146,10 @@ public class BaseScriptExecutionEngine {
             var signatureKey = AnalysisUtilities.getSignatureFromSignatureCommand(session, commandToExecute);
             var fileListKey = String.join(" ", usedFiles);
 
-            boolean SIDE_EFFECTS_FORCE_RUN = Boolean.parseBoolean(System.getProperty("gor.gorpipe.sideeffects.force_run", "false"));
-            if (usedFiles.stream().anyMatch(DataUtil::isYml)
-                    || (SIDE_EFFECTS_FORCE_RUN && MacroUtilities.containsWriteCommand(commandToExecute))) {
+            boolean sideEffectsForceRun = Boolean.parseBoolean(System.getProperty("gor.gorpipe.sideeffects.force_run", "false"));
+            boolean ymlForceRun = Boolean.parseBoolean(System.getProperty("gor.gorpipe.yml.force_run", "true"));
+            if (ymlForceRun && usedFiles.stream().anyMatch(DataUtil::isYml)
+                    || (sideEffectsForceRun && MacroUtilities.containsWriteCommand(commandToExecute))) {
                 // Cases were we always want to run the query:
                 // 1. if any of the files is a template expansion, we treat this as if non-deterministic.  We do not
                 // model how expansion might depend on files and parameters.

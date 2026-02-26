@@ -468,6 +468,4 @@ public class LinkFileTest {
 
         return new ReuseStrategySetupResult(linkFile, initialCount, latestBefore, newFile);
     }
-
-
 }

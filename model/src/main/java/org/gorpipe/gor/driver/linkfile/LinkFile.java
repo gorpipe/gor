@@ -16,6 +16,7 @@ import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.session.GorSession;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.util.Strings;
@@ -61,10 +62,11 @@ public abstract class LinkFile {
     // Approx max size of link file content to read or write. Stopp adding lines if exceeded. Dont load if twice this size.
     public static final int LINK_FILE_MAX_SIZE = Integer.parseInt(System.getProperty("gor.driver.link.maxfilesize", "10000"));
     private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.link.cache", "true"));
+    private static final boolean USE_LINK_CACHE_SESSION = Boolean.parseBoolean(System.getProperty("gor.driver.link.cache.session", "true"));
 
-    private static final Cache<StreamSource, String> linkCache = Caffeine.newBuilder()
+    private static final Cache<StreamSource, String> staticLinkCache = Caffeine.newBuilder()
             .maximumSize(10000)
-            .expireAfterWrite(15, TimeUnit.MINUTES).build();
+            .expireAfterWrite(5, TimeUnit.MINUTES).build();
 
     public static LinkFile load(StreamSource source) throws IOException {
         var content = loadContentFromSource(source);
@@ -368,6 +370,14 @@ public abstract class LinkFile {
 
         if (USE_LINK_CACHE) {
             try {
+                Cache<StreamSource, String> linkCache;
+                if (GorSession.currentSession.get() != null && USE_LINK_CACHE_SESSION) {
+                    linkCache = GorSession.currentSession.get().getCache().getLinkCache();
+                } else {
+                    log.warn("No session available, can not use session link cache for " + source);
+                    linkCache = staticLinkCache;
+                }
+
                 return linkCache.get(source, (k) -> {
                     try {
                         return readLimitedLinkContent(k);
