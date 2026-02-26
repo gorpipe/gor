@@ -802,7 +802,9 @@ object CommandParseUtilities {
   val INPUT_TO_EXTENSION: Map[String, String] = Map(
     ("CMD -N", TXT_EXTENSION),
     ("NORCMD", TXT_EXTENSION),
+    ("EXEC", TXT_EXTENSION),
     ("NOR", TSV_EXTENSION),
+    ("NORIF", TSV_EXTENSION),
     ("SDL", TSV_EXTENSION),
     ("NORSQL", TSV_EXTENSION),
     ("NORSTDIN", TSV_EXTENSION),
