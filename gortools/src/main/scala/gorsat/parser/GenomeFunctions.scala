@@ -27,6 +27,7 @@ import gorsat.parser.FunctionTypes.{dFun, iFun, sFun}
 import gorsat.parser.ParseUtilities._
 import gorsat.process.GorJavaUtilities
 import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.model.gor.iterators.RefSeq
 
 object GenomeFunctions {
   def register(functions: FunctionRegistry): Unit = {
@@ -101,8 +102,12 @@ object GenomeFunctions {
   }
 
   def refBases_with_build(owner: ParseArith, ex1: sFun, ex2: iFun, ex3: iFun, ex4: sFun): sFun = {
+    var refSeq: RefSeq  = null
     cvp => {
-      owner.context.getSession.getProjectContext.createRefSeq(ex4(cvp)).getBases(ex1(cvp), ex2(cvp), ex3(cvp))
+      if (refSeq == null) {
+        refSeq = owner.context.getSession.getProjectContext.createRefSeq(ex4(cvp))
+      }
+      refSeq.getBases(ex1(cvp), ex2(cvp), ex3(cvp))
     }
   }
 

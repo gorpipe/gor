@@ -995,9 +995,8 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
     stringIfMatcher |
     genericFunction[sFun](FunctionTypes.StringFun) |
     "REFBASES_WITH_BUILD".ignoreCase ~ "(" ~ sexpr ~ "," ~ iexpr ~ "," ~ iexpr ~ "," ~ myStringLiteralFilename ~ ")" ^^ {
-      case _ ~ "(" ~ ex1 ~ "," ~ ex2 ~ "," ~ ex3 ~ "," ~ ex4 ~ ")" => (line: ColumnValueProvider) => {
-        refBases_with_build(this, ex1, ex2, ex3, (line: ColumnValueProvider) => ex4)(line)
-      }
+      case _ ~ "(" ~ ex1 ~ "," ~ ex2 ~ "," ~ ex3 ~ "," ~ ex4 ~ ")" =>
+        refBases_with_build(this, ex1, ex2, ex3, (line: ColumnValueProvider) => ex4)
     } |
     "GTSTAT".ignoreCase ~ "(" ~ sexpr ~ "," ~ iexpr ~ "," ~ sexpr ~ "," ~ sexpr ~ "," ~ iexpr ~ "," ~ sexpr ~ "," ~ sexpr ~ "," ~ iexpr ~ "," ~ sexpr ~ "," ~ sexpr ~ ")" ^^ {
       case _ ~ "(" ~ ex1 ~ "," ~ ex2 ~ "," ~ ex3 ~ "," ~ ex4 ~ "," ~ ex5 ~ "," ~ ex6 ~ "," ~ ex7 ~ "," ~ ex8 ~ "," ~ ex9 ~ "," ~ ex10 ~ ")" => (line: ColumnValueProvider) => {

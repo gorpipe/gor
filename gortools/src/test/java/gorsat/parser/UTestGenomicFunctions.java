@@ -110,6 +110,18 @@ public class UTestGenomicFunctions {
         TestUtils.assertCalculated("refbases_with_build('chr1', 1010101, 1010103, /private/gorkube-mount/csa/ref/hg19/chromSeq)", "ACC");
     }
 
+    @Ignore("Slow, and not needed for testin.  Uses full build, which is not normally available")
+    @Test
+    public void testRefBasesWithBuildSpeed() {
+        TestUtils.runGorPipeCount("gorrows -p chr1:100000-400000 |  calc b refbases_with_build(chrom, pos, pos, /private/gorkube-mount/csa/ref/hg19/chromSeq)", ".");
+    }
+
+    @Ignore("Slow, and not needed for testin.  Uses full build, which is not normally available")
+    @Test
+    public void testRefBasesSpeed() {
+        TestUtils.runGorPipeCount("gorrows -p chr1:100000-400000 |  calc b refbases(chrom, pos, pos)", "-config", "/private/gorkube-mount/csa/ref/hg19/gor_config.txt");
+    }
+
     @Test
     public void testBamTag() {
         TestUtils.assertCalculated("bamtag('', '')", "NOT_FOUND");
