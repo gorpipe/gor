@@ -41,6 +41,13 @@ object RefSeqFromChromSeq {
     new java.util.concurrent.ConcurrentHashMap[String, java.lang.Boolean]
 }
 
+// IMPORTANT NOTE ON THREAD SAFETY:
+// This class is NOT thread safe. It is expected that each thread that needs to access reference sequence data
+// will have its own instance of this class.
+// 1.  The LUFO cache is per se thread safe but it is very small so if used by many threads it will cause a lot
+//     of thrasing and bad performance.
+// 2. The use of the filemap is NOT thread safe and is very likely to cause incorrect reads of the cache data.
+
 class RefSeqFromChromSeq(ipath : String, fileReader : FileReader) extends RefSeq {
   private val GOR_REFSEQ_CACHE_FOLDER = System.getProperty("gor.refseq.cache.folder")
   private val GOR_REFSEQ_CACHE_DOWNLOAD = Option(System.getProperty("gor.refseq.cache.download", "true")).exists(_.toBoolean)
