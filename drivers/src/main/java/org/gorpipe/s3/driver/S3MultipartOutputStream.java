@@ -1,7 +1,5 @@
 package org.gorpipe.s3.driver;
 
-import software.amazon.awssdk.core.async.AsyncRequestBody;
-import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
@@ -17,24 +15,42 @@ import java.util.concurrent.Executors;
 public abstract class S3MultipartOutputStream extends OutputStream {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(S3MultipartOutputStream.class);
 
-    private static final int PART_SIZE = 5 * 1024 * 1024; // 5 MiB
-    private static final int MAX_RETRIES = 3;
-    private static final int MAX_CONCURRENT_UPLOADS = 4;
-    private static final int RETRY_SLEEP_BASE_MS = 1000;
+    public static final int MIN_S3_PART_SIZE = 5 * 1024 * 1024; // 5 MiB, min parts size allowed by the S3 dreiver
+    public static final int INIT_PART_SIZE = Math.max(Integer.parseInt(System.getProperty(
+            "gor.s3.multipart.initpartsize", String.valueOf(MIN_S3_PART_SIZE))), MIN_S3_PART_SIZE);
+    public static final int MAX_PARTS = 10_000;
+
+    public static final int MAX_RETRIES = 3;
+    public static final int MAX_CONCURRENT_UPLOADS = 4;
+    public static final int RETRY_SLEEP_BASE_MS = 1000;
 
     private final String bucket;
     private final String key;
+    protected int currentPartSize = INIT_PART_SIZE;
+    private ByteBuffer buffer;
     private final List<CompletedPart> completedParts = new ArrayList<>();
-    private final ByteBuffer buffer = ByteBuffer.allocate(PART_SIZE);
     private final ExecutorService executor = Executors.newFixedThreadPool(MAX_CONCURRENT_UPLOADS);
 
     private String uploadId;
     private int partNumber = 1;
     private boolean closed = false;
 
-    public S3MultipartOutputStream(String bucket, String key) throws IOException {
+    public S3MultipartOutputStream(String bucket, String key) {
         this.bucket = bucket;
         this.key = key;
+        buffer = ByteBuffer.allocate(currentPartSize);
+    }
+
+    public int getUploadPartDone() {
+        return completedParts.size();
+    }
+
+    public int getUploadPartStarted() {
+        return partNumber - 1;
+    }
+
+    public int getCurrentPartSize() {
+        return currentPartSize;
     }
 
     abstract protected CreateMultipartUploadResponse sendCreateMultipartUploadRequest(CreateMultipartUploadRequest req) throws ExecutionException, InterruptedException;
@@ -83,7 +99,7 @@ public abstract class S3MultipartOutputStream extends OutputStream {
         byte[] partData = new byte[buffer.limit()];
         buffer.get(partData);
         buffer.clear();
-
+        adaptPartSize();
         int currentPart = partNumber++;
 
         if (uploadId == null) {
@@ -174,6 +190,17 @@ public abstract class S3MultipartOutputStream extends OutputStream {
             sendAbortMultipartUploadRequest(req);
         } catch (Exception ignored) {
             logger.warn("Failed to abort multipart upload (ignoring exception)", ignored);
+        }
+    }
+
+    /*
+    Simply quaddrouble the buffer every 2500 parts, given 5MB start buffer, allows for approx 850GB file, with
+    the first segment (2500 parts) allowing 12GB files, and max buffer approx 300Mb.
+     */
+    private void adaptPartSize() {
+        if (partNumber < MAX_PARTS && partNumber % 2500 == 0) {
+            currentPartSize *= 4;
+            buffer = ByteBuffer.allocate(currentPartSize);
         }
     }
 }
