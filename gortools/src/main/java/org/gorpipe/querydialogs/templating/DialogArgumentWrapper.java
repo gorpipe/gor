@@ -21,6 +21,7 @@
  */
 package org.gorpipe.querydialogs.templating;
 
+import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.SimpleHash;
 import freemarker.template.TemplateModel;
@@ -35,11 +36,15 @@ import org.gorpipe.querydialogs.argument.FormatArgument;
  * @version $Id$
  */
 public class DialogArgumentWrapper extends DefaultObjectWrapper {
+    public DialogArgumentWrapper() {
+        super(Configuration.VERSION_2_3_34);
+    }
+
     @Override
     protected TemplateModel handleUnknownType(Object obj) throws TemplateModelException {
         if (obj instanceof Argument) {
             Argument a = (Argument) obj;
-            SimpleHash wrapped = new SimpleHash();
+            SimpleHash wrapped = new SimpleHash(this);
             String raw = a.toString().trim();
             if (!raw.isEmpty()) {
                 wrapped.put("raw", raw);
