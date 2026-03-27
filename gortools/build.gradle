@@ -34,6 +34,10 @@ project(':gortools') {
 
     sourceSets.main.scala.srcDirs file("${projectDir}/build/generated-src/antlr/main")
 
+    tasks.named('compileScala') {
+        dependsOn tasks.named('generateGrammarSource')
+    }
+
     dependencies {
         implementation project(':model')
         implementation project(':base')

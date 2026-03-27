@@ -263,6 +263,8 @@ test {
 }
 
 task slowTest(type: Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
     useJUnit {
         includeCategories 'org.gorpipe.test.SlowTests'
     }
@@ -271,6 +273,8 @@ task slowTest(type: Test) {
 }
 
 task dbTest(type: Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
     onlyIf { ! Boolean.getBoolean('skip.tests') }
 
     useJUnit {
@@ -282,6 +286,8 @@ task dbTest(type: Test) {
 
 // See: https://github.com/junit-team/junit/wiki/Categories
 task integrationTest(type: Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
     useJUnit {
         includeCategories 'org.gorpipe.test.IntegrationTests'
     }

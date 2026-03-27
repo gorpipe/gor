@@ -25,6 +25,7 @@ import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.StringTemplateLoader;
 import freemarker.cache.TemplateLoader;
 import freemarker.core.Environment;
+import freemarker.core.InvalidReferenceException;
 import freemarker.core.ParseException;
 import freemarker.template.*;
 import org.gorpipe.exceptions.GorResourceException;
@@ -47,8 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 /**
  * A basic dialog implementation
@@ -120,15 +120,6 @@ public class Dialog extends AbstractListBean {
     private Configuration TEMPLATE_CONFIG;
     private String projectName;
 
-    static {
-        try {
-            // Turn off freemarker library logging
-            freemarker.log.Logger.selectLoggerLibrary(freemarker.log.Logger.LIBRARY_NONE);
-        } catch (ClassNotFoundException e) {
-            /* ignore */
-        }
-    }
-
     public final DialogDescription dialogDescription;
     protected final String errorMsgTemplate;
     protected final String longRunningQueryTemplate;
@@ -197,7 +188,7 @@ public class Dialog extends AbstractListBean {
     }
 
     private void initializeTemplateConfig(FileReader fileResolver, QueryEvaluator queryEval) {
-        TEMPLATE_CONFIG = new Configuration();
+        TEMPLATE_CONFIG = new Configuration(Configuration.VERSION_2_3_34);
         TEMPLATE_CONFIG.setLocalizedLookup(false);
         DIALOG_TEMPLATE_LOADER = new StringTemplateLoader();
 
@@ -214,7 +205,7 @@ public class Dialog extends AbstractListBean {
         TEMPLATE_CONFIG.setSharedVariable("skip", new SkipFirstMethodModel());
         TEMPLATE_CONFIG.setSharedVariable("br", new SimpleScalar("\\n"));
         TEMPLATE_CONFIG.setLocale(java.util.Locale.ENGLISH);
-        TEMPLATE_CONFIG.setSharedVariable("gor", new QueryEvalMethodModel(queryEval));
+        TEMPLATE_CONFIG.setSharedVariable("gor", new QueryEvalMethodModel(queryEval, TEMPLATE_CONFIG.getObjectWrapper()));
     }
 
     public FileReader getFileResolver() {
@@ -588,8 +579,6 @@ public class Dialog extends AbstractListBean {
     }
 
     private static final class DialogTemplateExceptionHandler implements TemplateExceptionHandler {
-        static final Pattern MESSAGE_PATTERN = Pattern.compile("^Expression (.+)\\.(.+) is undefined on.*");
-
         int count = 0;
         Dialog dialog;
 
@@ -605,16 +594,21 @@ public class Dialog extends AbstractListBean {
         @Override
         public void handleTemplateException(TemplateException te, Environment env, Writer out) throws TemplateException {
             try {
-                Matcher m = MESSAGE_PATTERN.matcher(te.getMessage());
-
-                if (m.matches() && m.group(2).startsWith("val")) {
-                    if (!dialog.getArgument(m.group(1)).isOptional()) {
-                        count++;
-                        out.write("REQUIRED(" + m.group(1) + ")");
+                if (te instanceof InvalidReferenceException ire) {
+                    String expr = ire.getBlamedExpressionString();
+                    if (expr != null && expr.contains(".")) {
+                        String argName = expr.substring(0, expr.indexOf('.'));
+                        String property = expr.substring(expr.indexOf('.') + 1);
+                        if (property.startsWith("val") && dialog.hasArgument(argName)) {
+                            if (!dialog.getArgument(argName).isOptional()) {
+                                count++;
+                                out.write("REQUIRED(" + argName + ")");
+                            }
+                            return;
+                        }
                     }
-                } else {
-                    throw te;
                 }
+                throw te;
             } catch (IOException e) {
                 throw new TemplateException("Failed to write required argument. Cause: " + e, env);
             }

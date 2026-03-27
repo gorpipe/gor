@@ -27,12 +27,14 @@ import org.gorpipe.gor.model.QueryEvaluator;
 
 import java.util.List;
 
-public class QueryEvalMethodModel implements TemplateMethodModel {
+public class QueryEvalMethodModel implements TemplateMethodModelEx {
 
     private final QueryEvaluator queryEval;
+    private final ObjectWrapper objectWrapper;
 
-    public QueryEvalMethodModel(QueryEvaluator queryEval) {
+    public QueryEvalMethodModel(QueryEvaluator queryEval, ObjectWrapper objectWrapper) {
         this.queryEval = queryEval;
+        this.objectWrapper = objectWrapper;
     }
 
     @Override
@@ -56,8 +58,8 @@ public class QueryEvalMethodModel implements TemplateMethodModel {
         switch (returnType.toLowerCase()) {
             case "string": return queryEval.asValue(query);
             case "number": return new SimpleNumber(Double.parseDouble(queryEval.asValue(query)));
-            case "list": return new SimpleSequence(queryEval.asList(query));
-            case "iterator": return new SimpleCollection(queryEval.asList(query));
+            case "list": return new SimpleSequence(queryEval.asList(query), objectWrapper);
+            case "iterator": return new SimpleCollection(queryEval.asList(query), objectWrapper);
             default: throw new TemplateModelException("gor method error, supported return types are string, number, list or iterator");
         }
     }
