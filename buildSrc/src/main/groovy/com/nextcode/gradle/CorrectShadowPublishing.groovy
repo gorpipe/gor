@@ -26,7 +26,7 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ExcludeRule
 import org.gradle.api.artifacts.ModuleDependency
 import org.gradle.api.artifacts.ProjectDependency
-import org.gradle.api.artifacts.SelfResolvingDependency
+import org.gradle.api.artifacts.FileCollectionDependency
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
 
@@ -75,7 +75,7 @@ private static void handleInternalDependency(Node dependenciesNode, Dependency d
 }
 
 private static void addDependency(Node dependenciesNode, dep) {
-    if (!(dep instanceof SelfResolvingDependency)) {
+    if (!(dep instanceof FileCollectionDependency)) {
         if (!dependenciesNode.find { getDepKey(dep).equals(getNodeKey(it))}) {
             def dependencyNode = dependenciesNode.appendNode('dependency')
             dependencyNode.appendNode('groupId', dep.group)

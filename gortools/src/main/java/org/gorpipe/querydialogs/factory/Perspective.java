@@ -25,6 +25,7 @@ import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.StringTemplateLoader;
 import freemarker.cache.TemplateLoader;
 import freemarker.core.Environment;
+import freemarker.core.InvalidReferenceException;
 import freemarker.core.ParseException;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -44,8 +45,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 /**
  * Represents a particular perspective onto data returned from a dialog query.
@@ -63,12 +63,7 @@ public class Perspective {
     private static final Logger logger = LoggerFactory.getLogger(Perspective.class);
 
     static {
-        try {
-            // Turn off freemarker library logging
-            freemarker.log.Logger.selectLoggerLibrary(freemarker.log.Logger.LIBRARY_NONE);
-        } catch (ClassNotFoundException e) {/* ignore */}
-
-        TEMPLATE_CONFIG = new Configuration();
+        TEMPLATE_CONFIG = new Configuration(Configuration.VERSION_2_3_34);
         TEMPLATE_LOADER = new StringTemplateLoader();
         TEMPLATE_CONFIG.setTemplateLoader(TEMPLATE_LOADER);
 
@@ -132,7 +127,7 @@ public class Perspective {
         if (viewTemplate != null)
             TEMPLATE_LOADER.putTemplate(getViewTemplateName(), viewTemplate);
         if (filterTemplate != null)
-            TEMPLATE_LOADER.putTemplate(getFilterTemplateName(), "<@compress>" + filterTemplate + "</@compress>");
+            TEMPLATE_LOADER.putTemplate(getFilterTemplateName(), "<#compress>" + filterTemplate + "</#compress>");
     }
 
     /**
@@ -309,19 +304,17 @@ public class Perspective {
     }
 
     private static final class PerspectiveTemplateExceptionHandler implements TemplateExceptionHandler {
-        private static final Pattern MESSAGE_PATTERN = Pattern.compile("Expression [\\p{Graph}]* is undefined on.*");
-
         @Override
         public void handleTemplateException(TemplateException te, Environment env, Writer out) throws TemplateException {
             try {
-                Matcher m = MESSAGE_PATTERN.matcher(te.getMessage());
-                if (m.matches()) {
-                    final int colNameStart = te.getMessage().indexOf("Expression ") + 11;
-                    final int colNameEnd = te.getMessage().indexOf(" is undefined on");
-                    out.write("[Unknown column name: " + te.getMessage().substring(colNameStart, colNameEnd).trim() + "]");
-                } else {
-                    throw te;
+                if (te instanceof InvalidReferenceException ire) {
+                    String expr = ire.getBlamedExpressionString();
+                    if (expr != null) {
+                        out.write("[Unknown column name: " + expr + "]");
+                        return;
+                    }
                 }
+                throw te;
             } catch (IOException e) {
                 throw new TemplateException("Failed to write required argument. Cause: " + e, env);
             }

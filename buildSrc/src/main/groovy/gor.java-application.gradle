@@ -31,7 +31,7 @@ ext {
     updateScriptTask = { projectName, scriptName, params, task, project ->
         task.mainClass = params.className
         task.applicationName = scriptName
-        task.outputDir = new File(project.buildDir, 'scripts')
+        task.outputDir = new File(project.layout.buildDirectory.get().asFile, 'scripts')
         // Ideally we like to set the classpath as this, but as we currently have a lot of dependencies the class path
         // will be to long (change this back if the class path becomes shorter)
         // task.classpath = project.jar.outputs.files + project.configurations.runtime
@@ -51,7 +51,7 @@ ext {
             task.unixScript.text = task.unixScript.text.replace('XMX_RATIO=""', 'XMX_RATIO="' + (params.containsKey('xmxRatio') ? params.xmxRatio : '') + '"')
         }
 
-        project.applicationDistribution.into("bin") {
+        project.distributions.main.contents.into("bin") {
             from(task)
             fileMode = 0755
             duplicatesStrategy 'exclude'

@@ -22,8 +22,6 @@
 
 package gorsat.gorsatGorIterator
 
-import org.apache.commons.collections.IteratorUtils
-
 import java.nio.file.Files
 import java.util.stream.Collectors
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader}

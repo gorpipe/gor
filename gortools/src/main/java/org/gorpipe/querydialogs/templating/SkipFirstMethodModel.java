@@ -21,7 +21,7 @@
  */
 package org.gorpipe.querydialogs.templating;
 
-import freemarker.template.TemplateMethodModel;
+import freemarker.template.TemplateMethodModelEx;
 import freemarker.template.TemplateModelException;
 
 import java.util.HashSet;
@@ -65,7 +65,7 @@ import java.util.Set;
  * @version $Id$
  */
 @SuppressWarnings("javadoc")
-public class SkipFirstMethodModel implements TemplateMethodModel {
+public class SkipFirstMethodModel implements TemplateMethodModelEx {
     private final Set<String> skipped = new HashSet<String>();
 
     @Override
