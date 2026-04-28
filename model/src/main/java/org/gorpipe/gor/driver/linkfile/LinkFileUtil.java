@@ -2,7 +2,9 @@ package org.gorpipe.gor.driver.linkfile;
 
 import gorsat.Commands.CommandParseUtilities;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.FileReader;
@@ -30,6 +32,22 @@ public class LinkFileUtil {
      * @return the data file path
      */
     public static String inferDataFileNameFromLinkFile(StreamSource linkSource, String linkFileMeta) throws IOException {
+        return inferDataFileNameFromLinkFile(linkSource, linkFileMeta, null);
+    }
+
+    /**
+     * Infer the data file name from the link file name.
+     * When a {@code fileReader} is supplied and the link file is lifecycle-managed, this method also
+     * verifies that the inferred target path does not already exist — overwriting a managed file
+     * would silently corrupt the version history stored in the link file.
+     *
+     * @param linkSource   the link file path with the link extension
+     * @param linkFileMeta additional link file meta data
+     * @param fileReader   file reader used to check target existence; may be {@code null} to skip the check
+     * @return the data file path
+     * @throws GorResourceException if the link is managed and the inferred target already exists
+     */
+    public static String inferDataFileNameFromLinkFile(StreamSource linkSource, String linkFileMeta, FileReader fileReader) throws IOException {
         if (linkSource == null || Strings.isNullOrEmpty(linkSource.getFullPath())) {
             throw new IllegalArgumentException("Link file path is null or empty.  Can not infer data file name.");
         }
@@ -68,12 +86,21 @@ public class LinkFileUtil {
 
         var fileName = PathUtils.getFileName(linkSource.getFullPath());
         var extraFolder = PathUtils.removeExtensions(fileName);
-        var uniqueFileName = PathUtils.injectStringIntoFileName(fileName, Integer.toString(link.getSerial() + 1));
+        var uniqueIdPart = (link.getSerial() + 1) + "-" + RandomStringUtils.insecure().nextAlphanumeric(3);
+        var uniqueFileName = PathUtils.injectStringIntoFileName(fileName, uniqueIdPart);
+        var resolvedPath = PathUtils.resolve(PathUtils.resolve(dataFileParentPath, extraFolder), uniqueFileName);
 
-        log.warn("Inferred file name for link file {} is {}", linkSource.getFullPath(),
-                PathUtils.resolve(PathUtils.resolve(dataFileParentPath, extraFolder), uniqueFileName));
+        log.debug("Inferred file name for link file {} is {}", linkSource.getFullPath(), resolvedPath);
 
-        return PathUtils.resolve(PathUtils.resolve(dataFileParentPath, extraFolder), uniqueFileName);
+        if (fileReader != null && link.getMeta().getPropertyBool(LinkFileMeta.HEADER_DATA_LIFECYCLE_MANAGED_KEY, false)) {
+            if (fileReader.exists(resolvedPath)) {
+                throw new GorResourceException(
+                        "Managed link file target already exists, overwrite would corrupt version history: " + resolvedPath,
+                        resolvedPath);
+            }
+        }
+
+        return resolvedPath;
     }
 
     private static Pattern linkPattern = Pattern.compile(".* -link ([^\\s]*) ?.*", Pattern.CASE_INSENSITIVE);

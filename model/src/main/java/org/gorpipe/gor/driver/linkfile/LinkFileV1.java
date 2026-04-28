@@ -2,8 +2,13 @@ package org.gorpipe.gor.driver.linkfile;
 
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.util.Strings;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
+import static org.gorpipe.gor.driver.linkfile.LinkFileMeta.HEADER_DATA_LIFECYCLE_MANAGED_KEY;
 
 /**
  * Link file format, version 1.
@@ -41,7 +46,7 @@ public class LinkFileV1 extends LinkFile {
     public LinkFile appendEntry(String link, String md5, String info, FileReader reader) {
         var latestEntry = getLatestEntry();
         var entry = new LinkFileEntryV1(link, System.currentTimeMillis(), md5, latestEntry != null ? latestEntry.serial() + 1 : 1, info);
-        validateEntry(entry, reader);
+        validateEntry(entry, latestEntry, reader);
         entry = handleRepeatedEntries(entry, reader);
         if (entry != null) {
             entries.add(entry);
@@ -53,15 +58,25 @@ public class LinkFileV1 extends LinkFile {
      * Validate the entry to ensure it is of the correct type, format and does not violate integrity of the link file.
      * @param entry the link file entry to validate
      */
-    private void validateEntry(LinkFileEntry entry, FileReader reader) {
+    private void validateEntry(LinkFileEntry entry, LinkFileEntry latestEntry, FileReader reader) {
         if (!(entry instanceof LinkFileEntryV1)) {
             throw new IllegalArgumentException("Invalid entry type: " + entry.getClass().getName());
         }
         if (entry.url() == null || entry.url().isEmpty()) {
             throw new IllegalArgumentException("Entry URL cannot be null or empty");
         }
-        if (!allowOverwriteOfTargets) {
-            // Only applies to non managed data.
+        if (latestEntry != null && entry.serial() > 0 && latestEntry.serial() > 0
+                && entry.serial() <= latestEntry.serial()) {
+            throw new IllegalArgumentException(
+                    "Entry serial %d must be greater than latest serial %d".formatted(entry.serial(), latestEntry.serial()));
+        }
+        if (latestEntry != null && entry.timestamp() > 0 && latestEntry.timestamp() > 0
+                && entry.timestamp() < latestEntry.timestamp()) {
+            log.warn("Entry timestamp {} is before latest entry timestamp {} in link file {}",
+                    entry.timestamp(), latestEntry.timestamp(), source.getFullPath());
+        }
+        boolean isManaged = meta.getPropertyBool(HEADER_DATA_LIFECYCLE_MANAGED_KEY, false);
+        if (!allowOverwriteOfTargets || isManaged) {
             for (LinkFileEntry existingEntry : entries) {
                 if (existingEntry.url().equals(entry.url()) && !canReuseEntryWithSameUrl(existingEntry, entry, reader)) {
                     throw new IllegalArgumentException("Duplicate entry URL: " + entry.url());
@@ -71,12 +86,12 @@ public class LinkFileV1 extends LinkFile {
     }
 
     private boolean canReuseEntryWithSameUrl(LinkFileEntry oldEntry, LinkFileEntry newEntry, FileReader reader) {
-        // We can reuse an entry (same url) if the entries have the  same underlying file, as if not the integrity of the
-        // versioned link file is violated (as the new entry file overwrites the old entry file, but the old entry
-        // is still in the link file history).
+        // We can reuse an entry (same url) if the entries have the same underlying file (same MD5), as if not the
+        // integrity of the versioned link file is violated (as the new entry file overwrites the old entry file,
+        // but the old entry is still in the link file history).
         // BUT haven't we already ruined the integrity when we enter here!?
 
-        if ((oldEntry.md5() != null && newEntry.md5() != null)) {
+        if (!Strings.isNullOrEmpty(oldEntry.md5()) && !Strings.isNullOrEmpty(newEntry.md5())) {
             // Use md5 if available.
             return oldEntry.md5().equals(newEntry.md5());
         } else {
@@ -114,8 +129,9 @@ public class LinkFileV1 extends LinkFile {
     }
 
     private LinkFileEntry findExistingEntryByMD5(LinkFileEntry entry) {
+        if (Strings.isNullOrEmpty(entry.md5())) return null;
         for (LinkFileEntry existingEntry : entries) {
-            if (existingEntry.md5().equals(entry.md5())) {
+            if (!Strings.isNullOrEmpty(existingEntry.md5()) && existingEntry.md5().equals(entry.md5())) {
                 return existingEntry;
             }
         }
@@ -147,6 +163,38 @@ public class LinkFileV1 extends LinkFile {
                 }
             }
         }
+    }
+
+    @Override
+    public List<String> checkIntegrity() {
+        var violations = new ArrayList<String>();
+        int prevSerial = -1;
+        long prevTimestamp = -1;
+        var urlToMd5 = new HashMap<String, String>();
+
+        for (var entry : entries) {
+            if (entry.serial() > 0 && prevSerial > 0 && entry.serial() <= prevSerial) {
+                violations.add("Entry serial %d is not greater than previous serial %d (url: %s)"
+                        .formatted(entry.serial(), prevSerial, entry.url()));
+            }
+            if (entry.serial() > 0) prevSerial = entry.serial();
+
+            if (prevTimestamp > 0 && entry.timestamp() > 0 && entry.timestamp() < prevTimestamp) {
+                violations.add("Entry timestamp %d is before previous timestamp %d (url: %s)"
+                        .formatted(entry.timestamp(), prevTimestamp, entry.url()));
+            }
+            if (entry.timestamp() > 0) prevTimestamp = entry.timestamp();
+
+            if (!Strings.isNullOrEmpty(entry.md5())) {
+                var existingMd5 = urlToMd5.get(entry.url());
+                if (existingMd5 != null && !existingMd5.equalsIgnoreCase(entry.md5())) {
+                    violations.add("URL '%s' appears with different MD5 values (%s vs %s)"
+                            .formatted(entry.url(), existingMd5, entry.md5()));
+                }
+                urlToMd5.put(entry.url(), entry.md5());
+            }
+        }
+        return violations;
     }
 
     private void checkDefaultMeta() {
