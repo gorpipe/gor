@@ -39,14 +39,12 @@ public class UTestCalc {
         Assert.assertEquals(expected, result);
     }
 
-    @Ignore("Only works if run alone, as the property is read only on class load")
     @Test
     public void addsNewExistingColumn() {
         System.setProperty("gor.iterators.allowDuplicateColumns", "false");
         Assert.assertThrows(GorDataException.class, () -> TestUtils.runGorPipe("gorrow 1,1 | calc pos 42"));
     }
 
-    @Ignore("Only works if run alone, as the property is read only on class load")
     @Test
     public void addsNewColumnWithSuffixWhenItExists() {
         System.setProperty("gor.iterators.allowDuplicateColumns", "false");
