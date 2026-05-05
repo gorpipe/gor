@@ -56,7 +56,9 @@ class Write extends CommandInfo("WRITE",
         context.getSession.getProjectContext.getFileReader.getCommonRoot, null, null, true);
       // Infer the full file name from the link (and defautl locations)
       LinkFileUtil.inferDataFileNameFromLinkFile(
-        context.getSession.getProjectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource], linkMetaInfo.linkFileMeta);
+        context.getSession.getProjectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource],
+        linkMetaInfo.linkFileMeta,
+        context.getSession.getProjectContext.getFileReader);
     } else {
       fileName
     }

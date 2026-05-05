@@ -10,6 +10,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
+import org.gorpipe.base.config.PropsHelper;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
@@ -59,10 +60,13 @@ public abstract class LinkFile {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LinkFile.class);
 
-    // Approx max size of link file content to read or write. Stopp adding lines if exceeded. Dont load if twice this size.
+    // Approx max size of link file content to read or write. Stop adding lines if exceeded. Don't load if twice this size.
     public static final int LINK_FILE_MAX_SIZE = Integer.parseInt(System.getProperty("gor.driver.link.maxfilesize", "10000"));
     private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.link.cache", "true"));
     private static final boolean USE_LINK_CACHE_SESSION = Boolean.parseBoolean(System.getProperty("gor.driver.link.cache.session", "true"));
+
+    public static final String LINK_FILE_VALIDATE_LOAD = "gor.driver.link.validate.load";
+    public static final String LINK_FILE_VALIDATE_SAVE = "gor.driver.link.validate.save";
 
     private static final Cache<StreamSource, String> staticLinkCache = Caffeine.newBuilder()
             .maximumSize(10000)
@@ -128,6 +132,10 @@ public abstract class LinkFile {
         this.source = source;
         this.meta = meta;
         this.entries = parseEntries(content);
+
+        if (PropsHelper.getBoolean(LINK_FILE_VALIDATE_LOAD, false)) {
+            validate();
+        }
     }
 
     public LinkFileMeta getMeta() {
@@ -281,6 +289,10 @@ public abstract class LinkFile {
 
 
     private void save(OutputStream os, long timestamp, FileReader reader) {
+        if (PropsHelper.getBoolean(LINK_FILE_VALIDATE_SAVE, false)) {
+            validate();
+        }
+
         meta.setProperty(LinkFileMeta.HEADER_SERIAL_KEY, Integer.toString(Integer.parseInt(meta.getProperty(LinkFileMeta.HEADER_SERIAL_KEY, "0")) + 1));
 
         var currentTimestamp = timestamp > 0 ? timestamp : System.currentTimeMillis();
@@ -308,6 +320,24 @@ public abstract class LinkFile {
     }
 
     protected abstract List<LinkFileEntry> parseEntries(String content);
+
+    /**
+     * Check internal consistency of this link file.
+     *
+     * @return list of human-readable violation strings; empty means the file is clean
+     */
+    public abstract List<String> checkIntegrity();
+
+    /**
+     * Validate the link file content.
+     */
+    public void validate() {
+        var vialations = checkIntegrity();
+        if (!vialations.isEmpty()) {
+            throw new GorResourceException("Link file integrity check failed with %d violation(s):\n%s".formatted(vialations.size(), String.join("\n", vialations)),
+                    source.getFullPath());
+        }
+    }
 
     // Check if we can garbage collect entries between fromIndex and toIndex (inclusive).
 
