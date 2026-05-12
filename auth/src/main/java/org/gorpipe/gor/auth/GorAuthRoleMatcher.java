@@ -27,33 +27,42 @@ public class GorAuthRoleMatcher {
     }
 
     /**
-     * Check roled based access.  Throws GorSystemException if no access.
-
-     * @param authInfo                  access info
-     * @param subject                   subject like, like file for file:write:&lt;subject&gt;
-     * @param authorizationActions      the actions we need to have access to, access to any of them will grant access.
-     * @throws GorSystemException       if not access.
-     */
-    public static void needsRolebasedAccess(GorAuthInfo authInfo, String subject, AuthorizationAction... authorizationActions) throws GorSystemException {
-        if (!hasRolebasedAccess(authInfo.getUserRoles(), authInfo.getProject(), subject, authorizationActions)) {
-            log.warn(String.format("User '%s' in project '%s' does not have access to subject '%s' with any of '%s'",
-                    authInfo.getUsername(), authInfo.getProject(), subject,
-                    Arrays.stream(authorizationActions).map(a -> a.value).collect(Collectors.joining(","))));
-            throw new GorSecurityException(String.format("User '%s' in project '%s' does not have access.",
-                    authInfo.getUsername(), authInfo.getProject()), null);
-        }
-    }
-
-    /**
      * Check roled based access.
 
      * @param authInfo                  access info
      * @param subject                   subject like, like file for file:write:&lt;subject&gt;
      * @param authorizationActions      the actions we need to have access to, access to any of them will grant access.
-     * @return  true if we have access to any of the authorizationActions, otherwise false.
+     * @throws GorSecurityException       if not access.
      */
-    public static boolean hasRolebasedAccess(GorAuthInfo authInfo, String subject, AuthorizationAction... authorizationActions) {
+    public static void needsRolebasedAccess(GorAuthInfo authInfo, String subject, String... authorizationActions) throws GorSecurityException {
+        if (!hasRolebasedAccess(authInfo.getUserRoles(), authInfo.getProject(), subject, authorizationActions)) {
+            log.warn(String.format("User '%s' in project '%s' does not have access to subject '%s' with any of '%s'",
+                    authInfo.getUsername(), authInfo.getProject(), subject,
+                    Arrays.stream(authorizationActions).collect(Collectors.joining(","))));
+            throw new GorSecurityException(String.format("User '%s' in project '%s' does not have access.",
+                    authInfo.getUsername(), authInfo.getProject()), null);
+        }
+    }
+
+    public static void needsRolebasedAccess(GorAuthInfo authInfo, String subject, AuthorizationAction... authorizationActions) throws GorSecurityException {
+        needsRolebasedAccess(authInfo, subject, Arrays.stream(authorizationActions).map(a -> a.value).toArray(String[]::new));
+    }
+
+
+        /**
+         * Check roled based access.
+
+         * @param authInfo                  access info
+         * @param subject                   subject like, like file for file:write:&lt;subject&gt;
+         * @param authorizationActions      the actions we need to have access to, access to any of them will grant access.
+         * @return  true if we have access to any of the authorizationActions, otherwise false.
+         */
+    public static boolean hasRolebasedAccess(GorAuthInfo authInfo, String subject, String... authorizationActions) {
         return hasRolebasedAccess(authInfo.getUserRoles(), authInfo.getProject(), subject, authorizationActions);
+    }
+
+    public static boolean hasRolebasedAccess(GorAuthInfo authInfo, String subject, AuthorizationAction... authorizationActions) {
+        return hasRolebasedAccess(authInfo.getUserRoles(), authInfo.getProject(), subject, Arrays.stream(authorizationActions).map(a -> a.value).toArray(String[]::new));
     }
 
     /**
@@ -65,27 +74,43 @@ public class GorAuthRoleMatcher {
      * @param authorizationActions      the actions we need to have access to, access to any of them will grant access.
      * @return  true if we have access to any of the authorizationActions, otherwise false.
      */
+
     public static boolean hasRolebasedAccess(List<String> userRoles, String project, String subject, AuthorizationAction... authorizationActions) {
+        return hasRolebasedAccess(userRoles, project, subject, Arrays.stream(authorizationActions).map(a -> a.value).toArray(String[]::new));
+    }
+
+    public static boolean hasRolebasedAccess(List<String> userRoles, String project, String subject, String... authorizationActions) {
         return matchRolePatterns(userRoles, getRolesThatGiveAccess(project, subject, authorizationActions));
     }
 
-    // Includes exact roles.
     static List<String> getRolesThatGiveAccess(String project, String subject, AuthorizationAction... actions) {
+        return getRolesThatGiveAccess(project, subject, Arrays.stream(actions).map(a -> a.value).toArray(String[]::new));
+    }
+
+    /**
+     *
+     * Includes exact roles.
+     * @param project       the project we are in.
+     * @param subject       optional subject like, like file for file:write:&lt;subject&gt;
+     * @param actions       actions that give access (if we have role for any of them we have access )
+     * @return list of roles that give access.
+     */
+    static List<String> getRolesThatGiveAccess(String project, String subject, String... actions) {
         List<String> allowedRoles = new ArrayList<String>();
 
         // Action based.
 
-        for (AuthorizationAction action : actions) {
+        for (String action : actions) {
             if (!Strings.isNullOrEmpty(project)) {
-                allowedRoles.add(PROJECT_REGEX + project + DELIMITER + action.value);
+                allowedRoles.add(PROJECT_REGEX + project + DELIMITER + action);
 
                 if (!Strings.isNullOrEmpty(subject)) {
-                    allowedRoles.add(PROJECT_REGEX + project + DELIMITER + action.value + DELIMITER + subject);
+                    allowedRoles.add(PROJECT_REGEX + project + DELIMITER + action + DELIMITER + subject);
                 }
             }
 
             // User data special
-            if (action == AuthorizationAction.WRITE && subject != null && subject.startsWith("user_data/")) {
+            if (AuthorizationAction.WRITE.value.equals(action) && subject != null && subject.startsWith("user_data/")) {
                 allowedRoles.add(PROJECT_REGEX + project + DELIMITER + AuthorizationAction.WRITE_TO_USER_DATA.value);
             }
         }
