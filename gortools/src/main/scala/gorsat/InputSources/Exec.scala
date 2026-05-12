@@ -53,11 +53,11 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, ignoreIl
       result(0) = result(0).substring(1)
     }
 
-    val header = "ChromNor\tPosNor\t" +  result(0)
+    val header = result(0)
     val myHeaderLength = header.split("\t").length
     val lineList = new ListBuffer[Row]()
     for (row <- result.slice(1, result.length)) {
-      lineList += new NoValidateRowBase("chrN\t0\t" + row, myHeaderLength)
+      lineList += new NoValidateRowBase(row, myHeaderLength)
     }
 
     val inputSource = RowListIterator(lineList.toList)
