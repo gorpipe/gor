@@ -162,7 +162,7 @@ public class UTestLinkCommandExec {
         String expectedEntry = LinkFile.load(new FileSource(linkFile)).getLatestEntry().format();
         String res = TestUtils.runGorPipe("exec gor link resolve " + linkFile.toString() + " -i");
 
-        assertEquals("ChromNor\tPosNor\tcol1\nchrN\t0\tinfo more\n", res);
+        assertEquals("ChromNOR\tPosNOR\tResult\nchrN\t0\tinfo more\n", res);
     }
 
     private String resolve(Path linkFile, String relative) {
