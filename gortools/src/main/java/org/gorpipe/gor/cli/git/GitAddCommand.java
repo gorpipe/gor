@@ -8,7 +8,7 @@ import java.util.List;
 
 @CommandLine.Command(name = "add",
         description = "Add file contents to the staging area.")
-public class GitAddCommand implements Runnable {
+public class GitAddCommand extends GitHelpOptions implements Runnable {
 
     @CommandLine.Parameters(arity = "0..*", paramLabel = "FILE",
             description = "Files to add to the staging area. Patterns can be used, e.g., '*.java'.")

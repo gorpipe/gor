@@ -8,7 +8,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Utility class for executing git commands.
@@ -33,24 +35,23 @@ class GitCommandExecutor {
 
         try {
             ProcessBuilder pb = new ProcessBuilder(command);
-            if (workingDir != null) {
+            if (workingDir != null && workingDir.isDirectory()) {
                 pb.directory(workingDir);
             }
             pb.redirectErrorStream(false);
 
             Process process = pb.start();
 
-            // Stream stdout to System.out
-            streamOutput(process.getInputStream(), System.out);
-
-            // Stream stderr to System.err
-            streamOutput(process.getErrorStream(), System.err);
+            Thread outThread = streamOutput(process.getInputStream(), System.out);
+            Thread errThread = streamOutput(process.getErrorStream(), System.err);
 
             int exitCode = process.waitFor();
+            outThread.join();
+            errThread.join();
 
             if (exitCode != 0) {
                 throw new CommandLine.ExecutionException(commandSpec.commandLine(),
-                        String.format("Git command '%s' failed with exit code %d", gitSubcommand, exitCode));
+                        String.format("Git command '%s' failed with exit code %d (%s)", gitSubcommand, exitCode, String.join(" ", command)));
             }
 
             return exitCode;
@@ -62,8 +63,8 @@ class GitCommandExecutor {
         }
     }
 
-    private static void streamOutput(InputStream inputStream, java.io.PrintStream outputStream) {
-        new Thread(() -> {
+    private static Thread streamOutput(InputStream inputStream, java.io.PrintStream outputStream) {
+        Thread t = new Thread(() -> {
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
                 String line;
@@ -73,7 +74,9 @@ class GitCommandExecutor {
             } catch (Exception e) {
                 // Ignore errors in output streaming
             }
-        }).start();
+        });
+        t.start();
+        return t;
     }
 }
 
