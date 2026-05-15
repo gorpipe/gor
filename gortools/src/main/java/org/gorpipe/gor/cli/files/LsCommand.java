@@ -1,5 +1,6 @@
 package org.gorpipe.gor.cli.files;
 
+import org.gorpipe.gor.cli.HelpOptions;
 import picocli.CommandLine;
 
 import java.io.IOException;
@@ -8,8 +9,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@CommandLine.Command(name = "ls", description = "List directory contents.")
-public class LsCommand implements Runnable {
+@CommandLine.Command(name = "ls", header = "List directory contents.", description = "List directory contents.")
+public class LsCommand extends HelpOptions implements Runnable {
 
     @CommandLine.Parameters(index = "0", defaultValue = ".", paramLabel = "PATH")
     private String path;

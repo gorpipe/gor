@@ -1,13 +1,14 @@
 package org.gorpipe.gor.cli.files;
 
+import org.gorpipe.gor.cli.HelpOptions;
 import picocli.CommandLine;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@CommandLine.Command(name = "cat", description = "Concatenate files to standard output.")
-public class CatCommand implements Runnable {
+@CommandLine.Command(name = "cat", header = "Concatenate files to standard output.", description = "Concatenate files to standard output.")
+public class CatCommand extends HelpOptions implements Runnable {
 
     @CommandLine.Parameters(index = "0", paramLabel = "PATH")
     private String path;

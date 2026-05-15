@@ -1,12 +1,13 @@
 package org.gorpipe.gor.cli.files;
 
+import org.gorpipe.gor.cli.HelpOptions;
 import picocli.CommandLine;
 
 import java.io.IOException;
 import java.util.List;
 
-@CommandLine.Command(name = "rm", description = "Remove files or directories.")
-public class RmCommand implements Runnable {
+@CommandLine.Command(name = "rm", header = "Remove files or directories.", description = "Remove files or directories.")
+public class RmCommand extends HelpOptions implements Runnable {
 
     @CommandLine.Option(names = {"-r", "--recursive"}, description = "Recursively delete directories.")
     private boolean recursive;

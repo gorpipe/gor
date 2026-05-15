@@ -1,12 +1,13 @@
 package org.gorpipe.gor.cli.files;
 
+import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.model.FileReader;
 import picocli.CommandLine;
 
 import java.io.IOException;
 
-@CommandLine.Command(name = "mv", description = "Move or rename files.")
-public class MvCommand implements Runnable {
+@CommandLine.Command(name = "mv", header = "Move or rename files.", description = "Move or rename files.")
+public class MvCommand extends HelpOptions implements Runnable {
 
     @CommandLine.Parameters(index = "0", paramLabel = "SOURCE")
     private String source;

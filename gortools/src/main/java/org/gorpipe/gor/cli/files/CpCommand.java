@@ -1,13 +1,14 @@
 package org.gorpipe.gor.cli.files;
 
+import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.model.FileReader;
 import picocli.CommandLine;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 
-@CommandLine.Command(name = "cp", description = "Copy files.")
-public class CpCommand implements Runnable {
+@CommandLine.Command(name = "cp", header = "Copy files.", description = "Copy files.")
+public class CpCommand extends HelpOptions implements Runnable {
 
     @CommandLine.Parameters(index = "0", paramLabel = "SOURCE")
     private String source;

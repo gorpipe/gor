@@ -1,5 +1,6 @@
 package org.gorpipe.gor.cli.link;
 
+import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.util.DateUtils;
@@ -9,8 +10,9 @@ import java.io.IOException;
 import java.time.Instant;
 
 @CommandLine.Command(name = "rollback",
+        header = "Rollback link file entries.",
         description = "Rollback the latest entry or rollback entries newer than a given date.")
-public class LinkRollbackCommand implements Runnable {
+public class LinkRollbackCommand extends HelpOptions implements Runnable {
 
     @CommandLine.Parameters(index = "0", paramLabel = "LINK_FILE", description = "Path to the link file to rollback.")
     private String linkFilePath;
