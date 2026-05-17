@@ -7,6 +7,7 @@ import java.time.Instant;
 
 import org.gorpipe.gor.cli.GorCLI;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
+import org.gorpipe.gor.driver.linkfile.LinkFileMeta;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import static org.junit.Assert.assertEquals;
 
@@ -128,6 +129,34 @@ public class UTestLinkCommand {
         String expectedEntry = LinkFile.load(new FileSource(linkFile)).getLatestEntry().format();
         String resolved = executeAndCapture(cmd, "link", "resolve", linkFile.toString(), "-f");
         assertEquals(expectedEntry.replace('\t', ' '), resolved);
+    }
+
+    @Test
+    public void testUpdateMetaRemovesHeader() throws Exception {
+        Path linkFile = temp.getRoot().toPath().resolve("remove_meta_test.gor.link");
+        CommandLine cmd = new CommandLine(new GorCLI());
+
+        cmd.execute("link", "update", linkFile.toString(), "data/file1.gor", "-h", "ENTRIES_COUNT_MAX=5");
+        cmd.execute("link", "updateMeta", linkFile.toString(), "-r", "ENTRIES_COUNT_MAX");
+
+        LinkFile link = LinkFile.load(new FileSource(linkFile));
+        assertEquals(1, link.getEntriesCount());
+        assertEquals(LinkFileMeta.DEFAULT_ENTRIES_COUNT_MAX, link.getEntriesCountMax());
+    }
+
+    @Test
+    public void testUpdateMetaUpdatesHeaderWithoutAddingEntry() throws Exception {
+        Path linkFile = temp.getRoot().toPath().resolve("update_meta_test.gor.link");
+        CommandLine cmd = new CommandLine(new GorCLI());
+
+        cmd.execute("link", "update", linkFile.toString(), "data/file1.gor");
+
+        int exitCode = cmd.execute("link", "updateMeta", linkFile.toString(), "-h", "ENTRIES_COUNT_MAX=10");
+        assertEquals(0, exitCode);
+
+        LinkFile link = LinkFile.load(new FileSource(linkFile));
+        assertEquals(1, link.getEntriesCount());
+        assertEquals(10, link.getEntriesCountMax());
     }
 
     private String resolve(Path linkFile, String relative) {
