@@ -61,7 +61,7 @@ public abstract class LinkFile {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LinkFile.class);
 
     // Approx max size of link file content to read or write. Stop adding lines if exceeded. Don't load if twice this size.
-    public static final int LINK_FILE_MAX_SIZE = Integer.parseInt(System.getProperty("gor.driver.link.maxfilesize", "10000"));
+    public static final int LINK_FILE_MAX_SIZE = Integer.parseInt(System.getProperty("gor.driver.link.maxfilesize", "100000"));
     private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.link.cache", "true"));
     private static final boolean USE_LINK_CACHE_SESSION = Boolean.parseBoolean(System.getProperty("gor.driver.link.cache.session", "true"));
 
@@ -230,6 +230,22 @@ public abstract class LinkFile {
         return meta.getEntriesAgeMax();
     }
 
+    public void setEntriesCountMin(int entriesCountMin) {
+        meta.setEntriesCountMin(entriesCountMin);
+    }
+
+    public int getEntriesCountMin() {
+        return meta.getEntriesCountMin();
+    }
+
+    public void setEntriesAgeMin(long entriesAgeMin) {
+        meta.setEntriesAgeMin(entriesAgeMin);
+    }
+
+    public long getEntriesAgeMin() {
+        return meta.getEntriesAgeMin();
+    }
+
     public LinkFile appendEntry(String link, String md5) {
         return appendEntry(link, md5, null, null);
     }
@@ -302,9 +318,7 @@ public abstract class LinkFile {
         for (var i = 0; i < entries.size(); i++) {
             var entry = entries.get(entries.size() - 1 - i);
 
-            if ((i >= getEntriesCountMax())
-                    || (entry.timestamp() > 0 && currentTimestamp - entry.timestamp() > getEntriesAgeMax())
-                    || (content.length() > LINK_FILE_MAX_SIZE)) {
+            if (isMaxEntriesReached(i, entry, currentTimestamp, content)) {
                 checkAndGCEntries(0, entries.size() - 1 - i, reader);
                 break;
             }
@@ -317,6 +331,20 @@ public abstract class LinkFile {
         } catch (IOException e) {
             throw new GorResourceException("Could not save: " + source.getFullPath(), source.getFullPath(), e);
         }
+    }
+
+    private boolean isMaxEntriesReached(int entriesAdded, LinkFileEntry entry, long currentTimestamp, StringBuilder content) {
+        boolean tooManyEntries = entriesAdded >= getEntriesCountMax();
+        boolean entryTooOld = entry.timestamp() > 0 && currentTimestamp - entry.timestamp() > getEntriesAgeMax();
+        boolean fileTooLarge = content.length() > LINK_FILE_MAX_SIZE;
+        boolean protectedByMinCount = entriesAdded < getEntriesCountMin();
+        boolean protectedByMinAge = getEntriesAgeMin() > 0 && entry.timestamp() > 0
+                && currentTimestamp - entry.timestamp() < getEntriesAgeMin();
+
+        // Min count and age take precedence over max count and age, but if the file is too large we need to stop regardless.
+
+        boolean maxEntriesReached = fileTooLarge || ((tooManyEntries || entryTooOld) && !protectedByMinCount && !protectedByMinAge);
+        return maxEntriesReached;
     }
 
     protected abstract List<LinkFileEntry> parseEntries(String content);

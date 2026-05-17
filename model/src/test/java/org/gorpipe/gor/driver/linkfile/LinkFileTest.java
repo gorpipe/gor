@@ -16,8 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.gorpipe.gor.driver.linkfile.LinkFile.LINK_FILE_VALIDATE_LOAD;
-import static org.gorpipe.gor.driver.linkfile.LinkFile.LINK_FILE_VALIDATE_SAVE;
+import static org.gorpipe.gor.driver.linkfile.LinkFile.*;
 import static org.gorpipe.gor.driver.linkfile.LinkFileV1.LinkReuseStrategy.NO_REUSE;
 import static org.gorpipe.gor.driver.linkfile.LinkFileV1.LinkReuseStrategy.REUSE;
 import static org.junit.Assert.*;
@@ -309,6 +308,8 @@ public class LinkFileTest {
     public void testLimitByNumberOfEntries() throws IOException {
         LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
         linkFile.setEntriesCountMax(2);
+        linkFile.setEntriesCountMin(0);
+        linkFile.setEntriesAgeMin(0);
 
         // Current entries: 2. Add one more.
         linkFile.appendEntry("new_entry.gor", "md5");
@@ -330,6 +331,8 @@ public class LinkFileTest {
 
         LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
         linkFile.setEntriesAgeMax(10000);
+        linkFile.setEntriesCountMin(0);
+        linkFile.setEntriesAgeMin(0);
 
         // Save with current time far in the future
         long futureTime = 1734305124533L + 20000;
@@ -343,13 +346,53 @@ public class LinkFileTest {
     }
 
     @Test
+    public void testLimitByMinCount() throws IOException {
+        // Both original entries are older than EntriesAgeMax, but EntriesCountMin=1 protects the newest.
+        LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
+        linkFile.setEntriesAgeMax(10000);
+        linkFile.setEntriesCountMin(1);
+        linkFile.setEntriesAgeMin(0);
+
+        long futureTime = 1734305124533L + 20000;
+        linkFile.save(futureTime, fileReader);
+
+        LinkFile saved = LinkFile.loadV1(source);
+        assertEquals(1, saved.getEntriesCount());
+        assertEquals(workPath.resolve("source/v1/ver2.gorz").toString(), saved.getLatestEntryUrl());
+    }
+
+    @Test
+    public void testLimitByMinAge() throws IOException {
+        // Both entries are just added with timestamp=now, so their age is ~0ms.
+        // CountMax=1 would normally drop the older of the two, but MinAge=1h protects it.
+        // Result: both entries are kept because the older one is too young to delete.
+        long now = System.currentTimeMillis();
+        String contentWithNowTimestamps = """
+                ## SERIAL = 2
+                ## VERSION = 1
+                #FILE\tTIMESTAMP\tMD5\tSERIAL\tINFO
+                source/v1/recent1.gorz\t%d\tAAA\t1\t
+                source/v1/recent2.gorz\t%d\tBBB\t2\t
+                """.formatted(now - 1000, now);
+
+        LinkFile linkFile = LinkFile.create(source, contentWithNowTimestamps);
+        linkFile.setEntriesCountMax(1);
+        linkFile.setEntriesCountMin(0);
+        linkFile.setEntriesAgeMin(60 * 60 * 1000L); // 1 hour — both entries are ~0-1s old, so both protected
+        linkFile.save(now, fileReader);
+
+        LinkFile saved = LinkFile.loadV1(source);
+        assertEquals(2, saved.getEntriesCount());
+    }
+
+    @Test
     public void testLimitBySize() throws IOException {
         LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
         linkFile.getMeta().setProperty(LinkFileMeta.HEADER_REUSE_STRATEGY_KEY, NO_REUSE.name());
 
-        // Generate a large info string to exceed default 10000 bytes.
-        // 4000 chars * 3 entries should exceed it.
-        String largeInfo = java.util.stream.IntStream.range(0, 4000).mapToObj(i -> "x").reduce("", String::concat);
+        // Generate a large info string to exceed default bytes.
+        // 40% default chars * 3 entries should exceed it.
+        String largeInfo = java.util.stream.IntStream.range(0, (int)(LINK_FILE_MAX_SIZE * 0.4)).mapToObj(i -> "x").reduce("", String::concat);
 
         linkFile.appendEntry("large1.gor", "md5", largeInfo);
         linkFile.appendEntry("large2.gor", "md5", largeInfo);
@@ -369,6 +412,8 @@ public class LinkFileTest {
     public void testGarbageCollectionManaged() throws IOException {
         LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
         linkFile.setEntriesCountMax(1); // Force eviction of oldest
+        linkFile.setEntriesCountMin(0);
+        linkFile.setEntriesAgeMin(0);
         linkFile.getMeta().setProperty("DATA_LIFECYCLE_MANAGED", "true");
 
         FileReader mockReader = mock(FileReader.class);
