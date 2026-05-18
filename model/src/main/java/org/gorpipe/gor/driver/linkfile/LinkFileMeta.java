@@ -15,7 +15,7 @@ public class LinkFileMeta extends BaseMeta {
     // Min number of entries to always keep (guard against age-based deletion).
     public static final String HEADER_ENTRIES_COUNT_MIN_KEY = "ENTRIES_COUNT_MIN";
     // Min age (ms) an entry must have before it can be cleaned up (guard against count-based deletion).
-    public static final String HEADER_ENTRIES_AGE_MIN_KEY = "ENTRIES_MIN_AGE";
+    public static final String HEADER_ENTRIES_AGE_MIN_KEY = "ENTRIES_AGE_MIN";
     // Path if the managed data location.
     public static final String HEADER_DATA_LOCATION_KEY = "DATA_LOCATION";
     // Should the content lifecycle be managed (data deleted if the link is removed from the link file) (true or false).
