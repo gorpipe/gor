@@ -61,9 +61,9 @@ public abstract class LinkFile {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LinkFile.class);
 
     // Approx max size of link file content to read or write. Stop adding lines if exceeded. Don't load if twice this size.
-    public static final int LINK_FILE_MAX_SIZE = Integer.parseInt(System.getProperty("gor.driver.link.maxfilesize", "100000"));
-    private static final boolean USE_LINK_CACHE = Boolean.parseBoolean(System.getProperty("gor.driver.link.cache", "true"));
-    private static final boolean USE_LINK_CACHE_SESSION = Boolean.parseBoolean(System.getProperty("gor.driver.link.cache.session", "true"));
+    public static final int LINK_FILE_MAX_SIZE = PropsHelper.getInt("gor.driver.link.maxfilesize", 100000);
+    private static final boolean USE_LINK_CACHE = PropsHelper.getBoolean("gor.driver.link.cache", true);
+    private static final boolean USE_LINK_CACHE_SESSION = PropsHelper.getBoolean("gor.driver.link.cache.session", true);
 
     public static final String LINK_FILE_VALIDATE_LOAD = "gor.driver.link.validate.load";
     public static final String LINK_FILE_VALIDATE_SAVE = "gor.driver.link.validate.save";
