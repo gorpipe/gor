@@ -536,7 +536,7 @@ public class UTestGorWrite {
     public void testWriteNor() throws IOException {
         Path tmpfile = Files.createTempFile(workDirPath, "data", ".nor").toAbsolutePath();
         TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write " + tmpfile);
-        TestUtils.assertTwoGorpipeResults("nor " + tmpfile, "nor ../tests/data/gor/dbsnp_test.gorz | select 3-");
+        TestUtils.assertTwoGorpipeResults("nor ../tests/data/gor/dbsnp_test.gorz | select 3-", "nor " + tmpfile);
         Assert.assertEquals("#reference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
     }
 
@@ -589,6 +589,14 @@ public class UTestGorWrite {
         TestUtils.runGorPipeCount("nor ../tests/data/gor/dbsnp_test.gorz | select 3- | write " + tmpfile);
         TestUtils.assertTwoGorpipeResults("nor " + tmpfile, "nor ../tests/data/gor/dbsnp_test.gorz | select 3-");
         Assert.assertEquals("#reference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
+    }
+
+    @Test
+    public void testGorWriteTsv() throws IOException {
+        Path tmpfile = Files.createTempFile(workDirPath, "data", ".tsv").toAbsolutePath();
+        TestUtils.runGorPipeCount("gor ../tests/data/gor/dbsnp_test.gorz | top 1 | write " + tmpfile);
+        Assert.assertEquals("#Chrom\tPOS\treference\tallele\trsIDs", Files.readAllLines(tmpfile).get(0));
+        Assert.assertEquals("chr1\t10179\tC\tCC\trs367896724", Files.readAllLines(tmpfile).get(1));
     }
 
     @Test
