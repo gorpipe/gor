@@ -184,4 +184,38 @@ public class UTestGorWriteFolder {
         Assert.assertEquals(UTestGorWriteExplicit.WRONG_RESULT, "chrom\tbpStart\tbpStop\tx\n" +
                 "chr1\t1\t1\t'PN1'\n" , results);
     }
+
+    @Test
+    public void testPgorWriteGordFolderWithGorrowsMerge() throws IOException {
+        // Regression test for ENGKNOW-3353: pgor write randomly fails when inner query
+        // uses gorrows with fixed chromosome ranges. pgor creates partitions for ALL
+        // chromosomes; most produce 0 rows. In single-file mode (write to specific .gorz),
+        // ForkWrite was creating empty gorz files for every empty partition, causing
+        // excessive S3 writes and random failures.
+        var folderpath = workDirPath.resolve("ref_af.gord");
+
+        TestUtils.runGorPipe(
+                "create #x# = gorrows -p chr2:1000-16001|merge <(gorrows -p chr19:910100-920102);\n" +
+                "pgor [#x#]|write " + folderpath,
+                "-gorroot", workDirPath.toAbsolutePath().toString(),
+                "-cachedir", cachePath.toString());
+
+        // Dictionary must exist
+        Assert.assertTrue("Dictionary file must be created", Files.exists(folderpath.resolve(DEFAULT_FOLDER_DICTIONARY_NAME)));
+
+        // Only gorz files with actual data should be in the folder — no empty gorz files.
+        List<Path> gorzFiles = Files.list(folderpath)
+                .filter(p -> p.toString().endsWith(".gorz"))
+                .collect(Collectors.toList());
+        for (Path gorzFile : gorzFiles) {
+            long rowCount = TestUtils.runGorPipeCount("gor " + gorzFile);
+            Assert.assertTrue("No empty gorz files should exist in gord folder: " + gorzFile.getFileName(), rowCount > 0);
+        }
+
+        // Reading the dict must return all chr2 and chr19 rows
+        long rowCount = TestUtils.runGorPipeCount("gor " + folderpath,
+                "-gorroot", workDirPath.toAbsolutePath().toString(),
+                "-cachedir", cachePath.toString());
+        Assert.assertEquals("pgor write gord should contain chr2 + chr19 rows", 15001L + 10002L, rowCount);
+    }
 }

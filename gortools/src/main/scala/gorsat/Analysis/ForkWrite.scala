@@ -316,7 +316,12 @@ case class ForkWrite(forkCol: Int,
         sh.fileOpen = false
       }
     })
-    if (options.useFolder.isEmpty && !somethingToWrite && !useFork) {
+    // Skip empty-file creation when writing to a specific gorz inside a gord folder
+    // (pgor partition writes). Those partitions should produce no file when they have no
+    // data; creating empty gorz files causes unnecessary writes (and S3 throttling) for
+    // every chromosome partition that falls outside the source data range.
+    val isInsideGordFolder = DataUtil.isGord(PathUtils.getParent(fullFileName))
+    if (options.useFolder.isEmpty && !somethingToWrite && !useFork && !isInsideGordFolder) {
       val out = createOutFile(fullFileName, false)
       out.setup()
       out.finish()
