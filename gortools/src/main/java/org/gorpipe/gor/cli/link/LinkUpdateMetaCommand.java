@@ -3,38 +3,32 @@ package org.gorpipe.gor.cli.link;
 import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.model.DriverBackedFileReader;
-import org.gorpipe.gor.util.StringUtil;
 import org.gorpipe.util.Strings;
 import picocli.CommandLine;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
-@CommandLine.Command(name = "update",
-        header = "Append a new entry to a link file.",
-        description = "Append a new entry to a link file, creating the file if needed.")
-public class LinkUpdateCommand extends HelpOptions implements Runnable {
+@CommandLine.Command(name = "updateMeta",
+        header = "Update metadata of a link file.",
+        description = "Update header properties of a link file without adding a new entry.")
+public class LinkUpdateMetaCommand extends HelpOptions implements Runnable {
 
-    @CommandLine.Parameters(index = "0", paramLabel = "LINK_FILE", description = "Path to the link file to update.")
+    @CommandLine.Parameters(index = "0", paramLabel = "LINK_FILE", description = "Path to the link file.")
     private String linkFilePath;
-
-    @CommandLine.Parameters(index = "1", paramLabel = "LINK_VALUE", description = "Value to add to the link file (file path, URL or query).")
-    private String linkValue;
-
-    @CommandLine.Option(names = {"-m", "--md5"}, paramLabel = "MD5",
-            description = "MD5 checksum to associate with the new link entry.")
-    private String entryMd5;
-
-    @CommandLine.Option(names = {"-i", "--info"}, paramLabel = "INFO",
-            description = "Free-form info string to store with the new link entry.")
-    private String entryInfo;
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @CommandLine.Option(names = {"-h", "--header"}, paramLabel = "KEY=VALUE",
             description = "Header property to upsert in the link file metadata. Repeatable.",
             mapFallbackValue = "")
     private final Map<String, String> headerParams = new LinkedHashMap<>();
+
+    @CommandLine.Option(names = {"-r", "--remove-header"}, paramLabel = "KEY",
+            description = "Header property key to remove from the link file metadata. Repeatable.")
+    private final List<String> removeHeaderKeys = new ArrayList<>();
 
     @CommandLine.ParentCommand
     private LinkCommand mainCmd;
@@ -44,11 +38,12 @@ public class LinkUpdateCommand extends HelpOptions implements Runnable {
         var normalizedLinkPath = LinkFile.validateAndUpdateLinkFileName(linkFilePath);
         try {
             var reader = new DriverBackedFileReader(mainCmd.getSecurityContext(), mainCmd.getProjectRoot());
-            var linkFile = LinkFile.loadV1(LinkStreamSourceProvider.resolve(normalizedLinkPath, mainCmd.getSecurityContext(), mainCmd.getProjectRoot(),  true, this));
+            var linkFile = LinkFile.loadV1(LinkStreamSourceProvider.resolve(
+                    normalizedLinkPath, mainCmd.getSecurityContext(), mainCmd.getProjectRoot(), true, this));
             applyHeaders(linkFile);
-            linkFile.appendEntry(linkValue, entryMd5, StringUtil.trimQuotes(entryInfo), reader);
+            removeHeaders(linkFile);
             linkFile.save(reader);
-            System.err.printf("Updated link file %s with %s%n", normalizedLinkPath, linkValue);
+            System.err.printf("Updated meta for link file %s%n", normalizedLinkPath);
         } catch (IOException e) {
             throw new CommandLine.ExecutionException(new CommandLine(this),
                     "Failed to load or create link file: " + normalizedLinkPath, e);
@@ -65,5 +60,12 @@ public class LinkUpdateCommand extends HelpOptions implements Runnable {
             linkFile.getMeta().setProperty(key.trim().toUpperCase(), value != null ? value.trim() : "");
         }
     }
-}
 
+    private void removeHeaders(LinkFile linkFile) {
+        for (var key : removeHeaderKeys) {
+            if (!Strings.isNullOrEmpty(key)) {
+                linkFile.getMeta().removeProperty(key.trim().toUpperCase());
+            }
+        }
+    }
+}

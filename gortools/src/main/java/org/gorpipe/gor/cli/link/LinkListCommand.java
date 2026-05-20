@@ -1,5 +1,6 @@
 package org.gorpipe.gor.cli.link;
 
+import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.util.Strings;
 import picocli.CommandLine;
@@ -10,8 +11,9 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 @CommandLine.Command(name = "list",
+        header = "List the raw content of a link file.",
         description = "List the raw content of a link file without resolving entries.")
-public class LinkListCommand implements Runnable {
+public class LinkListCommand extends HelpOptions implements Runnable {
 
     @CommandLine.Parameters(index = "0", paramLabel = "LINK_FILE",
             description = "Path to the link file to list.")

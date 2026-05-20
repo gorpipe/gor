@@ -10,7 +10,7 @@ import picocli.CommandLine;
         name = "files",
         description = "File system commands using the GOR driver framework.",
         header = "File command wrapper",
-        subcommands = {LsCommand.class, CpCommand.class, MvCommand.class, RmCommand.class, CatCommand.class})
+        subcommands = {LsCommand.class, CpCommand.class, MvCommand.class, /*RmCommand.class,*/ CatCommand.class})
 public class FilesCommand extends HelpOptions implements Runnable {
 
     @CommandLine.ParentCommand

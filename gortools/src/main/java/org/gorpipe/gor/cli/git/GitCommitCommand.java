@@ -8,7 +8,7 @@ import java.util.List;
 
 @CommandLine.Command(name = "commit",
         description = "Record changes to the repository.")
-public class GitCommitCommand implements Runnable {
+public class GitCommitCommand extends GitHelpOptions implements Runnable {
 
     @CommandLine.Option(names = {"-m", "--message"}, paramLabel = "MESSAGE",
             description = "Use the given message as the commit message.")

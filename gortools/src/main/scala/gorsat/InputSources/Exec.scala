@@ -46,14 +46,18 @@ class Exec() extends InputSourceInfo("EXEC", CommandArguments("","", 2, ignoreIl
 
     if (result.size == 0 || !result(0).startsWith("#")) {
       val columns = result(0).split("\t")
-      val header = IntStream.rangeClosed(1, columns.length).mapToObj((i: Int) => "col" + i).collect(Collectors.joining("\t"))
+      val header = if (columns.length == 1) {
+        "Result"
+      } else {
+        IntStream.rangeClosed(1, columns.length).mapToObj((i: Int) => "col" + i).collect(Collectors.joining("\t"))
+      }
       result = result.prepended(header)
     } else {
       // Remove the leading '#' from the header line
       result(0) = result(0).substring(1)
     }
 
-    val header = "ChromNor\tPosNor\t" +  result(0)
+    val header = "ChromNOR\tPosNOR\t" +  result(0)
     val myHeaderLength = header.split("\t").length
     val lineList = new ListBuffer[Row]()
     for (row <- result.slice(1, result.length)) {

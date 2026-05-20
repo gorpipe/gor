@@ -8,7 +8,7 @@ import java.util.List;
 
 @CommandLine.Command(name = "pull",
         description = "Fetch from and integrate with another repository or a local branch.")
-public class GitPullCommand implements Runnable {
+public class GitPullCommand extends GitHelpOptions implements Runnable {
 
     @CommandLine.Parameters(index = "0", arity = "0..1", paramLabel = "REPOSITORY",
             description = "The repository to pull from.")
