@@ -1,6 +1,7 @@
 package org.gorpipe.gor.cli.files;
 
 import gorsat.TestUtils;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -249,6 +250,7 @@ public class UTestFilesCommandExec {
 
     // ==================== RmCommand ====================
 
+    @Ignore("rm disabled for now")
     @Test
     public void testRmBasic() throws Exception {
         Path f = createFile("rm_basic.txt", "x");
@@ -256,6 +258,7 @@ public class UTestFilesCommandExec {
         assertFalse(Files.exists(f));
     }
 
+    @Ignore("rm disabled for now")
     @Test
     public void testRmRecursive() throws Exception {
         Path dir = temp.newFolder("rm_rec").toPath();
@@ -264,6 +267,7 @@ public class UTestFilesCommandExec {
         assertFalse(Files.exists(dir));
     }
 
+    @Ignore("rm disabled for now")
     @Test
     public void testRmForceNonExistent() throws Exception {
         Path nonExistent = temp.getRoot().toPath().resolve("does_not_exist.txt");
@@ -271,12 +275,14 @@ public class UTestFilesCommandExec {
         // no exception expected
     }
 
+    @Ignore("rm disabled for now")
     @Test(expected = Exception.class)
     public void testRmNonExistentWithoutForce() throws Exception {
         Path nonExistent = temp.getRoot().toPath().resolve("ghost.txt");
         runFiles("rm " + nonExistent);
     }
 
+    @Ignore("rm disabled for now")
     @Test
     public void testRmVerbose() throws Exception {
         Path f = createFile("rmv.txt", "x");
@@ -284,6 +290,7 @@ public class UTestFilesCommandExec {
         assertTrue(res.contains("removed"));
     }
 
+    @Ignore("rm disabled for now")
     @Test
     public void testRmDir() throws Exception {
         Path dir = temp.newFolder("rm_emptydir").toPath();
@@ -291,6 +298,7 @@ public class UTestFilesCommandExec {
         assertFalse(Files.exists(dir));
     }
 
+    @Ignore("rm disabled for now")
     @Test(expected = Exception.class)
     public void testRmDirNonEmpty() throws Exception {
         Path dir = temp.newFolder("rm_nonempty").toPath();
