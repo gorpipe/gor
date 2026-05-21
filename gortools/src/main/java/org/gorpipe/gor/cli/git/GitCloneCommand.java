@@ -78,7 +78,7 @@ public class GitCloneCommand extends GitHelpOptions implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(".");
 
-        GitCommandExecutor.executeGitCommand("clone", args, workingDir, spec);
+        GitCommandExecutor.executeGitCommand("clone", args, workingDir, spec, parentCommand.getGitToken());
     }
 }
 

@@ -94,6 +94,6 @@ public class GitFetchCommand extends GitHelpOptions implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(directory);
 
-        GitCommandExecutor.executeGitCommand("fetch", args, workingDir, spec);
+        GitCommandExecutor.executeGitCommand("fetch", args, workingDir, spec, parentCommand.getGitToken());
     }
 }

@@ -38,11 +38,14 @@ public class GitCommand extends HelpOptions implements Runnable {
         String user = System.getenv("GOR_GIT_USER");
         String pass = System.getenv("GOR_GIT_TOKEN");
         if (user != null && pass != null) {
-            var userPass = "%s:%s@".formatted(user, pass);
-            return "https://%sgithub.com/GeneDx/%s.git".formatted(userPass, repository);
-        } else {
-            return "git@github.com:GeneDx/%s.git".formatted(repository);
+            return "https://%s:%s@github.com/GeneDx/%s.git"
+                    .formatted(user, GitCommandExecutor.TOKEN_PLACEHOLDER, repository);
         }
+        return "git@github.com:GeneDx/%s.git".formatted(repository);
+    }
+
+    public String getGitToken() {
+        return System.getenv("GOR_GIT_TOKEN");
     }
 
     public File getWorkingDirectory(String directory) {

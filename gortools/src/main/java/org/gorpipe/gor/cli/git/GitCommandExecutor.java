@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
  */
 class GitCommandExecutor {
 
+    static final String TOKEN_PLACEHOLDER = "__GIT_TOKEN__";
+
     /**
      * Execute a git command with the given arguments.
      *
@@ -26,15 +28,25 @@ class GitCommandExecutor {
      * @param commandSpec the CommandLine spec for error reporting
      * @return the exit code of the git command
      */
-    static int executeGitCommand(String gitSubcommand, List<String> args, File workingDir, 
+    static int executeGitCommand(String gitSubcommand, List<String> args, File workingDir,
                                   CommandLine.Model.CommandSpec commandSpec) {
+        return executeGitCommand(gitSubcommand, args, workingDir, commandSpec, null);
+    }
+
+    static int executeGitCommand(String gitSubcommand, List<String> args, File workingDir,
+                                  CommandLine.Model.CommandSpec commandSpec, String token) {
         List<String> command = new ArrayList<>();
         command.add("git");
         command.add(gitSubcommand);
         command.addAll(args);
 
+        // Resolve token placeholder just before exec — command retains placeholder for safe error messages
+        List<String> execCommand = token != null
+                ? command.stream().map(a -> a.replace(TOKEN_PLACEHOLDER, token)).collect(Collectors.toList())
+                : command;
+
         try {
-            ProcessBuilder pb = new ProcessBuilder(command);
+            ProcessBuilder pb = new ProcessBuilder(execCommand);
             if (workingDir != null && workingDir.isDirectory()) {
                 pb.directory(workingDir);
             }

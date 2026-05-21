@@ -90,7 +90,7 @@ public class GitPushCommand extends GitHelpOptions implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(directory);
 
-        GitCommandExecutor.executeGitCommand("push", args, workingDir, spec);
+        GitCommandExecutor.executeGitCommand("push", args, workingDir, spec, parentCommand.getGitToken());
     }
 }
 
