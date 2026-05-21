@@ -177,7 +177,8 @@ public class UTestLinkCommandExec {
         Path file3 = temp.newFile("file3.gor").toPath();
 
         // Create link with max 2 entries
-        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString() + " -h ENTRIES_COUNT_MAX=2");
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString()
+                + " -h ENTRIES_COUNT_MAX=2 -h ENTRIES_COUNT_MIN=0 -h ENTRIES_AGE_MIN=0");
         Thread.sleep(10);
         TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file2.toString());
         Thread.sleep(10);
@@ -197,7 +198,7 @@ public class UTestLinkCommandExec {
         Path file2 = temp.newFile("file2.gor").toPath();
 
         // Max age 200ms
-        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString() + " -h ENTRIES_AGE_MAX=200");
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString() + " -h ENTRIES_AGE_MAX=200 -h ENTRIES_COUNT_MIN=0 -h ENTRIES_AGE_MIN=0");
 
         Thread.sleep(300); // Wait > 200ms
 
@@ -254,7 +255,7 @@ public class UTestLinkCommandExec {
         Files.write(file3, "data3".getBytes());
 
         // ENTRIES_COUNT_MAX=2, DATA_LIFECYCLE_MANAGED=true
-        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString() + " -h  ENTRIES_COUNT_MAX=2 -h DATA_LIFECYCLE_MANAGED=true");
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString() + " -h ENTRIES_COUNT_MAX=2 -h ENTRIES_COUNT_MIN=0 -h ENTRIES_AGE_MIN=0 -h DATA_LIFECYCLE_MANAGED=true");
         Thread.sleep(10);
         TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file2.toString());
 
@@ -283,7 +284,7 @@ public class UTestLinkCommandExec {
         Path file3 = temp.newFile("file3.gor").toPath();
 
         // ENTRIES_COUNT_MAX=2, DATA_LIFECYCLE_MANAGED=false
-        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString() + " -h ENTRIES_COUNT_MAX=2 -h DATA_LIFECYCLE_MANAGED=false");
+        TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file1.toString() + " -h ENTRIES_COUNT_MAX=2 -h ENTRIES_COUNT_MIN=0 -h ENTRIES_AGE_MIN=0 -h DATA_LIFECYCLE_MANAGED=false");
         Thread.sleep(10);
         TestUtils.runGorPipe("exec gor link update " + linkFile.toString() + " " + file2.toString());
         Thread.sleep(10);

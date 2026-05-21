@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 
 public class UTestSignature {
 
@@ -29,6 +30,17 @@ public class UTestSignature {
 
         GorPipeCommands.register();
         GorInputSources.register();
+    }
+
+    private String extractSingleValue(String output) {
+        var lines = Arrays.stream(output.split("\n"))
+                .map(String::trim)
+                .filter(line -> !line.isEmpty())
+                .toArray(String[]::new);
+
+        Assert.assertEquals("Expected a header row and one data row", 2, lines.length);
+        var values = lines[1].split("\t");
+        return values[values.length - 1];
     }
 
     @Test
@@ -48,6 +60,28 @@ public class UTestSignature {
 
         res = TestUtils.runGorPipe(query, workPath.toString(), cachePath.toString(), false, "", null).split("\n");
         Assert.assertEquals(3, res.length);
+    }
+
+    @Test
+    public void testQuerySignatureAfterUpdateWithMetaVirtualRelation() throws IOException {
+        var cachePath = workPath.resolve("cache");
+        Files.createDirectory(cachePath);
+
+        var dataPath = workPath.resolve("data_meta.gor");
+        Files.writeString(dataPath, "#Chrom\tPos\nchr1\t1\n");
+
+        var query = "create meta_size = meta " + dataPath
+                + " | where source='FILE' and name='SIZE' | rename value file_size | select file_size; nor [meta_size]";
+
+        var before = extractSingleValue(TestUtils.runGorPipe(query, workPath.toString(), cachePath.toString(), false, "", null));
+        Assert.assertEquals(String.valueOf(Files.size(dataPath)), before);
+
+        Files.writeString(dataPath, "chr1\t2\n", StandardOpenOption.APPEND);
+
+        var after = extractSingleValue(TestUtils.runGorPipe(query, workPath.toString(), cachePath.toString(), false, "", null));
+        Assert.assertEquals("META virtual relation should be invalidated when the source file size changes",
+                String.valueOf(Files.size(dataPath)), after);
+        Assert.assertNotEquals("META virtual relation should not reuse stale cached results", before, after);
     }
 
     @Test

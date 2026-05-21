@@ -22,20 +22,35 @@
 
 package gorsat.Outputs
 
+import gorsat.process.NorStreamIterator
 import org.gorpipe.gor.model.Row
 
 import java.io.OutputStream
 
 class NorOutStream(val header: String = null, val outputStream: OutputStream, skipHeader: Boolean = false) extends OutStream(header, outputStream) {
+  var stripExtraNorCols = true
+
   override def setup(): Unit = {
-    if (header != null & !skipHeader) out.write("#" + processHeader(header))
+    if (header == null || skipHeader) return
+
+    out.write("#" + processHeader(header) + "\n")
   }
 
   override protected def processHeader(header: String) : String = {
-    header.split("\t", -1).slice(2, 1000000).mkString("\t") + "\n"
+    val workHeader = header.stripPrefix("#")
+    if (workHeader.startsWith(NorStreamIterator.HEADER_PREFIX)) {
+      workHeader.substring(NorStreamIterator.HEADER_PREFIX.length)
+    } else {
+      stripExtraNorCols = false
+      workHeader
+    }
   }
 
   override protected def processRow(r: Row): String = {
-    r.otherCols()
+    if (stripExtraNorCols) {
+      r.otherCols()
+    } else {
+      r.toString()
+    }
   }
 }

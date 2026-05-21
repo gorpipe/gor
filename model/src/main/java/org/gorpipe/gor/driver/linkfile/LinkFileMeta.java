@@ -12,6 +12,10 @@ public class LinkFileMeta extends BaseMeta {
     public static final String HEADER_ENTRIES_COUNT_MAX_KEY = "ENTRIES_COUNT_MAX";
     // Max age of entries to keep track of in the link file.
     public static final String HEADER_ENTRIES_AGE_MAX_KEY = "ENTRIES_AGE_MAX";
+    // Min number of entries to always keep (guard against age-based deletion).
+    public static final String HEADER_ENTRIES_COUNT_MIN_KEY = "ENTRIES_COUNT_MIN";
+    // Min age (ms) an entry must have before it can be cleaned up (guard against count-based deletion).
+    public static final String HEADER_ENTRIES_AGE_MIN_KEY = "ENTRIES_AGE_MIN";
     // Path if the managed data location.
     public static final String HEADER_DATA_LOCATION_KEY = "DATA_LOCATION";
     // Should the content lifecycle be managed (data deleted if the link is removed from the link file) (true or false).
@@ -23,6 +27,8 @@ public class LinkFileMeta extends BaseMeta {
 
     public static final int DEFAULT_ENTRIES_COUNT_MAX = 100;
     public static final long DEFAULT_ENTRIES_AGE_MAX = Long.MAX_VALUE;
+    public static final int DEFAULT_ENTRIES_COUNT_MIN = 10;
+    public static final long DEFAULT_ENTRIES_AGE_MIN = 2L * 365 * 24 * 60 * 60 * 1000; // 2 years in ms
 
     /**
      * Create or load link file meta from content.
@@ -77,6 +83,22 @@ public class LinkFileMeta extends BaseMeta {
 
     public void setEntriesAgeMax(int entriesAgeMax) {
         setProperty(HEADER_ENTRIES_AGE_MAX_KEY, String.valueOf(entriesAgeMax));
+    }
+
+    public int getEntriesCountMin() {
+        return getPropertyInt(HEADER_ENTRIES_COUNT_MIN_KEY, DEFAULT_ENTRIES_COUNT_MIN);
+    }
+
+    public void setEntriesCountMin(int entriesCountMin) {
+        setProperty(HEADER_ENTRIES_COUNT_MIN_KEY, String.valueOf(entriesCountMin));
+    }
+
+    public long getEntriesAgeMin() {
+        return getPropertyLong(HEADER_ENTRIES_AGE_MIN_KEY, DEFAULT_ENTRIES_AGE_MIN);
+    }
+
+    public void setEntriesAgeMin(long entriesMinAge) {
+        setProperty(HEADER_ENTRIES_AGE_MIN_KEY, String.valueOf(entriesMinAge));
     }
 
     @Override
