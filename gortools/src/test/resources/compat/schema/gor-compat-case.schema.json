@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gorpipe.org/schemas/gor-compat-case.schema.json",
+  "title": "GOR Compatibility Test Case",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "mode",
+    "query"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["exact", "contains", "regex", "error"]
+    },
+    "query": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected": {
+      "type": "string"
+    },
+    "expectedFile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "errorContains": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "minLength": 1
+    },
+    "feature": {
+      "type": "string",
+      "minLength": 1
+    },
+    "behavior": {
+      "type": "string",
+      "minLength": 1
+    },
+    "docs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "junit": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "string"
+          },
+          "contentFile": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "content"
+            ]
+          },
+          {
+            "required": [
+              "contentFile"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "error"
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "expected"
+              ]
+            },
+            {
+              "required": [
+                "expectedFile"
+              ]
+            }
+          ]
+        }
+      },
+      "else": {
+        "oneOf": [
+          {
+            "required": [
+              "expected"
+            ]
+          },
+          {
+            "required": [
+              "expectedFile"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
