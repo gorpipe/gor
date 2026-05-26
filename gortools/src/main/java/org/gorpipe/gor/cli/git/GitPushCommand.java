@@ -8,7 +8,7 @@ import java.util.List;
 
 @CommandLine.Command(name = "push",
         description = "Update remote refs along with associated objects.")
-public class GitPushCommand implements Runnable {
+public class GitPushCommand extends GitHelpOptions implements Runnable {
 
     @CommandLine.Parameters(index = "0", arity = "0..1", paramLabel = "REPOSITORY",
             description = "The repository to push to.")
@@ -90,7 +90,7 @@ public class GitPushCommand implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(directory);
 
-        GitCommandExecutor.executeGitCommand("push", args, workingDir, spec);
+        GitCommandExecutor.executeGitCommand("push", args, workingDir, spec, parentCommand.getGitToken());
     }
 }
 

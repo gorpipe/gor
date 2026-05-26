@@ -125,6 +125,15 @@ public class BaseMeta {
     }
 
     /**
+     * Remove a property from the header.
+     *
+     * @param key name of the property to remove.
+     */
+    public void removeProperty(String key) {
+        headerProps.remove(key);
+    }
+
+    /**
      * Returns <code>true</code> if this header contains the property.
      *
      * @param key The property key.

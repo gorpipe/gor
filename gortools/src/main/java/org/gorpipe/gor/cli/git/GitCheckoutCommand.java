@@ -8,9 +8,9 @@ import java.util.List;
 
 @CommandLine.Command(name = "checkout",
         description = "Switch branches or restore working tree files.")
-public class GitCheckoutCommand implements Runnable {
+public class GitCheckoutCommand extends GitHelpOptions implements Runnable {
 
-    @CommandLine.Parameters(index = "0", arity = "1..*", paramLabel = "BRANCH_OR_FILE",
+    @CommandLine.Parameters(index = "0", arity = "0..*", paramLabel = "BRANCH_OR_FILE",
             description = "Branch, commit or files to checkout.")
     private List<String> branchOrFiles;
 
@@ -34,6 +34,10 @@ public class GitCheckoutCommand implements Runnable {
             description = "Suppress feedback messages.")
     private boolean quiet;
 
+    @CommandLine.Option(names = {"-t", "--track"}, paramLabel = "UPSTREAM",
+            description = "Set up tracking mode; set upstream to the specified remote branch.")
+    private String track;
+
     @CommandLine.ParentCommand
     private GitCommand parentCommand;
 
@@ -42,11 +46,6 @@ public class GitCheckoutCommand implements Runnable {
 
     @Override
     public void run() {
-        if (branchOrFiles == null || branchOrFiles.isEmpty()) {
-            throw new CommandLine.ParameterException(spec.commandLine(),
-                    "At least one branch or file must be specified.");
-        }
-
         List<String> args = new ArrayList<>();
 
         if (newBranch != null) {
@@ -67,7 +66,14 @@ public class GitCheckoutCommand implements Runnable {
             args.add("-q");
         }
 
-        args.addAll(branchOrFiles);
+        if (track != null) {
+            args.add("-t");
+            args.add(track);
+        }
+
+        if (branchOrFiles != null && !branchOrFiles.isEmpty()) {
+            args.addAll(branchOrFiles);
+        }
 
         File workingDir = parentCommand.getWorkingDirectory(directory);
 

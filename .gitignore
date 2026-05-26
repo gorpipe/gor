@@ -1,5 +1,8 @@
 # Git ignore for the gor repository.
 
+# Claude
+.claude/settings.local.json
+
 # Gradle
 
 .gradle/
