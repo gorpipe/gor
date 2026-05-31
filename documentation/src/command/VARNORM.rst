@@ -34,7 +34,7 @@ Options
 +--------------+------------------------------------------------------------------------------------+
 | ``-trim``    | Trims the redundant bases away from the defined columns (ref + alt)                |
 +--------------+------------------------------------------------------------------------------------+
-| ``-span``    | Max merge span. The default is 100bp, max 1Mb (crazy high!)                        |
+| ``-span``    | Max merge span. The default is 1000bp, max 1Mb (crazy high!)                        |
 +--------------+------------------------------------------------------------------------------------+
 
 Examples
