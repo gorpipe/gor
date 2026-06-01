@@ -189,7 +189,7 @@ case class ForkWrite(forkCol: Int,
 
   def inferFileName(inFileName: String, forkValue: String): String = {
     var inferredFileName: String = ""
-    if(options.useFolder.nonEmpty /*&& forkCol == -1*/) {
+    if(options.useFolder.nonEmpty) {
       val folder = options.useFolder.get
       val fn = if (inFileName.isEmpty || DataUtil.isGord(folder)) {
         val uuid = UUID.randomUUID().toString
