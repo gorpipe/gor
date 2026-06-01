@@ -189,7 +189,7 @@ case class ForkWrite(forkCol: Int,
 
   def inferFileName(inFileName: String, forkValue: String): String = {
     var inferredFileName: String = ""
-    if(options.useFolder.nonEmpty) {
+    if(options.useFolder.nonEmpty /*&& forkCol == -1*/) {
       val folder = options.useFolder.get
       val fn = if (inFileName.isEmpty || DataUtil.isGord(folder)) {
         val uuid = UUID.randomUUID().toString
@@ -316,11 +316,9 @@ case class ForkWrite(forkCol: Int,
         sh.fileOpen = false
       }
     })
-    // Skip empty-file creation when writing to a specific gorz inside a gord folder
-    // (pgor partition writes). Those partitions should produce no file when they have no
-    // data; creating empty gorz files causes unnecessary writes (and S3 throttling) for
-    // every chromosome partition that falls outside the source data range.
+
     val isInsideGordFolder = DataUtil.isGord(PathUtils.getParent(fullFileName))
+
     if (options.useFolder.isEmpty && !somethingToWrite && !useFork && !isInsideGordFolder) {
       val out = createOutFile(fullFileName, false)
       out.setup()
@@ -345,7 +343,7 @@ case class ForkWrite(forkCol: Int,
     }
 
     // Only write links for files that are NOT inside gord
-    if (options.useFolder.isEmpty && !singleFileHolder.fileName.contains(".gord/")) {
+    if (options.useFolder.isEmpty && !isInsideGordFolder) {
       if (useFork) {
         forkMap.values.foreach(sh => {
           val linkData = LinkFileUtil.extractLink(session.getProjectContext.getFileReader, sh.fileName,

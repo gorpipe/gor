@@ -138,7 +138,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
           var cacheFile = fileCache.lookupFile(commandSignature)
           cacheFile = GorJavaUtilities.verifyLinkFileLastModified(context.getSession.getProjectContext,cacheFile)
           // Do this if we have result cache active or if we are running locally and the local cacheFile does not exist.
-          fileNames(i) = if (cacheFile == null) {
+          fileNames(i) = if (cacheFile == null || !fileReader.exists(cacheFile)) {
             val writeLocationPath = cacheFiles(i)
             if (writeLocationPath != null) {
               runAndStoreLinkFileInCache(nested, writeLocationPath, fileCache, useMd5)
