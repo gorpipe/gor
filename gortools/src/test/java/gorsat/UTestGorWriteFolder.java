@@ -186,17 +186,19 @@ public class UTestGorWriteFolder {
     }
 
     @Test
-    public void testPgorWriteGordFolderWithGorrowsMerge() throws IOException {
-        // Regression test for ENGKNOW-3353: pgor write randomly fails when inner query
-        // uses gorrows with fixed chromosome ranges. pgor creates partitions for ALL
-        // chromosomes; most produce 0 rows. In single-file mode (write to specific .gorz),
-        // ForkWrite was creating empty gorz files for every empty partition, causing
-        // excessive S3 writes and random failures.
+    public void testOverwritePgorWriteGordFolderWithGorrowsMerge() throws IOException {
         var folderpath = workDirPath.resolve("ref_af.gord");
 
+        var query = "create #x# = gorrows -p chr2:1000-16001|merge <(gorrows -p chr19:910100-920102);\n" +
+                "pgor [#x#]|write " + folderpath;
         TestUtils.runGorPipe(
-                "create #x# = gorrows -p chr2:1000-16001|merge <(gorrows -p chr19:910100-920102);\n" +
-                "pgor [#x#]|write " + folderpath,
+                query,
+                "-gorroot", workDirPath.toAbsolutePath().toString(),
+                "-cachedir", cachePath.toString());
+
+        // Overwrite
+        TestUtils.runGorPipe(
+                query,
                 "-gorroot", workDirPath.toAbsolutePath().toString(),
                 "-cachedir", cachePath.toString());
 
