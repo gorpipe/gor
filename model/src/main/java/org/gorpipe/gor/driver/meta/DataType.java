@@ -54,8 +54,8 @@ public enum DataType {
     GORP(TABLE, ".gorp", true),
     GORQ(REPORT, ".gorq"),
     LINK(REFERENCE, ".link"),
-    VERSIONED_LINK(REFERENCE, ".versioned.link"),
-    GORD_INTERNAL_LINK(REFERENCE, ".internal.link"),  // Gord internal link type
+    // VERSIONED_LINK(REFERENCE, ".versioned.link"),
+    GORD_INTERNAL_LINK(REFERENCE, ".link"),  // Gord internal link type
     CRAM(VARIANTS, ".cram", true),
     CRAI(INDEX, ".crai"),
     SPEC(VARIANTS, ".spec"),

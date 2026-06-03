@@ -123,7 +123,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
 
     val linkMetaOptions = LinkFileUtil.extractLinkMetaOptionData(queryAppend)
     if (!Strings.isNullOrEmpty(linkMetaOptions)) {
-      gordict += " -linkMeta " + linkMetaOptions
+      gordict += String.format(" -linkMeta '%s'", linkMetaOptions)
     }
 
     val cmd = splitManager.chromosomeSplits.keys.foldLeft(gordict)((x, y) => x + " [" + theKey + "_" + y + "] " +
