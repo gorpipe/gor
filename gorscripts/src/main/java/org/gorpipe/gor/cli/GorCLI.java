@@ -30,6 +30,7 @@ import org.gorpipe.gor.cli.link.LinkCommand;
 import org.gorpipe.gor.cli.manager.ManagerCommand;
 import org.gorpipe.gor.cli.migrator.FolderMigratorCommand;
 import org.gorpipe.gor.cli.query.QueryCommand;
+import org.gorpipe.gor.cli.server.TestServerCommand;
 import org.gorpipe.gor.cli.render.RenderCommand;
 import org.gorpipe.logging.GorLogbackUtil;
 import picocli.CommandLine;
@@ -38,7 +39,7 @@ import picocli.CommandLine;
 @CommandLine.Command(name="gor",
         version="version 1.0",
         description = "Command line interface for gor query language and processes.",
-        subcommands = {QueryCommand.class, FolderMigratorCommand.class})
+        subcommands = {QueryCommand.class, FolderMigratorCommand.class, TestServerCommand.class})
 public class GorCLI extends GorExecCLI implements Runnable {
     public static void main(String[] args) {
         GorLogbackUtil.initLog("gor");

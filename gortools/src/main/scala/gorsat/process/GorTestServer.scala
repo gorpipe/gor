@@ -32,8 +32,8 @@ object GorTestServer {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  def start(baseOptions: PipeOptions): Unit = {
-    val server = HttpServer.create(new InetSocketAddress(baseOptions.port), 0)
+  def start(port: Int, baseOptions: PipeOptions): Unit = {
+    val server = HttpServer.create(new InetSocketAddress(port), 0)
 
     server.createContext("/query", (exchange: HttpExchange) => {
       if (exchange.getRequestMethod.equalsIgnoreCase("POST")) {
@@ -52,8 +52,8 @@ object GorTestServer {
     })
 
     server.start()
-    System.err.println(s"GOR test server listening on port ${baseOptions.port}")
-    logger.info(s"GOR test server started on port ${baseOptions.port}")
+    System.err.println(s"GOR test server listening on port $port")
+    logger.info(s"GOR test server started on port $port")
 
     Thread.currentThread().join()
   }
