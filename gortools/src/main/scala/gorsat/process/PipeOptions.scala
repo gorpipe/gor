@@ -90,7 +90,9 @@ object PipeOptions {
     "-gorroot",
     "-requestid",
     "-stats",
-    "-color")
+    "-color",
+    "-test-server",
+    "-port")
 }
 
 /**
@@ -136,6 +138,10 @@ class PipeOptions {
   var stats: Boolean = false
   // Colored output for stdout
   var color: String = _
+  // Start as a test HTTP server instead of executing a query
+  var testServer: Boolean = false
+  // Port for the test server
+  var port: Int = 4242
 
   def parseOptions(args: Array[String]): Unit = {
     this.aliasFile = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-aliases", null)
@@ -153,6 +159,8 @@ class PipeOptions {
     this.version = CommandParseUtilities.hasOption(args, "-version")
     this.stats = CommandParseUtilities.hasOption(args, "-stats")
     this.color = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-color", "none")
+    this.testServer = CommandParseUtilities.hasOption(args, "-test-server")
+    this.port = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-port", "4242").toInt
 
     // Following options should not be part of the documentation
     this.prePipe = CommandParseUtilities.hasOption(args, "-prepipe")
