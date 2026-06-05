@@ -60,7 +60,7 @@ object GorTestServer {
 
   private def executeQuery(query: String, baseOptions: PipeOptions): (Int, String) = {
     val opts = new PipeOptions()
-    opts.query = query
+    opts.query = PipeOptions.cleanUpQueryAndSplit(query).mkString(";")
     opts.gorRoot = baseOptions.gorRoot
     opts.configFile = baseOptions.configFile
     opts.aliasFile = baseOptions.aliasFile
@@ -74,9 +74,13 @@ object GorTestServer {
       (200, out.toString("UTF-8"))
     } catch {
       case ge: GorException =>
-        (500, ExceptionUtilities.gorExceptionToString(ge))
+        val msg = ExceptionUtilities.gorExceptionToString(ge)
+        logger.error("Query failed: {}", msg)
+        (500, msg)
       case ex: Throwable =>
-        (500, Option(ex.getMessage).getOrElse(ex.getClass.getName))
+        val msg = Option(ex.getMessage).getOrElse(ex.getClass.getName)
+        logger.error("Query failed: {}", msg, ex)
+        (500, msg)
     }
   }
 }
