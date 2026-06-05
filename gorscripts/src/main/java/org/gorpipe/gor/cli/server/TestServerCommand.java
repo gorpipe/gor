@@ -32,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
+import java.io.File;
+
 @CommandLine.Command(name = "test-server",
         description = "Start an HTTP server that accepts GOR queries via POST /query",
         header = "Start a GOR test server")
@@ -51,6 +53,10 @@ public class TestServerCommand extends HelpOptions implements Runnable {
             description = "Number of parallel workers for query execution")
     private int workers;
 
+    @CommandLine.Option(names = {"-c", "--config"},
+            description = "Loads configuration from external file")
+    private File configFile;
+
     @Override
     public void run() {
         try {
@@ -61,6 +67,8 @@ public class TestServerCommand extends HelpOptions implements Runnable {
             opts.cacheDir_$eq(cacheDir != null ? cacheDir : ProjectContext.DEFAULT_CACHE_DIR);
             opts.workers_$eq(workers);
             opts.color_$eq("none");
+            if (configFile != null)
+                opts.configFile_$eq(configFile.toString());
 
             GorTestServer.start(port, opts);
         } catch (Exception e) {
