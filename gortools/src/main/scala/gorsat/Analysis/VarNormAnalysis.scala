@@ -236,9 +236,6 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
 
   override def process(r: Row): Unit = {
     val aRefseq = r.colAsString(refCol)
-//    if (aRefseq.equals("N")) {
-//      super.process(r);
-//    } else {
     val stopPos = r.pos + aRefseq.length
     if (r.chr == rangeChr && r.pos <= rangeStopPos + mergeSpan) {
       // extending
@@ -262,7 +259,6 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
       outputModifiedRows(rangeStartPos + mergeSpan)
       rangeStartPos = minStartPos
     }
-//    }
   }
 
   override def finish(): Unit = {

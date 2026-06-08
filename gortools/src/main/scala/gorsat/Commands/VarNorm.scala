@@ -54,6 +54,6 @@ class VarNorm extends CommandInfo("VARNORM",
       throw new GorParsingException(s"Error in columns - specify the 2 columns for the reference ($refCol) and the alternative ($alleleCol) allele: ")
     }
 
-    CommandParsingResult(VarNormAnalysis(refCol, alleleCol, vcfForm, seg, forcedInputHeader, leftNormalize, mergeSpan, context.getSession) | SortAnalysis(forcedInputHeader, context.getSession, 1.max( mergeSpan)), forcedInputHeader)
+    CommandParsingResult(VarNormAnalysis(refCol, alleleCol, vcfForm, seg, forcedInputHeader, leftNormalize, mergeSpan, context.getSession) | SortAnalysis(forcedInputHeader, context.getSession, 1.max(mergeSpan)), forcedInputHeader)
   }
 }
