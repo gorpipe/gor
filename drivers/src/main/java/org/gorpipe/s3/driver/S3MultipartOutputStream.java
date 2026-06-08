@@ -64,11 +64,23 @@ public abstract class S3MultipartOutputStream extends OutputStream {
                 .bucket(bucket)
                 .key(key)
                 .build();
-        try {
-            return sendCreateMultipartUploadRequest(req).uploadId();
-        } catch (Exception e) {
-            throw new IOException("Failed to initiate multipart upload", e);
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                return sendCreateMultipartUploadRequest(req).uploadId();
+            } catch (Exception e) {
+                String errorMsg = String.format("Failed to initiate multipart upload for %s/%s on attempt %d/%d: %s",
+                        bucket, key, attempt, MAX_RETRIES, e.getMessage());
+                logger.warn(errorMsg, e);
+                if (attempt == MAX_RETRIES) throw new IOException("Failed to initiate multipart upload after retries", e);
+                try {
+                    Thread.sleep(RETRY_SLEEP_BASE_MS * attempt);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted while retrying multipart upload init", ie);
+                }
+            }
         }
+        throw new IOException("Failed to initiate multipart upload after retries");
     }
 
     @Override
@@ -144,8 +156,9 @@ public abstract class S3MultipartOutputStream extends OutputStream {
                 if (attempt == MAX_RETRIES) throw new IOException(errorMsg, e);
                 try {
                     Thread.sleep(RETRY_SLEEP_BASE_MS * attempt);
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted while retrying part upload", ie);
                 }
             }
         }

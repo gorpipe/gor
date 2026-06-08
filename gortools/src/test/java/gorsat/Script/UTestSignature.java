@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
 
 public class UTestSignature {
@@ -176,6 +177,7 @@ public class UTestSignature {
         }
 
         Files.writeString(dataPath1, "chr1\t2\n", StandardOpenOption.APPEND);
+        Files.setLastModifiedTime(dataPath1, FileTime.fromMillis(Files.getLastModifiedTime(dataPath1).toMillis() + 1000));
 
         try (var session = factory.create()) {
             var engine = ScriptEngineFactory.create(session.getGorContext());

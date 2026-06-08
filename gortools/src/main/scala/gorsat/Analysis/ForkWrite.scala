@@ -316,7 +316,10 @@ case class ForkWrite(forkCol: Int,
         sh.fileOpen = false
       }
     })
-    if (options.useFolder.isEmpty && !somethingToWrite && !useFork) {
+
+    val isInsideGordFolder = DataUtil.isGord(PathUtils.getParent(fullFileName))
+
+    if (options.useFolder.isEmpty && !somethingToWrite && !useFork && !isInsideGordFolder) {
       val out = createOutFile(fullFileName, false)
       out.setup()
       out.finish()
@@ -340,7 +343,7 @@ case class ForkWrite(forkCol: Int,
     }
 
     // Only write links for files that are NOT inside gord
-    if (options.useFolder.isEmpty && !singleFileHolder.fileName.contains(".gord/")) {
+    if (options.useFolder.isEmpty && !isInsideGordFolder) {
       if (useFork) {
         forkMap.values.foreach(sh => {
           val linkData = LinkFileUtil.extractLink(session.getProjectContext.getFileReader, sh.fileName,
