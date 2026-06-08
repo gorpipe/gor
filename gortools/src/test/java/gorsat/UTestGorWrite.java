@@ -294,6 +294,24 @@ public class UTestGorWrite {
     }
 
     @Test
+    public void testWriteLinkFileForGordFolderWithLinkMetaPgor() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("pgor dbsnp.gor | write -link dbsnp3.gord -linkmeta 'TEST1=T1,TEST2=T2' dbsnp2.gord", "-gorroot", workDirPath.toString());
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
+
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertEquals(workDirPath.resolve("dbsnp2.gord"), Path.of(linkFile.getLatestEntry().url()));
+        Assert.assertEquals("T1", linkFile.getMeta().getProperty("TEST1"));
+        Assert.assertEquals("T2", linkFile.getMeta().getProperty("TEST2"));
+
+        String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor | top 1000", "-gorroot", workDirPath.toString());
+        String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 1000", "-gorroot", workDirPath.toString());
+        Assert.assertEquals(linkresult1, linkresult3);
+    }
+
+    @Test
     public void testWriteLinkFileForGordFolderParallel() throws IOException {
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
@@ -305,6 +323,24 @@ public class UTestGorWrite {
         Assert.assertEquals(workDirPath.resolve("dbsnp2.gord"), Path.of(linkFile.getLatestEntry().url()));
 
         String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor| top 1000", "-gorroot", workDirPath.toString());
+        String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 1000", "-gorroot", workDirPath.toString());
+        Assert.assertEquals(linkresult1, linkresult3);
+    }
+
+    @Test
+    public void testWriteLinkFileForGordFolderParallelWithLinkMeta() throws IOException {
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        TestUtils.runGorPipe("parallel -parts <(nor dbsnp.gor | select chrom | distinct) <(gor -p #{col:Chrom} dbsnp.gor) | write -link dbsnp3.gord -linkmeta 'TEST1=T1,TEST2=T2' dbsnp2.gord", "-gorroot", workDirPath.toString());
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
+
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertEquals(workDirPath.resolve("dbsnp2.gord"), Path.of(linkFile.getLatestEntry().url()));
+        Assert.assertEquals("T1", linkFile.getMeta().getProperty("TEST1"));
+        Assert.assertEquals("T2", linkFile.getMeta().getProperty("TEST2"));
+
+        String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor | top 1000", "-gorroot", workDirPath.toString());
         String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 1000", "-gorroot", workDirPath.toString());
         Assert.assertEquals(linkresult1, linkresult3);
     }

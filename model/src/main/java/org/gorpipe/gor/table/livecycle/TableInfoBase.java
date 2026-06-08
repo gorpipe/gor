@@ -78,7 +78,7 @@ public abstract class TableInfoBase implements TableInfo {
             this.rootUri = realUri;
             this.folderPath = rootUri;
             this.linkPath = PathUtils.resolve(rootUri, DataUtil.toFile(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME, DataType.GORD_INTERNAL_LINK));
-            try (var linkFileSource = fileReader.resolveUrl(linkPath)) {
+            try (var linkFileSource = resolveGordUrl(linkPath)) {
                 this.path = linkFileSource != null ? linkFileSource.getFullPath() : getNewVersionedFileName();
             }
         } else if (safeCheckExists(PathUtils.resolve(realUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
@@ -353,5 +353,19 @@ public abstract class TableInfoBase implements TableInfo {
     protected String getNewVersionedFileName() {
         return PathUtils.resolve(getFolderPath(),
                 PathUtils.injectRandomStringIntoFileName("version" + DataType.GORD.suffix));
+    }
+
+    /**
+     * Resolve gord path.  Traverses and fins thddict.gord files.
+     * @param path  path to resolve.  Should be gord path.
+     * @return the path to the acutal gord file.
+     */
+    protected DataSource resolveGordUrl(String path) {
+        var source = fileReader.resolveUrl(path);
+        while (source.isDirectory()) {
+            path = source.getPath().resolve(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME).toString();
+            source = fileReader.resolveUrl(path);
+        }
+        return source;
     }
 }

@@ -133,7 +133,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
 
     val linkMetaOptions = LinkFileUtil.extractLinkMetaOptionData(create.query)
     if (!Strings.isNullOrEmpty(linkMetaOptions)) {
-      theCommand += " -linkMeta " + linkMetaOptions
+      theCommand += String.format(" -linkMeta '%s'", linkMetaOptions)
     }
     parGorCommands.put(createKey, ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true, hasForkWrite = hasForkWrite))
 
