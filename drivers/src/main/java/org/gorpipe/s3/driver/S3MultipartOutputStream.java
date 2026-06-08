@@ -76,6 +76,7 @@ public abstract class S3MultipartOutputStream extends OutputStream {
                     Thread.sleep(RETRY_SLEEP_BASE_MS * attempt);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted while retrying multipart upload init", ie);
                 }
             }
         }
@@ -155,8 +156,9 @@ public abstract class S3MultipartOutputStream extends OutputStream {
                 if (attempt == MAX_RETRIES) throw new IOException(errorMsg, e);
                 try {
                     Thread.sleep(RETRY_SLEEP_BASE_MS * attempt);
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
+                    throw new IOException("Interrupted while retrying part upload", ie);
                 }
             }
         }
