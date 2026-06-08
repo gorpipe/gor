@@ -477,7 +477,8 @@ class UTestVarnormAnalysis extends AnyFunSuite with MockitoSugar with BeforeAndA
   test("Left-normalize deletion - N in refSeq stops outer loop after inner completes") {
     // ref="TT", alt="" at 7401 (trim mode)
     // Inner: getBase(7400)='T'==ref(1), getBase(7399)='T'==ref(0) → i=2 (inner exhausted)
-    // Outer i=2: getBase(7398)='N' → explicit `!= 'N'` guard stops further shift
+    // Outer i=2: getBase(7398)='N' != getBase(7400)='T' → mismatch stops further shift
+    //   (outer loop has no N-guard; the period-L spacing makes the repeat→N boundary a mismatch)
     // Shift by 2: output pos 7399 with ref "TT" from getBases
     mockRefSeqFrom(7398, "NTT")
 
@@ -490,7 +491,8 @@ class UTestVarnormAnalysis extends AnyFunSuite with MockitoSugar with BeforeAndA
     // ref="", alt="A" at 7602 (trim mode: input is pure insertion)
     // Inner: getBase(7601)='A'==allele(0) → i=1 (inner exhausted)
     // Outer i=1: getBase(7600)='A' ≠ 'N', getBase(7600)==getBase(7601)='A' → i=2
-    // Outer i=2: getBase(7599)='N' → explicit `!= 'N'` guard stops
+    // Outer i=2: getBase(7599)='N' != getBase(7600)='A' → mismatch stops
+    //   (outer loop has no N-guard; the period-L spacing makes the repeat→N boundary a mismatch)
     // Shift by 2: allele updated from getBases to "A" at pos 7600
     mockRefSeqFrom(7599, "NAA")
 
