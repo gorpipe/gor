@@ -552,12 +552,16 @@ class UTestVarnormAnalysis extends AnyFunSuite with MockitoSugar with BeforeAndA
     assert(runVarNorm(input, leftnormalize = false) == expected)
   }
 
+  test("Right-normalize deletion - N entering on the right stops the slide") {
+    mockRefSeqFrom(5000, "ACNG")
+    val input = List(RowObj("chr1\t5000\tNA\t"))
+    assert(runVarNorm(input, leftnormalize = false, vcfForm = false) == input)
+  }
+
   // ---- ordering ----
 
   test("Row order at same position is preserved after normalization") {
     // Two SNPs at the same position: neither is normalized (1:1), order must be preserved.
-    // Original testVarnormOrder defined this inline data but had a copy-paste bug
-    // and ran the wrong query — this is the corrected test.
     val input = List(
       RowObj("chr1\t14203\tT\tC"),
       RowObj("chr1\t14203\tA\tG")
@@ -567,8 +571,6 @@ class UTestVarnormAnalysis extends AnyFunSuite with MockitoSugar with BeforeAndA
 
   test("Row order at same position is preserved after normalization if N in ref") {
     // Two SNPs at the same position: neither is normalized (1:1), order must be preserved.
-    // Original testVarnormOrder defined this inline data but had a copy-paste bug
-    // and ran the wrong query — this is the corrected test.
     val input = List(
       RowObj("chr1\t2634144\tC\tA"),
       RowObj("chr1\t2684218\tN\tA")

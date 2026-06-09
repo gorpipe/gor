@@ -119,7 +119,7 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
           var i = 0
 
           while (i < aNewAllele.length
-            && refSeq.getBase(chrom, aNewPos + i).toUpper != 'N'
+            && aNewAllele(i).toUpper != 'N'
             && refSeq.getBase(chrom, aNewPos + i).toUpper == aNewAllele(i).toUpper) {
             i += 1
           }
@@ -136,7 +136,7 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
         } else if (aNewRef.length > 0 && aNewAllele.length == 0) { // Deletion
           var i = 0
           while (i < aNewRef.length
-            && refSeq.getBase(chrom, aNewPos + i).toUpper != 'N'
+            && aNewRef(i).toUpper != 'N'
             && refSeq.getBase(chrom, aNewPos + i + aNewRef.length).toUpper == aNewRef(i).toUpper) {
             i += 1
           }
