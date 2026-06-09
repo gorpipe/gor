@@ -326,12 +326,15 @@ class UTestVarnormAnalysis extends AnyFunSuite with MockitoSugar with BeforeAndA
   }
 
   test("Empty ref, vcfForm=true, N in alt stops left shift - anchor still added") {
-    // ref="", alt="N" at 10400; inner loop stops immediately (N in alt)
-    // Anchor 'A' from refSeq at 10399 → ref="A", alt="AN" at 10399
-    when(mockRefSeq.getBase("chr1", 10399)).thenReturn('A')
+    // ref="", alt="N" at 10400 → insertion "N" at 10400, left-norm.
+    // REGRESSION: the reference IS an N-run here (10396..10401), so getBase(10399)='N'
+    // EQUALS the alt base 'N'. Only the inner-loop `!= 'N'` guard stops the slide.
+    // Without the guard the variant slides left through the N-run to the 10395='A'
+    // boundary (→ pos 10395). With the guard: no slide, anchor=getBase(10399)='N'.
+    mockRefSeqFrom(10395, "ANNNNNN") // 10395='A', 10396..10401='N'
 
     val input    = List(RowObj("chr1\t10400\t\tN"))
-    val expected = List(RowObj("chr1\t10399\tA\tAN"))
+    val expected = List(RowObj("chr1\t10399\tN\tNN"))
     assert(runVarNorm(input) == expected)
   }
 
@@ -371,49 +374,64 @@ class UTestVarnormAnalysis extends AnyFunSuite with MockitoSugar with BeforeAndA
   }
 
   test("Left-normalize insertion - N in alt stops inner loop, no shift") {
-    // ref="C", alt="CN" at 7000 → trim → insertion "N" at 7001
-    // Inner loop: allele char is 'N' → `!= 'N'` fails at i=0 → no shift
-    // VCF anchor 'C' at 7000 → output unchanged
-    when(mockRefSeq.getBase("chr1", 7000)).thenReturn('C')
+    // ref="C", alt="CN" at 7000 → trim → insertion "N" at 7001, left-norm.
+    // REGRESSION: reference is an N-run (6997..7002), so getBase(7000)='N' EQUALS the
+    // inserted base 'N'. Only the `!= 'N'` guard stops the slide; without it the variant
+    // slides left to the 6996='A' boundary (→ pos 6996). With the guard: no slide.
+    mockRefSeqFrom(6996, "ANNNNNN") // 6996='A', 6997..7002='N'
 
-    val input = List(RowObj("chr1\t7000\tC\tCN"))
-    assert(runVarNorm(input) == input)
+    val input    = List(RowObj("chr1\t7000\tC\tCN"))
+    val expected = List(RowObj("chr1\t7000\tN\tNN"))
+    assert(runVarNorm(input) == expected)
   }
 
   test("Left-normalize deletion - N in ref stops inner loop, no shift") {
-    // ref="CN", alt="C" at 7100 → trim → deletion "N" at 7101
-    // Inner loop: ref char is 'N' → `!= 'N'` fails at i=0 → no shift
-    // VCF anchor 'C' at 7100 → output unchanged
-    when(mockRefSeq.getBase("chr1", 7100)).thenReturn('C')
+    // ref="CN", alt="C" at 7100 → trim → deletion "N" at 7101, left-norm.
+    // REGRESSION: reference is an N-run (7097..7102), so getBase(7100)='N' EQUALS the
+    // deleted base 'N'. Only the `!= 'N'` guard stops the slide; without it the variant
+    // slides left to the 7096='A' boundary (→ pos 7096). With the guard: no slide.
+    mockRefSeqFrom(7096, "ANNNNNN") // 7096='A', 7097..7102='N'
 
-    val input = List(RowObj("chr1\t7100\tCN\tC"))
-    assert(runVarNorm(input) == input)
+    val input    = List(RowObj("chr1\t7100\tCN\tC"))
+    val expected = List(RowObj("chr1\t7100\tNN\tN"))
+    assert(runVarNorm(input) == expected)
   }
 
-  test("Left-normalize deletion - N at end of deleted ref, trim mode - no refSeq call, no shift") {
-    // ref="TN", alt="" at 9300 (trim mode)
-    // Inner loop: ref(1)='N' → `!= 'N'` fails at i=0, no getBase call made
-    when(mockRefSeq.getBase("chr1", 9300)).thenReturn('T')  // would be called if guard didn't fire
+  test("Left-normalize deletion - N at end of deleted ref, trim mode - no shift") {
+    // ref="TN", alt="" at 9300 (trim mode) → deletion "TN", left-norm.
+    // REGRESSION: reference is an N-run (9296..9301), so getBase(9299)='N' EQUALS the
+    // last deleted base ref(1)='N'. Only the `!= 'N'` guard stops the slide; without it
+    // the variant slides left into the N-run (changing the position). With the guard:
+    // no slide, output unchanged.
+    mockRefSeqFrom(9295, "ANNNNNN") // 9295='A', 9296..9301='N'
 
     val input = List(RowObj("chr1\t9300\tTN\t"))
     assert(runVarNorm(input, vcfForm = false) == input)
   }
 
-  test("Left-normalize insertion - N at end of inserted alt, trim mode - no refSeq call, no shift") {
-    // ref="", alt="TN" at 9400 (trim mode)
-    // Inner loop: allele(1)='N' → `!= 'N'` fails at i=0, no getBase call made
+  test("Left-normalize insertion - N at end of inserted alt, trim mode - no shift") {
+    // ref="", alt="TN" at 9400 (trim mode) → insertion "TN", left-norm.
+    // REGRESSION: reference is an N-run (9396..9401), so getBase(9399)='N' EQUALS the
+    // last inserted base alt(1)='N'. Only the `!= 'N'` guard stops the slide; without it
+    // the variant slides left into the N-run (changing the position). With the guard:
+    // no slide, output unchanged.
+    mockRefSeqFrom(9395, "ANNNNNN") // 9395='A', 9396..9401='N'
+
     val input = List(RowObj("chr1\t9400\t\tTN"))
     assert(runVarNorm(input, vcfForm = false) == input)
   }
 
   test("VCF deletion - N at end of deleted sequence stops shift, anchor from refSeq") {
-    // ref="ATN", alt="A" at 9000 → trim → deletion "TN" at 9001
-    // Inner loop: ref(1)='N' → stops at i=0; anchor = getBase(9000)='A'
-    // Output unchanged (no shift even though surrounding bases could match)
-    when(mockRefSeq.getBase("chr1", 9000)).thenReturn('A')
+    // ref="ATN", alt="A" at 9000 → trim → deletion "TN" at 9001, left-norm.
+    // REGRESSION: reference is an N-run (8997..9002), so getBase(9000)='N' EQUALS the
+    // last deleted base ref(1)='N'. Only the `!= 'N'` guard stops the slide; without it
+    // the variant slides left into the N-run (changing the position). With the guard:
+    // no slide, anchor=getBase(9000)='N'.
+    mockRefSeqFrom(8996, "ANNNNNN") // 8996='A', 8997..9002='N'
 
-    val input = List(RowObj("chr1\t9000\tATN\tA"))
-    assert(runVarNorm(input) == input)
+    val input    = List(RowObj("chr1\t9000\tATN\tA"))
+    val expected = List(RowObj("chr1\t9000\tNTN\tN"))
+    assert(runVarNorm(input) == expected)
   }
 
   test("VCF deletion - N at start of deleted sequence, partial left-shift, N preserved in ref") {
@@ -440,10 +458,13 @@ class UTestVarnormAnalysis extends AnyFunSuite with MockitoSugar with BeforeAndA
     assert(runVarNorm(input) == expected)
   }
 
-  test("Right-normalize insertion - N in alt treated as ordinary base, no N guard") {
-    // ref="", alt="NA" at 9500 (trim mode, right-norm)
-    // Right-norm has NO N guard; getBase(9500)='T' ≠ 'N' → stops at i=0, no shift
-    when(mockRefSeq.getBase("chr1", 9500)).thenReturn('T')
+  test("Right-normalize insertion - N at start of inserted alt stops inner loop, no shift") {
+    // ref="", alt="NA" at 9500 (trim mode, right-norm) → insertion "NA".
+    // REGRESSION: reference starts with an N (9500='N'), so getBase(9500)='N' EQUALS
+    // alt(0)='N'. Right-norm DOES have the `!= 'N'` guard; only that guard stops the
+    // slide. Without it the variant slides right past the N to the 9502='C' boundary
+    // (→ pos 9502). With the guard: no slide, output unchanged.
+    mockRefSeqFrom(9500, "NAC") // 9500='N', 9501='A', 9502='C'(stopper)
 
     val input = List(RowObj("chr1\t9500\t\tNA"))
     assert(runVarNorm(input, leftnormalize = false, vcfForm = false) == input)
@@ -577,8 +598,6 @@ class UTestVarnormAnalysis extends AnyFunSuite with MockitoSugar with BeforeAndA
     )
     assert(runVarNorm(input) == input)
   }
-
-  // ---- integration tests (require test data, no mocked refSeq) ----
 
   test("Right-then-left normalization round-trip is idempotent on dbsnp data") {
     // Applying right-norm then left-norm must produce variants that are gtshare-equivalent
