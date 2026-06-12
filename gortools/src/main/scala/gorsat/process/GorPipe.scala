@@ -80,7 +80,6 @@ object GorPipe extends GorPipeFirstOrderCommands {
     // Initialize database connections
     DbConnection.initInConsoleApp()
 
-
     var exitCode = 0
     //todo find a better way to construct
 

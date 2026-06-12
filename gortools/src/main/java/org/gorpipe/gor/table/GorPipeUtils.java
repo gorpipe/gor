@@ -37,21 +37,15 @@ public class GorPipeUtils {
 
         log.trace("Calling gor command with command args: {} \"{}\" {} {} {} {}", args);
 
-        PrintStream oldOut = System.out;
-
         PipeOptions options = new PipeOptions();
         options.parseOptions(args);
-        CLIGorExecutionEngine engine = new CLIGorExecutionEngine(options, null, securityContext);
 
         try (PrintStream newPrintStream = new PrintStream(NULL_OUTPUT_STREAM)){
-            System.setOut(newPrintStream);
+            CLIGorExecutionEngine engine = new CLIGorExecutionEngine(options, null, securityContext, newPrintStream);
             engine.execute();
         } catch (Exception e) {
             log.error("Calling gor command failed.  Command args: {} \"{}\" {} {} {} {} failed", args);
             throw e;
-        } finally {
-
-            System.setOut(oldOut);
         }
     }
 

@@ -31,6 +31,7 @@ import org.gorpipe.gor.RequestStats
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.util.DataUtil
 import org.gorpipe.gor.model.{RowRotatingColorize, RowTypeColorize}
+import java.io.OutputStream
 
 /**
   * Execution engine for GOR running as command line. This class takes as input the command line options, construct a
@@ -39,11 +40,16 @@ import org.gorpipe.gor.model.{RowRotatingColorize, RowTypeColorize}
   * @param pipeOptions          GorPipe command line options
   * @param whitelistedCmdFiles  File containing whitelisted commands
   * @param securityContext      Security context if needed
+  * @param outputStream         Stream to write query results to (defaults to stdout)
   */
-class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String = null, securityContext:String = null) extends GorExecutionEngine {
+class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String, securityContext:String, outputStream: OutputStream) extends GorExecutionEngine {
+
+  def this(pipeOptions: PipeOptions, whitelistedCmdFiles: String, securityContext: String) = {
+    this(pipeOptions, whitelistedCmdFiles, securityContext, System.out)
+  }
 
   def this(args:Array[String], whitelistedCmdFiles:String, securityContext:String) = {
-    this(PipeOptions.parseInputArguments(args), whitelistedCmdFiles, securityContext)
+    this(PipeOptions.parseInputArguments(args), whitelistedCmdFiles, securityContext, System.out)
   }
 
   override protected def createSession(): GorSession = {
@@ -66,7 +72,7 @@ class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String
     if (MacroUtilities.isLastCommandWrite(pipeOptions.query)) instance = null
 
     iterator.thePipeStep = iterator.thePipeStep |
-      createStdOut(session.getNorContext || iterator.isNorContext, pipeOptions.color, iterator)
+      createStdOut(session.getNorContext || iterator.isNorContext, pipeOptions.color, iterator, outputStream)
 
     iterator
   }
@@ -83,24 +89,24 @@ class CLIGorExecutionEngine(pipeOptions: PipeOptions, whitelistedCmdFiles:String
     }
   }
 
-  private def createStdOut(isNor: Boolean, color: String, iterator: PipeInstance): OutStream = {
+  private def createStdOut(isNor: Boolean, color: String, iterator: PipeInstance, out: OutputStream): OutStream = {
     val c = color.toLowerCase()
 
     if (isNor) {
       if (c.startsWith("r")) {
-        NorColorStdOut(iterator, new RowRotatingColorize())
+        NorColorStdOut(iterator, new RowRotatingColorize(), out)
       } else if(c.startsWith("t")) {
-        NorColorStdOut(iterator, new RowTypeColorize())
+        NorColorStdOut(iterator, new RowTypeColorize(), out)
       } else {
-        NorStdOut(if (iterator == null) null else iterator.getHeader())
+        NorStdOut(if (iterator == null) null else iterator.getHeader(), out)
       }
     } else {
       if (c.startsWith("r")) {
-        ColorStdOut(iterator, new RowRotatingColorize())
+        ColorStdOut(iterator, new RowRotatingColorize(), out)
       } else if (c.startsWith("t")) {
-        ColorStdOut(iterator, new RowTypeColorize())
+        ColorStdOut(iterator, new RowTypeColorize(), out)
       } else {
-        StdOut(if (iterator == null) null else iterator.getHeader())
+        StdOut(if (iterator == null) null else iterator.getHeader(), out)
       }
     }
   }
