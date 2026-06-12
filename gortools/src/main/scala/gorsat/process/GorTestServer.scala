@@ -36,18 +36,21 @@ object GorTestServer {
     val server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0)
 
     server.createContext("/query", (exchange: HttpExchange) => {
-      if (exchange.getRequestMethod.equalsIgnoreCase("POST")) {
-        val query = new String(exchange.getRequestBody.readAllBytes(), "UTF-8").trim
-        val (status, body) = executeQuery(query, baseOptions)
-        val bytes = body.getBytes("UTF-8")
-        exchange.getResponseHeaders.set("Content-Type", "text/plain; charset=UTF-8")
-        exchange.sendResponseHeaders(status, bytes.length)
-        val os = exchange.getResponseBody
-        os.write(bytes)
-        os.close()
-      } else {
-        exchange.sendResponseHeaders(405, -1)
-        exchange.getResponseBody.close()
+      try {
+        if (exchange.getRequestMethod.equalsIgnoreCase("POST")) {
+          val query = new String(exchange.getRequestBody.readAllBytes(), "UTF-8").trim
+          val (status, body) = executeQuery(query, baseOptions)
+          val bytes = body.getBytes("UTF-8")
+          exchange.getResponseHeaders.set("Content-Type", "text/plain; charset=UTF-8")
+          exchange.sendResponseHeaders(status, bytes.length)
+          val os = exchange.getResponseBody
+          os.write(bytes)
+          os.close()
+        } else {
+          exchange.sendResponseHeaders(405, -1)
+        }
+      } finally {
+        exchange.close()
       }
     })
 
