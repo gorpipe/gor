@@ -25,6 +25,7 @@ package gorsat.process
 import com.sun.net.httpserver.{HttpExchange, HttpServer}
 import java.io.ByteArrayOutputStream
 import java.net.InetSocketAddress
+import java.util.UUID
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
 import org.slf4j.LoggerFactory
 
@@ -73,6 +74,8 @@ object GorTestServer {
     opts.cacheDir = baseOptions.cacheDir
     opts.workers = baseOptions.workers
     opts.color = baseOptions.color
+    // Fresh id per request so each query gets its own GorSessionCache instead of sharing key "-1"
+    opts.requestId = UUID.randomUUID().toString
 
     val out = new ByteArrayOutputStream()
     val engine = new CLIGorExecutionEngine(opts, null, null, out)
