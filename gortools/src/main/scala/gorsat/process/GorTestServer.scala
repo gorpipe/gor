@@ -72,7 +72,7 @@ object GorTestServer {
     opts.aliasFile = baseOptions.aliasFile
     opts.cacheDir = baseOptions.cacheDir
     opts.workers = baseOptions.workers
-    opts.color = "none"
+    opts.color = baseOptions.color
 
     val out = new ByteArrayOutputStream()
     val engine = new CLIGorExecutionEngine(opts, null, null, out)
