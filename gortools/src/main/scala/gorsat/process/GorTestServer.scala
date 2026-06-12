@@ -42,10 +42,13 @@ object GorTestServer {
           val (status, body) = executeQuery(query, baseOptions)
           val bytes = body.getBytes("UTF-8")
           exchange.getResponseHeaders.set("Content-Type", "text/plain; charset=UTF-8")
-          exchange.sendResponseHeaders(status, bytes.length)
-          val os = exchange.getResponseBody
-          os.write(bytes)
-          os.close()
+          val responseLength = if (bytes.length == 0) -1L else bytes.length.toLong
+          exchange.sendResponseHeaders(status, responseLength)
+          if (bytes.length > 0) {
+            val os = exchange.getResponseBody
+            os.write(bytes)
+            os.close()
+          }
         } else {
           exchange.sendResponseHeaders(405, -1)
         }
