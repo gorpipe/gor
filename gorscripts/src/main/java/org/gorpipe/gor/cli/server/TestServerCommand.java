@@ -64,6 +64,7 @@ public class TestServerCommand extends HelpOptions implements Runnable {
             DbConnection.initInConsoleApp();
 
             PipeOptions opts = new PipeOptions();
+            // if options added, also add to gortools/src/main/scala/gorsat/process/GorTestServer.scala
             opts.cacheDir_$eq(cacheDir != null ? cacheDir : ProjectContext.DEFAULT_CACHE_DIR);
             opts.workers_$eq(workers);
             opts.color_$eq("none");

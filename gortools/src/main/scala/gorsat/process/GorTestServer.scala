@@ -33,7 +33,7 @@ object GorTestServer {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   def start(port: Int, baseOptions: PipeOptions): Unit = {
-    val server = HttpServer.create(new InetSocketAddress(port), 0)
+    val server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0)
 
     server.createContext("/query", (exchange: HttpExchange) => {
       if (exchange.getRequestMethod.equalsIgnoreCase("POST")) {
@@ -65,6 +65,7 @@ object GorTestServer {
     opts.configFile = baseOptions.configFile
     opts.aliasFile = baseOptions.aliasFile
     opts.cacheDir = baseOptions.cacheDir
+    opts.workers = baseOptions.workers
     opts.color = "none"
 
     val out = new ByteArrayOutputStream()
