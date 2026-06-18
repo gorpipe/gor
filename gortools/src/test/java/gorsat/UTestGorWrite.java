@@ -35,6 +35,7 @@ import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.model.BaseMeta;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
+import org.gorpipe.test.utils.FileTestUtils;
 import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.contrib.java.lang.system.RestoreSystemProperties;
@@ -394,6 +395,66 @@ public class UTestGorWrite {
         String linkresult1 = TestUtils.runGorPipe("gor dbsnp.gor | top 500", "-gorroot", workDirPath.toString());
         String linkresult3 = TestUtils.runGorPipe("gor dbsnp3.gord | top 500", "-gorroot", workDirPath.toString());
         Assert.assertEquals(linkresult1, linkresult3);
+    }
+
+    @Test
+    public void testCreateWriteLinkInferFileNamePgor() throws IOException {
+        // ENGKNOW-3577 follow-up: a pgor create whose query ends in `write -link` with an inferred
+        // (non-idempotent) data name must store a create-cache name matching the written gord
+        // folder, so referencing the create with [#test#] resolves to the same data. getCachePath
+        // derives the name via parseBaseOptions -> inferDataFileNameFromLinkFile; this guards
+        // against the name being re-derived to a different value.
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+
+        String viaCreate = TestUtils.runGorPipe(
+                "create #test# = pgor dbsnp.gor | write -link dbsnp3.gord; gor [#test#] | top 1000",
+                "-gorroot", workDirPath.toString());
+        String viaLink = TestUtils.runGorPipe("gor dbsnp3.gord | top 1000", "-gorroot", workDirPath.toString());
+
+        Assert.assertEquals(viaLink, viaCreate);
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertTrue(Files.exists(Path.of(linkFile.getLatestEntry().url())));
+    }
+
+    @Test
+    public void testCreateWriteLinkInferFileNameParallel() throws IOException {
+        // ENGKNOW-3577 follow-up: same check for a parallel create with inferred link data name.
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+
+        String viaCreate = TestUtils.runGorPipe(
+                "create #test# = parallel -parts <(nor dbsnp.gor | select chrom | distinct) <(gor -p #{col:Chrom} dbsnp.gor) | write -link dbsnp3.gord; gor [#test#] | top 1000",
+                "-gorroot", workDirPath.toString());
+        String viaLink = TestUtils.runGorPipe("gor dbsnp3.gord | top 1000", "-gorroot", workDirPath.toString());
+
+        Assert.assertEquals(viaLink, viaCreate);
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertTrue(Files.exists(Path.of(linkFile.getLatestEntry().url())));
+    }
+
+    @Test
+    public void testCreateWriteLinkInferFileNamePartgor() throws IOException {
+        // ENGKNOW-3577 follow-up: a partgor create whose query ends in `write -link` with an
+        // inferred (non-idempotent) data name must store a create-cache name that matches the
+        // written data, so referencing the create with [#test#] resolves to the expected rows.
+        // NOTE: unlike pgor/parallel, partgor currently does not propagate the -link option, so no
+        // .link file is written here; this test therefore asserts only the create-cache-name
+        // correctness (the getCachePath concern), not link-file generation.
+        Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
+        Files.copy(p, workDirPath.resolve("dbsnp.gor"));
+        File dictFile = FileTestUtils.createTempFile(workDir.getRoot(), "parts.gord", "dbsnp.gor\tA\n");
+
+        String viaCreate = TestUtils.runGorPipe(
+                "create #test# = partgor -dict " + dictFile.getAbsolutePath() + " <(gor dbsnp.gor | calc t '#{tags}') | write -link dbsnp3.gord; gor [#test#] | top 1000",
+                "-gorroot", workDirPath.toString());
+        String expected = TestUtils.runGorPipe("gor dbsnp.gor | calc t 'A' | top 1000", "-gorroot", workDirPath.toString());
+
+        Assert.assertEquals(expected, viaCreate);
     }
 
     @Test
