@@ -81,10 +81,13 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
       if (leftnormalize) {
         if (aNewRef.length == 0 && aNewAllele.length > 0) { // Insertion
           var i = 0
-          while (i < aNewAllele.length && refSeq.getBase(chrom, aNewPos - i - 1).toUpper == aNewAllele(aNewAllele.length - 1 - i).toUpper) {
+          while (i < aNewAllele.length
+            && aNewAllele(aNewAllele.length - 1 - i).toUpper != 'N'
+            && refSeq.getBase(chrom, aNewPos - i - 1).toUpper == aNewAllele(aNewAllele.length - 1 - i).toUpper) {
             i += 1
           }
-          while (i >= aNewAllele.length && refSeq.getBase(chrom, aNewPos - i - 1).toUpper == refSeq.getBase(chrom, aNewPos - i - 1 + aNewAllele.length).toUpper) {
+          while (i >= aNewAllele.length
+            && refSeq.getBase(chrom, aNewPos - i - 1).toUpper == refSeq.getBase(chrom, aNewPos - i - 1 + aNewAllele.length).toUpper) {
             i += 1
           }
           aNewPos -= i
@@ -95,10 +98,13 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
           }
         } else if (aNewRef.length > 0 && aNewAllele.length == 0) { // Deletion
           var i = 0
-          while (i < aNewRef.length && refSeq.getBase(chrom, aNewPos - i - 1).toUpper == aNewRef(aNewRef.length - 1 - i).toUpper) {
+          while (i < aNewRef.length
+            && aNewRef(aNewRef.length - 1 - i).toUpper != 'N'
+            && refSeq.getBase(chrom, aNewPos - i - 1).toUpper == aNewRef(aNewRef.length - 1 - i).toUpper) {
             i += 1
           }
-          while (i >= aNewRef.length && refSeq.getBase(chrom, aNewPos - i - 1).toUpper == refSeq.getBase(chrom, aNewPos - i - 1 + aNewRef.length).toUpper) {
+          while (i >= aNewRef.length
+            && refSeq.getBase(chrom, aNewPos - i - 1).toUpper == refSeq.getBase(chrom, aNewPos - i - 1 + aNewRef.length).toUpper) {
             i += 1
           }
           aNewPos -= i
@@ -112,10 +118,13 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
         if (aNewRef.length == 0 && aNewAllele.length > 0) { // Insertion
           var i = 0
 
-          while (i < aNewAllele.length && refSeq.getBase(chrom, aNewPos + i).toUpper == aNewAllele(i).toUpper) {
+          while (i < aNewAllele.length
+            && aNewAllele(i).toUpper != 'N'
+            && refSeq.getBase(chrom, aNewPos + i).toUpper == aNewAllele(i).toUpper) {
             i += 1
           }
-          while (i >= aNewAllele.length && refSeq.getBase(chrom, aNewPos + i - aNewAllele.length).toUpper == refSeq.getBase(chrom, aNewPos + i).toUpper) {
+          while (i >= aNewAllele.length
+            && refSeq.getBase(chrom, aNewPos + i - aNewAllele.length).toUpper == refSeq.getBase(chrom, aNewPos + i).toUpper) {
             i += 1
           }
           aNewPos += i
@@ -126,10 +135,13 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
           }
         } else if (aNewRef.length > 0 && aNewAllele.length == 0) { // Deletion
           var i = 0
-          while (i < aNewRef.length && refSeq.getBase(chrom, aNewPos + i + aNewRef.length).toUpper == aNewRef(i).toUpper) {
+          while (i < aNewRef.length
+            && aNewRef(i).toUpper != 'N'
+            && refSeq.getBase(chrom, aNewPos + i + aNewRef.length).toUpper == aNewRef(i).toUpper) {
             i += 1
           }
-          while (i >= aNewRef.length && refSeq.getBase(chrom, aNewPos + i + aNewRef.length).toUpper == refSeq.getBase(chrom, aNewPos + i).toUpper) {
+          while (i >= aNewRef.length
+            && refSeq.getBase(chrom, aNewPos + i + aNewRef.length).toUpper == refSeq.getBase(chrom, aNewPos + i).toUpper) {
             i += 1
           }
           aNewPos += i
@@ -224,32 +236,28 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
 
   override def process(r: Row): Unit = {
     val aRefseq = r.colAsString(refCol)
-    if (aRefseq.equals("N")) {
-      super.process(r);
-    } else {
-      val stopPos = r.pos + aRefseq.length
-      if (r.chr == rangeChr && r.pos <= rangeStopPos + mergeSpan) {
-        // extending
-        if (stopPos > rangeStopPos) {
-          rangeStopPos = stopPos
-        }
-      } else {
-        // See if we need to output existing range
-        if (rangeChr != rangeChrStart) {
-          outputModifiedRows(-1)
-        }
-        rangeChr = r.chr
-        rangeStartPos = r.pos
+    val stopPos = r.pos + aRefseq.length
+    if (r.chr == rangeChr && r.pos <= rangeStopPos + mergeSpan) {
+      // extending
+      if (stopPos > rangeStopPos) {
         rangeStopPos = stopPos
-        allRows = new ArrayBuffer[Row]
       }
-      allRows += r
+    } else {
+      // See if we need to output existing range
+      if (rangeChr != rangeChrStart) {
+        outputModifiedRows(-1)
+      }
+      rangeChr = r.chr
+      rangeStartPos = r.pos
+      rangeStopPos = stopPos
+      allRows = new ArrayBuffer[Row]
+    }
+    allRows += r
 
-      if (r.pos > rangeStartPos + mergeSpan * 2) {
-        minStartPos = r.pos
-        outputModifiedRows(rangeStartPos + mergeSpan)
-        rangeStartPos = minStartPos
-      }
+    if (r.pos > rangeStartPos + mergeSpan * 2) {
+      minStartPos = r.pos
+      outputModifiedRows(rangeStartPos + mergeSpan)
+      rangeStartPos = minStartPos
     }
   }
 
