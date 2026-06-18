@@ -23,9 +23,7 @@ public class LinkFileUtil {
     /**
      * Infer the data file name from the link file name.
      *
-     * Notes: The path returned must be idempotent as this is called
-     *        from multiple different places in the code (meaning we
-     *        can not use random or time in the path).
+     * Notes: The path returned is NOT  idempotent, so calling this multiple times has to be done with care.
      *
      * @param linkSource the link file path with the link extension
      * @param linkFileMeta additional link file meta data
@@ -40,6 +38,8 @@ public class LinkFileUtil {
      * When a {@code fileReader} is supplied and the link file is lifecycle-managed, this method also
      * verifies that the inferred target path does not already exist — overwriting a managed file
      * would silently corrupt the version history stored in the link file.
+     *
+     * Notes: The path returned is NOT  idempotent, so calling this multiple times has to be done with care.
      *
      * @param linkSource   the link file path with the link extension
      * @param linkFileMeta additional link file meta data
