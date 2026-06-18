@@ -114,6 +114,10 @@ Test must **fail before** the fix and **pass after**.
   shape. Verify whether it exhibits the same defect; file a follow-up if so.
 - Making `inferDataFileNameFromLinkFile` idempotent again (removing the random suffix) was
   rejected: it risks regressing the ENGKNOW-3362 concurrent-write uniqueness guarantee.
+- The doc comment on `inferDataFileNameFromLinkFile` (`LinkFileUtil.java:23-31`) promises an
+  idempotent result, which the random suffix (line 89) violates. This fix works *around* the
+  non-idempotency rather than removing it, so the comment is now misleading — update the comment
+  (or the implementation) in a follow-up.
 
 ## Verification
 
