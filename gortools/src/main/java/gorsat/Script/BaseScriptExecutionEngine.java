@@ -80,7 +80,7 @@ public class BaseScriptExecutionEngine {
                 outFile = null;
             }
         } else if (iargs.length == 0 && CommandParseUtilities.hasOption(args, "-link")) {
-            // ENGKNOW-3577: with `write -link X` (no explicit data file), the data file name is
+            // With `write -link X` (no explicit data file), the data file name is
             // inferred from the link and is non-idempotent (random suffix). Inject the resolved
             // name into the executed write so ForkWrite reuses it instead of re-deriving a
             // different name, keeping the create cache entry and the written file in sync.
@@ -307,8 +307,7 @@ public class BaseScriptExecutionEngine {
                 }
 
                 // Read the query AFTER getExplicitWrite, which may inject the resolved write
-                // target into the block's query (e.g. ENGKNOW-3577 link-inferred write name),
-                // so the executed command stays in sync with the resolved cache path.
+                // target into the block's query, so the executed command stays in sync with the resolved cache path.
                 var commandToExecute = newExecutionBlock.query();
 
                 // Extract used files from the final gor command
