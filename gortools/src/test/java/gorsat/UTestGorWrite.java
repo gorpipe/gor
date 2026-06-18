@@ -260,6 +260,25 @@ public class UTestGorWrite {
     }
 
     @Test
+    public void testCreateWriteLinkCacheName() throws IOException {
+        // ENGKNOW-3577: a create whose query ends in `write -link` must store the actual
+        // written data file name in the cache, so referencing the create afterwards works.
+        environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL,
+                workDirPath.resolve("managed_data").toString());
+
+        String query = "create #test# = gorrow chr1,1,100 | write -link test.gor; nor [#test#]";
+        String result = TestUtils.runGorPipe(query, "-gorroot", workDirPath.toString());
+
+        // The reference resolves and the original row survives the create -> link -> read round trip.
+        Assert.assertTrue("unexpected result: " + result, result.contains("chr1\t1\t100"));
+
+        // The link points at a data file that actually exists on disk.
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("test.gor.link").toString()));
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertTrue(Files.exists(Path.of(linkFile.getLatestEntry().url())));
+    }
+
+    @Test
     public void testWriteLinkFileWithInferFileNameForExistingLink() throws IOException {
 
         environmentVariables.set(GorDriverConfig.GOR_DRIVER_LINK_MANAGED_DATA_ROOT_URL, workDirPath.resolve("managed_data").toString());
