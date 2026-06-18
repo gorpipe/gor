@@ -54,7 +54,7 @@ class Write extends CommandInfo("WRITE",
       val linkSourceRef = new SourceReference(DataUtil.toLink(linkOpt),
         context.getSession.getProjectContext.getFileReader.getSecurityContext,
         context.getSession.getProjectContext.getFileReader.getCommonRoot, null, null, true);
-      // Infer the full file name from the link (and defautl locations)
+      // Infer the full file name from the link (and default locations)
       LinkFileUtil.inferDataFileNameFromLinkFile(
         context.getSession.getProjectContext.getFileReader.resolveDataSource(linkSourceRef).asInstanceOf[StreamSource],
         linkMetaInfo.linkFileMeta,
