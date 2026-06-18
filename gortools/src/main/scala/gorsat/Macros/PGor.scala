@@ -25,7 +25,7 @@ package gorsat.Macros
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import gorsat.Script
 import gorsat.Script._
-import gorsat.Utilities.MacroUtilities.getCachePath
+import gorsat.Utilities.MacroUtilities
 import org.gorpipe.gor.driver.linkfile.LinkFileUtil
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.util.PathUtils
@@ -56,7 +56,7 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
 
     if (!doHeader) {
       val noWithin = CommandParseUtilities.hasOption(options, "-nowithin")
-      val (hasDictFolderWrite, cacheFileExists, hasForkWrite, theCachePath, theQueryAppend) = getCachePath(create, context, skipCache)
+      val (hasDictFolderWrite, cacheFileExists, hasForkWrite, theCachePath, theQueryAppend) = MacroUtilities.getCachePath(create, context, skipCache)
       val useGordFolders = CommandParseUtilities.hasOption(options, "-gordfolder") || hasDictFolderWrite
 
       var cachePath: String = null
