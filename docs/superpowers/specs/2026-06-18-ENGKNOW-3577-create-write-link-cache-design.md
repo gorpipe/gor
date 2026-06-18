@@ -114,10 +114,11 @@ Test must **fail before** the fix and **pass after**.
   tests (`testCreateWriteLinkInferFileName{Pgor,Parallel,Partgor}` in `UTestGorWrite.java`): the
   resolved `cachePath` is derived once and reused, so the ENGKNOW-3577 cache-name mismatch does
   **not** occur for any of the three.
-- **Separate defect discovered:** `partgor` silently drops the `-link` option — `PartGor.scala`
-  builds the dictionary command (lines ~102-104) but never appends `-link`/`-linkmeta`, unlike
-  `PGor.scala`/`Parallel.scala`. So `partgor ... | write -link X` writes no `.link` file. No
-  existing test covered partgor + `-link`. Needs its own ticket/fix (mirror PGor/Parallel).
+- **Separate defect discovered and fixed in this PR:** `partgor` silently dropped the `-link`
+  option — `PartGor.scala` built the dictionary command but never appended `-link`/`-linkmeta`,
+  unlike `PGor.scala`/`Parallel.scala`, so `partgor ... | write -link X` wrote no `.link` file.
+  Fixed by appending the link options (extracted from `create.query`) to the partgor dictionary
+  command, mirroring `Parallel.scala`. Covered by `testCreateWriteLinkInferFileNamePartgor`.
 - Making `inferDataFileNameFromLinkFile` idempotent again (removing the random suffix) was
   rejected: it risks regressing the ENGKNOW-3362 concurrent-write uniqueness guarantee.
 - The doc comment on `inferDataFileNameFromLinkFile` (`LinkFileUtil.java:23-31`) promises an

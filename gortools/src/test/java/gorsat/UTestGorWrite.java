@@ -440,11 +440,9 @@ public class UTestGorWrite {
     @Test
     public void testCreateWriteLinkInferFileNamePartgor() throws IOException {
         // ENGKNOW-3577 follow-up: a partgor create whose query ends in `write -link` with an
-        // inferred (non-idempotent) data name must store a create-cache name that matches the
-        // written data, so referencing the create with [#test#] resolves to the expected rows.
-        // NOTE: unlike pgor/parallel, partgor currently does not propagate the -link option, so no
-        // .link file is written here; this test therefore asserts only the create-cache-name
-        // correctness (the getCachePath concern), not link-file generation.
+        // inferred (non-idempotent) data name must store a create-cache name matching the written
+        // data, so referencing the create with [#test#] resolves to the same data, and partgor
+        // must propagate -link so the link file is written (parity with pgor/parallel).
         Path p = Paths.get("../tests/data/gor/dbsnp_test.gor");
         Files.copy(p, workDirPath.resolve("dbsnp.gor"));
         File dictFile = FileTestUtils.createTempFile(workDir.getRoot(), "parts.gord", "dbsnp.gor\tA\n");
@@ -452,9 +450,13 @@ public class UTestGorWrite {
         String viaCreate = TestUtils.runGorPipe(
                 "create #test# = partgor -dict " + dictFile.getAbsolutePath() + " <(gor dbsnp.gor | calc t '#{tags}') | write -link dbsnp3.gord; gor [#test#] | top 1000",
                 "-gorroot", workDirPath.toString());
-        String expected = TestUtils.runGorPipe("gor dbsnp.gor | calc t 'A' | top 1000", "-gorroot", workDirPath.toString());
+        String viaLink = TestUtils.runGorPipe("gor dbsnp3.gord | top 1000", "-gorroot", workDirPath.toString());
 
-        Assert.assertEquals(expected, viaCreate);
+        Assert.assertEquals(viaLink, viaCreate);
+
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
+        Assert.assertEquals(1, linkFile.getEntriesCount());
+        Assert.assertTrue(Files.exists(Path.of(linkFile.getLatestEntry().url())));
     }
 
     @Test
