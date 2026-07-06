@@ -212,6 +212,15 @@ public class S3Source implements StreamSource {
         return sourceReference.getUrl();
     }
 
+    /**
+     * Full, resolved S3 url ({@code s3://bucket/key}).  Use in log/error messages instead of
+     * {@link #getName()}, which returns the raw (possibly project-relative) source reference url
+     * and therefore renders as a misleading {@code s3:<relative-path>} in diagnostics.
+     */
+    public String getFullS3Url() {
+        return String.format("s3://%s/%s", bucket, key);
+    }
+
     private S3SourceMetadata loadMetadata(String bucket, String key) {
         if (USE_META_CACHE) {
             return loadMetadataFromCache(bucket, key);
@@ -277,11 +286,11 @@ public class S3Source implements StreamSource {
         } catch (Exception e) {
             Credentials cred = getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
             throw new GorResourceException(String.format("Exists failed for %s, region: %s, access key: %s, secret key: %s",
-                    getName(), client.serviceClientConfiguration().region(),
+                    getFullS3Url(), client.serviceClientConfiguration().region(),
                     cred != null ? cred.getOrDefault(Credentials.Attr.KEY, "No key in creds") : "No creds",
                     cred != null ? (!StringUtils.isEmpty(cred.getOrDefault(Credentials.Attr.SECRET, "")) ? "Has secret" : "Empty secret")
                                  : "No creds"),
-                    getName(), e).retry();
+                    getFullS3Url(), e).retry();
         }
     }
 
@@ -420,11 +429,11 @@ public class S3Source implements StreamSource {
         } catch (Exception e) {
             Credentials cred = getCredentials(sourceReference.getSecurityContext(), "s3", bucket);
             throw new GorResourceException(String.format("List failed for %s, region: %s, access key: %s, secret key: %s",
-                    getName(), client.serviceClientConfiguration().region(),
+                    getFullS3Url(), client.serviceClientConfiguration().region(),
                     cred != null ? cred.getOrDefault(Credentials.Attr.KEY, "No key in creds") : "No creds",
                     cred != null ? (!StringUtils.isEmpty(cred.getOrDefault(Credentials.Attr.KEY, "")) ? "Has secret" : "Empty secret")
                             : "No creds"),
-                    getName(), e).retry();
+                    getFullS3Url(), e).retry();
         }
     }
 

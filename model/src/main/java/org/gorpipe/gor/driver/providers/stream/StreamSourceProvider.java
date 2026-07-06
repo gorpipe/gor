@@ -262,10 +262,15 @@ public abstract class StreamSourceProvider implements SourceProvider {
 
     public StreamSource findIndexFileFromFileDriver(StreamSourceFile file, SourceReference sourceRef) throws IOException {
         for (String index : file.possibleIndexNames()) {
-            StreamSource indexSource = resolveDataSource(new SourceReference(index, sourceRef));
-            if (indexSource != null && indexSource.exists()) {
-                indexSource = wrap(indexSource);
-                return indexSource;
+            try {
+                StreamSource indexSource = resolveDataSource(new SourceReference(index, sourceRef));
+                if (indexSource != null && indexSource.exists()) {
+                    indexSource = wrap(indexSource);
+                    return indexSource;
+                }
+            } catch (Exception e) {
+                // The index file is most often optional, just log the error.
+                log.warn("Ignoring optional index candidate {} - could not determine existence", index, e);
             }
         }
 

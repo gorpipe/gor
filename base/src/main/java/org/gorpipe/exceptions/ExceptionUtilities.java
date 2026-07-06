@@ -200,6 +200,7 @@ public final class ExceptionUtilities {
     private static final String ERROR_TYPE = "errorType";
     private static final String GOR_MESSAGE = "gorMessage";
     private static final String MESSAGE = "message";
+    private static final String CAUSE = "cause";
     private static final String REQUEST_ID = "requestId";
     private static final String QUERY = "query";
     private static final String COMMAND_NAME = "commandName";
@@ -223,6 +224,13 @@ public final class ExceptionUtilities {
         obj.put(ERROR_TYPE, getErrorType(exception));
         obj.put(GOR_MESSAGE, gorExceptionToString(exception));
         obj.put(MESSAGE, exception.getMessage());
+
+        // The message field rarely contains the root cause (e.g. the underlying S3/SDK error), and the
+        // only field that does -- stackTrace -- is often trimmed by downstream log projections.  Emit the
+        // full cause chain as its own field, independently of showStackTrace, so the real error is not lost.
+        // Note: kept separate from MESSAGE on purpose -- MESSAGE round-trips through gorExceptionFromJson,
+        // so polluting it would corrupt reconstructed exceptions across the service boundary.
+        addJsonEntry(CAUSE, exception.getCause() != null ? getFullCause(exception.getCause()) : null, obj);
 
         if (showStackTrace) {
             obj.put(STACK_TRACE, getStackTrace(exception));
