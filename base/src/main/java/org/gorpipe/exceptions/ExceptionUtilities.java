@@ -398,15 +398,18 @@ public final class ExceptionUtilities {
     }
 
     public static String getFullCause(Throwable e) {
-        var t = e;
         var builder = new StringBuilder();
+        var seen = new java.util.HashSet<Throwable>();
 
-        while (t != null && (t.getCause() != null || t.getCause() != t)) {
+        // Walk the whole cause chain. Skip (don't stop on) links with empty messages so an
+        // intermediate wrapper without a message doesn't hide the root cause below it.  Guard
+        // against self- or cyclic-cause chains, which would otherwise loop forever.
+        for (var t = e; t != null && seen.add(t); t = t.getCause()) {
             var message = t.getMessage();
-            if (ExceptionUtilities.isNullOrEmpty(message)) break;
-            builder.append(t.getMessage());
-            builder.append("\n");
-            t = t.getCause();
+            if (!ExceptionUtilities.isNullOrEmpty(message)) {
+                builder.append(message);
+                builder.append("\n");
+            }
         }
 
         return builder.toString().trim();
