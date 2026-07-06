@@ -79,7 +79,8 @@ public abstract class TableInfoBase implements TableInfo {
             this.folderPath = rootUri;
             this.linkPath = PathUtils.resolve(rootUri, DataUtil.toFile(GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME, DataType.GORD_INTERNAL_LINK));
             try (var linkFileSource = resolveGordUrl(linkPath)) {
-                this.path = linkFileSource != null ? linkFileSource.getFullPath() : getNewVersionedFileName();
+                // Can not use getFullPath as for s3data that gives actual s3 url (which we might not have creds for).
+                this.path = linkFileSource != null ? linkFileSource.getProjectLinkFileContent() : getNewVersionedFileName();
             }
         } else if (safeCheckExists(PathUtils.resolve(realUri, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
             // Not all data sources support isDirectory (so just check for the dict file)
