@@ -517,14 +517,30 @@ public final class ExceptionUtilities {
         }
     }
 
+    /**
+     * Rebuild a carrier for the {@code cause} field so the underlying error chain survives a
+     * serialize -> deserialize -> re-serialize hop (gorExceptionToJson re-emits CAUSE from getCause()).
+     * Only the concatenated cause messages round-trip, not real frames, so the synthetic throwable's
+     * stack trace is cleared to avoid polluting a reconstructed stack trace with this call site.
+     */
+    private static Throwable reconstructCause(JSONObject obj) {
+        String causeText = getStringValue(obj, CAUSE);
+        if (isNullOrEmpty(causeText)) {
+            return null;
+        }
+        Throwable cause = new Throwable(causeText);
+        cause.setStackTrace(new StackTraceElement[0]);
+        return cause;
+    }
+
     private static GorException createGorSystemException(JSONObject obj) {
-        return new GorSystemException(getStringValue(obj, MESSAGE), null);
+        return new GorSystemException(getStringValue(obj, MESSAGE), reconstructCause(obj));
     }
 
     private static GorException createGorResourceException(JSONObject obj) {
         GorResourceException exception = new GorResourceException(getStringValue(obj, MESSAGE),
                 getStringValue(obj, URI),
-                null, false);
+                reconstructCause(obj), false);
 
         updateGorUserException(obj, exception);
 

@@ -52,4 +52,23 @@ public class UTestExceptionUtilities {
 
         assertFalse("no cause field expected when there is no cause", json.contains("\"cause\""));
     }
+
+    @Test
+    public void causeSurvivesSerializeDeserializeReserialize() {
+        // Multi-tier deployment: an error is serialized on a worker, reconstructed on the query service,
+        // then re-serialized to the client. The cause chain must not be lost at the second hop.
+        ExceptionUtilities.setShowStackTrace(false);
+        Throwable root = new RuntimeException("S3 SlowDown 503 - please reduce your request rate");
+        GorResourceException original =
+                new GorResourceException("Exists failed for s3://thebucket/the/key", "s3://thebucket/the/key", root);
+
+        String firstJson = ExceptionUtilities.gorExceptionToJson(original);
+        assertTrue("first serialization must carry the cause", firstJson.contains("S3 SlowDown 503"));
+
+        // Reconstruct (as the query service does) and serialize again.
+        String secondJson = ExceptionUtilities.gorExceptionToJson(ExceptionUtilities.gorExceptionFromJson(firstJson));
+
+        assertTrue("cause field must survive the round-trip", secondJson.contains("cause"));
+        assertTrue("root cause message must survive the round-trip", secondJson.contains("S3 SlowDown 503"));
+    }
 }
