@@ -56,6 +56,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
 
     private boolean dataLoaded = false;
     private boolean tagHashLoaded = false;
+    private boolean contentMapLoaded = false;
 
     /**
      * Construct new dict file from the given path and chromosome cache.
@@ -152,9 +153,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
 
     @Override
     public Iterator<T> getActiveEntries() {
-        if (!dataLoaded) {
-            loadLinesAndUpdateIndices();
-        }
+        updateContentMap();
         return new Iterator<T>() {
 
             int nextIndex = 0;
@@ -186,14 +185,13 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
 
     @Override
     public Set<String> getAllActiveTags() {
-        if (!dataLoaded) {
-            loadLinesAndUpdateIndices();
-        }
+        updateContentMap();
         return activeTags.elementSet();
     }
 
     @Override
     public boolean hasDeletedEntries() {
+        updateContentMap();
         return deletedEntriesCount > 0;
     }
 
@@ -204,18 +202,24 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
 
     @Override
     public int getActiveLinesCount() {
+        updateContentMap();
         int size = getEntries().size();
         return size - deletedEntriesCount;
     }
 
 
-    private void updateContentMap() {
+    synchronized private void updateContentMap() {
+        if (contentMapLoaded) return;
+        if (!dataLoaded) {
+            loadLinesAndUpdateIndices();
+        }
         contentHashToLines = ArrayListMultimap.create(rawLines.size(), 1);
         activeTags = HashMultiset.create();
-
+        deletedEntriesCount = 0;
         for (T entry : rawLines) {
             addEntryToContentMap(entry);
         }
+        contentMapLoaded = true;
     }
 
     synchronized private void updateTagMap() {
@@ -274,6 +278,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
         contentHashToLines = null;
         activeTags = null;
         deletedEntriesCount = 0;
+        contentMapLoaded = false;
     }
 
     private void clearTagMap() {
@@ -285,7 +290,6 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
         if (dataLoaded) return;
         log.trace("Loading entries into table {} {}", table.getName(), table);
         this.rawLines = this.loadLines();
-        this.updateContentMap();
         if (table.getColumns().length == 0 && !this.rawLines.isEmpty()) {
             try {
                 // Update header from the first file.
@@ -338,6 +342,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
     public T findLine(T line) {
         // Using contentHashMap
         List<T> allLines = getEntries();
+        updateContentMap();
         List<T> lines2Search = contentHashToLines != null ? contentHashToLines.get(line.getSearchHash()) : allLines;
 
         return lines2Search != null ? lines2Search.stream().filter(l -> l.equals(line)).findFirst().orElse(null) : null;
