@@ -200,6 +200,7 @@ public final class ExceptionUtilities {
     private static final String ERROR_TYPE = "errorType";
     private static final String GOR_MESSAGE = "gorMessage";
     private static final String MESSAGE = "message";
+    private static final String CAUSE = "cause";
     private static final String REQUEST_ID = "requestId";
     private static final String QUERY = "query";
     private static final String COMMAND_NAME = "commandName";
@@ -223,6 +224,13 @@ public final class ExceptionUtilities {
         obj.put(ERROR_TYPE, getErrorType(exception));
         obj.put(GOR_MESSAGE, gorExceptionToString(exception));
         obj.put(MESSAGE, exception.getMessage());
+
+        // The message field rarely contains the root cause (e.g. the underlying S3/SDK error), and the
+        // only field that does -- stackTrace -- is often trimmed by downstream log projections.  Emit the
+        // full cause chain as its own field, independently of showStackTrace, so the real error is not lost.
+        // Note: kept separate from MESSAGE on purpose -- MESSAGE round-trips through gorExceptionFromJson,
+        // so polluting it would corrupt reconstructed exceptions across the service boundary.
+        addJsonEntry(CAUSE, exception.getCause() != null ? getFullCause(exception.getCause()) : null, obj);
 
         if (showStackTrace) {
             obj.put(STACK_TRACE, getStackTrace(exception));
@@ -390,15 +398,18 @@ public final class ExceptionUtilities {
     }
 
     public static String getFullCause(Throwable e) {
-        var t = e;
         var builder = new StringBuilder();
+        var seen = new java.util.HashSet<Throwable>();
 
-        while (t != null && (t.getCause() != null || t.getCause() != t)) {
+        // Walk the whole cause chain. Skip (don't stop on) links with empty messages so an
+        // intermediate wrapper without a message doesn't hide the root cause below it.  Guard
+        // against self- or cyclic-cause chains, which would otherwise loop forever.
+        for (var t = e; t != null && seen.add(t); t = t.getCause()) {
             var message = t.getMessage();
-            if (ExceptionUtilities.isNullOrEmpty(message)) break;
-            builder.append(t.getMessage());
-            builder.append("\n");
-            t = t.getCause();
+            if (!ExceptionUtilities.isNullOrEmpty(message)) {
+                builder.append(message);
+                builder.append("\n");
+            }
         }
 
         return builder.toString().trim();
@@ -506,14 +517,30 @@ public final class ExceptionUtilities {
         }
     }
 
+    /**
+     * Rebuild a carrier for the {@code cause} field so the underlying error chain survives a
+     * serialize -> deserialize -> re-serialize hop (gorExceptionToJson re-emits CAUSE from getCause()).
+     * Only the concatenated cause messages round-trip, not real frames, so the synthetic throwable's
+     * stack trace is cleared to avoid polluting a reconstructed stack trace with this call site.
+     */
+    private static Throwable reconstructCause(JSONObject obj) {
+        String causeText = getStringValue(obj, CAUSE);
+        if (isNullOrEmpty(causeText)) {
+            return null;
+        }
+        Throwable cause = new Throwable(causeText);
+        cause.setStackTrace(new StackTraceElement[0]);
+        return cause;
+    }
+
     private static GorException createGorSystemException(JSONObject obj) {
-        return new GorSystemException(getStringValue(obj, MESSAGE), null);
+        return new GorSystemException(getStringValue(obj, MESSAGE), reconstructCause(obj));
     }
 
     private static GorException createGorResourceException(JSONObject obj) {
         GorResourceException exception = new GorResourceException(getStringValue(obj, MESSAGE),
                 getStringValue(obj, URI),
-                null, false);
+                reconstructCause(obj), false);
 
         updateGorUserException(obj, exception);
 
