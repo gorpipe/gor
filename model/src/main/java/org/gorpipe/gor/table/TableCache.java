@@ -19,7 +19,7 @@ public abstract class TableCache<T extends Table> {
     public static final boolean useCache = Boolean.parseBoolean(System.getProperty("gor.dictionary.cache.active", "true"));
 
     final protected Cache<String, T> dictCache = Caffeine.newBuilder()
-            .maximumSize(Long.getLong("gor.dictionary.cache.maxsize", 500L))
+            .maximumSize(Long.getLong("gor.dictionary.cache.maxsize", 64L))
             .expireAfterAccess(Duration.ofHours(Long.getLong("gor.dictionary.cache.ttl.hours", 12L)))
             .softValues()
             .recordStats()
