@@ -26,13 +26,14 @@ import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** Background thread sampling heap-used (via MXBean) and RSS (via /proc on Linux). */
 public class MemorySampler {
     private final long intervalMillis;
     private volatile boolean running;
-    private volatile long peakHeap;
-    private volatile long peakRss = -1;
+    private final AtomicLong peakHeap = new AtomicLong();
+    private final AtomicLong peakRss = new AtomicLong(-1);
     private Thread thread;
 
     public MemorySampler(long intervalMillis) {
@@ -49,15 +50,22 @@ public class MemorySampler {
     private void loop() {
         while (running) {
             sampleOnce();
-            try { Thread.sleep(intervalMillis); } catch (InterruptedException e) { return; }
+            try {
+                Thread.sleep(intervalMillis);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
 
     private void sampleOnce() {
         long heap = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();
-        if (heap > peakHeap) peakHeap = heap;
+        peakHeap.accumulateAndGet(heap, Math::max);
         long rss = readRssBytes();
-        if (rss > peakRss) peakRss = rss;
+        if (rss >= 0) {
+            peakRss.accumulateAndGet(rss, Math::max);
+        }
     }
 
     /** Reads VmRSS from /proc/self/status. Returns -1 if unavailable (e.g. macOS). */
@@ -80,12 +88,19 @@ public class MemorySampler {
 
     public void stop() {
         running = false;
-        if (thread != null) thread.interrupt();
+        if (thread != null) {
+            thread.interrupt();
+            try {
+                thread.join(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
         sampleOnce();
     }
 
-    public long peakHeapUsedBytes() { return peakHeap; }
-    public long peakRssBytes() { return peakRss; }
+    public long peakHeapUsedBytes() { return peakHeap.get(); }
+    public long peakRssBytes() { return peakRss.get(); }
     public long currentHeapUsedBytes() {
         return ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();
     }
