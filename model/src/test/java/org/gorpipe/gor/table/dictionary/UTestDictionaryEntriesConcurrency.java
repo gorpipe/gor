@@ -121,4 +121,37 @@ public class UTestDictionaryEntriesConcurrency {
         Assert.assertTrue("threads did not finish", done.await(60, TimeUnit.SECONDS));
         Assert.assertTrue("concurrent getOptimizedLines threw: " + failures, failures.isEmpty());
     }
+
+    @Test
+    public void concurrentInferBucketize_consistentAndSafe() throws Exception {
+        GorDictionaryTable table = buildTable();
+        Boolean expected = table.inferShouldBucketizeFromContent();
+
+        int threads = 16;
+        int opsPerThread = 300;
+        CountDownLatch start = new CountDownLatch(1);
+        CountDownLatch done = new CountDownLatch(threads);
+        List<Throwable> failures = new CopyOnWriteArrayList<>();
+
+        for (int t = 0; t < threads; t++) {
+            Thread th = new Thread(() -> {
+                try {
+                    start.await();
+                    for (int i = 0; i < opsPerThread; i++) {
+                        // exercises the lazy contentType cache
+                        Assert.assertEquals(expected, table.inferShouldBucketizeFromContent());
+                    }
+                } catch (Throwable e) {
+                    failures.add(e);
+                } finally {
+                    done.countDown();
+                }
+            });
+            th.start();
+        }
+
+        start.countDown();
+        Assert.assertTrue("threads did not finish", done.await(60, TimeUnit.SECONDS));
+        Assert.assertTrue("concurrent inferShouldBucketizeFromContent threw: " + failures, failures.isEmpty());
+    }
 }

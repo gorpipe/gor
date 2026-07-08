@@ -51,7 +51,7 @@ public class DictionaryTableReader<T extends DictionaryEntry> extends TableInfoB
 
     private static final Logger log = LoggerFactory.getLogger(DictionaryTableReader.class);
 
-    private String contentType = null;  // For caching content type.
+    private volatile String contentType = null;  // For caching content type. volatile: lazily computed in inferShouldBucketizeFromContent() without a lock.
 
     protected IDictionaryEntries<T> tableEntries;
 
@@ -158,10 +158,15 @@ public class DictionaryTableReader<T extends DictionaryEntry> extends TableInfoB
     }
 
     public Boolean inferShouldBucketizeFromContent() {
-        if (contentType == null) {
-            contentType = getFileEndingFromContent();
+        // Read the volatile field once into a local; the computation is idempotent, so a race
+        // between concurrent callers just recomputes the same value (last write wins) rather
+        // than needing a lock. Using the local avoids returning a racily-published field read.
+        String ct = contentType;
+        if (ct == null) {
+            ct = getFileEndingFromContent();
+            contentType = ct;
         }
-        return inferShouldBucketizeFromType(contentType);
+        return inferShouldBucketizeFromType(ct);
     }
 
     public Boolean inferShouldBucketizeFromFile(String fileName) {
