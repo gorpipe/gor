@@ -22,7 +22,12 @@
 
 package org.gorpipe.test.memory;
 
+import org.gorpipe.gor.manager.TableManager;
 import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTable;
+import org.gorpipe.gor.table.lock.ExclusiveFileTableLock;
+import org.gorpipe.gor.table.lock.TableTransaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -39,6 +44,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * Reads: tag-filtered {@code filter().tags(..).get()}. Writes: insert a new data line + save.
  */
 public class TableServiceLoadDriver {
+    private static final Logger log = LoggerFactory.getLogger(TableServiceLoadDriver.class);
+
     private final List<Path> tablePaths;
     private final DictionaryFixture fixture;
     private final MemoryLoadConfig config;
@@ -70,12 +77,18 @@ public class TableServiceLoadDriver {
                         }
                     } catch (Exception e) {
                         errors.incrementAndGet();
+                        log.debug("load op failed: {}: {}", e.getClass().getSimpleName(), e.getMessage());
                     }
                 }
             });
         }
         pool.shutdown();
-        pool.awaitTermination(config.durationSeconds + 30, TimeUnit.SECONDS);
+        boolean terminated = pool.awaitTermination(config.durationSeconds + 30, TimeUnit.SECONDS);
+        if (!terminated) {
+            // Workers are still alive well past the expected run time; force them down so
+            // they don't leak and keep mutating state after run() has returned.
+            pool.shutdownNow();
+        }
         return new LoadResult(readOps.get(), writeOps.get(), errors.get());
     }
 
@@ -86,7 +99,6 @@ public class TableServiceLoadDriver {
     }
 
     private void doWrite(Path gord) throws IOException {
-        GorDictionaryTable table = fixture.openTable(gord);
         int id = ThreadLocalRandom.current().nextInt(1_000_000);
         // insert() validates that the referenced file exists and its header column
         // count matches the dictionary's existing entries, so write a minimal real
@@ -97,9 +109,20 @@ public class TableServiceLoadDriver {
             out.println("Chr\tPos\tPN\tChromoInfo\tConstData\tRandomData");
             out.println("chr1\t1\tEXTRA" + id + "\tinfo\tconst\t1");
         }
-        // insert(String...) accepts raw dictionary lines: "file\talias".
-        table.insert(dataFile + "\tEXTRA" + id);
-        table.save();
+
+        // Write through the same exclusive-lock write path the real Table Service uses
+        // (see TableManager#insert): opening a write transaction acquires the exclusive
+        // file lock, reloads the table's fresh on-disk state under that lock, and (on
+        // commit + close) saves under the same lock. This serializes concurrent writers
+        // to the same dictionary instead of racing on independent last-writer-wins temp
+        // files, which was silently dropping inserts under contention.
+        GorDictionaryTable table = fixture.openTable(gord);
+        try (TableTransaction trans = TableTransaction.openWriteTransaction(
+                ExclusiveFileTableLock.class, table, table.getName(), TableManager.DEFAULT_LOCK_TIMEOUT)) {
+            // insert(String...) accepts raw dictionary lines: "file\talias".
+            table.insert(dataFile + "\tEXTRA" + id);
+            trans.commit();
+        }
     }
 
     public static class LoadResult {
