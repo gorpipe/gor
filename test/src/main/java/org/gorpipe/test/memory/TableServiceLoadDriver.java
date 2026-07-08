@@ -69,8 +69,10 @@ public class TableServiceLoadDriver {
         AtomicLong errors = new AtomicLong();
         long deadline = System.nanoTime() + config.durationSeconds * 1_000_000_000L;
 
-        // Pre-open all tables into the cache so retention is deterministic (equals all
-        // tableCount tables regardless of which ones random ops happen to touch).
+        // Pre-open all tables into the cache. NOTE: this builds the table shells only;
+        // each table's DictionaryEntries (the retained heap payload) loads lazily on its
+        // first read, so full retention assumes every table gets at least one read during
+        // the run (guaranteed at the validation config: tableCount=4, threads=4, 3s).
         for (Path p : tablePaths) tableCache.computeIfAbsent(p, fixture::openTable);
 
         ExecutorService pool = Executors.newFixedThreadPool(config.threads);
@@ -104,8 +106,12 @@ public class TableServiceLoadDriver {
     }
 
     private void doRead(Path gord) {
-        // Use the cached instance so its read-side DictionaryEntries stay retained. Reads on
-        // a shared instance are safe: the access optimizer's getOptimizedEntries is synchronized.
+        // Reads use the shared cached instance so its DictionaryEntries stay retained.
+        // NOTE: concurrent reads share DictionaryEntries.getEntries(), whose lazy-load
+        // guard (non-volatile 'dataLoaded' double-checked outside the synchronized
+        // loadLinesAndUpdateIndices()) is a pre-existing JMM data race in product code.
+        // loadLinesAndUpdateIndices() is idempotent+synchronized so the worst case here
+        // is a redundant reload, not corruption. See ENGKNOW-3657 findings.
         GorDictionaryTable table = tableCache.get(gord);
         String tag = "PN" + ThreadLocalRandom.current().nextInt(config.fileCount);
         table.filter().tags(tag).get();
