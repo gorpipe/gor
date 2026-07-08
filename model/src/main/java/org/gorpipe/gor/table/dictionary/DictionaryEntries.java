@@ -37,26 +37,35 @@ import java.util.stream.Collectors;
 /**
  * Class that handles the loading caching of and working with table entries.
  *
- * Class is thread safe.
+ * <p>Thread-safety: safe for concurrent <b>reads</b> on a shared instance, including
+ * concurrent lazy first-load. Loaders and mutators ({@code insert}/{@code delete}/
+ * {@code clear}/{@code loadLinesAndUpdateIndices}/{@code updateTagMap}/{@code updateContentMap})
+ * are {@code synchronized}, and the lazily-published state fields are {@code volatile} so the
+ * unsynchronized read accessors observe fully-constructed data. Mutation must be externally
+ * serialized and must NOT run concurrently with reads on the same instance (structural
+ * modification of the backing list would break in-flight iteration); share a read-only instance
+ * for concurrent reads and use a separate instance for writes.
  */
 public class DictionaryEntries<T extends DictionaryEntry> implements IDictionaryEntries<T> {
     private static final Logger log = LoggerFactory.getLogger(DictionaryEntries.class);
     private final IDictionaryEntryFactory<T> factory;
 
-    private List<T> rawLines;
+    // volatile: lazily built under synchronized builders, but read by unsynchronized accessors
+    // (e.g. getEntries()/isLoaded()); volatile gives those reads safe publication.
+    private volatile List<T> rawLines;
 
     // For indices we use hashed values.  Insert into the dict is much much faster, and it takes a lot less space.  Getting data takes
     // a little bit longer as you could get small list of values you need to loop through.
-    private ListMultimap<Integer, T> tagHashToLines;  // tags here means aliases and tags.
-    private ListMultimap<Integer, T> contentHashToLines;
+    private volatile ListMultimap<Integer, T> tagHashToLines;  // tags here means aliases and tags.
+    private volatile ListMultimap<Integer, T> contentHashToLines;
 
-    private Multiset<String> activeTags;
-    private int deletedEntriesCount = 0;
+    private volatile Multiset<String> activeTags;
+    private int deletedEntriesCount = 0;  // only mutated/read under (or after) a synchronized builder.
     private final TableInfo table;
 
-    private boolean dataLoaded = false;
-    private boolean tagHashLoaded = false;
-    private boolean contentMapLoaded = false;
+    private volatile boolean dataLoaded = false;
+    private volatile boolean tagHashLoaded = false;
+    private volatile boolean contentMapLoaded = false;
 
     /**
      * Construct new dict file from the given path and chromosome cache.
