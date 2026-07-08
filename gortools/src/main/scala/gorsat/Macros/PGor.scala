@@ -97,7 +97,15 @@ class PGor extends MacroInfo("PGOR", CommandArguments("-nowithin", "-gordfolder"
     val partitionKey = "[" + theKey + "_" + replacePattern + "]"
     val newQuery = gorReplacement + replacePattern + queryAppend
 
-    if (useGordFolder && cachePath != null && cachePath.length > 1) {
+    // Only clear the existing gord folder when the result is not already cached for this
+    // signature. When it is cached, the write is skipped at execution time; deleting the folder
+    // here would leave the skipped write with nothing to build the dictionary from (ENGKNOW-3656).
+    // Note: fileCacheLookup only checks for a cache entry, slightly looser than the execution-time
+    // skip (GeneralQueryHandler.executeBatch also verifies the resolved file exists and the link is
+    // current). The gap only matters if the same folder path is reused by a different query on a
+    // persistent cache and the older query is then re-run; see ENGKNOW-3656.
+    if (useGordFolder && cachePath != null && cachePath.length > 1
+        && !MacroUtilities.fileCacheLookup(context, create.signature)._2) {
       context.getSession.getProjectContext.getSystemFileReader.deleteDirectory(cachePath)
     }
 
