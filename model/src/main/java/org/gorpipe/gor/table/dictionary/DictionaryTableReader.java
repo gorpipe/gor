@@ -55,7 +55,9 @@ public class DictionaryTableReader<T extends DictionaryEntry> extends TableInfoB
 
     protected IDictionaryEntries<T> tableEntries;
 
-    protected DictionaryAccessOptimizer tableAccessOptimizer;
+    // volatile: lazily built in getTableAccessOptimizer() (double-checked) and cleared in reload();
+    // volatile gives safe publication to concurrent readers.
+    protected volatile DictionaryAccessOptimizer tableAccessOptimizer;
 
     protected IDictionaryEntryFactory<T> factory;
 
@@ -322,10 +324,19 @@ public class DictionaryTableReader<T extends DictionaryEntry> extends TableInfoB
     }
 
     protected DictionaryAccessOptimizer getTableAccessOptimizer() {
-        if (tableAccessOptimizer == null) {
-            tableAccessOptimizer = new DefaultTableAccessOptimizer(this, tableEntries);
+        // Double-checked locking on the volatile field: concurrent readers get a single,
+        // safely-published optimizer instead of racing to build separate ones.
+        DictionaryAccessOptimizer optimizer = tableAccessOptimizer;
+        if (optimizer == null) {
+            synchronized (this) {
+                optimizer = tableAccessOptimizer;
+                if (optimizer == null) {
+                    optimizer = new DefaultTableAccessOptimizer(this, tableEntries);
+                    tableAccessOptimizer = optimizer;
+                }
+            }
         }
-        return tableAccessOptimizer;
+        return optimizer;
     }
 
     
