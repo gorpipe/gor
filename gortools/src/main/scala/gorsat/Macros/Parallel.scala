@@ -77,7 +77,11 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     val useGordFolders: Boolean = CommandParseUtilities.hasOption(options, "-gordfolder") || hasDictFolderWrite
     if (useGordFolders) {
       cachePath = PathUtils.markAsFolder(theCachePath)
-      if (cachePath != null && cachePath.length > 1) {
+      // Only clear the gord folder when the result is not already cached for this signature;
+      // a cached result means the write is skipped at execution and the folder must survive
+      // for the dictionary build (ENGKNOW-3656).
+      if (cachePath != null && cachePath.length > 1
+          && !MacroUtilities.fileCacheLookup(context, create.signature)._2) {
         context.getSession.getProjectContext.getSystemFileReader.deleteDirectory(cachePath)
       }
     }
