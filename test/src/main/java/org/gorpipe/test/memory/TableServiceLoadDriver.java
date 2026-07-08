@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +43,11 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Drives a mixed read+write load against a set of Gor dictionaries using a thread pool.
  * Reads: tag-filtered {@code filter().tags(..).get()}. Writes: insert a new data line + save.
+ *
+ * <p>Read-side table instances are cached (keyed by dictionary path) so their in-memory
+ * {@code DictionaryEntries} stay retained for the lifetime of the run, modeling a
+ * session/table cache in the real Table Service. Writes deliberately bypass the cache and
+ * always go through the faithful locked-transaction path on a fresh instance.
  */
 public class TableServiceLoadDriver {
     private static final Logger log = LoggerFactory.getLogger(TableServiceLoadDriver.class);
@@ -49,6 +55,7 @@ public class TableServiceLoadDriver {
     private final List<Path> tablePaths;
     private final DictionaryFixture fixture;
     private final MemoryLoadConfig config;
+    private final ConcurrentHashMap<Path, GorDictionaryTable> tableCache = new ConcurrentHashMap<>();
 
     public TableServiceLoadDriver(List<Path> tablePaths, DictionaryFixture fixture, MemoryLoadConfig config) {
         this.tablePaths = tablePaths;
@@ -61,6 +68,10 @@ public class TableServiceLoadDriver {
         AtomicLong writeOps = new AtomicLong();
         AtomicLong errors = new AtomicLong();
         long deadline = System.nanoTime() + config.durationSeconds * 1_000_000_000L;
+
+        // Pre-open all tables into the cache so retention is deterministic (equals all
+        // tableCount tables regardless of which ones random ops happen to touch).
+        for (Path p : tablePaths) tableCache.computeIfAbsent(p, fixture::openTable);
 
         ExecutorService pool = Executors.newFixedThreadPool(config.threads);
         for (int i = 0; i < config.threads; i++) {
@@ -93,7 +104,9 @@ public class TableServiceLoadDriver {
     }
 
     private void doRead(Path gord) {
-        GorDictionaryTable table = fixture.openTable(gord);
+        // Use the cached instance so its read-side DictionaryEntries stay retained. Reads on
+        // a shared instance are safe: the access optimizer's getOptimizedEntries is synchronized.
+        GorDictionaryTable table = tableCache.get(gord);
         String tag = "PN" + ThreadLocalRandom.current().nextInt(config.fileCount);
         table.filter().tags(tag).get();
     }

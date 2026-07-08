@@ -104,4 +104,13 @@ public class MemorySampler {
     public long currentHeapUsedBytes() {
         return ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();
     }
+
+    /** Best-effort retained heap: forces GC twice then reads heap-used. Approximate but stable enough for scaling comparisons. */
+    public static long measureRetainedHeapBytes() {
+        for (int i = 0; i < 2; i++) {
+            System.gc();
+            try { Thread.sleep(100); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        }
+        return ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();
+    }
 }

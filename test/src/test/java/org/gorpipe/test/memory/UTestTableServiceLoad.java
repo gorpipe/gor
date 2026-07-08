@@ -34,25 +34,26 @@ import static org.junit.Assert.assertTrue;
 @Category(SlowTests.class)
 public class UTestTableServiceLoad {
 
-    private long peakHeapForFileCount(int fileCount) throws Exception {
+    private long retainedDeltaForFileCount(int fileCount) throws Exception {
         Path root = Files.createTempDirectory("memtest-scale-" + fileCount);
         MemoryLoadConfig config = new MemoryLoadConfig(fileCount, 20, 100, 4, 4, 70, 3);
-        MemorySampler sampler = new MemorySampler(50);
-        sampler.start();
+        long baseline = MemorySampler.measureRetainedHeapBytes();
         DictionaryFixture fixture = new DictionaryFixture(root);
         var tables = fixture.createTables(config);
-        new TableServiceLoadDriver(tables, fixture, config).run();
-        System.gc();
-        Thread.sleep(200);
-        sampler.stop();
-        return sampler.peakHeapUsedBytes();
+        TableServiceLoadDriver driver = new TableServiceLoadDriver(tables, fixture, config);
+        driver.run(); // pre-opens + retains all tables in driver.tableCache
+        long retained = MemorySampler.measureRetainedHeapBytes();
+        long delta = retained - baseline;
+        // keep driver (and its retained tables) alive until AFTER measurement:
+        assertTrue("driver retained", driver != null);
+        return delta;
     }
 
     @Test
-    public void peakHeapScalesWithDictionarySize() throws Exception {
-        long small = peakHeapForFileCount(500);
-        long large = peakHeapForFileCount(8000);
-        assertTrue("peak heap should grow with dictionary size: small=" + small + " large=" + large,
+    public void retainedHeapScalesWithDictionarySize() throws Exception {
+        long small = retainedDeltaForFileCount(500);
+        long large = retainedDeltaForFileCount(8000);
+        assertTrue("retained heap should grow with dictionary size: small=" + small + " large=" + large,
                 large > small * 1.5);
     }
 }

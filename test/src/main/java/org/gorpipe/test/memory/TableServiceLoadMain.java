@@ -55,7 +55,10 @@ public class TableServiceLoadMain {
             sampler.stop();
             long peakHeapMB = sampler.peakHeapUsedBytes() / (1024 * 1024);
             long peakRssMB = sampler.peakRssBytes() < 0 ? -1 : sampler.peakRssBytes() / (1024 * 1024);
-            return "peakHeapMB=" + peakHeapMB + " peakRssMB=" + peakRssMB + " " + result;
+            // driver still in scope here, tables retained in its cache, so this measures
+            // heap that survives GC while the dictionary tables are still held.
+            long retainedMB = MemorySampler.measureRetainedHeapBytes() / (1024 * 1024);
+            return "peakHeapMB=" + peakHeapMB + " peakRssMB=" + peakRssMB + " retainedHeapMB=" + retainedMB + " " + result;
         } finally {
             sampler.stop();
         }
