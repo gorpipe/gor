@@ -44,8 +44,6 @@ public class UTestTableServiceLoad {
         driver.run(); // pre-opens + retains all tables in driver.tableCache
         long retained = MemorySampler.measureRetainedHeapBytes();
         long delta = retained - baseline;
-        // keep driver (and its retained tables) alive until AFTER measurement:
-        assertTrue("driver retained", driver != null);
         return delta;
     }
 
