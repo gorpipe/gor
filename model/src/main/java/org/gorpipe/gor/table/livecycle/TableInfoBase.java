@@ -47,7 +47,7 @@ public abstract class TableInfoBase implements TableInfo {
     private final String linkPath;      // Path to the link file.
     private final String rootUri;       // uri to table root (just to improve performance when working with uri's).
     private String name;          // Name of the table.
-    protected String id = null;         // Unique id (based on full path (and possibly timestamp), just so we don't always have to refer to full path).
+    protected volatile String id = null;         // Unique id (based on full path (and possibly timestamp), just so we don't always have to refer to full path).  volatile: lazily computed in getId() without synchronization.
 
     protected TableHeader header; // Header info.
 

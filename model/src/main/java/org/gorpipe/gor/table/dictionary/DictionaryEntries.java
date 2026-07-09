@@ -37,25 +37,35 @@ import java.util.stream.Collectors;
 /**
  * Class that handles the loading caching of and working with table entries.
  *
- * Class is thread safe.
+ * <p>Thread-safety: safe for concurrent <b>reads</b> on a shared instance, including
+ * concurrent lazy first-load. Loaders and mutators ({@code insert}/{@code delete}/
+ * {@code clear}/{@code loadLinesAndUpdateIndices}/{@code updateTagMap}/{@code updateContentMap})
+ * are {@code synchronized}, and the lazily-published state fields are {@code volatile} so the
+ * unsynchronized read accessors observe fully-constructed data. Mutation must be externally
+ * serialized and must NOT run concurrently with reads on the same instance (structural
+ * modification of the backing list would break in-flight iteration); share a read-only instance
+ * for concurrent reads and use a separate instance for writes.
  */
 public class DictionaryEntries<T extends DictionaryEntry> implements IDictionaryEntries<T> {
     private static final Logger log = LoggerFactory.getLogger(DictionaryEntries.class);
     private final IDictionaryEntryFactory<T> factory;
 
-    private List<T> rawLines;
+    // volatile: lazily built under synchronized builders, but read by unsynchronized accessors
+    // (e.g. getEntries()/isLoaded()); volatile gives those reads safe publication.
+    private volatile List<T> rawLines;
 
     // For indices we use hashed values.  Insert into the dict is much much faster, and it takes a lot less space.  Getting data takes
     // a little bit longer as you could get small list of values you need to loop through.
-    private ListMultimap<Integer, T> tagHashToLines;  // tags here means aliases and tags.
-    private ListMultimap<Integer, T> contentHashToLines;
+    private volatile ListMultimap<Integer, T> tagHashToLines;  // tags here means aliases and tags.
+    private volatile ListMultimap<Integer, T> contentHashToLines;
 
-    private Multiset<String> activeTags;
-    private int deletedEntriesCount = 0;
+    private volatile Multiset<String> activeTags;
+    private int deletedEntriesCount = 0;  // only mutated/read under (or after) a synchronized builder.
     private final TableInfo table;
 
-    private boolean dataLoaded = false;
-    private boolean tagHashLoaded = false;
+    private volatile boolean dataLoaded = false;
+    private volatile boolean tagHashLoaded = false;
+    private volatile boolean contentMapLoaded = false;
 
     /**
      * Construct new dict file from the given path and chromosome cache.
@@ -152,9 +162,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
 
     @Override
     public Iterator<T> getActiveEntries() {
-        if (!dataLoaded) {
-            loadLinesAndUpdateIndices();
-        }
+        updateContentMap();
         return new Iterator<T>() {
 
             int nextIndex = 0;
@@ -186,14 +194,13 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
 
     @Override
     public Set<String> getAllActiveTags() {
-        if (!dataLoaded) {
-            loadLinesAndUpdateIndices();
-        }
+        updateContentMap();
         return activeTags.elementSet();
     }
 
     @Override
     public boolean hasDeletedEntries() {
+        updateContentMap();
         return deletedEntriesCount > 0;
     }
 
@@ -204,18 +211,24 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
 
     @Override
     public int getActiveLinesCount() {
+        updateContentMap();
         int size = getEntries().size();
         return size - deletedEntriesCount;
     }
 
 
-    private void updateContentMap() {
+    synchronized private void updateContentMap() {
+        if (contentMapLoaded) return;
+        if (!dataLoaded) {
+            loadLinesAndUpdateIndices();
+        }
         contentHashToLines = ArrayListMultimap.create(rawLines.size(), 1);
         activeTags = HashMultiset.create();
-
+        deletedEntriesCount = 0;
         for (T entry : rawLines) {
             addEntryToContentMap(entry);
         }
+        contentMapLoaded = true;
     }
 
     synchronized private void updateTagMap() {
@@ -274,6 +287,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
         contentHashToLines = null;
         activeTags = null;
         deletedEntriesCount = 0;
+        contentMapLoaded = false;
     }
 
     private void clearTagMap() {
@@ -285,7 +299,6 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
         if (dataLoaded) return;
         log.trace("Loading entries into table {} {}", table.getName(), table);
         this.rawLines = this.loadLines();
-        this.updateContentMap();
         if (table.getColumns().length == 0 && !this.rawLines.isEmpty()) {
             try {
                 // Update header from the first file.
@@ -338,6 +351,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
     public T findLine(T line) {
         // Using contentHashMap
         List<T> allLines = getEntries();
+        updateContentMap();
         List<T> lines2Search = contentHashToLines != null ? contentHashToLines.get(line.getSearchHash()) : allLines;
 
         return lines2Search != null ? lines2Search.stream().filter(l -> l.equals(line)).findFirst().orElse(null) : null;
