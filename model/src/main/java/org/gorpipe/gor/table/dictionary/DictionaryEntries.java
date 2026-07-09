@@ -45,6 +45,10 @@ import java.util.stream.Collectors;
  * serialized and must NOT run concurrently with reads on the same instance (structural
  * modification of the backing list would break in-flight iteration); share a read-only instance
  * for concurrent reads and use a separate instance for writes.
+ *
+ * <p>The public read accessors ({@code getEntries()}/{@code getAllActiveTags()}) return
+ * <b>unmodifiable</b> views so callers cannot structurally modify the shared internal state;
+ * copy the result if a mutable list is needed (see {@code selectAll()}).
  */
 public class DictionaryEntries<T extends DictionaryEntry> implements IDictionaryEntries<T> {
     private static final Logger log = LoggerFactory.getLogger(DictionaryEntries.class);
@@ -94,7 +98,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
             delete(oldLine, true);
         }
 
-        getEntries().add(line);
+        loadedEntries().add(line);
 
         addEntryToContentMap(line);
         addEntryToTagMap(line);
@@ -110,7 +114,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
     synchronized public void delete(T lineToRemove, boolean keepIfBucket) {
         T line = this.findLine(lineToRemove);
         if (line != null) {
-            getEntries().remove(line);
+            loadedEntries().remove(line);
             removeEntryFromContentMap(line);
             removeEntryFromTagMap(line);
 
@@ -118,7 +122,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
                 // NOTE: the deleted flag is part of the hashCode so we remove and add again if we change it.
                 T entry = (T) DictionaryEntry.copy(line);
                 entry.setDeleted(true);
-                getEntries().add(entry);
+                loadedEntries().add(entry);
                 addEntryToContentMap(entry);
                 addEntryToTagMap(entry);
             }
@@ -127,6 +131,8 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
 
     @Override
     synchronized public void clear() {
+        // We deliberatly set list/maps to null, instead of clearing.  This is because someone could be reading
+        // the buffers and we want to let them finish.
         dataLoaded = false;
         this.rawLines = null;
         clearContentMap();
@@ -135,16 +141,32 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
 
     @Override
     public List<T> getEntries() {
-        if (!this.dataLoaded) {
-            loadLinesAndUpdateIndices();
-        }
+        // Return an unmodifiable view: the backing list is shared across concurrent readers and
+        // must not be structurally modified from the outside (see class-level thread-safety note).
+        return Collections.unmodifiableList(loadedEntries());
+    }
 
-        return this.rawLines;
+    /**
+     * Load the entries if needed and return the live backing list.
+     *
+     * <p>Reads {@code rawLines} into a single local so the load check and the returned reference are
+     * the same read; a separate re-read of the volatile field could observe {@code null} if a
+     * concurrent {@code clear()} slipped in (which the contract forbids, but the local read makes the
+     * accessor robust anyway). For internal use only — mutators hold the instance lock; read
+     * accessors that expose the result to callers must wrap it (see {@link #getEntries()}).
+     */
+    private List<T> loadedEntries() {
+        List<T> lines = this.rawLines;
+        if (!this.dataLoaded || lines == null) {
+            loadLinesAndUpdateIndices();
+            lines = this.rawLines;
+        }
+        return lines;
     }
 
     @Override
     public List<T> getEntries(String... aliasesAndTags) {
-        List<T> lines2Search = getEntries();
+        List<T> lines2Search = loadedEntries();
         updateTagMap();
         if (tagHashToLines != null && aliasesAndTags != null) {
             // If we have tags and tag map to lines we use that to get a better list of lines to search..
@@ -195,7 +217,10 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
     @Override
     public Set<String> getAllActiveTags() {
         updateContentMap();
-        return activeTags.elementSet();
+        // Read the volatile once and wrap: elementSet() is a live view of the internal multiset and
+        // supports remove()/clear(), so it must be made unmodifiable before it escapes to callers.
+        Multiset<String> tags = this.activeTags;
+        return tags != null ? Collections.unmodifiableSet(tags.elementSet()) : Collections.emptySet();
     }
 
     @Override
@@ -206,13 +231,13 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
 
     @Override
     public int size() {
-        return getEntries().size();
+        return loadedEntries().size();
     }
 
     @Override
     public int getActiveLinesCount() {
         updateContentMap();
-        int size = getEntries().size();
+        int size = loadedEntries().size();
         return size - deletedEntriesCount;
     }
 
@@ -233,6 +258,9 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
 
     synchronized private void updateTagMap() {
         if (tagHashLoaded) return;
+        if (!dataLoaded) {
+            loadLinesAndUpdateIndices();
+        }
         tagHashToLines = ArrayListMultimap.create(rawLines.size(), 1);
         for (T entry : rawLines) {
             addEntryToTagMap(entry);
@@ -350,7 +378,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
     @Override
     public T findLine(T line) {
         // Using contentHashMap
-        List<T> allLines = getEntries();
+        List<T> allLines = loadedEntries();
         updateContentMap();
         List<T> lines2Search = contentHashToLines != null ? contentHashToLines.get(line.getSearchHash()) : allLines;
 
@@ -361,7 +389,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
         String[] linekey = line.getFilterTags();
 
         // Using contentHashMap
-        List<T> lines2Search = getEntries();
+        List<T> lines2Search = loadedEntries();
         if (tagHashToLines != null) {
             lines2Search = new ArrayList<>();
             for (String tag : linekey) {
