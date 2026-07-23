@@ -220,4 +220,31 @@ public class UTestGorWriteFolder {
                 "-cachedir", cachePath.toString());
         Assert.assertEquals("pgor write gord should contain chr2 + chr19 rows", 15001L + 10002L, rowCount);
     }
+
+    // Overwrite an existing gord folder with entirely DIFFERENT data on a cache MISS (the two
+    // writes use different queries -> different signatures -> the second is a genuine
+    // delete-and-rewrite, not a skipped cache hit). The folder must be replaced, not appended to:
+    // if stale parts from the first write survived (a superset dictionary) the counts below break.
+    @Test
+    public void testPgorOverwriteGordFolderWithDifferentDataOnCacheMiss() {
+        var folderpath = workDirPath.resolve("overwrite.gord");
+        var gorroot = workDirPath.toAbsolutePath().toString();
+
+        // First write: 1000 chr1 rows.
+        TestUtils.runGorPipe("pgor <(gorrows -p chr1:1000-2000) | write " + folderpath,
+                "-gorroot", gorroot, "-cachedir", cachePath.toString());
+
+        // Overwrite with 2000 chr2 rows (disjoint from the first write, different query).
+        TestUtils.runGorPipe("pgor <(gorrows -p chr2:1000-3000) | write " + folderpath,
+                "-gorroot", gorroot, "-cachedir", cachePath.toString());
+
+        // Only the second write's data may remain: 2000 rows, none on chr1.
+        long total = TestUtils.runGorPipeCount(new String[]{"gor " + folderpath,
+                "-gorroot", gorroot, "-cachedir", cachePath.toString()}, false);
+        Assert.assertEquals("overwrite must replace, not append: only the 2000 chr2 rows", 2000L, total);
+
+        long staleChr1 = TestUtils.runGorPipeCount(new String[]{"gor -p chr1 " + folderpath,
+                "-gorroot", gorroot, "-cachedir", cachePath.toString()}, false);
+        Assert.assertEquals("no stale chr1 rows from the first write may remain", 0L, staleChr1);
+    }
 }
