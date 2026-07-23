@@ -193,6 +193,34 @@ public class MdrServer {
         }
     }
 
+    /**
+     * Validate that an MDR response resolved to exactly one usable (non-blank) url.
+     * Pure and network-free so it can be unit tested directly.
+     *
+     * @throws GorResourceException if the response is null, does not contain exactly one
+     *                              url, or the single url is null/blank.
+     */
+    public static MdrUrlsResultItem validateResolved(MdrUrlsResult result, URI mdrUrl) {
+        String docId = mdrUrl != null ? extractDocumentId(mdrUrl) : null;
+        if (result == null || result.urls() == null) {
+            throw new GorResourceException(
+                    "Invalid response from MDR for document " + docId, String.valueOf(mdrUrl));
+        }
+        if (result.urls().size() != 1) {
+            throw new GorResourceException(
+                    "Invalid response from MDR, only one source allowed per request, got "
+                            + result.urls().size() + " for document " + docId,
+                    String.valueOf(mdrUrl));
+        }
+        MdrUrlsResultItem item = result.urls().get(0);
+        if (item == null || item.url() == null || item.url().isBlank()) {
+            throw new GorResourceException(
+                    "MDR could not resolve document " + docId + " (no url returned)",
+                    String.valueOf(mdrUrl));
+        }
+        return item;
+    }
+
     private MdrUrlsResult getMdrDocument(URI url) {
         try {
             var mdrUri = constructUrl(url);
@@ -202,11 +230,7 @@ public class MdrServer {
 
             var mdrResult = MdrUrlsResult.fromJSON(result);
 
-            if (mdrResult == null) {
-                throw new GorResourceException("Invalid response from MDR: " + result, url.toString());
-            } else if (mdrResult.urls().size() != 1) {
-                throw new GorResourceException("Invalid response from MDR, only one source allowed per request, got " + mdrResult.urls().size(), url.toString());
-            }
+            validateResolved(mdrResult, url);
             return mdrResult;
         } catch (URISyntaxException e) {
             throw new GorResourceException("Invalid uri: " + url, url.toString(), e);
