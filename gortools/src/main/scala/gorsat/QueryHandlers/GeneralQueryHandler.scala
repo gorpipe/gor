@@ -114,9 +114,18 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     cmdUpper.startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART) || cmdUpper.startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER)
   }
 
-  def generateDictionaryFile(commandToExecute: String, fileRoot: String, fileReader: FileReader, useMd5: Boolean, cacheFile: String): Unit = {
-    if (isDictionaryFolderMacro(commandToExecute.toUpperCase()) && !fileReader.exists(PathUtils.resolve(fileRoot, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
-      runCommand(context, commandToExecute, cacheFile, useMd5, theTheDict = true)
+  def generateDictionaryFile(commandToExecute: String, fileReader: FileReader, useMd5: Boolean, cacheFile: String): Unit = {
+    if (isDictionaryFolderMacro(commandToExecute.toUpperCase())) {
+      // On a cache hit `cacheFile` may be a `<fingerprint>.gord.link` entry. Resolve it to the real
+      // gord folder before deciding anything: the old guard checked project-root/thedict.gord so it
+      // never matched and always rebuilt, and the rebuild ran through the unresolved link
+      // -> thedict.gord written INSIDE the `.gord.link` file -> "Not a directory" (ENGKNOW-3670).
+      val resolvedFolder = fileReader.resolveUrl(cacheFile, false).getFullPath()
+      if (!fileReader.exists(PathUtils.resolve(resolvedFolder, GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME))) {
+        // Fallback (partial/corrupt cache): rebuild the dictionary, but target the resolved folder,
+        // never the raw `.gord.link` path.
+        runCommand(context, commandToExecute, resolvedFolder, useMd5, theTheDict = true)
+      }
     }
   }
 
@@ -124,7 +133,6 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     val fileNames = new Array[String](commandSignatures.length)
     val fileCache = context.getSession.getProjectContext.getFileCache
     val fileReader = context.getSession.getProjectContext.getFileReader
-    val fileRoot = context.getSession.getProjectContext.getProjectRoot
     var commandList: List[() => Unit] = Nil
     val useMd5 = System.getProperty("gor.caching.md5.enabled", "false").toBoolean
 
@@ -146,7 +154,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
               runAndStoreInCache(nested, fileCache, useMd5)
             }
           } else {
-            generateDictionaryFile(commandToExecute, fileRoot, fileReader, useMd5, cacheFile)
+            generateDictionaryFile(commandToExecute, fileReader, useMd5, cacheFile)
             nested.cached(cacheFile)
             cacheFile
           }
