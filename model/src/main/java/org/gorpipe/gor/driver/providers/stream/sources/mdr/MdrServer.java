@@ -203,7 +203,7 @@ public class MdrServer {
                     }
                 }
             });
-        } catch (Throwable e) {
+        } catch (Exception e) {
             // Bulk caching is a best-effort optimization; individual sources are still
             // resolved (and fail loud) at read time via resolveMdrUrl/getMdrDocument.
             log.warn("MDR bulk url caching failed; falling back to per-source resolution", e);
