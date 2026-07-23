@@ -157,6 +157,12 @@ public class MdrServer {
             mdrDocument = mdrResult.urls().get(0);
         }
 
+        if (mdrDocument.url() == null || mdrDocument.url().isBlank()) {
+            throw new GorResourceException(
+                    "MDR could not resolve document " + extractDocumentId(uri) + " (no url returned)",
+                    uri.toString());
+        }
+
         return mdrDocument.url();
     }
 
