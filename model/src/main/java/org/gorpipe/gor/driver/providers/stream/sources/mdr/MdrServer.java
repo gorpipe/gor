@@ -8,6 +8,8 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.SourceRef;
 import org.gorpipe.util.http.keycloak.KeycloakClientAuthRequester;
 import org.gorpipe.util.http.utils.HttpUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -21,6 +23,8 @@ import java.util.concurrent.TimeUnit;
 public class MdrServer {
 
     public static final String DEFAULT_MDR_SERVER_NAME = "default";
+
+    private static final Logger log = LoggerFactory.getLogger(MdrServer.class);
 
     private static final String MDR_PATH = "/api/v1/documents/urls";
     private static final String URL_TYPE = "url_type";
@@ -187,6 +191,10 @@ public class MdrServer {
 
             // Cache all entries
             mdrResult.urls().forEach(u -> {
+                if (u.url() == null || u.url().isBlank()) {
+                    log.warn("MDR bulk resolution returned no url for document {}; leaving mdr:// url for per-source resolution", u.document_id());
+                    return;
+                }
                 documentCache.put(new MdrDocumentCacheKey(u.document_id(), mdrResult.url_type()), u);
                 for (var s : sources) {
                     if (s.file.startsWith("mdr://" + u.document_id())) {
@@ -195,7 +203,9 @@ public class MdrServer {
                 }
             });
         } catch (Throwable e) {
-            // Ignore errors and leave mdr:// urls as is, i.e. not cached.
+            // Bulk caching is a best-effort optimization; individual sources are still
+            // resolved (and fail loud) at read time via resolveMdrUrl/getMdrDocument.
+            log.warn("MDR bulk url caching failed; falling back to per-source resolution", e);
         }
     }
 
