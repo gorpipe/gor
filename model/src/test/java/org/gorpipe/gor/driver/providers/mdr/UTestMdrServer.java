@@ -63,4 +63,10 @@ public class UTestMdrServer {
                 () -> MdrServer.validateResolved(
                         result(item("s3://a"), item("s3://b")), MDR_URL));
     }
+
+    @Test
+    public void nullUrlsListThrows() {
+        Assert.assertThrows(GorResourceException.class,
+                () -> MdrServer.validateResolved(new MdrUrlsResult("direct", null), MDR_URL));
+    }
 }

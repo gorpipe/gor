@@ -157,8 +157,9 @@ public class MdrServer {
 
         if (mdrDocument == null) {
             var mdrResult = getMdrDocument(uri);
-            documentCache.put(new MdrDocumentCacheKey(extractDocumentId(uri), mdrResult.url_type()), mdrResult.urls().get(0));
-            mdrDocument = mdrResult.urls().get(0);
+            var item = mdrResult.urls().get(0);
+            documentCache.put(new MdrDocumentCacheKey(extractDocumentId(uri), mdrResult.url_type()), item);
+            mdrDocument = item;
         }
 
         if (mdrDocument.url() == null || mdrDocument.url().isBlank()) {
