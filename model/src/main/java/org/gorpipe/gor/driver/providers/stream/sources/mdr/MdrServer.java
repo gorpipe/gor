@@ -8,6 +8,8 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.SourceRef;
 import org.gorpipe.util.http.keycloak.KeycloakClientAuthRequester;
 import org.gorpipe.util.http.utils.HttpUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -21,6 +23,8 @@ import java.util.concurrent.TimeUnit;
 public class MdrServer {
 
     public static final String DEFAULT_MDR_SERVER_NAME = "default";
+
+    private static final Logger log = LoggerFactory.getLogger(MdrServer.class);
 
     private static final String MDR_PATH = "/api/v1/documents/urls";
     private static final String URL_TYPE = "url_type";
@@ -146,18 +150,41 @@ public class MdrServer {
     }
 
     public String resolveMdrUrl(URI uri) {
-        var query = uri.getQuery() != null ? uri.getQuery() : "";
+        var urlType = resolveUrlType(uri);
 
-        var mdrDocument = documentCache.getIfPresent(new MdrDocumentCacheKey(extractDocumentId(uri),
-                query.contains(URL_TYPE_PRESIGNED) ? URL_TYPE_PRESIGNED : URL_TYPE_DIRECT));
+        var mdrDocument = documentCache.getIfPresent(
+                new MdrDocumentCacheKey(extractDocumentId(uri), urlType));
 
         if (mdrDocument == null) {
-            var mdrResult = getMdrDocument(uri);
-            documentCache.put(new MdrDocumentCacheKey(extractDocumentId(uri), mdrResult.url_type()), mdrResult.urls().get(0));
-            mdrDocument = mdrResult.urls().get(0);
+            var item = getMdrDocument(uri);
+            documentCache.put(new MdrDocumentCacheKey(extractDocumentId(uri), urlType), item);
+            mdrDocument = item;
+        }
+
+        if (mdrDocument.url() == null || mdrDocument.url().isBlank()) {
+            throw new GorResourceException(
+                    "MDR could not resolve document " + extractDocumentId(uri) + " (no url returned)",
+                    uri.toString());
         }
 
         return mdrDocument.url();
+    }
+
+    /**
+     * Determine the url_type used as the cache key for a given mdr:// uri.
+     * Must derive purely from the request (uri + config default) so that the
+     * cache-write key matches the cache-read key: the read happens before any
+     * server call, so it cannot depend on the server-echoed url_type.
+     */
+    public static String resolveUrlType(URI uri) {
+        var query = uri.getQuery() != null ? uri.getQuery() : "";
+        if (query.contains(URL_TYPE_PRESIGNED)) {
+            return URL_TYPE_PRESIGNED;
+        }
+        if (query.contains(URL_TYPE_DIRECT)) {
+            return URL_TYPE_DIRECT;
+        }
+        return defaultConfig.mdrDefaultLinkType();
     }
 
     public void cacheMdrUrls(List<SourceRef> sources) {
@@ -175,12 +202,16 @@ public class MdrServer {
             var result = getAuthorizedClient().post(mdrUri, payload);
             var mdrResult = MdrUrlsResult.fromJSON(result);
 
-            if (mdrResult == null) {
+            if (mdrResult == null || mdrResult.urls() == null) {
                 throw new GorResourceException("Invalid response from MDR", mdrUri.toString());
             }
 
             // Cache all entries
             mdrResult.urls().forEach(u -> {
+                if (u.url() == null || u.url().isBlank()) {
+                    log.warn("MDR bulk resolution returned no url for document {}; leaving mdr:// url for per-source resolution", u.document_id());
+                    return;
+                }
                 documentCache.put(new MdrDocumentCacheKey(u.document_id(), mdrResult.url_type()), u);
                 for (var s : sources) {
                     if (s.file.startsWith("mdr://" + u.document_id())) {
@@ -188,12 +219,42 @@ public class MdrServer {
                     }
                 }
             });
-        } catch (Throwable e) {
-            // Ignore errors and leave mdr:// urls as is, i.e. not cached.
+        } catch (Exception e) {
+            // Bulk caching is a best-effort optimization; individual sources are still
+            // resolved (and fail loud) at read time via resolveMdrUrl/getMdrDocument.
+            log.warn("MDR bulk url caching failed; falling back to per-source resolution", e);
         }
     }
 
-    private MdrUrlsResult getMdrDocument(URI url) {
+    /**
+     * Validate that an MDR response resolved to exactly one usable (non-blank) url.
+     * Pure and network-free so it can be unit tested directly.
+     *
+     * @throws GorResourceException if the response is null, does not contain exactly one
+     *                              url, or the single url is null/blank.
+     */
+    public static MdrUrlsResultItem validateResolved(MdrUrlsResult result, URI mdrUrl) {
+        String docId = mdrUrl != null ? extractDocumentId(mdrUrl) : null;
+        if (result == null || result.urls() == null) {
+            throw new GorResourceException(
+                    "Invalid response from MDR for document " + docId, String.valueOf(mdrUrl));
+        }
+        if (result.urls().size() != 1) {
+            throw new GorResourceException(
+                    "Invalid response from MDR, only one source allowed per request, got "
+                            + result.urls().size() + " for document " + docId,
+                    String.valueOf(mdrUrl));
+        }
+        MdrUrlsResultItem item = result.urls().get(0);
+        if (item == null || item.url() == null || item.url().isBlank()) {
+            throw new GorResourceException(
+                    "MDR could not resolve document " + docId + " (no url returned)",
+                    String.valueOf(mdrUrl));
+        }
+        return item;
+    }
+
+    private MdrUrlsResultItem getMdrDocument(URI url) {
         try {
             var mdrUri = constructUrl(url);
             var payload = constructPayload(url);
@@ -202,12 +263,7 @@ public class MdrServer {
 
             var mdrResult = MdrUrlsResult.fromJSON(result);
 
-            if (mdrResult == null) {
-                throw new GorResourceException("Invalid response from MDR: " + result, url.toString());
-            } else if (mdrResult.urls().size() != 1) {
-                throw new GorResourceException("Invalid response from MDR, only one source allowed per request, got " + mdrResult.urls().size(), url.toString());
-            }
-            return mdrResult;
+            return validateResolved(mdrResult, url);
         } catch (URISyntaxException e) {
             throw new GorResourceException("Invalid uri: " + url, url.toString(), e);
         } catch (IOException e) {
