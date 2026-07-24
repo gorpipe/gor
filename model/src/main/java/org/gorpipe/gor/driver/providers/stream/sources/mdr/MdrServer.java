@@ -150,15 +150,14 @@ public class MdrServer {
     }
 
     public String resolveMdrUrl(URI uri) {
-        var query = uri.getQuery() != null ? uri.getQuery() : "";
+        var urlType = resolveUrlType(uri);
 
-        var mdrDocument = documentCache.getIfPresent(new MdrDocumentCacheKey(extractDocumentId(uri),
-                query.contains(URL_TYPE_PRESIGNED) ? URL_TYPE_PRESIGNED : URL_TYPE_DIRECT));
+        var mdrDocument = documentCache.getIfPresent(
+                new MdrDocumentCacheKey(extractDocumentId(uri), urlType));
 
         if (mdrDocument == null) {
-            var mdrResult = getMdrDocument(uri);
-            var item = mdrResult.urls().get(0);
-            documentCache.put(new MdrDocumentCacheKey(extractDocumentId(uri), mdrResult.url_type()), item);
+            var item = getMdrDocument(uri);
+            documentCache.put(new MdrDocumentCacheKey(extractDocumentId(uri), urlType), item);
             mdrDocument = item;
         }
 
@@ -169,6 +168,23 @@ public class MdrServer {
         }
 
         return mdrDocument.url();
+    }
+
+    /**
+     * Determine the url_type used as the cache key for a given mdr:// uri.
+     * Must derive purely from the request (uri + config default) so that the
+     * cache-write key matches the cache-read key: the read happens before any
+     * server call, so it cannot depend on the server-echoed url_type.
+     */
+    public static String resolveUrlType(URI uri) {
+        var query = uri.getQuery() != null ? uri.getQuery() : "";
+        if (query.contains(URL_TYPE_PRESIGNED)) {
+            return URL_TYPE_PRESIGNED;
+        }
+        if (query.contains(URL_TYPE_DIRECT)) {
+            return URL_TYPE_DIRECT;
+        }
+        return defaultConfig.mdrDefaultLinkType();
     }
 
     public void cacheMdrUrls(List<SourceRef> sources) {
@@ -186,7 +202,7 @@ public class MdrServer {
             var result = getAuthorizedClient().post(mdrUri, payload);
             var mdrResult = MdrUrlsResult.fromJSON(result);
 
-            if (mdrResult == null) {
+            if (mdrResult == null || mdrResult.urls() == null) {
                 throw new GorResourceException("Invalid response from MDR", mdrUri.toString());
             }
 
@@ -238,7 +254,7 @@ public class MdrServer {
         return item;
     }
 
-    private MdrUrlsResult getMdrDocument(URI url) {
+    private MdrUrlsResultItem getMdrDocument(URI url) {
         try {
             var mdrUri = constructUrl(url);
             var payload = constructPayload(url);
@@ -247,8 +263,7 @@ public class MdrServer {
 
             var mdrResult = MdrUrlsResult.fromJSON(result);
 
-            validateResolved(mdrResult, url);
-            return mdrResult;
+            return validateResolved(mdrResult, url);
         } catch (URISyntaxException e) {
             throw new GorResourceException("Invalid uri: " + url, url.toString(), e);
         } catch (IOException e) {

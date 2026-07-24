@@ -69,4 +69,34 @@ public class UTestMdrServer {
         Assert.assertThrows(GorResourceException.class,
                 () -> MdrServer.validateResolved(new MdrUrlsResult("direct", null), MDR_URL));
     }
+
+    // Regression: cache read key and write key must be derived the same way, purely from
+    // the request (uri + config default), never from the server-echoed url_type. Otherwise
+    // a presigned-default config caused the entry to be written under a different key than
+    // it was read under, missing the cache on every resolve.
+
+    @Test
+    public void resolveUrlTypeHonorsPresignedInQuery() {
+        Assert.assertEquals("presigned",
+                MdrServer.resolveUrlType(URI.create("mdr://" + DOC_ID + "/x.cram?url_type=presigned&env=prd")));
+    }
+
+    @Test
+    public void resolveUrlTypeHonorsDirectInQuery() {
+        Assert.assertEquals("direct",
+                MdrServer.resolveUrlType(URI.create("mdr://" + DOC_ID + "/x.cram?url_type=direct&env=prd")));
+    }
+
+    @Test
+    public void resolveUrlTypeFallsBackToConfigDefaultWhenAbsent() {
+        // default config link type is "direct"
+        Assert.assertEquals("direct",
+                MdrServer.resolveUrlType(URI.create("mdr://" + DOC_ID + "/x.cram?env=prd")));
+    }
+
+    @Test
+    public void resolveUrlTypeIsStableForSameUri() {
+        URI uri = URI.create("mdr://" + DOC_ID + "/x.cram?env=prd");
+        Assert.assertEquals(MdrServer.resolveUrlType(uri), MdrServer.resolveUrlType(uri));
+    }
 }
