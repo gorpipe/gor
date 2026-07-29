@@ -23,8 +23,14 @@
 package org.gorpipe.gor.model;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -148,5 +154,93 @@ public class UTestDbSource {
     public void parseEnvSkipsSourceWhenDriverCannotBeDerived() {
         Map<String, String> env = rdaEnv("jdbc:whatever://db/x", "gregor_reader", "secret");
         Assert.assertTrue(DbConnectionCache.parseEnvForDbSourceInstallation(env).isEmpty());
+    }
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
+
+    private String writeCredentialsFile(String... lines) throws Exception {
+        File file = tempFolder.newFile("gor.db.credentials");
+        Files.write(file.toPath(), String.join("\n", lines).getBytes(StandardCharsets.UTF_8));
+        return file.getAbsolutePath();
+    }
+
+    @Test
+    public void envOnlyInstallsRdaSource() throws Exception {
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources(null, rdaEnv("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
+
+        DbConnection rda = cache.lookup("rda");
+        Assert.assertNotNull("rda source should be installed from the environment", rda);
+        Assert.assertEquals("jdbc:postgresql://db:5432/csa", rda.url);
+        Assert.assertEquals("gregor_reader", rda.user);
+        Assert.assertEquals("secret", rda.pwd);
+    }
+
+    @Test
+    public void fileRowOverridesEnvSource() throws Exception {
+        String credpath = writeCredentialsFile(
+                "name\tdriver\turl\tuser\tpwd",
+                "rda\torg.postgresql.Driver\tjdbc:postgresql://filehost:5432/csa\tfileuser\tfilepwd");
+
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources(credpath, rdaEnv("jdbc:postgresql://envhost:5432/csa", "envuser", "envpwd"));
+
+        DbConnection rda = cache.lookup("rda");
+        Assert.assertNotNull(rda);
+        Assert.assertEquals("jdbc:postgresql://filehost:5432/csa", rda.url);
+        Assert.assertEquals("fileuser", rda.user);
+    }
+
+    @Test
+    public void fileSuppliesAuxiliarySourceAlongsideEnv() throws Exception {
+        String credpath = writeCredentialsFile(
+                "name\tdriver\turl\tuser\tpwd",
+                "aux\torg.postgresql.Driver\tjdbc:postgresql://auxhost:5432/aux\tauxuser\tauxpwd");
+
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources(credpath, rdaEnv("jdbc:postgresql://envhost:5432/csa", "envuser", "envpwd"));
+
+        Assert.assertNotNull("env source should survive", cache.lookup("rda"));
+        Assert.assertEquals("jdbc:postgresql://envhost:5432/csa", cache.lookup("rda").url);
+        Assert.assertNotNull("file source should also be installed", cache.lookup("aux"));
+        Assert.assertEquals("auxuser", cache.lookup("aux").user);
+    }
+
+    @Test
+    public void missingFileToleratedWhenEnvSourcePresent() throws Exception {
+        String missing = new File(tempFolder.getRoot(), "does-not-exist.credentials").getAbsolutePath();
+
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources(missing, rdaEnv("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
+
+        Assert.assertNotNull(cache.lookup("rda"));
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void missingFileStillThrowsWithoutEnvSources() throws Exception {
+        String missing = new File(tempFolder.getRoot(), "does-not-exist.credentials").getAbsolutePath();
+        new DbConnectionCache().initializeDbSources(missing, new HashMap<>());
+    }
+
+    @Test
+    public void partialEnvSkipsSourceWithoutThrowing() throws Exception {
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources(null, rdaEnv("jdbc:postgresql://db:5432/csa", null, "secret"));
+
+        Assert.assertNull(cache.lookup("rda"));
+    }
+
+    @Test
+    public void fileOnlyBehaviourIsUnchanged() throws Exception {
+        String credpath = writeCredentialsFile(
+                "name\tdriver\turl\tuser\tpwd",
+                "rda\torg.postgresql.Driver\tjdbc:postgresql://filehost:5432/csa\tfileuser\tfilepwd");
+
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources(credpath, new HashMap<>());
+
+        Assert.assertNotNull(cache.lookup("rda"));
+        Assert.assertEquals("fileuser", cache.lookup("rda").user);
     }
 }

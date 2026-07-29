@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,27 +60,52 @@ public class DbConnectionCache {
      */
     @SuppressWarnings("WeakerAccess") // Used from gor-services
     public void initializeDbSources(String credpath) throws IOException {
+        initializeDbSources(credpath, System.getenv());
+    }
+
+    /**
+     * Read database sources from the environment and from the configuration file.
+     *
+     * Env-defined sources are installed first so that a file row with the same name
+     * takes precedence over it.
+     *
+     * @param credpath The path to the configuration file
+     * @param env      The environment to read env-defined sources from
+     */
+    void initializeDbSources(String credpath, Map<String, String> env) throws IOException {
         clearDbSources();
-        if (credpath != null && credpath.trim().length() > 0) {
-            final Path path = Paths.get(credpath);
-            if (Files.notExists(path)) {
-                throw new FileNotFoundException("Specified db credentials file (" + credpath + ") is not found");
-            }
+        List<String[]> envParts = parseEnvForDbSourceInstallation(env);
+        installAllFromParts(envParts);
+        installAllFromParts(readFileForDbSourceInstallation(credpath, !envParts.isEmpty()));
+    }
 
-            final List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
-
-            List<String[]> partsList = parseLinesForDbSourceInstallation(credpath, lines);
-
-            for (String[] parts : partsList) {
-                try {
-                    installDbSourceFromParts(parts);
-                } catch (ClassNotFoundException e) {
-                    log.error("Failed to load driver class {} for db source {}. Please ensure the driver is in the classpath.",
-                            parts[1], parts[0], e);
-                }
-            }
-        } else {
+    private List<String[]> readFileForDbSourceInstallation(String credpath, boolean haveEnvSources) throws IOException {
+        if (credpath == null || credpath.trim().length() == 0) {
             log.info("No db credential path specified");
+            return Collections.emptyList();
+        }
+
+        final Path path = Paths.get(credpath);
+        if (Files.notExists(path)) {
+            if (haveEnvSources) {
+                log.warn("Specified db credentials file ({}) is not found, continuing with db sources from the environment", credpath);
+                return Collections.emptyList();
+            }
+            throw new FileNotFoundException("Specified db credentials file (" + credpath + ") is not found");
+        }
+
+        final List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+        return parseLinesForDbSourceInstallation(credpath, lines);
+    }
+
+    private void installAllFromParts(List<String[]> partsList) {
+        for (String[] parts : partsList) {
+            try {
+                installDbSourceFromParts(parts);
+            } catch (ClassNotFoundException e) {
+                log.error("Failed to load driver class {} for db source {}. Please ensure the driver is in the classpath.",
+                        parts[1], parts[0], e);
+            }
         }
     }
 
