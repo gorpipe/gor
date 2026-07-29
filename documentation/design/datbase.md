@@ -79,32 +79,61 @@ TBD
 
 ### Configuration
 
-TBD
+Database sources come from two places: a credentials file, and credentials the host application passes
+in programmatically.
 
-We have two different configuration files:
-*
-* <li> gor.db.credentials - contains all the databases gor can reach.  These feed both the system connections,
-*                         used internally (e.g. session management) and by operations with strict access
-*                         controls (db://, //db:), and the user connections behind the user available
-*                         commands/sources (SQL, GORSQL, NORSQL, sql://).
-* <p><br>
-* Credentials that rotate, and so cannot be baked into a file, can instead be passed in by the host
-* application as DbCredentials objects, via DbConnection.initInServer(List) or
-* DbConnectionCache.initializeDbSources(String, List).  Gor does not care where the host got them —
-* its own configuration, a secret manager, or environment variables the host owns the naming of — and
-* never reads credentials from the environment itself.  A row in the credentials file overrides a
-* supplied source of the same name, so a host that wants its supplied credentials to be authoritative
-* must keep that name out of the file.
-* <p><br>
-* The separate gor.sql.credentials file has been removed.  It previously held the user databases; those now
-* live in gor.db.credentials alongside the rest.
-* <p><br>
-* The format for these files is:
-* <pre>
-*    name\tdriver\turl\tuser\tpwd
-*    rda\torg.postgresql.Driver\tjdbc:postgresql://myurl.com:5432/csa\trda\tmypass
-*    ...
-* </pre>
-*<p>
-* The location of the file defaults to the config directory but can be specified by the system property
-* gor.db.credentials.
+#### The credentials file
+
+`gor.db.credentials` contains the databases gor can reach. It feeds both connection caches:
+
+- **system connections** — used internally (e.g. session management) and by the access-controlled
+  operations (`db://`, `//db:`)
+- **user connections** — behind the user-available commands and sources (`SQL`, `GORSQL`, `NORSQL`,
+  `sql://`)
+
+The file is tab-separated, with a header line:
+
+```
+name	driver	url	user	pwd
+rda	org.postgresql.Driver	jdbc:postgresql://myurl.com:5432/csa	rda	mypass
+```
+
+The password column is optional. Lines starting with `#` are ignored.
+
+Its location defaults to the config directory and can be set with the `gor.db.credentials` system
+property.
+
+> The separate `gor.sql.credentials` file has been removed. It previously held the user databases;
+> those now live in `gor.db.credentials` alongside the rest.
+
+#### Credentials passed in by the host
+
+Credentials that rotate cannot be baked into a file — a rotation would leave it stale. The host
+application passes those in as `DbCredentials`:
+
+```java
+var credentials = List.of(new DbCredentials("rda", url, user, password));
+
+DbConnection.initInServer(credentials);
+// or, per cache:
+DbConnection.systemConnections.initializeDbSources(credpath, credentials);
+```
+
+Gor never reads credentials from the environment itself, and does not care where the host got them —
+its own configuration, a secret manager, or environment variables the host owns the naming of. This
+keeps deployment-specific naming out of the library.
+
+`DbCredentials` takes `name`, `url`, `user`, `pwd`, and an optional `driver`. When `driver` is null it
+is derived from the url prefix (`jdbc:postgresql:`, `jdbc:oracle:`). Blank values count as unset,
+including the password, so a secret manager rendering an empty string does not become a real empty
+password. Incomplete credentials are logged — naming the missing field, never a value — and skipped,
+rather than failing startup.
+
+#### Precedence
+
+Supplied credentials are installed first, then the file is read on top, so **a file row overrides a
+supplied source of the same name**. A host that wants its supplied credentials to be authoritative for
+a source must keep a row of that name out of the file.
+
+If the configured credentials file is missing, that is an error — unless credentials were supplied, in
+which case gor logs a warning and continues with those.
