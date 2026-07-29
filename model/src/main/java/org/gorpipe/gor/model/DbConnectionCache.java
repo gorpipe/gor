@@ -28,11 +28,11 @@ public class DbConnectionCache {
     private final ConcurrentHashMap<String, DbConnection> mapSources = new ConcurrentHashMap<>();
     public String defaultDbSource = "rda";
 
-    static final String ENV_RDA_SOURCE_NAME = "rda";
-    static final String ENV_RDA_URL = "APPSERVER_RDA_URL";
-    static final String ENV_RDA_USERNAME = "APPSERVER_RDA_USERNAME";
-    static final String ENV_RDA_PASSWORD = "APPSERVER_RDA_PASSWORD";
-    static final String ENV_RDA_DRIVER = "APPSERVER_RDA_DRIVER";
+    static final String ENV_GREGOR_DB_SOURCE_NAME = "rda";
+    static final String ENV_GREGOR_DB_URL = "GREGOR_DB_URL";
+    static final String ENV_GREGOR_DB_USERNAME = "GREGOR_DB_USERNAME";
+    static final String ENV_GREGOR_DB_PASSWORD = "GREGOR_DB_PASSWORD";
+    static final String ENV_GREGOR_DB_DRIVER = "GREGOR_DB_DRIVER";
 
     public DbConnectionCache() {
     }
@@ -166,35 +166,35 @@ public class DbConnectionCache {
             return partsList;
         }
 
-        String url = trimToNull(env.get(ENV_RDA_URL));
-        String user = trimToNull(env.get(ENV_RDA_USERNAME));
+        String url = trimToNull(env.get(ENV_GREGOR_DB_URL));
+        String user = trimToNull(env.get(ENV_GREGOR_DB_USERNAME));
         // Blank counts as unset here, as it does for url and username: an env var that is present but
         // empty is a missing value, not a real empty password.
-        String pwd = trimToNull(env.get(ENV_RDA_PASSWORD));
+        String pwd = trimToNull(env.get(ENV_GREGOR_DB_PASSWORD));
 
         if (url == null && user == null) {
             return partsList;
         }
         if (url == null || user == null) {
             log.warn("Incomplete db source configuration in environment for source {}: {} is not set. Ignoring it.",
-                    ENV_RDA_SOURCE_NAME, url == null ? ENV_RDA_URL : ENV_RDA_USERNAME);
+                    ENV_GREGOR_DB_SOURCE_NAME, url == null ? ENV_GREGOR_DB_URL : ENV_GREGOR_DB_USERNAME);
             return partsList;
         }
 
-        String driver = trimToNull(env.get(ENV_RDA_DRIVER));
+        String driver = trimToNull(env.get(ENV_GREGOR_DB_DRIVER));
         if (driver == null) {
             driver = driverClassForUrl(url);
         }
         if (driver == null) {
             log.warn("Could not derive a jdbc driver for db source {} from its url, and {} is not set. Ignoring it.",
-                    ENV_RDA_SOURCE_NAME, ENV_RDA_DRIVER);
+                    ENV_GREGOR_DB_SOURCE_NAME, ENV_GREGOR_DB_DRIVER);
             return partsList;
         }
 
         if (pwd == null) {
-            partsList.add(new String[]{ENV_RDA_SOURCE_NAME, driver, url, user});
+            partsList.add(new String[]{ENV_GREGOR_DB_SOURCE_NAME, driver, url, user});
         } else {
-            partsList.add(new String[]{ENV_RDA_SOURCE_NAME, driver, url, user, pwd});
+            partsList.add(new String[]{ENV_GREGOR_DB_SOURCE_NAME, driver, url, user, pwd});
         }
         return partsList;
     }

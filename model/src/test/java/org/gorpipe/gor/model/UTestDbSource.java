@@ -82,9 +82,9 @@ public class UTestDbSource {
 
     private static Map<String, String> rdaEnv(String url, String username, String password) {
         Map<String, String> env = new HashMap<>();
-        if (url != null) env.put("APPSERVER_RDA_URL", url);
-        if (username != null) env.put("APPSERVER_RDA_USERNAME", username);
-        if (password != null) env.put("APPSERVER_RDA_PASSWORD", password);
+        if (url != null) env.put("GREGOR_DB_URL", url);
+        if (username != null) env.put("GREGOR_DB_USERNAME", username);
+        if (password != null) env.put("GREGOR_DB_PASSWORD", password);
         return env;
     }
 
@@ -153,7 +153,7 @@ public class UTestDbSource {
     @Test
     public void parseEnvHonoursExplicitDriverOverride() {
         Map<String, String> env = rdaEnv("jdbc:whatever://db/x", "gregor_reader", "secret");
-        env.put("APPSERVER_RDA_DRIVER", "com.example.Driver");
+        env.put("GREGOR_DB_DRIVER", "com.example.Driver");
         List<String[]> partsList = DbConnectionCache.parseEnvForDbSourceInstallation(env);
         Assert.assertEquals(1, partsList.size());
         Assert.assertEquals("com.example.Driver", partsList.get(0)[1]);

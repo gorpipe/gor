@@ -50,8 +50,8 @@ import java.sql.*;
  *                         controls (db://, //db:), and the user connections behind the user available
  *                         commands/sources (SQL, GORSQL, NORSQL, sql://).
  * <p><br>
- * Credentials that rotate can instead be supplied through the environment, as APPSERVER_RDA_URL,
- * APPSERVER_RDA_USERNAME and APPSERVER_RDA_PASSWORD, which install a source named "rda".  A row in the
+ * Credentials that rotate can instead be supplied through the environment, as GREGOR_DB_URL,
+ * GREGOR_DB_USERNAME and GREGOR_DB_PASSWORD, which install a source named "rda".  A row in the
  * credentials file overrides an env-defined source of the same name, so a deployment that wants the
  * environment to be authoritative must keep that name out of the file.
  * <p><br>
@@ -265,7 +265,7 @@ public class DbConnection {
      * Initialize DbSource to be used in a server.
      *
      * Both caches are fed from gor.db.credentials plus the environment. In a deployment that
-     * supplies rotating credentials through APPSERVER_RDA_*, those reach {@link #systemConnections}
+     * supplies rotating credentials through GREGOR_DB_*, those reach {@link #systemConnections}
      * (used for db:// sources), while the credentials file supplies the additional databases
      * reached through {@link #userConnections} (sql:// sources).
      *
