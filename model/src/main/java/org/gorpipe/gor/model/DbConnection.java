@@ -43,24 +43,30 @@ import java.sql.*;
  * The static part creates a cache of DbConnection objects that can be used to access all databases defined in the
  * database configuration files.  This part is located here for backward compatibility reasons.
  *<p>
- * We have two different configuration files:
+ * We have one configuration file:
  *
- * <li> gor.db.credentials - contains the system databases, which are used by the system internally (e.g. session management),
- *                         and by operation where we have strict access controls (db://, //db:).  These credentials
- *                         typically would grant full access to the database.
- * <li> gor.sql.credentials - contains the user databases, which are used by the user available commands/sources (SQL,
- *                          GORSQL, NORSQL, sql://).  These credentials typically would grant limited/read-only access to
- *                          the database.
+ * <li> gor.db.credentials - contains all the databases gor can reach.  It feeds both the system connections,
+ *                         used internally (e.g. session management) and by operations with strict access
+ *                         controls (db://, //db:), and the user connections behind the user available
+ *                         commands/sources (SQL, GORSQL, NORSQL, sql://).
  * <p><br>
- * The format for these files is:
+ * Credentials that rotate can instead be supplied through the environment, as APPSERVER_RDA_URL,
+ * APPSERVER_RDA_USERNAME and APPSERVER_RDA_PASSWORD, which install a source named "rda".  A row in the
+ * credentials file overrides an env-defined source of the same name, so a deployment that wants the
+ * environment to be authoritative must keep that name out of the file.
+ * <p><br>
+ * The separate gor.sql.credentials file has been removed.  It previously held the user databases; those now
+ * live in gor.db.credentials alongside the rest.
+ * <p><br>
+ * The format for this file is:
  * <pre>
  *    name\tdriver\turl\tuser\tpwd
  *    rda\torg.postgresql.Driver\tjdbc:postgresql://myurl.com:5432/csa\trda\tmypass
  *    ...
  * </pre>
  *<p>
- * The location of the files defaults to the config directory but can be specified by the system properties
- * gor.db.credentials and gor.sql.credentials.
+ * The location of the file defaults to the config directory but can be specified by the system property
+ * gor.db.credentials.
  * <p><br>
  * TODO:  This class needs some refactoring to handle the different databases more gracefully.  We should use some kind of
  * plugin mechanism (or Guice) instead of if/else statements.
@@ -237,6 +243,9 @@ public class DbConnection {
      * Initialize DbConnections to be used in a console app. i.e. search for config files in the in user home dir
      * or be specified by system properties and set up a console based login for missing db passwords
      *
+     * Both caches load from gor.db.credentials. The separate gor.sql.credentials source has been
+     * removed — the db credentials file now carries the additional databases it was intended for.
+     *
      * @throws ClassNotFoundException
      * @throws IOException
      */
@@ -244,8 +253,7 @@ public class DbConnection {
         File homeDbCredFile = new File(System.getProperty("user.home"), "gor.db.credentials");
         final String dbCredpath = homeDbCredFile.exists() ? homeDbCredFile.getCanonicalPath() : System.getProperty("gor.db.credentials");
         systemConnections.initializeDbSources(dbCredpath);
-
-        userConnections.initializeDbSources(resolveSqlCredPath(dbCredpath));
+        userConnections.initializeDbSources(dbCredpath);
 
         setPasswordCallback(s -> {
             final Console console = System.console();
@@ -261,6 +269,9 @@ public class DbConnection {
      * (used for db:// sources), while the credentials file supplies the additional databases
      * reached through {@link #userConnections} (sql:// sources).
      *
+     * The separate gor.sql.credentials source has been removed; it existed for exactly the
+     * resources the db credentials file now carries.
+     *
      * @throws ClassNotFoundException
      * @throws IOException
      */
@@ -269,32 +280,8 @@ public class DbConnection {
         final String dbCredpath = System.getProperty("gor.db.credentials");
         if (dbCredpath != null) {
             systemConnections.initializeDbSources(dbCredpath);
+            userConnections.initializeDbSources(dbCredpath);
         }
-
-        final String sqlCredpath = resolveSqlCredPath(dbCredpath);
-        if (sqlCredpath != null) {
-            userConnections.initializeDbSources(sqlCredpath);
-        }
-    }
-
-    /**
-     * Resolve the credentials file backing {@link #userConnections}.
-     *
-     * The dedicated gor.sql.credentials source is deprecated: gor.db.credentials now carries the
-     * additional db resources it was intended for. An explicit gor.sql.credentials still wins where
-     * one is configured, so existing setups keep working; otherwise the db credentials are used for
-     * both caches. Returns null only when neither is configured.
-     *
-     * @param dbCredpath the already-resolved gor.db.credentials path, may be null
-     * @return the path to load user connections from, or null if none is configured
-     */
-    static String resolveSqlCredPath(String dbCredpath) throws IOException {
-        File homeSqlCredFile = new File(System.getProperty("user.home"), "gor.sql.credentials");
-        if (homeSqlCredFile.exists()) {
-            return homeSqlCredFile.getCanonicalPath();
-        }
-        final String sqlCredpath = System.getProperty("gor.sql.credentials");
-        return sqlCredpath != null ? sqlCredpath : dbCredpath;
     }
 
     /**

@@ -58,9 +58,9 @@ public class UTestSQLInputSource {
 
         List<String> credFileLines = Files.readAllLines(Path.of(rdaPaths[2]));
         credFileLines.add(Files.readAllLines(Path.of(avasPaths[2])).get(1));
-        File credFile = FileTestUtils.createTempFile(new File(rdaPaths[0]), "gor.sql.credentials",
+        File credFile = FileTestUtils.createTempFile(new File(rdaPaths[0]), "gor.db.credentials",
                 credFileLines.stream().collect(Collectors.joining("\n")));
-        System.setProperty("gor.sql.credentials", credFile.getAbsolutePath());
+        System.setProperty("gor.db.credentials", credFile.getAbsolutePath());
         DbConnection.initInConsoleApp();
     }
 

@@ -83,12 +83,18 @@ TBD
 
 We have two different configuration files:
 *
-* <li> gor.db.credentials - contains the system databases, which are used by the system internally (e.g. session management),
-*                         and by operation where we have strict access controls (db://, //db:).  These credentials
-*                         typically would grant full access to the database.
-* <li> gor.sql.credentials - contains the user databases, which are used by the user available commands/sources (SQL,
-*                          GORSQL, NORSQL, sql://).  These credentials typically would grant limited/read-only access to
-*                          the database.
+* <li> gor.db.credentials - contains all the databases gor can reach.  These feed both the system connections,
+*                         used internally (e.g. session management) and by operations with strict access
+*                         controls (db://, //db:), and the user connections behind the user available
+*                         commands/sources (SQL, GORSQL, NORSQL, sql://).
+* <p><br>
+* Credentials that rotate can instead be supplied through the environment, as APPSERVER_RDA_URL,
+* APPSERVER_RDA_USERNAME and APPSERVER_RDA_PASSWORD, which install a source named "rda".  A row in the
+* credentials file overrides an env-defined source of the same name, so a deployment that wants the
+* environment to be authoritative must keep that name out of the file.
+* <p><br>
+* The separate gor.sql.credentials file has been removed.  It previously held the user databases; those now
+* live in gor.db.credentials alongside the rest.
 * <p><br>
 * The format for these files is:
 * <pre>
@@ -97,5 +103,5 @@ We have two different configuration files:
 *    ...
 * </pre>
 *<p>
-* The location of the files defaults to the config directory but can be specified by the system properties
-* gor.db.credentials and gor.sql.credentials.
+* The location of the file defaults to the config directory but can be specified by the system property
+* gor.db.credentials.

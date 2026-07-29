@@ -168,7 +168,9 @@ public class DbConnectionCache {
 
         String url = trimToNull(env.get(ENV_RDA_URL));
         String user = trimToNull(env.get(ENV_RDA_USERNAME));
-        String pwd = env.get(ENV_RDA_PASSWORD);
+        // Blank counts as unset here, as it does for url and username: an env var that is present but
+        // empty is a missing value, not a real empty password.
+        String pwd = trimToNull(env.get(ENV_RDA_PASSWORD));
 
         if (url == null && user == null) {
             return partsList;
