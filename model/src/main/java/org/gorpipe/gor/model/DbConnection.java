@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.sql.*;
+import java.util.List;
 
 /**
  * DbConnection abstract access to database source that are configured on installation time.
@@ -50,10 +51,12 @@ import java.sql.*;
  *                         controls (db://, //db:), and the user connections behind the user available
  *                         commands/sources (SQL, GORSQL, NORSQL, sql://).
  * <p><br>
- * Credentials that rotate can instead be supplied through the environment, as GREGOR_DB_URL,
- * GREGOR_DB_USERNAME and GREGOR_DB_PASSWORD, which install a source named "rda".  A row in the
- * credentials file overrides an env-defined source of the same name, so a deployment that wants the
- * environment to be authoritative must keep that name out of the file.
+ * Credentials that rotate, and so cannot be baked into a file, can instead be passed in by the host
+ * application as {@link DbCredentials} — see {@link #initInServer(java.util.List)} and
+ * {@link DbConnectionCache#initializeDbSources(String, java.util.List)}.  Gor does not care where the
+ * host got them; it never reads credentials from the environment itself.  A row in the credentials
+ * file overrides a supplied source of the same name, so a host that wants its supplied credentials to
+ * be authoritative must keep that name out of the file.
  * <p><br>
  * The separate gor.sql.credentials file has been removed.  It previously held the user databases; those now
  * live in gor.db.credentials alongside the rest.
@@ -264,23 +267,36 @@ public class DbConnection {
     /**
      * Initialize DbSource to be used in a server.
      *
-     * Both caches are fed from gor.db.credentials plus the environment. In a deployment that
-     * supplies rotating credentials through GREGOR_DB_*, those reach {@link #systemConnections}
-     * (used for db:// sources), while the credentials file supplies the additional databases
-     * reached through {@link #userConnections} (sql:// sources).
+     * @throws ClassNotFoundException
+     * @throws IOException
+     */
+    @SuppressWarnings("unused") // Called from gor-services
+    public static void initInServer() throws ClassNotFoundException, IOException {
+        initInServer(List.of());
+    }
+
+    /**
+     * Initialize DbSource to be used in a server, with credentials supplied by the host application.
+     *
+     * Both caches are fed from the supplied credentials plus gor.db.credentials. A host that holds
+     * rotating credentials — from its own configuration, a secret manager, or environment variables
+     * it owns the naming of — passes them here rather than gor reading them itself. The credentials
+     * file supplies the additional databases gor can reach. A file row takes precedence over a
+     * supplied credential of the same name.
      *
      * The separate gor.sql.credentials source has been removed; it existed for exactly the
      * resources the db credentials file now carries.
      *
+     * @param credentials Credentials to install before reading the file. May be empty.
      * @throws ClassNotFoundException
      * @throws IOException
      */
     @SuppressWarnings("unused") // Called from GorQueryTask in gor-services
-    public static void initInServer() throws ClassNotFoundException, IOException {
+    public static void initInServer(List<DbCredentials> credentials) throws ClassNotFoundException, IOException {
         final String dbCredpath = System.getProperty("gor.db.credentials");
-        if (dbCredpath != null) {
-            systemConnections.initializeDbSources(dbCredpath);
-            userConnections.initializeDbSources(dbCredpath);
+        if (dbCredpath != null || !credentials.isEmpty()) {
+            systemConnections.initializeDbSources(dbCredpath, credentials);
+            userConnections.initializeDbSources(dbCredpath, credentials);
         }
     }
 

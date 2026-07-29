@@ -28,12 +28,6 @@ public class DbConnectionCache {
     private final ConcurrentHashMap<String, DbConnection> mapSources = new ConcurrentHashMap<>();
     public String defaultDbSource = "rda";
 
-    static final String ENV_GREGOR_DB_SOURCE_NAME = "rda";
-    static final String ENV_GREGOR_DB_URL = "GREGOR_DB_URL";
-    static final String ENV_GREGOR_DB_USERNAME = "GREGOR_DB_USERNAME";
-    static final String ENV_GREGOR_DB_PASSWORD = "GREGOR_DB_PASSWORD";
-    static final String ENV_GREGOR_DB_DRIVER = "GREGOR_DB_DRIVER";
-
     public DbConnectionCache() {
     }
 
@@ -52,41 +46,41 @@ public class DbConnectionCache {
     }
 
     /**
-     * Read database sources from the environment and from the configuration file.
-     *
-     * Sources may come from two places. Environment variables carry credentials that rotate and so
-     * cannot be baked into a file — see {@link #parseEnvForDbSourceInstallation}. The credentials
-     * file carries the static set of additional databases gor can reach. A deployment typically
-     * supplies the rotating system credentials through the environment and the remaining resources
-     * through the file.
+     * Read database sources from the configuration file.
      *
      * @param credpath The path to the configuration file
-     * @throws IOException if the credentials file is configured but missing, and no env source was installed
+     * @throws IOException if the credentials file is configured but missing
      */
     @SuppressWarnings("WeakerAccess") // Used from gor-services
     public void initializeDbSources(String credpath) throws IOException {
-        initializeDbSources(credpath, System.getenv());
+        initializeDbSources(credpath, List.of());
     }
 
     /**
-     * Read database sources from the environment and from the configuration file.
+     * Read database sources from caller-supplied credentials and from the configuration file.
      *
-     * Env-defined sources are installed first so that a file row with the same name takes
-     * precedence over it. A deployment that wants the environment to be authoritative for a given
-     * source must therefore keep a row of that name out of the credentials file — otherwise the
-     * file's static copy shadows the rotating one.
+     * Sources may come from two places. The caller can pass credentials directly — useful for
+     * credentials that rotate and so cannot be baked into a file, which the host application may
+     * source from its own configuration or a secret manager. The credentials file carries the
+     * static set of additional databases gor can reach.
      *
-     * @param credpath The path to the configuration file
-     * @param env      The environment to read env-defined sources from
+     * Supplied credentials are installed first, so a file row with the same name takes precedence.
+     * A deployment that wants its supplied credentials to be authoritative for a given source must
+     * therefore keep a row of that name out of the credentials file — otherwise the file's static
+     * copy shadows the rotating one.
+     *
+     * @param credpath    The path to the configuration file
+     * @param credentials Credentials to install before reading the file. May be empty.
+     * @throws IOException if the credentials file is configured but missing, and no credentials were installed
      */
-    void initializeDbSources(String credpath, Map<String, String> env) throws IOException {
+    public void initializeDbSources(String credpath, List<DbCredentials> credentials) throws IOException {
         clearDbSources();
-        List<String[]> envParts = parseEnvForDbSourceInstallation(env);
-        installAllFromParts(envParts);
-        installAllFromParts(readFileForDbSourceInstallation(credpath, !envParts.isEmpty()));
+        List<String[]> suppliedParts = toPartsForInstallation(credentials);
+        installAllFromParts(suppliedParts);
+        installAllFromParts(readFileForDbSourceInstallation(credpath, !suppliedParts.isEmpty()));
     }
 
-    private List<String[]> readFileForDbSourceInstallation(String credpath, boolean haveEnvSources) throws IOException {
+    private List<String[]> readFileForDbSourceInstallation(String credpath, boolean haveSuppliedSources) throws IOException {
         if (credpath == null || credpath.trim().length() == 0) {
             log.info("No db credential path specified");
             return Collections.emptyList();
@@ -94,8 +88,8 @@ public class DbConnectionCache {
 
         final Path path = Paths.get(credpath);
         if (Files.notExists(path)) {
-            if (haveEnvSources) {
-                log.warn("Specified db credentials file ({}) is not found, continuing with db sources from the environment", credpath);
+            if (haveSuppliedSources) {
+                log.warn("Specified db credentials file ({}) is not found, continuing with the supplied db sources", credpath);
                 return Collections.emptyList();
             }
             throw new FileNotFoundException("Specified db credentials file (" + credpath + ") is not found");
@@ -151,50 +145,56 @@ public class DbConnectionCache {
     }
 
     /**
-     * Build db source definitions from environment variables.
+     * Convert caller-supplied credentials into the {name, driver, url, user[, pwd]} shape that
+     * parseLinesForDbSourceInstallation produces, so both paths share the install code.
      *
-     * Returns entries in the same {name, driver, url, user[, pwd]} shape as
-     * parseLinesForDbSourceInstallation, so both paths share the install code.
-     * Never logs credential values, only variable names.
+     * Incomplete credentials are skipped with a warning rather than failing initialization. Blank
+     * values count as unset, including the password: a secret manager or template that renders an
+     * empty value is expressing a missing value, not a real empty password.
      *
-     * @param env the environment to read, normally System.getenv()
-     * @return zero or one db source definition
+     * Never logs credential values, only the source name and which field was missing.
+     *
+     * @param credentials the credentials to convert, may be null
+     * @return one entry per usable credential
      */
-    static List<String[]> parseEnvForDbSourceInstallation(Map<String, String> env) {
+    static List<String[]> toPartsForInstallation(List<DbCredentials> credentials) {
         List<String[]> partsList = new ArrayList<>();
-        if (env == null) {
+        if (credentials == null) {
             return partsList;
         }
 
-        String url = trimToNull(env.get(ENV_GREGOR_DB_URL));
-        String user = trimToNull(env.get(ENV_GREGOR_DB_USERNAME));
-        // Blank counts as unset here, as it does for url and username: an env var that is present but
-        // empty is a missing value, not a real empty password.
-        String pwd = trimToNull(env.get(ENV_GREGOR_DB_PASSWORD));
+        for (DbCredentials cred : credentials) {
+            if (cred == null) {
+                continue;
+            }
 
-        if (url == null && user == null) {
-            return partsList;
-        }
-        if (url == null || user == null) {
-            log.warn("Incomplete db source configuration in environment for source {}: {} is not set. Ignoring it.",
-                    ENV_GREGOR_DB_SOURCE_NAME, url == null ? ENV_GREGOR_DB_URL : ENV_GREGOR_DB_USERNAME);
-            return partsList;
-        }
+            String name = trimToNull(cred.name());
+            String url = trimToNull(cred.url());
+            String user = trimToNull(cred.user());
+            String pwd = trimToNull(cred.pwd());
 
-        String driver = trimToNull(env.get(ENV_GREGOR_DB_DRIVER));
-        if (driver == null) {
-            driver = driverClassForUrl(url);
-        }
-        if (driver == null) {
-            log.warn("Could not derive a jdbc driver for db source {} from its url, and {} is not set. Ignoring it.",
-                    ENV_GREGOR_DB_SOURCE_NAME, ENV_GREGOR_DB_DRIVER);
-            return partsList;
-        }
+            if (name == null || url == null || user == null) {
+                log.warn("Incomplete db source credentials for source {}: {} is not set. Ignoring it.",
+                        name == null ? "<unnamed>" : name,
+                        name == null ? "name" : (url == null ? "url" : "user"));
+                continue;
+            }
 
-        if (pwd == null) {
-            partsList.add(new String[]{ENV_GREGOR_DB_SOURCE_NAME, driver, url, user});
-        } else {
-            partsList.add(new String[]{ENV_GREGOR_DB_SOURCE_NAME, driver, url, user, pwd});
+            String driver = trimToNull(cred.driver());
+            if (driver == null) {
+                driver = driverClassForUrl(url);
+            }
+            if (driver == null) {
+                log.warn("Could not derive a jdbc driver for db source {} from its url, and no driver was given. Ignoring it.",
+                        name);
+                continue;
+            }
+
+            if (pwd == null) {
+                partsList.add(new String[]{name, driver, url, user});
+            } else {
+                partsList.add(new String[]{name, driver, url, user, pwd});
+            }
         }
         return partsList;
     }

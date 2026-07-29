@@ -32,7 +32,6 @@ import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -80,18 +79,18 @@ public class UTestDbSource {
         Assert.assertEquals(5, partsList.get(0).length);
     }
 
-    private static Map<String, String> rdaEnv(String url, String username, String password) {
-        Map<String, String> env = new HashMap<>();
-        if (url != null) env.put("GREGOR_DB_URL", url);
-        if (username != null) env.put("GREGOR_DB_USERNAME", username);
-        if (password != null) env.put("GREGOR_DB_PASSWORD", password);
-        return env;
+    private static List<DbCredentials> rdaCreds(String url, String username, String password) {
+        return List.of(new DbCredentials("rda", url, username, password));
+    }
+
+    private static List<DbCredentials> rdaCreds(String url, String username, String password, String driver) {
+        return List.of(new DbCredentials("rda", url, username, password, driver));
     }
 
     @Test
-    public void parseEnvBuildsRdaPartsInFileParserShape() {
-        Map<String, String> env = rdaEnv("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret");
-        List<String[]> partsList = DbConnectionCache.parseEnvForDbSourceInstallation(env);
+    public void credentialsBuildPartsInFileParserShape() {
+        List<DbCredentials> creds = rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret");
+        List<String[]> partsList = DbConnectionCache.toPartsForInstallation(creds);
         Assert.assertEquals(1, partsList.size());
         String[] parts = partsList.get(0);
         Assert.assertEquals(5, parts.length);
@@ -103,66 +102,65 @@ public class UTestDbSource {
     }
 
     @Test
-    public void parseEnvOmitsPasswordFieldWhenPasswordUnset() {
-        Map<String, String> env = rdaEnv("jdbc:postgresql://db:5432/csa", "gregor_reader", null);
-        List<String[]> partsList = DbConnectionCache.parseEnvForDbSourceInstallation(env);
+    public void credentialsOmitPasswordFieldWhenPasswordUnset() {
+        List<DbCredentials> creds = rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", null);
+        List<String[]> partsList = DbConnectionCache.toPartsForInstallation(creds);
         Assert.assertEquals(1, partsList.size());
         Assert.assertEquals(4, partsList.get(0).length);
     }
 
     @Test
-    public void parseEnvTreatsBlankPasswordAsUnset() {
-        Map<String, String> env = rdaEnv("jdbc:postgresql://db:5432/csa", "gregor_reader", "   ");
-        List<String[]> partsList = DbConnectionCache.parseEnvForDbSourceInstallation(env);
+    public void credentialsTreatBlankPasswordAsUnset() {
+        List<DbCredentials> creds = rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "   ");
+        List<String[]> partsList = DbConnectionCache.toPartsForInstallation(creds);
         Assert.assertEquals(1, partsList.size());
         Assert.assertEquals("blank password should be omitted, not installed as an empty password",
                 4, partsList.get(0).length);
     }
 
     @Test
-    public void parseEnvReturnsNothingWhenNoRdaVarsPresent() {
-        Assert.assertTrue(DbConnectionCache.parseEnvForDbSourceInstallation(new HashMap<>()).isEmpty());
+    public void noCredentialsProducesNoParts() {
+        Assert.assertTrue(DbConnectionCache.toPartsForInstallation(List.of()).isEmpty());
     }
 
     @Test
-    public void parseEnvSkipsSourceWhenUsernameMissing() {
-        Map<String, String> env = rdaEnv("jdbc:postgresql://db:5432/csa", null, "secret");
-        Assert.assertTrue(DbConnectionCache.parseEnvForDbSourceInstallation(env).isEmpty());
+    public void credentialsSkippedWhenUsernameMissing() {
+        List<DbCredentials> creds = rdaCreds("jdbc:postgresql://db:5432/csa", null, "secret");
+        Assert.assertTrue(DbConnectionCache.toPartsForInstallation(creds).isEmpty());
     }
 
     @Test
-    public void parseEnvSkipsSourceWhenUrlMissing() {
-        Map<String, String> env = rdaEnv(null, "gregor_reader", "secret");
-        Assert.assertTrue(DbConnectionCache.parseEnvForDbSourceInstallation(env).isEmpty());
+    public void credentialsSkippedWhenUrlMissing() {
+        List<DbCredentials> creds = rdaCreds(null, "gregor_reader", "secret");
+        Assert.assertTrue(DbConnectionCache.toPartsForInstallation(creds).isEmpty());
     }
 
     @Test
-    public void parseEnvTreatsBlankValuesAsUnset() {
-        Map<String, String> env = rdaEnv("jdbc:postgresql://db:5432/csa", "   ", "secret");
-        Assert.assertTrue(DbConnectionCache.parseEnvForDbSourceInstallation(env).isEmpty());
+    public void credentialsTreatBlankValuesAsUnset() {
+        List<DbCredentials> creds = rdaCreds("jdbc:postgresql://db:5432/csa", "   ", "secret");
+        Assert.assertTrue(DbConnectionCache.toPartsForInstallation(creds).isEmpty());
     }
 
     @Test
-    public void parseEnvDerivesOracleDriverFromUrlPrefix() {
-        Map<String, String> env = rdaEnv("jdbc:oracle:thin:@db:1521:XE", "gregor_reader", "secret");
-        List<String[]> partsList = DbConnectionCache.parseEnvForDbSourceInstallation(env);
+    public void credentialsDeriveOracleDriverFromUrlPrefix() {
+        List<DbCredentials> creds = rdaCreds("jdbc:oracle:thin:@db:1521:XE", "gregor_reader", "secret");
+        List<String[]> partsList = DbConnectionCache.toPartsForInstallation(creds);
         Assert.assertEquals(1, partsList.size());
         Assert.assertEquals("oracle.jdbc.driver.OracleDriver", partsList.get(0)[1]);
     }
 
     @Test
-    public void parseEnvHonoursExplicitDriverOverride() {
-        Map<String, String> env = rdaEnv("jdbc:whatever://db/x", "gregor_reader", "secret");
-        env.put("GREGOR_DB_DRIVER", "com.example.Driver");
-        List<String[]> partsList = DbConnectionCache.parseEnvForDbSourceInstallation(env);
+    public void credentialsHonourExplicitDriverOverride() {
+        List<DbCredentials> creds = rdaCreds("jdbc:whatever://db/x", "gregor_reader", "secret", "com.example.Driver");
+        List<String[]> partsList = DbConnectionCache.toPartsForInstallation(creds);
         Assert.assertEquals(1, partsList.size());
         Assert.assertEquals("com.example.Driver", partsList.get(0)[1]);
     }
 
     @Test
-    public void parseEnvSkipsSourceWhenDriverCannotBeDerived() {
-        Map<String, String> env = rdaEnv("jdbc:whatever://db/x", "gregor_reader", "secret");
-        Assert.assertTrue(DbConnectionCache.parseEnvForDbSourceInstallation(env).isEmpty());
+    public void credentialsSkippedWhenDriverCannotBeDerived() {
+        List<DbCredentials> creds = rdaCreds("jdbc:whatever://db/x", "gregor_reader", "secret");
+        Assert.assertTrue(DbConnectionCache.toPartsForInstallation(creds).isEmpty());
     }
 
     @Rule
@@ -175,9 +173,9 @@ public class UTestDbSource {
     }
 
     @Test
-    public void envOnlyInstallsRdaSource() throws Exception {
+    public void suppliedCredentialsOnlyInstallRdaSource() throws Exception {
         DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(null, rdaEnv("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
+        cache.initializeDbSources(null, rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
 
         DbConnection rda = cache.lookup("rda");
         Assert.assertNotNull("rda source should be installed from the environment", rda);
@@ -187,9 +185,9 @@ public class UTestDbSource {
     }
 
     @Test
-    public void blankEnvPasswordInstallsSourceWithNullPassword() throws Exception {
+    public void blankSuppliedPasswordInstallsSourceWithNullPassword() throws Exception {
         DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(null, rdaEnv("jdbc:postgresql://db:5432/csa", "gregor_reader", "   "));
+        cache.initializeDbSources(null, rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "   "));
 
         DbConnection rda = cache.lookup("rda");
         Assert.assertNotNull("source should still install, only the password is unset", rda);
@@ -197,13 +195,13 @@ public class UTestDbSource {
     }
 
     @Test
-    public void fileRowOverridesEnvSource() throws Exception {
+    public void fileRowOverridesSuppliedSource() throws Exception {
         String credpath = writeCredentialsFile(
                 "name\tdriver\turl\tuser\tpwd",
                 "rda\torg.postgresql.Driver\tjdbc:postgresql://filehost:5432/csa\tfileuser\tfilepwd");
 
         DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(credpath, rdaEnv("jdbc:postgresql://envhost:5432/csa", "envuser", "envpwd"));
+        cache.initializeDbSources(credpath, rdaCreds("jdbc:postgresql://suppliedhost:5432/csa", "supplieduser", "suppliedpwd"));
 
         DbConnection rda = cache.lookup("rda");
         Assert.assertNotNull(rda);
@@ -212,40 +210,40 @@ public class UTestDbSource {
     }
 
     @Test
-    public void fileSuppliesAuxiliarySourceAlongsideEnv() throws Exception {
+    public void fileSuppliesAuxiliarySourceAlongsideSupplied() throws Exception {
         String credpath = writeCredentialsFile(
                 "name\tdriver\turl\tuser\tpwd",
                 "aux\torg.postgresql.Driver\tjdbc:postgresql://auxhost:5432/aux\tauxuser\tauxpwd");
 
         DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(credpath, rdaEnv("jdbc:postgresql://envhost:5432/csa", "envuser", "envpwd"));
+        cache.initializeDbSources(credpath, rdaCreds("jdbc:postgresql://suppliedhost:5432/csa", "supplieduser", "suppliedpwd"));
 
-        Assert.assertNotNull("env source should survive", cache.lookup("rda"));
-        Assert.assertEquals("jdbc:postgresql://envhost:5432/csa", cache.lookup("rda").url);
+        Assert.assertNotNull("supplied source should survive", cache.lookup("rda"));
+        Assert.assertEquals("jdbc:postgresql://suppliedhost:5432/csa", cache.lookup("rda").url);
         Assert.assertNotNull("file source should also be installed", cache.lookup("aux"));
         Assert.assertEquals("auxuser", cache.lookup("aux").user);
     }
 
     @Test
-    public void missingFileToleratedWhenEnvSourcePresent() throws Exception {
+    public void missingFileToleratedWhenSuppliedSourcePresent() throws Exception {
         String missing = new File(tempFolder.getRoot(), "does-not-exist.credentials").getAbsolutePath();
 
         DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(missing, rdaEnv("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
+        cache.initializeDbSources(missing, rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
 
         Assert.assertNotNull(cache.lookup("rda"));
     }
 
     @Test(expected = FileNotFoundException.class)
-    public void missingFileStillThrowsWithoutEnvSources() throws Exception {
+    public void missingFileStillThrowsWithoutSuppliedSources() throws Exception {
         String missing = new File(tempFolder.getRoot(), "does-not-exist.credentials").getAbsolutePath();
-        new DbConnectionCache().initializeDbSources(missing, new HashMap<>());
+        new DbConnectionCache().initializeDbSources(missing, List.of());
     }
 
     @Test
-    public void partialEnvSkipsSourceWithoutThrowing() throws Exception {
+    public void partialCredentialsSkippedWithoutThrowing() throws Exception {
         DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(null, rdaEnv("jdbc:postgresql://db:5432/csa", null, "secret"));
+        cache.initializeDbSources(null, rdaCreds("jdbc:postgresql://db:5432/csa", null, "secret"));
 
         Assert.assertNull(cache.lookup("rda"));
     }
@@ -257,7 +255,7 @@ public class UTestDbSource {
                 "rda\torg.postgresql.Driver\tjdbc:postgresql://filehost:5432/csa\tfileuser\tfilepwd");
 
         DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(credpath, new HashMap<>());
+        cache.initializeDbSources(credpath, List.of());
 
         Assert.assertNotNull(cache.lookup("rda"));
         Assert.assertEquals("fileuser", cache.lookup("rda").user);

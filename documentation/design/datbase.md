@@ -88,10 +88,13 @@ We have two different configuration files:
 *                         controls (db://, //db:), and the user connections behind the user available
 *                         commands/sources (SQL, GORSQL, NORSQL, sql://).
 * <p><br>
-* Credentials that rotate can instead be supplied through the environment, as GREGOR_DB_URL,
-* GREGOR_DB_USERNAME and GREGOR_DB_PASSWORD, which install a source named "rda".  A row in the
-* credentials file overrides an env-defined source of the same name, so a deployment that wants the
-* environment to be authoritative must keep that name out of the file.
+* Credentials that rotate, and so cannot be baked into a file, can instead be passed in by the host
+* application as DbCredentials objects, via DbConnection.initInServer(List) or
+* DbConnectionCache.initializeDbSources(String, List).  Gor does not care where the host got them —
+* its own configuration, a secret manager, or environment variables the host owns the naming of — and
+* never reads credentials from the environment itself.  A row in the credentials file overrides a
+* supplied source of the same name, so a host that wants its supplied credentials to be authoritative
+* must keep that name out of the file.
 * <p><br>
 * The separate gor.sql.credentials file has been removed.  It previously held the user databases; those now
 * live in gor.db.credentials alongside the rest.
