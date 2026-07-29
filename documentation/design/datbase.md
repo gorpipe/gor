@@ -103,9 +103,6 @@ The password column is optional. Lines starting with `#` are ignored.
 Its location defaults to the config directory and can be set with the `gor.db.credentials` system
 property.
 
-> The separate `gor.sql.credentials` file has been removed. It previously held the user databases;
-> those now live in `gor.db.credentials` alongside the rest.
-
 #### Credentials passed in by the host
 
 Credentials that rotate cannot be baked into a file — a rotation would leave it stale. The host

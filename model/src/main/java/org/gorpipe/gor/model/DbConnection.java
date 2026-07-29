@@ -58,9 +58,6 @@ import java.util.List;
  * file overrides a supplied source of the same name, so a host that wants its supplied credentials to
  * be authoritative must keep that name out of the file.
  * <p><br>
- * The separate gor.sql.credentials file has been removed.  It previously held the user databases; those now
- * live in gor.db.credentials alongside the rest.
- * <p><br>
  * The format for this file is:
  * <pre>
  *    name\tdriver\turl\tuser\tpwd
@@ -246,9 +243,6 @@ public class DbConnection {
      * Initialize DbConnections to be used in a console app. i.e. search for config files in the in user home dir
      * or be specified by system properties and set up a console based login for missing db passwords
      *
-     * Both caches load from gor.db.credentials. The separate gor.sql.credentials source has been
-     * removed — the db credentials file now carries the additional databases it was intended for.
-     *
      * @throws ClassNotFoundException
      * @throws IOException
      */
@@ -283,9 +277,6 @@ public class DbConnection {
      * it owns the naming of — passes them here rather than gor reading them itself. The credentials
      * file supplies the additional databases gor can reach. A file row takes precedence over a
      * supplied credential of the same name.
-     *
-     * The separate gor.sql.credentials source has been removed; it existed for exactly the
-     * resources the db credentials file now carries.
      *
      * @param credentials Credentials to install before reading the file. May be empty.
      * @throws ClassNotFoundException
