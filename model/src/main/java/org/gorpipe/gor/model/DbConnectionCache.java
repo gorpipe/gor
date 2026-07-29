@@ -153,7 +153,7 @@ public class DbConnectionCache {
      * @param env the environment to read, normally System.getenv()
      * @return zero or one db source definition
      */
-    public static List<String[]> parseEnvForDbSourceInstallation(Map<String, String> env) {
+    static List<String[]> parseEnvForDbSourceInstallation(Map<String, String> env) {
         List<String[]> partsList = new ArrayList<>();
         if (env == null) {
             return partsList;
@@ -194,7 +194,7 @@ public class DbConnectionCache {
      * @param url a jdbc url
      * @return the matching driver class name, or null if the prefix is not recognized
      */
-    public static String driverClassForUrl(String url) {
+    static String driverClassForUrl(String url) {
         if (url.startsWith("jdbc:postgresql:")) {
             return "org.postgresql.Driver";
         }
