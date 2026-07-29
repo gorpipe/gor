@@ -243,4 +243,52 @@ public class UTestDbSource {
         Assert.assertNotNull(cache.lookup("rda"));
         Assert.assertEquals("fileuser", cache.lookup("rda").user);
     }
+
+    /**
+     * Runs body with user.home pointed at an empty dir, so the ~/gor.sql.credentials branch
+     * of resolveSqlCredPath is deterministically absent, and with gor.sql.credentials set as given.
+     */
+    private void withSqlCredProperties(String sqlCredProperty, ThrowingRunnable body) throws Exception {
+        String originalHome = System.getProperty("user.home");
+        String originalSqlCred = System.getProperty("gor.sql.credentials");
+        try {
+            System.setProperty("user.home", tempFolder.newFolder("home").getAbsolutePath());
+            if (sqlCredProperty == null) {
+                System.clearProperty("gor.sql.credentials");
+            } else {
+                System.setProperty("gor.sql.credentials", sqlCredProperty);
+            }
+            body.run();
+        } finally {
+            System.setProperty("user.home", originalHome);
+            if (originalSqlCred == null) {
+                System.clearProperty("gor.sql.credentials");
+            } else {
+                System.setProperty("gor.sql.credentials", originalSqlCred);
+            }
+        }
+    }
+
+    private interface ThrowingRunnable {
+        void run() throws Exception;
+    }
+
+    @Test
+    public void userConnectionsFallBackToDbCredentialsWhenSqlCredentialsUnset() throws Exception {
+        withSqlCredProperties(null, () ->
+                Assert.assertEquals("/app/config/gor.db.credentials",
+                        DbConnection.resolveSqlCredPath("/app/config/gor.db.credentials")));
+    }
+
+    @Test
+    public void explicitSqlCredentialsStillWinsOverDbCredentials() throws Exception {
+        withSqlCredProperties("/custom/gor.sql.credentials", () ->
+                Assert.assertEquals("/custom/gor.sql.credentials",
+                        DbConnection.resolveSqlCredPath("/app/config/gor.db.credentials")));
+    }
+
+    @Test
+    public void sqlCredPathIsNullWhenNeitherIsConfigured() throws Exception {
+        withSqlCredProperties(null, () -> Assert.assertNull(DbConnection.resolveSqlCredPath(null)));
+    }
 }

@@ -52,11 +52,16 @@ public class DbConnectionCache {
     }
 
     /**
-     * Read Database sources from configuration file
+     * Read database sources from the environment and from the configuration file.
+     *
+     * Sources may come from two places. Environment variables carry credentials that rotate and so
+     * cannot be baked into a file — see {@link #parseEnvForDbSourceInstallation}. The credentials
+     * file carries the static set of additional databases gor can reach. A deployment typically
+     * supplies the rotating system credentials through the environment and the remaining resources
+     * through the file.
      *
      * @param credpath The path to the configuration file
-     * @throws ClassNotFoundException
-     * @throws IOException
+     * @throws IOException if the credentials file is configured but missing, and no env source was installed
      */
     @SuppressWarnings("WeakerAccess") // Used from gor-services
     public void initializeDbSources(String credpath) throws IOException {
@@ -66,8 +71,10 @@ public class DbConnectionCache {
     /**
      * Read database sources from the environment and from the configuration file.
      *
-     * Env-defined sources are installed first so that a file row with the same name
-     * takes precedence over it.
+     * Env-defined sources are installed first so that a file row with the same name takes
+     * precedence over it. A deployment that wants the environment to be authoritative for a given
+     * source must therefore keep a row of that name out of the credentials file — otherwise the
+     * file's static copy shadows the rotating one.
      *
      * @param credpath The path to the configuration file
      * @param env      The environment to read env-defined sources from

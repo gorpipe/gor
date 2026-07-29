@@ -245,9 +245,7 @@ public class DbConnection {
         final String dbCredpath = homeDbCredFile.exists() ? homeDbCredFile.getCanonicalPath() : System.getProperty("gor.db.credentials");
         systemConnections.initializeDbSources(dbCredpath);
 
-        File homeSqlCredFile = new File(System.getProperty("user.home"), "gor.sql.credentials");
-        final String sqlCredpath = homeSqlCredFile.exists() ? homeSqlCredFile.getCanonicalPath() : System.getProperty("gor.sql.credentials");
-        userConnections.initializeDbSources(sqlCredpath);
+        userConnections.initializeDbSources(resolveSqlCredPath(dbCredpath));
 
         setPasswordCallback(s -> {
             final Console console = System.console();
@@ -257,6 +255,11 @@ public class DbConnection {
 
     /**
      * Initialize DbSource to be used in a server.
+     *
+     * Both caches are fed from gor.db.credentials plus the environment. In a deployment that
+     * supplies rotating credentials through APPSERVER_RDA_*, those reach {@link #systemConnections}
+     * (used for db:// sources), while the credentials file supplies the additional databases
+     * reached through {@link #userConnections} (sql:// sources).
      *
      * @throws ClassNotFoundException
      * @throws IOException
@@ -268,10 +271,30 @@ public class DbConnection {
             systemConnections.initializeDbSources(dbCredpath);
         }
 
-        final String sqlCredpath = System.getProperty("gor.sql.credentials");
+        final String sqlCredpath = resolveSqlCredPath(dbCredpath);
         if (sqlCredpath != null) {
             userConnections.initializeDbSources(sqlCredpath);
         }
+    }
+
+    /**
+     * Resolve the credentials file backing {@link #userConnections}.
+     *
+     * The dedicated gor.sql.credentials source is deprecated: gor.db.credentials now carries the
+     * additional db resources it was intended for. An explicit gor.sql.credentials still wins where
+     * one is configured, so existing setups keep working; otherwise the db credentials are used for
+     * both caches. Returns null only when neither is configured.
+     *
+     * @param dbCredpath the already-resolved gor.db.credentials path, may be null
+     * @return the path to load user connections from, or null if none is configured
+     */
+    static String resolveSqlCredPath(String dbCredpath) throws IOException {
+        File homeSqlCredFile = new File(System.getProperty("user.home"), "gor.sql.credentials");
+        if (homeSqlCredFile.exists()) {
+            return homeSqlCredFile.getCanonicalPath();
+        }
+        final String sqlCredpath = System.getProperty("gor.sql.credentials");
+        return sqlCredpath != null ? sqlCredpath : dbCredpath;
     }
 
     /**
