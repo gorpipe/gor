@@ -27,6 +27,12 @@ public class DbConnectionCache {
     private final ConcurrentHashMap<String, DbConnection> mapSources = new ConcurrentHashMap<>();
     public String defaultDbSource = "rda";
 
+    static final String ENV_RDA_SOURCE_NAME = "rda";
+    static final String ENV_RDA_URL = "APPSERVER_RDA_URL";
+    static final String ENV_RDA_USERNAME = "APPSERVER_RDA_USERNAME";
+    static final String ENV_RDA_PASSWORD = "APPSERVER_RDA_PASSWORD";
+    static final String ENV_RDA_DRIVER = "APPSERVER_RDA_DRIVER";
+
     public DbConnectionCache() {
     }
 
@@ -109,6 +115,75 @@ public class DbConnectionCache {
             linecnt++;
         }
         return partsList;
+    }
+
+    /**
+     * Build db source definitions from environment variables.
+     *
+     * Returns entries in the same {name, driver, url, user[, pwd]} shape as
+     * parseLinesForDbSourceInstallation, so both paths share the install code.
+     * Never logs credential values, only variable names.
+     *
+     * @param env the environment to read, normally System.getenv()
+     * @return zero or one db source definition
+     */
+    public static List<String[]> parseEnvForDbSourceInstallation(Map<String, String> env) {
+        List<String[]> partsList = new ArrayList<>();
+        if (env == null) {
+            return partsList;
+        }
+
+        String url = trimToNull(env.get(ENV_RDA_URL));
+        String user = trimToNull(env.get(ENV_RDA_USERNAME));
+        String pwd = env.get(ENV_RDA_PASSWORD);
+
+        if (url == null && user == null) {
+            return partsList;
+        }
+        if (url == null || user == null) {
+            log.warn("Incomplete db source configuration in environment for source {}: {} is not set. Ignoring it.",
+                    ENV_RDA_SOURCE_NAME, url == null ? ENV_RDA_URL : ENV_RDA_USERNAME);
+            return partsList;
+        }
+
+        String driver = trimToNull(env.get(ENV_RDA_DRIVER));
+        if (driver == null) {
+            driver = driverClassForUrl(url);
+        }
+        if (driver == null) {
+            log.warn("Could not derive a jdbc driver for db source {} from its url, and {} is not set. Ignoring it.",
+                    ENV_RDA_SOURCE_NAME, ENV_RDA_DRIVER);
+            return partsList;
+        }
+
+        if (pwd == null) {
+            partsList.add(new String[]{ENV_RDA_SOURCE_NAME, driver, url, user});
+        } else {
+            partsList.add(new String[]{ENV_RDA_SOURCE_NAME, driver, url, user, pwd});
+        }
+        return partsList;
+    }
+
+    /**
+     * @param url a jdbc url
+     * @return the matching driver class name, or null if the prefix is not recognized
+     */
+    public static String driverClassForUrl(String url) {
+        if (url.startsWith("jdbc:postgresql:")) {
+            return "org.postgresql.Driver";
+        }
+        if (url.startsWith("jdbc:oracle:")) {
+            return "oracle.jdbc.driver.OracleDriver";
+        }
+        return null;
+    }
+
+    private static String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private void installDbSourceFromParts(String[] parts) throws ClassNotFoundException {
