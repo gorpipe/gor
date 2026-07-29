@@ -7,7 +7,7 @@
 ===
 SQL
 ===
-The SQL command allows you to run arbitrary SQL commands against "the database" (the database here being defined by the content of a file called gor.db.credentials in the config directory).
+The SQL command allows you to run arbitrary SQL commands against "the database" (the databases available here are the user connections, defined by the content of a file called gor.db.credentials in the config directory).
 
 SQL statements need to be encapsulated between curly brackets, e.g. sql {sql_query}.
 

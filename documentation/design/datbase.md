@@ -23,11 +23,13 @@ These come in two flavors:
 
 Notes:
 1. Uses DBNorIterator.
+2. Resolves against the **user** connections, i.e. the `gor.db.credentials` file. See [Configuration](#configuration).
 
 #### **sql:// URIs**
 
 Notes:
 1. Uses DBNorIterator (and SQLSource).
+2. Resolves against the **user** connections, i.e. the `gor.db.credentials` file. See [Configuration](#configuration).
 
 ### **Limited SQL Commands**
 These come in  flavors:
@@ -50,6 +52,7 @@ gor db://rda:variant_annotations | top 10
 
 Notes:
 1. Uses DBSource and DbGenomicIterator.
+2. Resolves against the **system** connections, i.e. the credentials the host passes in. See [Configuration](#configuration).
 
 #### **//db/ Paths**
 The //db/ paths are arbitrary SELECT statements that can be used to selected from a given database.  
@@ -68,7 +71,8 @@ Their limit is the can ONLY be executed from a link file  but not from a GOR que
 
 Notes:  
 1. Uses DBNorIterator.
-2. This is the old style of doing SQL access in GOR.  The new preferred way is to use the `sql`, `norsql`, `gorsql` commands.  This is likely to be deprecated.
+2. Resolves against the **system** connections, i.e. the credentials the host passes in. See [Configuration](#configuration).
+3. This is the old style of doing SQL access in GOR.  The new preferred way is to use the `sql`, `norsql`, `gorsql` commands.  This is likely to be deprecated.
 
 ### Sepcial Variables
 

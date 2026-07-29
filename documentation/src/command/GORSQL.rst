@@ -7,7 +7,7 @@
 ======
 GORSQL
 ======
-The :ref:`GORSQL` command allows you to run arbitrary SQL commands against "the database" (the database here being defined by the content of a file called gor.db.credentials in the config directory).
+The :ref:`GORSQL` command allows you to run arbitrary SQL commands against "the database" (the databases available here are the user connections, defined by the content of a file called gor.db.credentials in the config directory).
 
 For :ref:`GORSQL` to work properly, the defined query must return Chrom-POS information as first two columns.
 
