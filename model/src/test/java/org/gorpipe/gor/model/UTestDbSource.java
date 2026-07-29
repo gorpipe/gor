@@ -33,7 +33,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class UTestDbSource {
 
@@ -173,21 +172,21 @@ public class UTestDbSource {
     }
 
     @Test
-    public void suppliedCredentialsOnlyInstallRdaSource() throws Exception {
+    public void suppliedCredentialsOnlyInstallRdaSource() {
         DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(null, rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
+        cache.initializeDbSources(rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
 
         DbConnection rda = cache.lookup("rda");
-        Assert.assertNotNull("rda source should be installed from the environment", rda);
+        Assert.assertNotNull("rda source should be installed from the supplied credentials", rda);
         Assert.assertEquals("jdbc:postgresql://db:5432/csa", rda.url);
         Assert.assertEquals("gregor_reader", rda.user);
         Assert.assertEquals("secret", rda.pwd);
     }
 
     @Test
-    public void blankSuppliedPasswordInstallsSourceWithNullPassword() throws Exception {
+    public void blankSuppliedPasswordInstallsSourceWithNullPassword() {
         DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(null, rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "   "));
+        cache.initializeDbSources(rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "   "));
 
         DbConnection rda = cache.lookup("rda");
         Assert.assertNotNull("source should still install, only the password is unset", rda);
@@ -195,69 +194,55 @@ public class UTestDbSource {
     }
 
     @Test
-    public void fileRowOverridesSuppliedSource() throws Exception {
-        String credpath = writeCredentialsFile(
-                "name\tdriver\turl\tuser\tpwd",
-                "rda\torg.postgresql.Driver\tjdbc:postgresql://filehost:5432/csa\tfileuser\tfilepwd");
-
+    public void partialCredentialsSkippedWithoutThrowing() {
         DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(credpath, rdaCreds("jdbc:postgresql://suppliedhost:5432/csa", "supplieduser", "suppliedpwd"));
-
-        DbConnection rda = cache.lookup("rda");
-        Assert.assertNotNull(rda);
-        Assert.assertEquals("jdbc:postgresql://filehost:5432/csa", rda.url);
-        Assert.assertEquals("fileuser", rda.user);
-    }
-
-    @Test
-    public void fileSuppliesAuxiliarySourceAlongsideSupplied() throws Exception {
-        String credpath = writeCredentialsFile(
-                "name\tdriver\turl\tuser\tpwd",
-                "aux\torg.postgresql.Driver\tjdbc:postgresql://auxhost:5432/aux\tauxuser\tauxpwd");
-
-        DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(credpath, rdaCreds("jdbc:postgresql://suppliedhost:5432/csa", "supplieduser", "suppliedpwd"));
-
-        Assert.assertNotNull("supplied source should survive", cache.lookup("rda"));
-        Assert.assertEquals("jdbc:postgresql://suppliedhost:5432/csa", cache.lookup("rda").url);
-        Assert.assertNotNull("file source should also be installed", cache.lookup("aux"));
-        Assert.assertEquals("auxuser", cache.lookup("aux").user);
-    }
-
-    @Test
-    public void missingFileToleratedWhenSuppliedSourcePresent() throws Exception {
-        String missing = new File(tempFolder.getRoot(), "does-not-exist.credentials").getAbsolutePath();
-
-        DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(missing, rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
-
-        Assert.assertNotNull(cache.lookup("rda"));
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void missingFileStillThrowsWithoutSuppliedSources() throws Exception {
-        String missing = new File(tempFolder.getRoot(), "does-not-exist.credentials").getAbsolutePath();
-        new DbConnectionCache().initializeDbSources(missing, List.of());
-    }
-
-    @Test
-    public void partialCredentialsSkippedWithoutThrowing() throws Exception {
-        DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(null, rdaCreds("jdbc:postgresql://db:5432/csa", null, "secret"));
+        cache.initializeDbSources(rdaCreds("jdbc:postgresql://db:5432/csa", null, "secret"));
 
         Assert.assertNull(cache.lookup("rda"));
     }
 
     @Test
-    public void fileOnlyBehaviourIsUnchanged() throws Exception {
+    public void suppliedCredentialsReplaceAnythingAlreadyInstalled() throws Exception {
         String credpath = writeCredentialsFile(
                 "name\tdriver\turl\tuser\tpwd",
-                "rda\torg.postgresql.Driver\tjdbc:postgresql://filehost:5432/csa\tfileuser\tfilepwd");
+                "aux\torg.postgresql.Driver\tjdbc:postgresql://auxhost:5432/aux\tauxuser\tauxpwd");
 
         DbConnectionCache cache = new DbConnectionCache();
-        cache.initializeDbSources(credpath, List.of());
+        cache.initializeDbSources(credpath);
+        Assert.assertNotNull(cache.lookup("aux"));
 
+        // The two initializers are alternatives, not additive - each clears the cache first, which is
+        // what keeps the system and user caches fed from exactly one source each.
+        cache.initializeDbSources(rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
         Assert.assertNotNull(cache.lookup("rda"));
+        Assert.assertNull("file sources should not survive a credentials load", cache.lookup("aux"));
+    }
+
+    @Test
+    public void fileInstallsEveryRow() throws Exception {
+        String credpath = writeCredentialsFile(
+                "name\tdriver\turl\tuser\tpwd",
+                "rda\torg.postgresql.Driver\tjdbc:postgresql://filehost:5432/csa\tfileuser\tfilepwd",
+                "aux\torg.postgresql.Driver\tjdbc:postgresql://auxhost:5432/aux\tauxuser\tauxpwd");
+
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources(credpath);
+
         Assert.assertEquals("fileuser", cache.lookup("rda").user);
+        Assert.assertEquals("auxuser", cache.lookup("aux").user);
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    public void missingFileThrows() throws Exception {
+        String missing = new File(tempFolder.getRoot(), "does-not-exist.credentials").getAbsolutePath();
+        new DbConnectionCache().initializeDbSources(missing);
+    }
+
+    @Test
+    public void noCredentialPathLeavesCacheEmpty() throws Exception {
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources((String) null);
+
+        Assert.assertNull(cache.lookup("rda"));
     }
 }

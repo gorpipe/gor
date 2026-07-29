@@ -46,41 +46,33 @@ public class DbConnectionCache {
     }
 
     /**
-     * Read database sources from the configuration file.
+     * Read database sources from the configuration file, replacing any sources already installed.
      *
      * @param credpath The path to the configuration file
      * @throws IOException if the credentials file is configured but missing
      */
     @SuppressWarnings("WeakerAccess") // Used from gor-services
     public void initializeDbSources(String credpath) throws IOException {
-        initializeDbSources(credpath, List.of());
+        clearDbSources();
+        installAllFromParts(readFileForDbSourceInstallation(credpath));
     }
 
     /**
-     * Read database sources from caller-supplied credentials and from the configuration file.
+     * Install database sources from credentials supplied by the host application, replacing any
+     * sources already installed.
      *
-     * Sources may come from two places. The caller can pass credentials directly — useful for
-     * credentials that rotate and so cannot be baked into a file, which the host application may
-     * source from its own configuration or a secret manager. The credentials file carries the
-     * static set of additional databases gor can reach.
+     * This is the counterpart to {@link #initializeDbSources(String)} for credentials that rotate and
+     * so cannot be baked into a file. The host may source them from its own configuration, a secret
+     * manager, or environment variables it owns the naming of — gor does not read them itself.
      *
-     * Supplied credentials are installed first, so a file row with the same name takes precedence.
-     * A deployment that wants its supplied credentials to be authoritative for a given source must
-     * therefore keep a row of that name out of the credentials file — otherwise the file's static
-     * copy shadows the rotating one.
-     *
-     * @param credpath    The path to the configuration file
-     * @param credentials Credentials to install before reading the file. May be empty.
-     * @throws IOException if the credentials file is configured but missing, and no credentials were installed
+     * @param credentials The credentials to install. May be empty, which leaves the cache empty.
      */
-    public void initializeDbSources(String credpath, List<DbCredentials> credentials) throws IOException {
+    public void initializeDbSources(List<DbCredentials> credentials) {
         clearDbSources();
-        List<String[]> suppliedParts = toPartsForInstallation(credentials);
-        installAllFromParts(suppliedParts);
-        installAllFromParts(readFileForDbSourceInstallation(credpath, !suppliedParts.isEmpty()));
+        installAllFromParts(toPartsForInstallation(credentials));
     }
 
-    private List<String[]> readFileForDbSourceInstallation(String credpath, boolean haveSuppliedSources) throws IOException {
+    private List<String[]> readFileForDbSourceInstallation(String credpath) throws IOException {
         if (credpath == null || credpath.trim().length() == 0) {
             log.info("No db credential path specified");
             return Collections.emptyList();
@@ -88,10 +80,6 @@ public class DbConnectionCache {
 
         final Path path = Paths.get(credpath);
         if (Files.notExists(path)) {
-            if (haveSuppliedSources) {
-                log.warn("Specified db credentials file ({}) is not found, continuing with the supplied db sources", credpath);
-                return Collections.emptyList();
-            }
             throw new FileNotFoundException("Specified db credentials file (" + credpath + ") is not found");
         }
 

@@ -79,19 +79,22 @@ TBD
 
 ### Configuration
 
-Database sources come from two places: a credentials file, and credentials the host application passes
-in programmatically.
+There are two connection caches, and in a server they are fed from **separate** sources:
+
+| Cache | Used by | Fed from |
+|---|---|---|
+| system connections | internal use (e.g. session management) and the access-controlled operations `db://`, `//db:` | credentials the host passes in |
+| user connections | the user-available commands and sources `SQL`, `GORSQL`, `NORSQL`, `sql://` | the `gor.db.credentials` file |
+
+They are kept apart deliberately. System credentials typically rotate, and a file cannot hold rotating
+credentials without going stale; equally, the rotating system credentials are not the ones user queries
+should reach.
+
+In a console app there is no host to supply credentials, so both caches load from the file.
 
 #### The credentials file
 
-`gor.db.credentials` contains the databases gor can reach. It feeds both connection caches:
-
-- **system connections** — used internally (e.g. session management) and by the access-controlled
-  operations (`db://`, `//db:`)
-- **user connections** — behind the user-available commands and sources (`SQL`, `GORSQL`, `NORSQL`,
-  `sql://`)
-
-The file is tab-separated, with a header line:
+`gor.db.credentials` is tab-separated, with a header line:
 
 ```
 name	driver	url	user	pwd
@@ -103,17 +106,19 @@ The password column is optional. Lines starting with `#` are ignored.
 Its location defaults to the config directory and can be set with the `gor.db.credentials` system
 property.
 
+A missing credentials file is an error.
+
 #### Credentials passed in by the host
 
-Credentials that rotate cannot be baked into a file — a rotation would leave it stale. The host
-application passes those in as `DbCredentials`:
+The host application supplies the system credentials as `DbCredentials`:
 
 ```java
-var credentials = List.of(new DbCredentials("rda", url, user, password));
+var systemCredentials = List.of(new DbCredentials("rda", url, user, password));
 
-DbConnection.initInServer(credentials);
-// or, per cache:
-DbConnection.systemConnections.initializeDbSources(credpath, credentials);
+DbConnection.initInServer(systemCredentials);
+// which is, per cache:
+DbConnection.systemConnections.initializeDbSources(systemCredentials);
+DbConnection.userConnections.initializeDbSources(credpath);
 ```
 
 Gor never reads credentials from the environment itself, and does not care where the host got them —
@@ -126,11 +131,6 @@ including the password, so a secret manager rendering an empty string does not b
 password. Incomplete credentials are logged — naming the missing field, never a value — and skipped,
 rather than failing startup.
 
-#### Precedence
-
-Supplied credentials are installed first, then the file is read on top, so **a file row overrides a
-supplied source of the same name**. A host that wants its supplied credentials to be authoritative for
-a source must keep a row of that name out of the file.
-
-If the configured credentials file is missing, that is an error — unless credentials were supplied, in
-which case gor logs a warning and continues with those.
+The two `initializeDbSources` overloads are alternatives, not additive: each clears the cache first.
+That is what keeps a cache fed from exactly one source. Passing no credentials therefore leaves the
+system cache empty, and `db://` sources will not resolve.

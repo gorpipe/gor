@@ -51,12 +51,13 @@ import java.util.List;
  *                         controls (db://, //db:), and the user connections behind the user available
  *                         commands/sources (SQL, GORSQL, NORSQL, sql://).
  * <p><br>
- * Credentials that rotate, and so cannot be baked into a file, can instead be passed in by the host
- * application as {@link DbCredentials} — see {@link #initInServer(java.util.List)} and
- * {@link DbConnectionCache#initializeDbSources(String, java.util.List)}.  Gor does not care where the
- * host got them; it never reads credentials from the environment itself.  A row in the credentials
- * file overrides a supplied source of the same name, so a host that wants its supplied credentials to
- * be authoritative must keep that name out of the file.
+ * In a server, the two caches are fed from separate sources.  {@link #userConnections} comes from the
+ * gor.db.credentials file, while {@link #systemConnections} comes from credentials the host passes in
+ * as {@link DbCredentials} — see {@link #initInServer(java.util.List)}.  System credentials typically
+ * rotate, and so cannot be baked into a file without going stale; gor does not care where the host got
+ * them and never reads them from the environment itself.
+ * <p><br>
+ * In a console app there is no host to supply credentials, so both caches load from the file.
  * <p><br>
  * The format for this file is:
  * <pre>
@@ -270,24 +271,33 @@ public class DbConnection {
     }
 
     /**
-     * Initialize DbSource to be used in a server, with credentials supplied by the host application.
+     * Initialize DbSource to be used in a server, with the system credentials supplied by the host
+     * application.
      *
-     * Both caches are fed from the supplied credentials plus gor.db.credentials. A host that holds
-     * rotating credentials — from its own configuration, a secret manager, or environment variables
-     * it owns the naming of — passes them here rather than gor reading them itself. The credentials
-     * file supplies the additional databases gor can reach. A file row takes precedence over a
-     * supplied credential of the same name.
+     * The two caches are fed from separate sources:
      *
-     * @param credentials Credentials to install before reading the file. May be empty.
+     * <li> {@link #systemConnections}, used internally and by the access-controlled operations
+     *      (db://, //db:), comes from the supplied credentials. These typically rotate, so a host
+     *      holding them — in its own configuration, a secret manager, or environment variables it
+     *      owns the naming of — passes them here rather than gor reading them itself.
+     * <li> {@link #userConnections}, behind the user-available commands and sources (SQL, GORSQL,
+     *      NORSQL, sql://), comes from the gor.db.credentials file.
+     *
+     * The sources are kept apart deliberately: the file cannot hold credentials that rotate without
+     * going stale, and the rotating system credentials are not the ones user queries should reach.
+     *
+     * @param systemCredentials Credentials for {@link #systemConnections}. May be empty, which leaves
+     *                          that cache empty.
      * @throws ClassNotFoundException
      * @throws IOException
      */
     @SuppressWarnings("unused") // Called from GorQueryTask in gor-services
-    public static void initInServer(List<DbCredentials> credentials) throws ClassNotFoundException, IOException {
-        final String dbCredpath = System.getProperty("gor.db.credentials");
-        if (dbCredpath != null || !credentials.isEmpty()) {
-            systemConnections.initializeDbSources(dbCredpath, credentials);
-            userConnections.initializeDbSources(dbCredpath, credentials);
+    public static void initInServer(List<DbCredentials> systemCredentials) throws ClassNotFoundException, IOException {
+        systemConnections.initializeDbSources(systemCredentials);
+
+        final String userCredpath = System.getProperty("gor.db.credentials");
+        if (userCredpath != null) {
+            userConnections.initializeDbSources(userCredpath);
         }
     }
 
