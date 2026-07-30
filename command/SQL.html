@@ -160,7 +160,7 @@
             
   <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="sql">
 <span id="id1"></span><h1>SQL<a class="headerlink" href="#sql" title="Permalink to this headline">¶</a></h1>
-<p>The SQL command allows you to run arbitrary SQL commands against “the database” (the database here being defined by the content of a file called gor.sql.credentials in the config directory).</p>
+<p>The SQL command allows you to run arbitrary SQL commands against “the database” (the databases available here are the user connections, defined by the content of a file called gor.db.credentials in the config directory).</p>
 <p>SQL statements need to be encapsulated between curly brackets, e.g. sql {sql_query}.</p>
 <p>See also <a class="reference internal" href="GORSQL.html#gorsql"><span class="std std-ref">GORSQL</span></a> and <a class="reference internal" href="NORSQL.html#norsql"><span class="std std-ref">NORSQL</span></a></p>
 <div class="section" id="usage">
@@ -195,7 +195,7 @@ The following place holders are provided: #{TAGS}.   The necessary quoting is do
 The following place holders are provided: #{TAGS}.   The necessary quoting is done automatically.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-db</span> <span class="pre">database</span></code></p></td>
-<td><p>Database alias as defied in <code class="docutils literal notranslate"><span class="pre">gor.sql.credentials</span></code>.</p></td>
+<td><p>Database alias as defied in <code class="docutils literal notranslate"><span class="pre">gor.db.credentials</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
