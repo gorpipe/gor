@@ -7,7 +7,7 @@
 ======
 NORSQL
 ======
-The :ref:`NORSQL` command allows you to run arbitrary SQL commands against "the database" (the database here being defined by the content of a file called gor.sql.credentials in the config directory).
+The :ref:`NORSQL` command allows you to run arbitrary SQL commands against "the database" (the databases available here are the user connections, defined by the content of a file called gor.db.credentials in the config directory).
 
 :ref:`NORSQL` can be run against any database table.
 
