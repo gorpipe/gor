@@ -9,7 +9,10 @@ import java.util.List;
 @CommandLine.Command(name = "rm", header = "Remove files or directories.", description = "Remove files or directories.")
 public class RmCommand extends HelpOptions implements Runnable {
 
-    @CommandLine.Option(names = {"-r", "--recursive"}, description = "Recursively delete directories.")
+    static final String RECURSIVE_ENABLED_PROPERTY = "gor.cli.files.rm.recursive";
+
+    @CommandLine.Option(names = {"-r", "--recursive"},
+            description = "Recursively delete directories.  Disabled unless -D" + RECURSIVE_ENABLED_PROPERTY + "=true is set.")
     private boolean recursive;
 
     @CommandLine.Option(names = {"-f", "--force"}, description = "Ignore nonexistent files, never prompt.")
@@ -32,6 +35,11 @@ public class RmCommand extends HelpOptions implements Runnable {
 
     @Override
     public void run() {
+        if (recursive && !isRecursiveEnabled()) {
+            throw new CommandLine.ExecutionException(spec.commandLine(),
+                    "rm: recursive delete is disabled, set -D" + RECURSIVE_ENABLED_PROPERTY + "=true to enable it");
+        }
+
         var reader = parent.getFileReader();
 
         for (var path : paths) {
@@ -68,5 +76,9 @@ public class RmCommand extends HelpOptions implements Runnable {
                 throw new CommandLine.ExecutionException(spec.commandLine(), e.getMessage(), e);
             }
         }
+    }
+
+    private static boolean isRecursiveEnabled() {
+        return Boolean.parseBoolean(System.getProperty(RECURSIVE_ENABLED_PROPERTY, "false"));
     }
 }
