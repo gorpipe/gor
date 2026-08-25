@@ -1,5 +1,6 @@
 package org.gorpipe.gor.driver.linkfile;
 
+import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.gorpipe.gor.driver.linkfile.LinkFile.*;
 import static org.gorpipe.gor.driver.linkfile.LinkFileV1.LinkReuseStrategy.NO_REUSE;
 import static org.gorpipe.gor.driver.linkfile.LinkFileV1.LinkReuseStrategy.REUSE;
 import static org.junit.Assert.*;
@@ -197,6 +199,39 @@ public class LinkFileTest {
         assertEquals(simpleFile, savedContent.trim());
     }
 
+    @Test(expected = GorResourceException.class)
+    public void testInferDataFileNameFromLinkFile_Managed_TargetAlreadyExists_Throws() throws Exception {
+        // When managed and the inferred target already exists, throw to prevent silent overwrite.
+        // Mock the reader so exists() always returns true regardless of the (random) inferred path.
+        String linkFileMeta = "## VERSION = 1\n## " + LinkFileMeta.HEADER_DATA_LIFECYCLE_MANAGED_KEY + " = true";
+        FileReader mockReader = mock(FileReader.class);
+        when(mockReader.exists(anyString())).thenReturn(true);
+
+        LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource("managed.gor.link"), linkFileMeta, mockReader);
+    }
+
+    @Test
+    public void testInferDataFileNameFromLinkFile_Managed_TargetMissing_Succeeds() throws Exception {
+        // When managed but the target does not yet exist, the call must succeed.
+        String linkFileMeta = "## VERSION = 1\n## " + LinkFileMeta.HEADER_DATA_LIFECYCLE_MANAGED_KEY + " = true";
+        FileReader mockReader = mock(FileReader.class);
+        when(mockReader.exists(anyString())).thenReturn(false);
+
+        String result = LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource("managed2.gor.link"), linkFileMeta, mockReader);
+        assertNotNull(result);
+    }
+
+    @Test
+    public void testInferDataFileNameFromLinkFile_Unmanaged_TargetAlreadyExists_NoThrow() throws Exception {
+        // When NOT managed, an existing target must not trigger an error.
+        String linkFileMeta = "## VERSION = 1\n## " + LinkFileMeta.HEADER_DATA_LIFECYCLE_MANAGED_KEY + " = false";
+        FileReader mockReader = mock(FileReader.class);
+        when(mockReader.exists(anyString())).thenReturn(true);
+
+        String result = LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource("unmanaged.gor.link"), linkFileMeta, mockReader);
+        assertNotNull(result);
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testInferDataFileNameFromLinkFile_NullOrEmptyPath() throws Exception {
         LinkFileUtil.inferDataFileNameFromLinkFile(new FileSource(""), null);
@@ -273,6 +308,8 @@ public class LinkFileTest {
     public void testLimitByNumberOfEntries() throws IOException {
         LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
         linkFile.setEntriesCountMax(2);
+        linkFile.setEntriesCountMin(0);
+        linkFile.setEntriesAgeMin(0);
 
         // Current entries: 2. Add one more.
         linkFile.appendEntry("new_entry.gor", "md5");
@@ -294,6 +331,8 @@ public class LinkFileTest {
 
         LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
         linkFile.setEntriesAgeMax(10000);
+        linkFile.setEntriesCountMin(0);
+        linkFile.setEntriesAgeMin(0);
 
         // Save with current time far in the future
         long futureTime = 1734305124533L + 20000;
@@ -307,13 +346,53 @@ public class LinkFileTest {
     }
 
     @Test
+    public void testLimitByMinCount() throws IOException {
+        // Both original entries are older than EntriesAgeMax, but EntriesCountMin=1 protects the newest.
+        LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
+        linkFile.setEntriesAgeMax(10000);
+        linkFile.setEntriesCountMin(1);
+        linkFile.setEntriesAgeMin(0);
+
+        long futureTime = 1734305124533L + 20000;
+        linkFile.save(futureTime, fileReader);
+
+        LinkFile saved = LinkFile.loadV1(source);
+        assertEquals(1, saved.getEntriesCount());
+        assertEquals(workPath.resolve("source/v1/ver2.gorz").toString(), saved.getLatestEntryUrl());
+    }
+
+    @Test
+    public void testLimitByMinAge() throws IOException {
+        // Both entries are just added with timestamp=now, so their age is ~0ms.
+        // CountMax=1 would normally drop the older of the two, but MinAge=1h protects it.
+        // Result: both entries are kept because the older one is too young to delete.
+        long now = System.currentTimeMillis();
+        String contentWithNowTimestamps = """
+                ## SERIAL = 2
+                ## VERSION = 1
+                #FILE\tTIMESTAMP\tMD5\tSERIAL\tINFO
+                source/v1/recent1.gorz\t%d\tAAA\t1\t
+                source/v1/recent2.gorz\t%d\tBBB\t2\t
+                """.formatted(now - 1000, now);
+
+        LinkFile linkFile = LinkFile.create(source, contentWithNowTimestamps);
+        linkFile.setEntriesCountMax(1);
+        linkFile.setEntriesCountMin(0);
+        linkFile.setEntriesAgeMin(60 * 60 * 1000L); // 1 hour — both entries are ~0-1s old, so both protected
+        linkFile.save(now, fileReader);
+
+        LinkFile saved = LinkFile.loadV1(source);
+        assertEquals(2, saved.getEntriesCount());
+    }
+
+    @Test
     public void testLimitBySize() throws IOException {
         LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
         linkFile.getMeta().setProperty(LinkFileMeta.HEADER_REUSE_STRATEGY_KEY, NO_REUSE.name());
 
-        // Generate a large info string to exceed default 10000 bytes.
-        // 4000 chars * 3 entries should exceed it.
-        String largeInfo = java.util.stream.IntStream.range(0, 4000).mapToObj(i -> "x").reduce("", String::concat);
+        // Generate a large info string to exceed default bytes.
+        // 40% default chars * 3 entries should exceed it.
+        String largeInfo = java.util.stream.IntStream.range(0, (int)(LINK_FILE_MAX_SIZE * 0.4)).mapToObj(i -> "x").reduce("", String::concat);
 
         linkFile.appendEntry("large1.gor", "md5", largeInfo);
         linkFile.appendEntry("large2.gor", "md5", largeInfo);
@@ -333,6 +412,8 @@ public class LinkFileTest {
     public void testGarbageCollectionManaged() throws IOException {
         LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
         linkFile.setEntriesCountMax(1); // Force eviction of oldest
+        linkFile.setEntriesCountMin(0);
+        linkFile.setEntriesAgeMin(0);
         linkFile.getMeta().setProperty("DATA_LIFECYCLE_MANAGED", "true");
 
         FileReader mockReader = mock(FileReader.class);
@@ -450,6 +531,192 @@ public class LinkFileTest {
         assertNotEquals(latestBefore, linkFile.getLatestEntry());
         assertEquals("new entry info", linkFile.getLatestEntry().info());
         assertTrue(Files.exists(newFile)); // Verify the new file is not used and deleted.
+    }
+
+    // --- MD5 fix: null/empty MD5 handling ---
+
+    @Test
+    public void testReuseStrategy_emptyMd5_doesNotMatchAnotherEmptyMd5() throws IOException {
+        // Two entries with empty MD5 must NOT be treated as duplicates via MD5 match.
+        // With REUSE strategy they should not collapse into one entry just because both have no MD5.
+        LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
+        linkFile.getMeta().setProperty(LinkFileMeta.HEADER_REUSE_STRATEGY_KEY, REUSE.name());
+        linkFile.getMeta().setProperty(LinkFileMeta.HEADER_DATA_LIFECYCLE_MANAGED_KEY, "false");
+
+        int initialCount = linkFile.getEntriesCount();
+
+        // Append two entries with no MD5 and distinct URLs — each should create a separate entry.
+        linkFile.appendEntry("no_md5_file1.gor", "", "first entry", fileReader);
+        linkFile.appendEntry("no_md5_file2.gor", "", "second entry", fileReader);
+
+        assertEquals(initialCount + 2, linkFile.getEntriesCount());
+    }
+
+    @Test
+    public void testReuseStrategy_emptyMd5_usesTimestampFallback() throws IOException {
+        // With empty MD5, canReuseEntryWithSameUrl should fall through to timestamp comparison
+        // rather than incorrectly matching two entries just because both have no MD5.
+        System.setProperty("gor.link.versioned.allow.overwrite", "false");
+        try {
+            LinkFile linkFile = LinkFile.createV1(source, "");
+            Path file1 = workPath.resolve("shared_url.gor");
+            Files.writeString(file1, "#Chrom\tPos\nchr1\t100\n");
+
+            // First append with empty MD5 — establishes the URL.
+            linkFile.appendEntry(file1.toString(), "", "first", fileReader);
+
+            // Second append with the same URL and same (empty) MD5 — the fallback is to compare
+            // timestamps. Since ver1 timestamp <= file's last-modified, it should succeed.
+            linkFile.appendEntry(file1.toString(), "", "second", fileReader);
+
+            // If we reach here without an exception the timestamp fallback was used (not a false MD5 match).
+            assertEquals(2, linkFile.getEntriesCount());
+        } finally {
+            System.clearProperty("gor.link.versioned.allow.overwrite");
+        }
+    }
+
+    // --- checkIntegrity() ---
+
+    @Test
+    public void testCheckIntegrity_cleanFile_noViolations() {
+        LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
+        var violations = linkFile.checkIntegrity();
+        assertTrue("Expected no violations for a well-formed link file", violations.isEmpty());
+    }
+
+    @Test
+    public void testCheckIntegrity_serialNotMonotonicAfterTimestampSort() {
+        // Entries are stored with ascending timestamps but descending serials.
+        // After parsing (which sorts by timestamp) the serial order is violated.
+        String corruptContent = """
+                ## SERIAL = 2
+                ## VERSION = 1
+                #FILE\tTIMESTAMP\tMD5\tSERIAL\tINFO
+                a.gorz\t2024-12-15T23:25:24.533Z\tAAA\t1\t
+                b.gorz\t2024-12-15T11:21:30.790Z\tBBB\t2\t
+                """;
+        LinkFile linkFile = LinkFile.create(source, corruptContent);
+        var violations = linkFile.checkIntegrity();
+        assertFalse("Expected a serial-order violation", violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.contains("serial")));
+    }
+
+    @Test
+    public void testCheckIntegrity_duplicateSerials() {
+        String corruptContent = """
+                ## SERIAL = 2
+                ## VERSION = 1
+                #FILE\tTIMESTAMP\tMD5\tSERIAL\tINFO
+                a.gorz\t2024-12-15T11:21:30.790Z\tAAA\t2\t
+                b.gorz\t2024-12-15T23:25:24.533Z\tBBB\t2\t
+                """;
+        LinkFile linkFile = LinkFile.create(source, corruptContent);
+        var violations = linkFile.checkIntegrity();
+        assertFalse("Expected a serial-order violation", violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.contains("serial")));
+    }
+
+    @Test
+    public void testCheckIntegrity_urlReusedWithDifferentMd5() {
+        // The same URL appearing with two different non-empty MD5s means the file was overwritten.
+        String content = """
+                ## SERIAL = 2
+                ## VERSION = 1
+                #FILE\tTIMESTAMP\tMD5\tSERIAL\tINFO
+                shared.gorz\t2024-12-15T11:21:30.790Z\tAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\t1\t
+                shared.gorz\t2024-12-15T23:25:24.533Z\tBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\t2\t
+                """;
+        LinkFile linkFile = LinkFile.create(source, content);
+        var violations = linkFile.checkIntegrity();
+        assertFalse("Expected a URL-reuse-with-different-MD5 violation", violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.contains("shared.gorz")));
+    }
+
+    @Test
+    public void testCheckIntegrity_urlReusedWithSameMd5_noViolation() {
+        // The same URL with the same MD5 is fine (same content, URL just repeated in history).
+        String content = """
+                ## SERIAL = 2
+                ## VERSION = 1
+                #FILE\tTIMESTAMP\tMD5\tSERIAL\tINFO
+                shared.gorz\t2024-12-15T11:21:30.790Z\tAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\t1\t
+                shared.gorz\t2024-12-15T23:25:24.533Z\tAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\t2\t
+                """;
+        LinkFile linkFile = LinkFile.create(source, content);
+        var violations = linkFile.checkIntegrity();
+        assertTrue("Same URL with same MD5 should not be a violation", violations.isEmpty());
+    }
+
+    @Test
+    public void testCheckIntegrity_v0_alwaysClean() {
+        LinkFile v0 = LinkFile.createV0(source, "some/path.gorz");
+        assertTrue(v0.checkIntegrity().isEmpty());
+    }
+
+    // --- validate() ---
+
+    // Corrupt V1 content: entries have ascending timestamps but descending serials,
+    // so after parsing (which sorts by timestamp) the serial order is violated.
+    private static final String CORRUPT_V1_CONTENT = """
+            ## SERIAL = 2
+            ## VERSION = 1
+            #FILE\tTIMESTAMP\tMD5\tSERIAL\tINFO
+            a.gorz\t2024-12-15T23:25:24.533Z\tAAA\t1\t
+            b.gorz\t2024-12-15T11:21:30.790Z\tBBB\t2\t
+            """;
+
+    @Test
+    public void testValidate_false_cleanFile_doesNotThrow() {
+        System.setProperty(LINK_FILE_VALIDATE_LOAD, "false");
+        System.setProperty(LINK_FILE_VALIDATE_SAVE, "false");
+        LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
+        assertNotNull(linkFile);
+        linkFile.save(fileReader);
+    }
+
+    @Test
+    public void testValidate_false_corruptFile_doesNotThrow() {
+        System.setProperty(LINK_FILE_VALIDATE_LOAD, "false");
+        System.setProperty(LINK_FILE_VALIDATE_SAVE, "false");
+        LinkFile linkFile = LinkFile.create(source, CORRUPT_V1_CONTENT);
+        assertNotNull(linkFile);
+        linkFile.save(fileReader);
+    }
+
+    @Test
+    public void testValidate_true_calledOnConstruction_cleanFile() {
+        System.setProperty(LINK_FILE_VALIDATE_LOAD, "true");
+        LinkFile.create(source, v1LinkFileContent);
+    }
+
+    @Test(expected = GorResourceException.class)
+    public void testValidate_true_calledOnConstruction_corruptFile() {
+        System.setProperty(LINK_FILE_VALIDATE_LOAD, "true");
+        LinkFile.create(source, CORRUPT_V1_CONTENT);
+    }
+
+    @Test
+    public void testValidate_calledOnSave_cleanFile() {
+        System.setProperty(LINK_FILE_VALIDATE_LOAD, "false");
+        System.setProperty(LINK_FILE_VALIDATE_SAVE, "true");
+        LinkFile linkFile = LinkFile.create(source, v1LinkFileContent);
+        linkFile.save(fileReader);
+    }
+
+    @Test(expected = GorResourceException.class)
+    public void testValidate_calledOnSave_corruptFile() {
+        System.setProperty(LINK_FILE_VALIDATE_LOAD, "false");
+        System.setProperty(LINK_FILE_VALIDATE_SAVE, "true");
+        LinkFile linkFile = LinkFile.create(source, CORRUPT_V1_CONTENT);
+        linkFile.save(fileReader);
+    }
+
+    @Test
+    public void testValidate_v0_doesNotThrow() {
+        // V0 has no invariants; validate() must always succeed silently.
+        LinkFile v0 = LinkFile.createV0(source, "some/path.gorz");
+        v0.validate(); // must not throw
     }
 
     record ReuseStrategySetupResult(LinkFile linkFile, int initialCount, LinkFileEntry latestBefore, Path newFile) {}

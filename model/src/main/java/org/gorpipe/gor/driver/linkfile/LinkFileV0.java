@@ -3,7 +3,7 @@ package org.gorpipe.gor.driver.linkfile;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.model.FileReader;
 
-import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -33,6 +33,11 @@ public class LinkFileV0 extends LinkFile {
         entries.clear(); // V0 does not support multiple entries, so we clear the list
         entries.add(new LinkFileEntryV0(link));
         return this;
+    }
+
+    @Override
+    public List<String> checkIntegrity() {
+        return Collections.emptyList();
     }
 
     public static String getDefaultMetaContent() {

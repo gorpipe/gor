@@ -36,6 +36,8 @@ import gorsat.Iterators.NorInputSource;
 import java.net.URI;
 import java.nio.file.Path;
 
+import static gorsat.process.NorStreamIterator.HEADER_PREFIX;
+
 
 /**
  * NorDictionaryTable.
@@ -69,8 +71,7 @@ public class NorDictionaryTable extends DictionaryTable<DictionaryEntry> {
         try {
             String headerLine = new NorInputSource(file, fileReader, false, false, 0, false, false, false).getHeader();
             if (headerLine != null) {
-                var CHROM_NOR_COLS = "ChromNOR\tPosNOR\t";
-                newHeader.setColumns(headerLine.startsWith(CHROM_NOR_COLS) ? headerLine.substring(CHROM_NOR_COLS.length()).split("\t") : headerLine.split("\t"));
+                newHeader.setColumns(headerLine.startsWith(HEADER_PREFIX) ? headerLine.substring(HEADER_PREFIX.length()).split("\t") : headerLine.split("\t"));
             } else {
                 newHeader.setColumns( new String[]{""});
             }

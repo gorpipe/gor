@@ -27,7 +27,7 @@ import picocli.CommandLine;
 
 public class HelpOptions extends FormattingOptions {
 
-    @CommandLine.Option(names = {"-h", "--help"},
+    @CommandLine.Option(names = {"--help"},
             hidden = true,
             usageHelp = true,
             description = "Print usage help and exit.")

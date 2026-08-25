@@ -8,7 +8,7 @@ import java.util.List;
 
 @CommandLine.Command(name = "diff",
         description = "Show changes between commits, commit and working tree, etc.")
-public class GitDiffCommand implements Runnable {
+public class GitDiffCommand extends GitHelpOptions implements Runnable {
 
     @CommandLine.Option(names = {"--cached", "--staged"},
             description = "Show staged changes.")

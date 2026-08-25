@@ -1,5 +1,6 @@
 package org.gorpipe.gor.cli.link;
 
+import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.util.DateUtils;
 import org.gorpipe.util.Strings;
@@ -9,8 +10,9 @@ import java.io.IOException;
 import java.time.Instant;
 
 @CommandLine.Command(name = "resolve",
+        header = "Resolve a link file to an active entry.",
         description = "Resolve a link file to the entry active at the current or given time.")
-public class LinkResolveCommand implements Runnable {
+public class LinkResolveCommand extends HelpOptions implements Runnable {
 
     @CommandLine.Parameters(index = "0", paramLabel = "LINK_FILE",
             description = "Path to the link file to resolve.")

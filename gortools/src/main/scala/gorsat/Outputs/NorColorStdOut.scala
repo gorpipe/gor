@@ -23,10 +23,11 @@
 package gorsat.Outputs
 
 import gorsat.process.PipeInstance
+import java.io.OutputStream
 import org.gorpipe.gor.model.{Row, RowColorize}
 
-case class NorColorStdOut(instance: PipeInstance = null, colorFormatter: RowColorize)
-  extends NorOutStream(null, System.out)  {
+case class NorColorStdOut(instance: PipeInstance = null, colorFormatter: RowColorize, dest: OutputStream = System.out)
+  extends NorOutStream(null, dest)  {
 
   var headerPrinted : Boolean = false
 

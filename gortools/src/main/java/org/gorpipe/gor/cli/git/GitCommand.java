@@ -10,9 +10,9 @@ import java.io.File;
 
 @SuppressWarnings("squid:S106")
 @CommandLine.Command(name = "git",
-        description = "Wrapper for git commands (clone, checkout, pull, push, commit, add, config, diff).",
+        description = "Wrapper for git commands (clone, checkout, pull, push, commit, add, config, diff, status, log, fetch).",
         header = "Git command wrapper.",
-        subcommands = {GitCloneCommand.class, GitCheckoutCommand.class, GitPullCommand.class, GitPushCommand.class, GitCommitCommand.class, GitAddCommand.class, GitConfigCommand.class, GitDiffCommand.class})
+        subcommands = {GitCloneCommand.class, GitCheckoutCommand.class, GitPullCommand.class, GitPushCommand.class, GitCommitCommand.class, GitAddCommand.class, GitConfigCommand.class, GitDiffCommand.class, GitStatusCommand.class, GitLogCommand.class, GitFetchCommand.class})
 public class GitCommand extends HelpOptions implements Runnable {
 
     @CommandLine.ParentCommand
@@ -38,11 +38,14 @@ public class GitCommand extends HelpOptions implements Runnable {
         String user = System.getenv("GOR_GIT_USER");
         String pass = System.getenv("GOR_GIT_TOKEN");
         if (user != null && pass != null) {
-            var userPass = "%s:%s@".formatted(user, pass);
-            return "https://%sgithub.com/GeneDx/%s.git".formatted(userPass, repository);
-        } else {
-            return "git@github.com:GeneDx/%s.git".formatted(repository);
+            return "https://%s:%s@github.com/GeneDx/%s.git"
+                    .formatted(user, GitCommandExecutor.TOKEN_PLACEHOLDER, repository);
         }
+        return "git@github.com:GeneDx/%s.git".formatted(repository);
+    }
+
+    public String getGitToken() {
+        return System.getenv("GOR_GIT_TOKEN");
     }
 
     public File getWorkingDirectory(String directory) {

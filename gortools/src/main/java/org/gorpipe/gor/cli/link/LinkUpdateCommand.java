@@ -1,5 +1,6 @@
 package org.gorpipe.gor.cli.link;
 
+import org.gorpipe.gor.cli.HelpOptions;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.util.StringUtil;
@@ -11,8 +12,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @CommandLine.Command(name = "update",
+        header = "Append a new entry to a link file.",
         description = "Append a new entry to a link file, creating the file if needed.")
-public class LinkUpdateCommand implements Runnable {
+public class LinkUpdateCommand extends HelpOptions implements Runnable {
 
     @CommandLine.Parameters(index = "0", paramLabel = "LINK_FILE", description = "Path to the link file to update.")
     private String linkFilePath;

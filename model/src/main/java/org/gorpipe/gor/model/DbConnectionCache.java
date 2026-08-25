@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,35 +46,55 @@ public class DbConnectionCache {
     }
 
     /**
-     * Read Database sources from configuration file
+     * Read database sources from the configuration file, replacing any sources already installed.
      *
      * @param credpath The path to the configuration file
-     * @throws ClassNotFoundException
-     * @throws IOException
+     * @throws IOException if the credentials file is configured but missing
      */
     @SuppressWarnings("WeakerAccess") // Used from gor-services
     public void initializeDbSources(String credpath) throws IOException {
         clearDbSources();
-        if (credpath != null && credpath.trim().length() > 0) {
-            final Path path = Paths.get(credpath);
-            if (Files.notExists(path)) {
-                throw new FileNotFoundException("Specified db credentials file (" + credpath + ") is not found");
-            }
+        installAllFromParts(readFileForDbSourceInstallation(credpath));
+    }
 
-            final List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+    /**
+     * Install database sources from credentials supplied by the host application, replacing any
+     * sources already installed.
+     *
+     * This is the counterpart to {@link #initializeDbSources(String)} for credentials that rotate and
+     * so cannot be baked into a file. The host may source them from its own configuration, a secret
+     * manager, or environment variables it owns the naming of — gor does not read them itself.
+     *
+     * @param credentials The credentials to install. May be empty, which leaves the cache empty.
+     */
+    public void initializeDbSources(List<DbCredentials> credentials) {
+        clearDbSources();
+        installAllFromParts(toPartsForInstallation(credentials));
+    }
 
-            List<String[]> partsList = parseLinesForDbSourceInstallation(credpath, lines);
-
-            for (String[] parts : partsList) {
-                try {
-                    installDbSourceFromParts(parts);
-                } catch (ClassNotFoundException e) {
-                    log.error("Failed to load driver class {} for db source {}. Please ensure the driver is in the classpath.",
-                            parts[1], parts[0], e);
-                }
-            }
-        } else {
+    private List<String[]> readFileForDbSourceInstallation(String credpath) throws IOException {
+        if (credpath == null || credpath.trim().length() == 0) {
             log.info("No db credential path specified");
+            return Collections.emptyList();
+        }
+
+        final Path path = Paths.get(credpath);
+        if (Files.notExists(path)) {
+            throw new FileNotFoundException("Specified db credentials file (" + credpath + ") is not found");
+        }
+
+        final List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+        return parseLinesForDbSourceInstallation(credpath, lines);
+    }
+
+    private void installAllFromParts(List<String[]> partsList) {
+        for (String[] parts : partsList) {
+            try {
+                installDbSourceFromParts(parts);
+            } catch (ClassNotFoundException e) {
+                log.error("Failed to load driver class {} for db source {}. Please ensure the driver is in the classpath.",
+                        parts[1], parts[0], e);
+            }
         }
     }
 
@@ -109,6 +130,83 @@ public class DbConnectionCache {
             linecnt++;
         }
         return partsList;
+    }
+
+    /**
+     * Convert caller-supplied credentials into the {name, driver, url, user[, pwd]} shape that
+     * parseLinesForDbSourceInstallation produces, so both paths share the install code.
+     *
+     * Incomplete credentials are skipped with a warning rather than failing initialization. Blank
+     * values count as unset, including the password: a secret manager or template that renders an
+     * empty value is expressing a missing value, not a real empty password.
+     *
+     * Never logs credential values, only the source name and which field was missing.
+     *
+     * @param credentials the credentials to convert, may be null
+     * @return one entry per usable credential
+     */
+    static List<String[]> toPartsForInstallation(List<DbCredentials> credentials) {
+        List<String[]> partsList = new ArrayList<>();
+        if (credentials == null) {
+            return partsList;
+        }
+
+        for (DbCredentials cred : credentials) {
+            if (cred == null) {
+                continue;
+            }
+
+            String name = trimToNull(cred.name());
+            String url = trimToNull(cred.url());
+            String user = trimToNull(cred.user());
+            String pwd = trimToNull(cred.pwd());
+
+            if (name == null || url == null || user == null) {
+                log.warn("Incomplete db source credentials for source {}: {} is not set. Ignoring it.",
+                        name == null ? "<unnamed>" : name,
+                        name == null ? "name" : (url == null ? "url" : "user"));
+                continue;
+            }
+
+            String driver = trimToNull(cred.driver());
+            if (driver == null) {
+                driver = driverClassForUrl(url);
+            }
+            if (driver == null) {
+                log.warn("Could not derive a jdbc driver for db source {} from its url, and no driver was given. Ignoring it.",
+                        name);
+                continue;
+            }
+
+            if (pwd == null) {
+                partsList.add(new String[]{name, driver, url, user});
+            } else {
+                partsList.add(new String[]{name, driver, url, user, pwd});
+            }
+        }
+        return partsList;
+    }
+
+    /**
+     * @param url a jdbc url
+     * @return the matching driver class name, or null if the prefix is not recognized
+     */
+    static String driverClassForUrl(String url) {
+        if (url.startsWith("jdbc:postgresql:")) {
+            return "org.postgresql.Driver";
+        }
+        if (url.startsWith("jdbc:oracle:")) {
+            return "oracle.jdbc.driver.OracleDriver";
+        }
+        return null;
+    }
+
+    private static String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private void installDbSourceFromParts(String[] parts) throws ClassNotFoundException {

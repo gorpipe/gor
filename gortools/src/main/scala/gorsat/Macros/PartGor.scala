@@ -28,8 +28,10 @@ import gorsat.Utilities.{AnalysisUtilities, MacroUtilities}
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.process.GorJavaUtilities
 import org.gorpipe.exceptions.{GorDataException, GorParsingException}
+import org.gorpipe.gor.driver.linkfile.LinkFileUtil
 import org.gorpipe.gor.model.FileReader
 import org.gorpipe.gor.session.{GorContext, GorSession}
+import org.gorpipe.util.Strings
 
 import java.util
 import scala.collection.mutable
@@ -76,7 +78,11 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("-gordfolder", "-s -
     val useGordFolders = CommandParseUtilities.hasOption(options, "-gordfolder") || hasDictFolderWrite
     if (useGordFolders) {
       cachePath = theCachePath
-      if (cachePath != null && cachePath.length > 1) {
+      // Only clear the gord folder when the result is not already cached for this signature;
+      // a cached result means the write is skipped at execution and the folder must survive
+      // for the dictionary build (ENGKNOW-3656).
+      if (cachePath != null && cachePath.length > 1
+          && !MacroUtilities.fileCacheLookup(context, create.signature)._2) {
         context.getSession.getProjectContext.getSystemFileReader.deleteDirectory(cachePath)
       }
     }
@@ -100,7 +106,18 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("-gordfolder", "-s -
     })
 
     val gordict = if (useGordFolders) CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART else CommandParseUtilities.GOR_DICTIONARY_PART
-    val theCommand = partitions.keys.foldLeft(gordict) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
+    var theCommand = partitions.keys.foldLeft(gordict) ((x, y) => x + " [" + theKey + "_" + y + "] " + y)
+
+    val linkOptions = LinkFileUtil.extractLinkOptionData(create.query)
+    if (!Strings.isNullOrEmpty(linkOptions)) {
+      theCommand += " -link " + linkOptions
+    }
+
+    val linkMetaOptions = LinkFileUtil.extractLinkMetaOptionData(create.query)
+    if (!Strings.isNullOrEmpty(linkMetaOptions)) {
+      theCommand += String.format(" -linkMeta '%s'", linkMetaOptions)
+    }
+
     parGorCommands.put(createKey, ExecutionBlock(create.groupName, theCommand, create.signature, theDependencies.toArray, create.batchGroupName, cachePath, isDictionary = true))
 
     MacroParsingResult(parGorCommands, null)

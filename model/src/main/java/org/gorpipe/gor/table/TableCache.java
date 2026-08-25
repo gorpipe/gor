@@ -2,6 +2,7 @@ package org.gorpipe.gor.table;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.util.Strings;
 import org.slf4j.Logger;
@@ -18,8 +19,10 @@ public abstract class TableCache<T extends Table> {
     public static final boolean useCache = Boolean.parseBoolean(System.getProperty("gor.dictionary.cache.active", "true"));
 
     final protected Cache<String, T> dictCache = Caffeine.newBuilder()
-            .maximumSize(500).expireAfterAccess(Duration.ofHours(12L))
+            .maximumSize(Long.getLong("gor.dictionary.cache.maxsize", 64L))
+            .expireAfterAccess(Duration.ofHours(Long.getLong("gor.dictionary.cache.ttl.hours", 12L)))
             .softValues()
+            .recordStats()
             .build();   //A map from dictionaries to the cache objects.
 
     abstract protected T createTable(String path, FileReader fileReader);
@@ -58,6 +61,18 @@ public abstract class TableCache<T extends Table> {
         } else {
             return dict;
         }
+    }
+
+    public CacheStats stats() {
+        return dictCache.stats();
+    }
+
+    public long estimatedSize() {
+        return dictCache.estimatedSize();
+    }
+
+    public void cleanUp() {
+        dictCache.cleanUp();
     }
 
     public synchronized void updateCache(T table) {

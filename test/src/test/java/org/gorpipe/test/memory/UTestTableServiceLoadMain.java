@@ -20,18 +20,23 @@
  *  END_COPYRIGHT
  */
 
-package gorsat;
+package org.gorpipe.test.memory;
 
-import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * Created by sigmar on 04/12/2016.
- */
-public class UTestVarnorm {
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.junit.Assert.assertTrue;
+
+public class UTestTableServiceLoadMain {
+
     @Test
-    public void testVarnorm() {
-        String query = "gor -p chr2 ../tests/data/gor/dbsnp_test.gorz | calc oldpos pos | calc oldref #3 | calc oldalt #4 | varnorm #3 #4 -right | calc oldposx pos | calc oldrefx #3 | calc oldaltx #4 | varnorm #3 #4 -left | where gtshare(chrom,pos,#3,#4,oldpos,oldref,oldalt) = 0 or gtshare(chrom,oldpos,oldref,oldalt,oldposx,oldrefx,oldaltx)=0 or gtshare(chrom,pos,#3,#4,oldposx,oldrefx,oldaltx)=0 | rownum | throwif rownum = 1";
-        Assert.assertEquals(0, TestUtils.runGorPipeCount(query));
+    public void runOnceProducesSummary() throws Exception {
+        Path root = Files.createTempDirectory("memtest-main");
+        MemoryLoadConfig config = new MemoryLoadConfig(30, 10, 10, 2, 4, 70, 2);
+        String summary = TableServiceLoadMain.runOnce(config, root);
+        assertTrue("summary reports peak heap", summary.contains("peakHeapMB="));
+        assertTrue("summary reports reads", summary.contains("reads="));
     }
 }

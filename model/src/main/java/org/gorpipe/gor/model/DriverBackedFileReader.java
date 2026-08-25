@@ -516,7 +516,7 @@ public class DriverBackedFileReader extends FileReader {
             StreamSourceFile sourceFile = streamProvider.getSourceFile(source);
 
             if (sourceFile != null && sourceFile.supportsIndex()) {
-                return streamProvider.findIndexFileFromFileDriver(sourceFile, source.getSourceReference());
+                return streamProvider.findIndexFileFromFileDriver(sourceFile, source.getSourceReference(), true);
             }
         }
         return null;

@@ -8,7 +8,7 @@ import java.util.List;
 
 @CommandLine.Command(name = "config",
         description = "Get and set repository or global options.")
-public class GitConfigCommand implements Runnable {
+public class GitConfigCommand extends GitHelpOptions implements Runnable {
 
     @CommandLine.Parameters(arity = "0..*", paramLabel = "KEY [VALUE]",
             description = "Configuration key, optionally followed by value to set.")

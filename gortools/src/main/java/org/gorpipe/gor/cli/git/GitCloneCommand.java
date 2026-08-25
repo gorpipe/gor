@@ -8,7 +8,7 @@ import java.util.List;
 
 @CommandLine.Command(name = "clone",
         description = "Clone a repository into a new directory.")
-public class GitCloneCommand implements Runnable {
+public class GitCloneCommand extends GitHelpOptions implements Runnable {
 
     @CommandLine.Parameters(index = "0", paramLabel = "REPOSITORY",
             description = "The repository to clone from, just the repository name, e.g. ref-gregor.")
@@ -78,7 +78,7 @@ public class GitCloneCommand implements Runnable {
 
         File workingDir = parentCommand.getWorkingDirectory(".");
 
-        GitCommandExecutor.executeGitCommand("clone", args, workingDir, spec);
+        GitCommandExecutor.executeGitCommand("clone", args, workingDir, spec, parentCommand.getGitToken());
     }
 }
 

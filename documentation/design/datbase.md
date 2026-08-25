@@ -23,11 +23,13 @@ These come in two flavors:
 
 Notes:
 1. Uses DBNorIterator.
+2. Resolves against the **user** connections, i.e. the `gor.db.credentials` file. See [Configuration](#configuration).
 
 #### **sql:// URIs**
 
 Notes:
 1. Uses DBNorIterator (and SQLSource).
+2. Resolves against the **user** connections, i.e. the `gor.db.credentials` file. See [Configuration](#configuration).
 
 ### **Limited SQL Commands**
 These come in  flavors:
@@ -50,6 +52,7 @@ gor db://rda:variant_annotations | top 10
 
 Notes:
 1. Uses DBSource and DbGenomicIterator.
+2. Resolves against the **system** connections, i.e. the credentials the host passes in. See [Configuration](#configuration).
 
 #### **//db/ Paths**
 The //db/ paths are arbitrary SELECT statements that can be used to selected from a given database.  
@@ -68,7 +71,8 @@ Their limit is the can ONLY be executed from a link file  but not from a GOR que
 
 Notes:  
 1. Uses DBNorIterator.
-2. This is the old style of doing SQL access in GOR.  The new preferred way is to use the `sql`, `norsql`, `gorsql` commands.  This is likely to be deprecated.
+2. Resolves against the **system** connections, i.e. the credentials the host passes in. See [Configuration](#configuration).
+3. This is the old style of doing SQL access in GOR.  The new preferred way is to use the `sql`, `norsql`, `gorsql` commands.  This is likely to be deprecated.
 
 ### Sepcial Variables
 
@@ -79,23 +83,58 @@ TBD
 
 ### Configuration
 
-TBD
+There are two connection caches, and in a server they are fed from **separate** sources:
 
-We have two different configuration files:
-*
-* <li> gor.db.credentials - contains the system databases, which are used by the system internally (e.g. session management),
-*                         and by operation where we have strict access controls (db://, //db:).  These credentials
-*                         typically would grant full access to the database.
-* <li> gor.sql.credentials - contains the user databases, which are used by the user available commands/sources (SQL,
-*                          GORSQL, NORSQL, sql://).  These credentials typically would grant limited/read-only access to
-*                          the database.
-* <p><br>
-* The format for these files is:
-* <pre>
-*    name\tdriver\turl\tuser\tpwd
-*    rda\torg.postgresql.Driver\tjdbc:postgresql://myurl.com:5432/csa\trda\tmypass
-*    ...
-* </pre>
-*<p>
-* The location of the files defaults to the config directory but can be specified by the system properties
-* gor.db.credentials and gor.sql.credentials.
+| Cache | Used by | Fed from |
+|---|---|---|
+| system connections | internal use (e.g. session management) and the access-controlled operations `db://`, `//db:` | credentials the host passes in |
+| user connections | the user-available commands and sources `SQL`, `GORSQL`, `NORSQL`, `sql://` | the `gor.db.credentials` file |
+
+They are kept apart deliberately. System credentials typically rotate, and a file cannot hold rotating
+credentials without going stale; equally, the rotating system credentials are not the ones user queries
+should reach.
+
+In a console app there is no host to supply credentials, so both caches load from the file.
+
+#### The credentials file
+
+`gor.db.credentials` is tab-separated, with a header line:
+
+```
+name	driver	url	user	pwd
+rda	org.postgresql.Driver	jdbc:postgresql://myurl.com:5432/csa	rda	mypass
+```
+
+The password column is optional. Lines starting with `#` are ignored.
+
+Its location defaults to the config directory and can be set with the `gor.db.credentials` system
+property.
+
+A missing credentials file is an error.
+
+#### Credentials passed in by the host
+
+The host application supplies the system credentials as `DbCredentials`:
+
+```java
+var systemCredentials = List.of(new DbCredentials("rda", url, user, password));
+
+DbConnection.initInServer(systemCredentials);
+// which is, per cache:
+DbConnection.systemConnections.initializeDbSources(systemCredentials);
+DbConnection.userConnections.initializeDbSources(credpath);
+```
+
+Gor never reads credentials from the environment itself, and does not care where the host got them —
+its own configuration, a secret manager, or environment variables the host owns the naming of. This
+keeps deployment-specific naming out of the library.
+
+`DbCredentials` takes `name`, `url`, `user`, `pwd`, and an optional `driver`. When `driver` is null it
+is derived from the url prefix (`jdbc:postgresql:`, `jdbc:oracle:`). Blank values count as unset,
+including the password, so a secret manager rendering an empty string does not become a real empty
+password. Incomplete credentials are logged — naming the missing field, never a value — and skipped,
+rather than failing startup.
+
+The two `initializeDbSources` overloads are alternatives, not additive: each clears the cache first.
+That is what keeps a cache fed from exactly one source. Passing no credentials therefore leaves the
+system cache empty, and `db://` sources will not resolve.

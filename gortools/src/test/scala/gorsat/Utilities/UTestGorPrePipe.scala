@@ -92,6 +92,14 @@ class UTestGorPrePipe extends AnyFunSuite with BeforeAndAfterAll {
     assert(result.head == "../tests/data/gor/dbsnp_test.gorz")
   }
 
+  test("Get used file from meta query") {
+    val query = "meta ../tests/data/gor/dbsnp_test.gorz | where source='FILE' and name='SIZE'"
+    val result = process.GorPrePipe.getUsedFiles(query, session)
+
+    assert(result.length == 1)
+    assert(result.head == "../tests/data/gor/dbsnp_test.gorz")
+  }
+
   test("Get used file from gor query with join") {
     val query = "nor ../tests/data/gor/dbsnp_test.gorz | join -snpsnp multicolumns.gor"
     val result = process.GorPrePipe.getUsedFiles(query, session)

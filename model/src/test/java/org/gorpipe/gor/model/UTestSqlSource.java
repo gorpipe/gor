@@ -26,7 +26,6 @@ public class UTestSqlSource {
     public static void setup() throws IOException, ClassNotFoundException, SQLException {
         paths = DatabaseHelper.createRdaDatabase();
         System.setProperty("gor.db.credentials", paths[2]);
-        System.setProperty("gor.sql.credentials", paths[2]);
         DbConnection.initInConsoleApp();
     }
 

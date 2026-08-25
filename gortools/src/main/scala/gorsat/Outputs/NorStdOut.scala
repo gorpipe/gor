@@ -22,5 +22,7 @@
 
 package gorsat.Outputs
 
-case class NorStdOut(override val header: String = null) extends NorOutStream(header, System.out)  {
+import java.io.OutputStream
+
+case class NorStdOut(override val header: String = null, dest: OutputStream = System.out) extends NorOutStream(header, dest) {
 }

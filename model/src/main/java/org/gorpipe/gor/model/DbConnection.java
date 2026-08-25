@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.sql.*;
+import java.util.List;
 
 /**
  * DbConnection abstract access to database source that are configured on installation time.
@@ -43,24 +44,30 @@ import java.sql.*;
  * The static part creates a cache of DbConnection objects that can be used to access all databases defined in the
  * database configuration files.  This part is located here for backward compatibility reasons.
  *<p>
- * We have two different configuration files:
+ * We have one configuration file:
  *
- * <li> gor.db.credentials - contains the system databases, which are used by the system internally (e.g. session management),
- *                         and by operation where we have strict access controls (db://, //db:).  These credentials
- *                         typically would grant full access to the database.
- * <li> gor.sql.credentials - contains the user databases, which are used by the user available commands/sources (SQL,
- *                          GORSQL, NORSQL, sql://).  These credentials typically would grant limited/read-only access to
- *                          the database.
+ * <li> gor.db.credentials - contains all the databases gor can reach.  It feeds both the system connections,
+ *                         used internally (e.g. session management) and by operations with strict access
+ *                         controls (db://, //db:), and the user connections behind the user available
+ *                         commands/sources (SQL, GORSQL, NORSQL, sql://).
  * <p><br>
- * The format for these files is:
+ * In a server, the two caches are fed from separate sources.  {@link #userConnections} comes from the
+ * gor.db.credentials file, while {@link #systemConnections} comes from credentials the host passes in
+ * as {@link DbCredentials} — see {@link #initInServer(java.util.List)}.  System credentials typically
+ * rotate, and so cannot be baked into a file without going stale; gor does not care where the host got
+ * them and never reads them from the environment itself.
+ * <p><br>
+ * In a console app there is no host to supply credentials, so both caches load from the file.
+ * <p><br>
+ * The format for this file is:
  * <pre>
  *    name\tdriver\turl\tuser\tpwd
  *    rda\torg.postgresql.Driver\tjdbc:postgresql://myurl.com:5432/csa\trda\tmypass
  *    ...
  * </pre>
  *<p>
- * The location of the files defaults to the config directory but can be specified by the system properties
- * gor.db.credentials and gor.sql.credentials.
+ * The location of the file defaults to the config directory but can be specified by the system property
+ * gor.db.credentials.
  * <p><br>
  * TODO:  This class needs some refactoring to handle the different databases more gracefully.  We should use some kind of
  * plugin mechanism (or Guice) instead of if/else statements.
@@ -244,10 +251,7 @@ public class DbConnection {
         File homeDbCredFile = new File(System.getProperty("user.home"), "gor.db.credentials");
         final String dbCredpath = homeDbCredFile.exists() ? homeDbCredFile.getCanonicalPath() : System.getProperty("gor.db.credentials");
         systemConnections.initializeDbSources(dbCredpath);
-
-        File homeSqlCredFile = new File(System.getProperty("user.home"), "gor.sql.credentials");
-        final String sqlCredpath = homeSqlCredFile.exists() ? homeSqlCredFile.getCanonicalPath() : System.getProperty("gor.sql.credentials");
-        userConnections.initializeDbSources(sqlCredpath);
+        userConnections.initializeDbSources(dbCredpath);
 
         setPasswordCallback(s -> {
             final Console console = System.console();
@@ -261,16 +265,39 @@ public class DbConnection {
      * @throws ClassNotFoundException
      * @throws IOException
      */
-    @SuppressWarnings("unused") // Called from GorQueryTask in gor-services
+    @SuppressWarnings("unused") // Called from gor-services
     public static void initInServer() throws ClassNotFoundException, IOException {
-        final String dbCredpath = System.getProperty("gor.db.credentials");
-        if (dbCredpath != null) {
-            systemConnections.initializeDbSources(dbCredpath);
-        }
+        initInServer(List.of());
+    }
 
-        final String sqlCredpath = System.getProperty("gor.sql.credentials");
-        if (sqlCredpath != null) {
-            userConnections.initializeDbSources(sqlCredpath);
+    /**
+     * Initialize DbSource to be used in a server, with the system credentials supplied by the host
+     * application.
+     *
+     * The two caches are fed from separate sources:
+     *
+     * <li> {@link #systemConnections}, used internally and by the access-controlled operations
+     *      (db://, //db:), comes from the supplied credentials. These typically rotate, so a host
+     *      holding them — in its own configuration, a secret manager, or environment variables it
+     *      owns the naming of — passes them here rather than gor reading them itself.
+     * <li> {@link #userConnections}, behind the user-available commands and sources (SQL, GORSQL,
+     *      NORSQL, sql://), comes from the gor.db.credentials file.
+     *
+     * The sources are kept apart deliberately: the file cannot hold credentials that rotate without
+     * going stale, and the rotating system credentials are not the ones user queries should reach.
+     *
+     * @param systemCredentials Credentials for {@link #systemConnections}. May be empty, which leaves
+     *                          that cache empty.
+     * @throws ClassNotFoundException
+     * @throws IOException
+     */
+    @SuppressWarnings("unused") // Called from GorQueryTask in gor-services
+    public static void initInServer(List<DbCredentials> systemCredentials) throws ClassNotFoundException, IOException {
+        systemConnections.initializeDbSources(systemCredentials);
+
+        final String userCredpath = System.getProperty("gor.db.credentials");
+        if (userCredpath != null) {
+            userConnections.initializeDbSources(userCredpath);
         }
     }
 

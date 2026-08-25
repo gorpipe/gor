@@ -22,6 +22,7 @@
 
 package org.gorpipe.gor.driver.providers.stream;
 
+import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.gor.driver.DataSource;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.GorDriverFactory;
@@ -260,12 +261,54 @@ public abstract class StreamSourceProvider implements SourceProvider {
         return factory;
     }
 
+    /**
+     * Locate the index file for {@code file}, treating the index as optional: if its existence cannot be
+     * determined (a probe error surviving retries), the index is skipped rather than failing the caller.
+     * This is the query-read contract -- a missing index only degrades to a full scan (ENGKNOW-3643).
+     */
     public StreamSource findIndexFileFromFileDriver(StreamSourceFile file, SourceReference sourceRef) throws IOException {
+        return findIndexFileFromFileDriver(file, sourceRef, true);
+    }
+
+    /**
+     * Locate the index file for {@code file}.
+     *
+     * @param optional when true, a probe error that survives retries is logged and the index skipped (query
+     *                 read path -- a missing index is non-fatal).  When false, such an error propagates:
+     *                 callers that mutate storage (copy/move/delete enumerating dependents) must get a
+     *                 definitive answer, because silently skipping an index that actually exists leaves a
+     *                 stale orphan {@code .gori} behind.
+     */
+    public StreamSource findIndexFileFromFileDriver(StreamSourceFile file, SourceReference sourceRef, boolean optional) throws IOException {
         for (String index : file.possibleIndexNames()) {
+            // resolveDataSource stays outside the try: a failure here is a real configuration error
+            // (bad security context, unknown scheme), not a missing optional index, so it must surface.
             StreamSource indexSource = resolveDataSource(new SourceReference(index, sourceRef));
-            if (indexSource != null && indexSource.exists()) {
-                indexSource = wrap(indexSource);
-                return indexSource;
+            if (indexSource == null) {
+                continue;
+            }
+            // Wrap before probing so the retry handler (added by wrap) covers exists(): a transient
+            // storage error (e.g. an S3 503 SlowDown) is then retried instead of being silently treated
+            // as "index absent" -- which would degrade an indexed query to a full scan, or fail later
+            // for formats where the index is required. Only after retries are exhausted do we fall back.
+            StreamSource wrapped = wrap(indexSource);
+            try {
+                if (wrapped.exists()) {
+                    return wrapped;
+                }
+            } catch (Exception e) {
+                if (!optional) {
+                    // Caller needs a definitive answer (see javadoc) -- do not swallow.
+                    if (e instanceof IOException ioe) throw ioe;
+                    if (e instanceof RuntimeException re) throw re;
+                    throw new IOException(e);
+                }
+                // Retries exhausted. The index is most often optional, so log and try the next candidate.
+                // Log a one-line cause summary at WARN (this runs per candidate per file open, so full
+                // stack traces here flood the log during a storage brownout); keep the detail at DEBUG.
+                log.warn("Ignoring optional index candidate {} - could not determine existence after retries: {}",
+                        index, ExceptionUtilities.getFullCause(e));
+                log.debug("Index probe failure detail for {}", index, e);
             }
         }
 

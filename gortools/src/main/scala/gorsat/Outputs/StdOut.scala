@@ -22,6 +22,8 @@
 
 package gorsat.Outputs
 
-case class StdOut( val header: String = null) extends OutStream (header, System.out) {
+import java.io.OutputStream
+
+case class StdOut(val header: String = null, dest: OutputStream = System.out) extends OutStream(header, dest) {
 
 }
