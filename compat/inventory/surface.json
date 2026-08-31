@@ -169,7 +169,7 @@
       "maxArgs": 1
     },
     "GAVA": {
-      "valuelessFlags": ["-debug", "-dominant", "-noMaxAlleleCounts", "-protective", "-recessive"],
+      "valuelessFlags": ["-debug", "-dominant", "-noMaxAlleleCounts", "-protective", "-recessive", "-usePhase"],
       "valueFlags": ["-bailout", "-casefile", "-caselist", "-casepene", "-ctrlfile", "-ctrllist", "-ctrlpene", "-grouping", "-maxAf"],
       "minArgs": 1,
       "maxArgs": 1

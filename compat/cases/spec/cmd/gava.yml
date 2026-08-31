@@ -1,0 +1,11 @@
+- id: cmd.gava.usephase_is_accepted
+  tier: spec
+  mode: error
+  source: docs
+  behavior: "GAVA accepts the documented -usePhase flag; it must not be rejected as unknown"
+  cites: ["documentation/src/command/GAVA.rst"]
+  query: "gor ${ROOT}/left.gor | GAVA -usePhase -caselist PN001 -ctrllist PN002 ${ROOT}/left.gor"
+  errorContains: "maxIterations"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\n"

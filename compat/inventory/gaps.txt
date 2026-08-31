@@ -615,11 +615,10 @@ variantData.rst block 3: references project data (#ref#)
 variantData.rst block 4: usage template, not a runnable query
 variantData.rst block 5: references project data (#ref#)
 
-## Phantom flags: documented but NOT registered (2)
+## Phantom flags: documented but NOT registered (1)
 # Each is either a stale documentation page or a flag that was dropped.
 # The second is a real compatibility defect.
 CMD -n
-GAVA -usePhase
 
 ## Undocumented flags: registered but absent from the page (289)
 ADJUST -gc

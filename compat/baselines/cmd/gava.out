@@ -14,3 +14,6 @@ ERROR: Error in cases - none specified.  Please check your -caselist argument or
 >>> cmd.gava.flag_recessive
 ERROR: Error in cases - none specified.  Please check your -caselist argument or -casefile file: 
 <<<
+>>> cmd.gava.flag_usephase
+ERROR: Error in cases - none specified.  Please check your -caselist argument or -casefile file: 
+<<<
