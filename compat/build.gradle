@@ -53,6 +53,15 @@ project(':compat') {
         workingDir = projectDir
     }
 
+    tasks.register('generateNightly', JavaExec) {
+        group = 'compat'
+        description = 'Regenerate the corpus including mutation and grammar-fuzz cases'
+        mainClass = 'org.gorpipe.compat.gen.GenerateMain'
+        classpath = sourceSets.main.runtimeClasspath
+        workingDir = projectDir
+        systemProperty 'compat.nightly', 'true'
+    }
+
     tasks.named('test') {
         useJUnit {
             // gor.java-common.gradle's default `test` task configures

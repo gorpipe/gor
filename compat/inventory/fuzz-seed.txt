@@ -1,0 +1,3 @@
+# Fixed seed for grammar fuzzing. Changing it regenerates the entire fuzz corpus,
+# so change it deliberately and accept the resulting baselines in the same commit.
+20260831

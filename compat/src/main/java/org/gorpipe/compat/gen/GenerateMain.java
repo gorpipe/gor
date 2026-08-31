@@ -38,6 +38,14 @@ public final class GenerateMain {
                 FlagMatrixGenerator.generate(inventory, values).cases);
         generated.addAll(DocHarvester.harvest().cases);
 
+        // Nightly only: these are noisier and far more expensive than the flag
+        // matrix, and they must not change what the pull-request lane runs.
+        if (Boolean.getBoolean("compat.nightly")) {
+            generated.addAll(MutationGenerator.mutate(
+                    new ArrayList<>(generated), inventory, 500));
+            generated.addAll(GrammarFuzzer.generate(inventory, 250));
+        }
+
         Map<Path, List<CompatCase>> byFile = new TreeMap<>();
         Path caseRoot = CaseLoader.moduleRoot().resolve("cases/baseline");
         for (CompatCase c : generated) {
