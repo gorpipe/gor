@@ -2,8 +2,12 @@ package org.gorpipe.compat;
 
 import gorsat.Commands.CommandArguments;
 import gorsat.Commands.CommandInfo;
+import gorsat.Commands.InputSourceInfo;
+import gorsat.Script.MacroInfo;
 import gorsat.parser.CalcFunctions;
+import gorsat.process.GorInputSources;
 import gorsat.process.GorPipeCommands;
+import gorsat.process.GorPipeMacros;
 import gorsat.process.PipeInstance;
 
 import java.util.ArrayList;
@@ -48,10 +52,17 @@ public final class SurfaceInventory {
     }
 
     private final Map<String, CommandSurface> commands;
+    private final Map<String, CommandSurface> inputSources;
+    private final Map<String, CommandSurface> macros;
     private final Set<String> functionNames;
 
-    private SurfaceInventory(Map<String, CommandSurface> commands, Set<String> functionNames) {
+    private SurfaceInventory(Map<String, CommandSurface> commands,
+                             Map<String, CommandSurface> inputSources,
+                             Map<String, CommandSurface> macros,
+                             Set<String> functionNames) {
         this.commands = Collections.unmodifiableMap(commands);
+        this.inputSources = Collections.unmodifiableMap(inputSources);
+        this.macros = Collections.unmodifiableMap(macros);
         this.functionNames = Collections.unmodifiableSet(functionNames);
     }
 
@@ -64,19 +75,37 @@ public final class SurfaceInventory {
         while (it.hasNext()) {
             scala.Tuple2<String, CommandInfo> entry = it.next();
             String name = entry._1();
-            CommandArguments args = entry._2().commandArguments();
-            commands.put(name, new CommandSurface(
-                    name,
-                    splitFlags(args.options()),
-                    splitFlags(args.valueOptions()),
-                    args.minimumNumberOfArguments(),
-                    args.maximumNumberOfArguments()));
+            commands.put(name, surfaceOf(name, entry._2().commandArguments()));
+        }
+
+        Map<String, CommandSurface> inputSources = new TreeMap<>();
+        scala.collection.Iterator<scala.Tuple2<String, InputSourceInfo>> sources =
+                GorInputSources.commandMap().iterator();
+        while (sources.hasNext()) {
+            scala.Tuple2<String, InputSourceInfo> entry = sources.next();
+            inputSources.put(entry._1(), surfaceOf(entry._1(), entry._2().commandArguments()));
+        }
+
+        Map<String, CommandSurface> macros = new TreeMap<>();
+        scala.collection.Iterator<scala.Tuple2<String, MacroInfo>> macroEntries =
+                GorPipeMacros.macrosMap().iterator();
+        while (macroEntries.hasNext()) {
+            scala.Tuple2<String, MacroInfo> entry = macroEntries.next();
+            macros.put(entry._1(), surfaceOf(entry._1(), entry._2().commandArguments()));
         }
 
         // FunctionRegistry is a class; the CALC/WHERE surface lives in the
         // self-registering CalcFunctions.registry singleton.
-        return new SurfaceInventory(commands,
+        return new SurfaceInventory(commands, inputSources, macros,
                 new TreeSet<>(CalcFunctions.registry().functionNames()));
+    }
+
+    private static CommandSurface surfaceOf(String name, CommandArguments args) {
+        return new CommandSurface(name,
+                splitFlags(args.options()),
+                splitFlags(args.valueOptions()),
+                args.minimumNumberOfArguments(),
+                args.maximumNumberOfArguments());
     }
 
     /** Flags are declared as one space-separated string, e.g. "-snpsnp -segseg -l". */
@@ -96,6 +125,21 @@ public final class SurfaceInventory {
 
     public Map<String, CommandSurface> commands() {
         return commands;
+    }
+
+    /**
+     * Input sources: the leading stage of a query (GOR, NOR, NORROWS, CMD, ...).
+     *
+     * A distinct surface from pipe commands, and not interchangeable with them:
+     * CMD exists as both, and only the input source declares -n.
+     */
+    public Map<String, CommandSurface> inputSources() {
+        return inputSources;
+    }
+
+    /** Macros (PGOR, PARTGOR, ...), which expand into a script rather than run as a stage. */
+    public Map<String, CommandSurface> macros() {
+        return macros;
     }
 
     public Set<String> functionNames() {
@@ -126,9 +170,27 @@ public final class SurfaceInventory {
             sb.append("      \"maxArgs\": ").append(c.maxArgs).append('\n');
             sb.append("    }").append(++ci < commands.size() ? "," : "").append('\n');
         }
-        sb.append("  },\n  \"functions\": ").append(jsonArray(new ArrayList<>(functionNames)));
+        sb.append("  },\n");
+        appendSurfaceMap(sb, "inputSources", inputSources);
+        appendSurfaceMap(sb, "macros", macros);
+        sb.append("  \"functions\": ").append(jsonArray(new ArrayList<>(functionNames)));
         sb.append('\n').append("}\n");
         return sb.toString();
+    }
+
+    private static void appendSurfaceMap(StringBuilder sb, String key,
+                                         Map<String, CommandSurface> surfaces) {
+        sb.append("  \"").append(key).append("\": {\n");
+        int i = 0;
+        for (CommandSurface c : surfaces.values()) {
+            sb.append("    \"").append(c.name).append("\": {\n");
+            sb.append("      \"valuelessFlags\": ").append(jsonArray(c.valuelessFlags)).append(",\n");
+            sb.append("      \"valueFlags\": ").append(jsonArray(c.valueFlags)).append(",\n");
+            sb.append("      \"minArgs\": ").append(c.minArgs).append(",\n");
+            sb.append("      \"maxArgs\": ").append(c.maxArgs).append('\n');
+            sb.append("    }").append(++i < surfaces.size() ? "," : "").append('\n');
+        }
+        sb.append("  },\n");
     }
 
     private static String jsonArray(List<String> values) {

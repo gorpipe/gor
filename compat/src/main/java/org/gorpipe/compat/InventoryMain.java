@@ -21,8 +21,10 @@ public final class InventoryMain {
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot write " + out, e);
         }
-        System.out.printf("Wrote %s: %d commands, %d flags, %d functions.%n",
+        System.out.printf("Wrote %s: %d commands, %d flags, %d functions, "
+                        + "%d input sources, %d macros.%n",
                 out, inventory.commands().size(), inventory.totalFlagCount(),
-                inventory.functionNames().size());
+                inventory.functionNames().size(), inventory.inputSources().size(),
+                inventory.macros().size());
     }
 }

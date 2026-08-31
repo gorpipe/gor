@@ -28,6 +28,8 @@ public final class CoverageReport {
     private final Set<String> coveredCommands = new TreeSet<>();
     private final Set<String> coveredFlags = new TreeSet<>();
     private final Set<String> coveredFunctions = new TreeSet<>();
+    private final Set<String> coveredInputSources = new TreeSet<>();
+    private final Set<String> coveredMacros = new TreeSet<>();
     private final int excluded;
 
     private CoverageReport(List<CompatCase> cases, SurfaceInventory inventory) {
@@ -51,6 +53,17 @@ public final class CoverageReport {
                     continue;
                 }
                 String first = trimmed.split("\\s+")[0].toUpperCase(Locale.ROOT);
+
+                // A name can belong to more than one registry, so each is checked
+                // rather than matched exclusively: CMD is both a pipe command and
+                // an input source.
+                if (inventory.inputSources().containsKey(first)) {
+                    coveredInputSources.add(first);
+                }
+                if (inventory.macros().containsKey(first)) {
+                    coveredMacros.add(first);
+                }
+
                 SurfaceInventory.CommandSurface surface = inventory.commands().get(first);
                 if (surface == null) {
                     continue;
@@ -99,6 +112,14 @@ public final class CoverageReport {
         return coveredFunctions.size();
     }
 
+    public int inputSourcesCovered() {
+        return coveredInputSources.size();
+    }
+
+    public int macrosCovered() {
+        return coveredMacros.size();
+    }
+
     public int excludedCount() {
         return excluded;
     }
@@ -132,6 +153,13 @@ public final class CoverageReport {
                 flagsCovered(), totalFlags, totalFlags - flagsCovered()));
         sb.append(String.format(Locale.ROOT, "    functions  %4d/%-4d  %d gaps%n",
                 functionsCovered(), totalFunctions, totalFunctions - functionsCovered()));
+        int totalInputSources = inventory.inputSources().size();
+        int totalMacros = inventory.macros().size();
+        sb.append(String.format(Locale.ROOT, "    inputsrc   %4d/%-4d  %d gaps%n",
+                inputSourcesCovered(), totalInputSources,
+                totalInputSources - inputSourcesCovered()));
+        sb.append(String.format(Locale.ROOT, "    macros     %4d/%-4d  %d gaps%n",
+                macrosCovered(), totalMacros, totalMacros - macrosCovered()));
         sb.append(String.format(Locale.ROOT, "  EXCLUDED  %d element(s)"
                 + " (see inventory/exclusions.yml)%n", excluded));
         return sb.toString();

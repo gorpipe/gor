@@ -53,6 +53,18 @@ public class UTestCoverageReport {
     }
 
     @Test
+    public void attributesTheLeadingInputSource() {
+        // NORROWS is an input source, not a pipe command; without attributing it
+        // the report claimed no coverage for a construct half the corpus uses.
+        List<CompatCase> cases = new ArrayList<>();
+        cases.add(c("cmd.calc.a", "spec", "norrows 1 | calc X 1+1"));
+
+        CoverageReport report = CoverageReport.of(cases, SurfaceInventory.read());
+        Assert.assertTrue("NORROWS should be attributed as an input source",
+                report.inputSourcesCovered() >= 1);
+    }
+
+    @Test
     public void renderIncludesEveryHeadlineNumber() {
         List<CompatCase> cases = new ArrayList<>();
         cases.add(c("cmd.calc.a", "spec", "norrows 1 | calc X 1+1"));
@@ -60,6 +72,8 @@ public class UTestCoverageReport {
 
         String out = CoverageReport.of(cases, SurfaceInventory.read()).render();
         Assert.assertTrue(out, out.contains("SPEC"));
+        Assert.assertTrue(out, out.contains("inputsrc"));
+        Assert.assertTrue(out, out.contains("macros"));
         Assert.assertTrue(out, out.contains("BASELINE"));
         Assert.assertTrue(out, out.contains("SURFACE"));
         Assert.assertTrue(out, out.contains("commands"));

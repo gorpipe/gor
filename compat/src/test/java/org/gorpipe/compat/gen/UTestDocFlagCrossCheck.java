@@ -42,9 +42,13 @@ public class UTestDocFlagCrossCheck {
     }
 
     @Test
-    public void reportsAFlagThatTheOptionsTableDocumentsButTheRegistryLacks() {
-        // CMD's Options table documents -n; the registry declares only -e -f -h -s -u.
-        Assert.assertTrue(result.phantom.toString(), result.phantom.contains("CMD -n"));
+    public void resolvesAPageAgainstEveryRegistryThatOwnsTheName() {
+        // CMD is both a pipe command and an input source, and the documented -n
+        // belongs to the input source. Checking the pipe command alone reported it
+        // as a phantom flag of a command that does document it.
+        Assert.assertFalse(result.phantom.toString(), result.phantom.contains("CMD -n"));
+        Assert.assertFalse(result.undocumented.toString(),
+                result.undocumented.contains("CMD -n"));
     }
 
     @Test

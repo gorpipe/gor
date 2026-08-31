@@ -615,12 +615,11 @@ variantData.rst block 3: references project data (#ref#)
 variantData.rst block 4: usage template, not a runnable query
 variantData.rst block 5: references project data (#ref#)
 
-## Phantom flags: documented but NOT registered (1)
+## Phantom flags: documented but NOT registered (0)
 # Each is either a stale documentation page or a flag that was dropped.
 # The second is a real compatibility defect.
-CMD -n
 
-## Undocumented flags: registered but absent from the page (289)
+## Undocumented flags: registered but absent from the page (397)
 ADJUST -gc
 ADJUST -pc
 ATMAX -gc
@@ -633,8 +632,10 @@ BUCKETSPLIT -s
 BUCKETSPLIT -vs
 CIGARSEGS -gc
 CIGARSEGS -readlength
+CMD -b
 CMD -e
 CMD -f
+CMD -p
 CMD -s
 CMD -u
 COLS2LIST -gc
@@ -672,6 +673,64 @@ GAVA -ctrlpene
 GAVA -debug
 GAVA -grouping
 GAVA -maxAf
+GOR -H
+GOR -X
+GOR -Y
+GOR -Z
+GOR -b
+GOR -c
+GOR -dict
+GOR -f
+GOR -ff
+GOR -g
+GOR -idx
+GOR -nowithin
+GOR -p
+GOR -parts
+GOR -q
+GOR -ref
+GOR -s
+GOR -seek
+GOR -stdin
+GOR -time
+GOR -w
+GORCMD -b
+GORCMD -f
+GORCMD -h
+GORCMD -p
+GORCMD -s
+GORCMD -u
+GORIF -H
+GORIF -X
+GORIF -Y
+GORIF -Z
+GORIF -b
+GORIF -c
+GORIF -dh
+GORIF -dict
+GORIF -f
+GORIF -ff
+GORIF -fs
+GORIF -g
+GORIF -idx
+GORIF -nf
+GORIF -nowithin
+GORIF -p
+GORIF -parts
+GORIF -q
+GORIF -ref
+GORIF -s
+GORIF -seek
+GORIF -stdin
+GORIF -time
+GORIF -w
+GORROWS -p
+GORROWS -segment
+GORROWS -step
+GORSQL -db
+GORSQL -f
+GORSQL -ff
+GORSQL -p
 GRANNO -ac
 GRANNO -avg
 GRANNO -dis
@@ -798,8 +857,52 @@ MULTIMAP -m
 MULTIMAP -n
 MULTIMAP -not
 MULTIMAP -ordered
+NOR -c
+NOR -f
+NOR -ff
+NOR -nv
+NOR -r
+NOR -s
+NOR -time
+NORCMD -b
+NORCMD -f
+NORCMD -h
+NORCMD -p
+NORCMD -s
+NORCMD -u
+NORIF -asdict
+NORIF -c
+NORIF -d
+NORIF -dh
+NORIF -f
+NORIF -ff
+NORIF -fs
+NORIF -h
+NORIF -i
+NORIF -m
+NORIF -nl
+NORIF -nv
+NORIF -r
+NORIF -s
+NORIF -time
+NORROWS -offset
+NORROWS -step
+NORSQL -db
+NORSQL -f
+NORSQL -ff
+NORSQL -p
+PARALLEL -gordfolder
+PARALLEL -limit
+PARTGOR -dict
+PARTGOR -fs
+PARTGOR -gordfolder
+PARTGOR -nf
+PARTGOR -p
+PARTGOR -s
 PEDPIVOT -e
 PEDPIVOT -gc
+PGOR -gordfolder
+PGOR -nowithin
 PILEUP -bq
 PILEUP -gc
 PILEUP -i
@@ -875,6 +978,10 @@ SIGNATURE -timeres
 SORT -c
 SPLIT -e
 SPLIT -s
+SQL -db
+SQL -f
+SQL -ff
+SQL -p
 TRYHIDE -sort
 TRYSELECT -s
 TRYSELECT -sort

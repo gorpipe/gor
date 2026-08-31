@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -40,6 +41,28 @@ public final class DocFlagCrossCheck {
         }
     }
 
+    /**
+     * Every flag the engine registers under this name, or null when nothing does.
+     *
+     * A name can be owned by more than one registry: CMD is both a pipe command and
+     * an input source, and only the input source declares the documented -n.
+     * Comparing a page against one registry alone reported that as a phantom flag
+     * of a command that does in fact document it.
+     */
+    private static Set<String> registeredFlagsFor(SurfaceInventory inventory, String name) {
+        Set<String> flags = new TreeSet<>();
+        boolean known = false;
+        for (Map<String, SurfaceInventory.CommandSurface> registry : java.util.Arrays.asList(
+                inventory.commands(), inventory.inputSources(), inventory.macros())) {
+            SurfaceInventory.CommandSurface surface = registry.get(name);
+            if (surface != null) {
+                known = true;
+                flags.addAll(surface.allFlags());
+            }
+        }
+        return known ? flags : null;
+    }
+
     /** Flags in the docs appear as inline literals, e.g. ``-count``. */
     private static final Pattern DOC_FLAG = Pattern.compile("``(-[a-zA-Z][a-zA-Z0-9]*)``");
 
@@ -61,16 +84,15 @@ public final class DocFlagCrossCheck {
                     .replaceAll("\\.rst$", "")
                     .toUpperCase(Locale.ROOT);
 
-            SurfaceInventory.CommandSurface surface = inventory.commands().get(commandName);
-            if (surface == null) {
-                // A page with no matching command. Real, but a different finding
-                // from a flag mismatch, so it is not reported here.
+            Set<String> registered = registeredFlagsFor(inventory, commandName);
+            if (registered == null) {
+                // A page with no matching command, input source or macro. Real, but
+                // a different finding from a flag mismatch, so it is not reported here.
                 continue;
             }
             pagesParsed++;
 
             Set<String> documented = documentedFlags(page);
-            Set<String> registered = new TreeSet<>(surface.allFlags());
 
             for (String flag : registered) {
                 if (!documented.contains(flag)) {

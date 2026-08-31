@@ -649,5 +649,129 @@
       "maxArgs": -1
     }
   },
+  "inputSources": {
+    "CMD": {
+      "valuelessFlags": ["-h", "-n", "-u"],
+      "valueFlags": ["-b", "-f", "-p", "-s"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "EXEC": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 2,
+      "maxArgs": -1
+    },
+    "GOR": {
+      "valuelessFlags": ["-Y", "-fs", "-g", "-nf", "-nowithin", "-q", "-stdin", "-w"],
+      "valueFlags": ["-H", "-X", "-Z", "-b", "-c", "-dict", "-f", "-ff", "-idx", "-p", "-parts", "-ref", "-s", "-seek", "-time"],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "GORCMD": {
+      "valuelessFlags": ["-h", "-u"],
+      "valueFlags": ["-b", "-f", "-p", "-s"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "GORIF": {
+      "valuelessFlags": ["-Y", "-fs", "-g", "-nf", "-nowithin", "-q", "-stdin", "-w"],
+      "valueFlags": ["-H", "-X", "-Z", "-b", "-c", "-dh", "-dict", "-f", "-ff", "-idx", "-p", "-parts", "-ref", "-s", "-seek", "-time"],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "GORNOR": {
+      "valuelessFlags": ["-asdict", "-fs", "-h", "-i", "-m", "-nl", "-nv", "-r"],
+      "valueFlags": ["-c", "-d", "-f", "-ff", "-s", "-time"],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "GORROW": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "GORROWS": {
+      "valuelessFlags": [],
+      "valueFlags": ["-p", "-segment", "-step"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "GORSQL": {
+      "valuelessFlags": [],
+      "valueFlags": ["-db", "-f", "-ff", "-p"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "META": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "NOR": {
+      "valuelessFlags": ["-asdict", "-fs", "-h", "-i", "-m", "-nl", "-nv", "-r"],
+      "valueFlags": ["-c", "-d", "-f", "-ff", "-s", "-time"],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "NORCMD": {
+      "valuelessFlags": ["-h", "-u"],
+      "valueFlags": ["-b", "-f", "-p", "-s"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "NORIF": {
+      "valuelessFlags": ["-asdict", "-fs", "-h", "-i", "-m", "-nl", "-nv", "-r"],
+      "valueFlags": ["-c", "-d", "-dh", "-f", "-ff", "-s", "-time"],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "NORROWS": {
+      "valuelessFlags": [],
+      "valueFlags": ["-offset", "-step"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "NORSQL": {
+      "valuelessFlags": [],
+      "valueFlags": ["-db", "-f", "-ff", "-p"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "SQL": {
+      "valuelessFlags": ["-n"],
+      "valueFlags": ["-db", "-f", "-ff", "-p"],
+      "minArgs": 1,
+      "maxArgs": 1
+    }
+  },
+  "macros": {
+    "PARALLEL": {
+      "valuelessFlags": ["-gordfolder"],
+      "valueFlags": ["-limit", "-parts"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "PARTGOR": {
+      "valuelessFlags": ["-gordfolder"],
+      "valueFlags": ["-dict", "-f", "-ff", "-fs", "-nf", "-p", "-parts", "-partscale", "-partsize", "-s"],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "PGOR": {
+      "valuelessFlags": ["-nowithin"],
+      "valueFlags": ["-gordfolder"],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "TABLEFUNCTION": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    }
+  },
   "functions": ["ABS", "ACOS", "ADDDAYS", "ADDMONTHS", "ADDYEARS", "ARCH", "ASIN", "ATAN", "AVAILCPU", "AVGBASESPERMILLIS", "AVGROWSPERMILLIS", "AVGSEEKTIMEMILLIS", "BAMTAG", "BASE26", "BASEPN", "BETA", "BETAC", "BINOMIAL", "BINOMIALC", "BRACKETS", "CATCH", "CEIL", "CHAR", "CHAR2PR", "CHARS2DOSE", "CHARS2GT", "CHARS2PRHET", "CHARS2PRHOM", "CHARS2PRPR", "CHARS2PRPRPR", "CHARSPHASED2GT", "CHI", "CHI2", "CHISQUARE", "CHISQUARECOMPL", "CODONS2AMINOS", "CODONS2SHORTAMINOS", "COLS2LIST", "COLS2LISTMAP", "CONTAINS", "CONTAINSALL", "CONTAINSANY", "CONTAINSCOUNT", "COS", "CPULOAD", "CSCONTAINS", "CSCONTAINSALL", "CSCONTAINSANY", "CSCONTAINSCOUNT", "CSLISTHASANY", "CSLISTHASCOUNT", "CURRENTDATE", "DATE", "DAYDIFF", "DAYOFMONTH", "DAYOFWEEK", "DAYOFYEAR", "DECODE", "DIV", "DQUOTE", "DUNQUOTE", "EDATE", "EFORM", "EPOCH", "ERF", "ERFC", "EVAL", "EXP", "FILECONTENT", "FILEINFO", "FILEPATH", "FLOAT", "FLOOR", "FORM", "FREE", "FREEMEM", "FSVMAP", "GAMMA", "GAMMAC", "GFFTAG", "GFORM", "GORVERSION", "GTFA", "GTMA", "GTSHARE", "GTSTAT", "HAPLDIFF", "HOSTNAME", "IHA", "INT", "INVCHISQUARE", "INVNORMAL", "INVSTUDENT", "IOOA", "IP", "ISFLOAT", "ISINT", "ISLONG", "IUPAC2GT", "IUPACFA", "IUPACGTSTAT", "IUPACMA", "JAVAVERSION", "LEFT", "LEN", "LISTADD", "LISTCOMB", "LISTCOUNT", "LISTDIST", "LISTFILTER", "LISTFIRST", "LISTHASANY", "LISTHASCOUNT", "LISTINDEX", "LISTLAST", "LISTMAP", "LISTMAX", "LISTMIN", "LISTNTH", "LISTNUMAVG", "LISTNUMMAX", "LISTNUMMIN", "LISTNUMSORTASC", "LISTNUMSORTDESC", "LISTNUMSTD", "LISTNUMSUM", "LISTREVERSE", "LISTSECOND", "LISTSIZE", "LISTSORTASC", "LISTSORTDESC", "LISTTAIL", "LISTTRIM", "LISTZIP", "LISTZIPFILTER", "LN", "LOG", "LONG", "LOWER", "MAJORVERSION", "MATCHLEN", "MAX", "MAXFILES", "MAXMEM", "MD5", "MID", "MIN", "MINORVERSION", "MOD", "MONTH", "MONTHDIFF", "NEGBINOMIAL", "NEGBINOMIALC", "NORMAL", "NUMBER", "ONCE", "OPENFILES", "POISSON", "POISSONC", "POSOF", "POW", "PR2CHAR", "PRPR2CHARS", "PRPRPR2CHARS", "PVAL", "PVALONE", "RANDOM", "RANDOMACCESSTIMING", "RC", "REFBASE", "REFBASES", "REFBASES_WITH_BUILD", "REGSEL", "REPLACE", "REVCIGAR", "REVCOMPL", "REVERSE", "RIGHT", "ROUND", "SEGDIST", "SEGOVERLAP", "SIN", "SLEEP", "SQR", "SQRT", "SQUOTE", "STR", "STR2LIST", "STRING", "STUDENT", "SUBSTR", "SUNQUOTE", "SYSCPULOAD", "SYSTEM", "TAG", "TAN", "THREADID", "TIME", "TIMESIGNATURE", "TOTALMEM", "TRIM", "UNBRACKET", "UPPER", "VARSIG", "VCFFORMATTAG", "VCFGTITEM", "YEAR", "YEARDIFF"]
 }

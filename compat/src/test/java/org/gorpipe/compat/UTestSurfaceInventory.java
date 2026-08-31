@@ -55,6 +55,44 @@ public class UTestSurfaceInventory {
     }
 
     @Test
+    public void enumeratesInputSources() {
+        // Roughly 17 input sources are registered. They are a distinct surface from
+        // pipe commands — CMD exists as both, with different flags.
+        Assert.assertTrue("expected at least 10 input sources, got "
+                + inventory.inputSources().size(), inventory.inputSources().size() >= 10);
+        Assert.assertTrue(inventory.inputSources().containsKey("GOR"));
+        Assert.assertTrue(inventory.inputSources().containsKey("NOR"));
+        Assert.assertTrue(inventory.inputSources().containsKey("CMD"));
+    }
+
+    @Test
+    public void distinguishesTheInputSourceSurfaceFromThePipeCommand() {
+        // The CMD input source declares -n; the CMD pipe command does not. Reading
+        // only the pipe command reported the documented -n as a phantom flag.
+        SurfaceInventory.CommandSurface source = inventory.inputSources().get("CMD");
+        SurfaceInventory.CommandSurface pipe = inventory.commands().get("CMD");
+
+        Assert.assertTrue(source.valuelessFlags.toString(),
+                source.valuelessFlags.contains("-n"));
+        Assert.assertFalse(pipe.allFlags().toString(), pipe.allFlags().contains("-n"));
+    }
+
+    @Test
+    public void enumeratesMacros() {
+        Assert.assertTrue("expected at least 4 macros, got " + inventory.macros().size(),
+                inventory.macros().size() >= 4);
+        Assert.assertTrue(inventory.macros().containsKey("PGOR"));
+        Assert.assertTrue(inventory.macros().containsKey("PARTGOR"));
+    }
+
+    @Test
+    public void jsonCarriesInputSourcesAndMacros() {
+        String json = inventory.toJson();
+        Assert.assertTrue(json, json.contains("\"inputSources\""));
+        Assert.assertTrue(json, json.contains("\"macros\""));
+    }
+
+    @Test
     public void jsonIsStableAcrossReads() {
         String first = SurfaceInventory.read().toJson();
         String second = SurfaceInventory.read().toJson();
