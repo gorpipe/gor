@@ -4,9 +4,15 @@ plugins {
 
 project(':compat') {
     dependencies {
-        // The ONLY repo dependency. Never add ':test' — it holds gorsat.TestUtils
-        // and would reintroduce the coupling this module exists to remove.
+        // Never add ':test' — it holds gorsat.TestUtils and would reintroduce
+        // the coupling this module exists to remove.
         implementation project(':gortools')
+        // :gortools declares ':model' as `implementation`, so model types it
+        // exposes through its own public API (GorContext, GenomicIterator, Row)
+        // are not on our compile classpath transitively. Declared here rather
+        // than flipping ':gortools' to `api project(':model')`, which would
+        // change the published engine POM.
+        implementation project(':model')
 
         implementation "org.yaml:snakeyaml:_"
         implementation "com.fasterxml.jackson.core:jackson-databind:_"
