@@ -12,8 +12,6 @@ project(':compat') {
         implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation "com.networknt:json-schema-validator:_"
 
-        runtimeOnly project(':drivers')
-
         testImplementation "junit:junit:_"
     }
 
