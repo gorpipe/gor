@@ -21,6 +21,14 @@ project(':compat') {
         testImplementation "junit:junit:_"
     }
 
+    tasks.register('accept', JavaExec) {
+        group = 'compat'
+        description = 'Re-capture baseline outputs and rewrite the committed files'
+        mainClass = 'org.gorpipe.compat.BaselineAccept'
+        classpath = sourceSets.main.runtimeClasspath
+        workingDir = projectDir
+    }
+
     tasks.named('test') {
         useJUnit {
             // gor.java-common.gradle's default `test` task configures
