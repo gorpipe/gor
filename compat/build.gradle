@@ -1,0 +1,43 @@
+plugins {
+    id 'gor.java-common'
+}
+
+project(':compat') {
+    dependencies {
+        // The ONLY repo dependency. Never add ':test' — it holds gorsat.TestUtils
+        // and would reintroduce the coupling this module exists to remove.
+        implementation project(':gortools')
+
+        implementation "org.yaml:snakeyaml:_"
+        implementation "com.fasterxml.jackson.core:jackson-databind:_"
+        implementation "com.networknt:json-schema-validator:_"
+
+        runtimeOnly project(':drivers')
+
+        testImplementation "junit:junit:_"
+    }
+
+    tasks.named('test') {
+        useJUnit {
+            // gor.java-common.gradle's default `test` task configures
+            // excludeCategories against marker interfaces that live in the
+            // :test module (org.gorpipe.test.IntegrationTests, etc). :compat
+            // deliberately has no dependency on :test, so those classes are
+            // unresolvable and JUnit4 fails hard trying to load them to
+            // evaluate the filter — even though :compat has no categorised
+            // tests to exclude. Clear the inherited filter here rather than
+            // depend on :test just to satisfy it.
+            excludeCategories.clear()
+        }
+        systemProperty 'user.timezone', 'UTC'
+        systemProperty 'file.encoding', 'UTF-8'
+        testLogging {
+            events 'failed'
+            exceptionFormat 'full'
+        }
+        reports {
+            junitXml.required = true
+            html.required = true
+        }
+    }
+}
