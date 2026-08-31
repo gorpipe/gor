@@ -49,6 +49,17 @@ public final class FlagMatrixGenerator {
                 continue;
             }
 
+            // A bare invocation, so that the 32 commands declaring no flags at all
+            // are covered too. Without it they produced no case whatsoever, which
+            // was most of the uncovered command surface.
+            //
+            // Skipped where the command demands a companion flag: JOIN cannot run
+            // without a join type, so its bare case would be byte-identical to its
+            // -snpsnp case, and corpus lint rejects duplicate bodies.
+            if (commandArgs.requiredFlags(command.name).isEmpty()) {
+                cases.add(bareCaseFor(command, commandArgs));
+            }
+
             for (String flag : command.valuelessFlags) {
                 cases.add(caseFor(command, flag, null, commandArgs));
             }
@@ -62,6 +73,18 @@ public final class FlagMatrixGenerator {
             }
         }
         return new GenerationResult(cases, unmapped);
+    }
+
+    private static CompatCase bareCaseFor(SurfaceInventory.CommandSurface command,
+                                          CommandArgs commandArgs) {
+        CompatCase c = new CompatCase();
+        c.id = "cmd." + command.name.toLowerCase(Locale.ROOT) + ".bare";
+        c.tier = "baseline";
+        c.mode = "exact";
+        c.behavior = "Generated: " + command.name + " with no flags";
+        c.query = buildQuery(command, null, null, commandArgs);
+        c.inputs.addAll(inputsReferencedBy(c.query));
+        return c;
     }
 
     private static CompatCase caseFor(SurfaceInventory.CommandSurface command,
@@ -79,7 +102,8 @@ public final class FlagMatrixGenerator {
 
     /**
      * A minimal invocation: read the canonical gor fixture, apply the command with
-     * one flag, and cap the output so a baseline stays small.
+     * one flag (or none, for the bare case), and cap the output so a baseline stays
+     * small.
      *
      * Companion flags and the positional argument come from the curated
      * CommandArgs mapping, because a case that dies on a missing join type or on a
@@ -95,13 +119,15 @@ public final class FlagMatrixGenerator {
         String required = commandArgs.requiredFlags(command.name);
         // Skipped when the flag under test is itself the required one, so that a
         // case never passes the same flag twice.
-        if (!required.isEmpty() && !required.startsWith(flag)) {
+        if (!required.isEmpty() && (flag == null || !required.startsWith(flag))) {
             q.append(' ').append(required);
         }
 
-        q.append(' ').append(flag);
-        if (value != null) {
-            q.append(' ').append(value);
+        if (flag != null) {
+            q.append(' ').append(flag);
+            if (value != null) {
+                q.append(' ').append(value);
+            }
         }
         if (command.minArgs > 0 || commandArgs.hasExplicitPositional(command.name)) {
             q.append(' ').append(commandArgs.positional(command.name));

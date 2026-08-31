@@ -35,7 +35,18 @@ public final class CaseRunner {
 
     /** Runs the case and always cleans up. Used by generators and the baseline tier. */
     public static CompatResult run(CompatCase c) {
-        Path root = createRoot();
+        return run(c, "gor-compat-");
+    }
+
+    /**
+     * Runs the case under a temporary root whose name starts with the given prefix.
+     *
+     * The prefix is a lever for {@link CaseStability}: running the same case under
+     * roots of different path lengths exposes output that depends on the root
+     * without quoting it.
+     */
+    public static CompatResult run(CompatCase c, String namePrefix) {
+        Path root = createRoot(namePrefix);
         try {
             return execute(c, root);
         } finally {
@@ -45,7 +56,7 @@ public final class CaseRunner {
 
     /** Runs the case, keeping the fixture directory when the caller may need it. */
     public static CaseOutcome runRetainingOnFailure(CompatCase c) {
-        Path root = createRoot();
+        Path root = createRoot("gor-compat-");
         CompatResult result;
         try {
             result = execute(c, root);
@@ -69,9 +80,9 @@ public final class CaseRunner {
         }
     }
 
-    private static Path createRoot() {
+    private static Path createRoot(String namePrefix) {
         try {
-            return Files.createTempDirectory("gor-compat-");
+            return Files.createTempDirectory(namePrefix);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

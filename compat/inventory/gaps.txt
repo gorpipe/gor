@@ -534,6 +534,11 @@ variantData.rst block 3: references project data (#ref#)
 variantData.rst block 4: usage template, not a runnable query
 variantData.rst block 5: references project data (#ref#)
 
+## Cases dropped as not reproducible (1)
+# Output changed when the project root path changed, so no committed baseline
+# could ever match. Recorded in inventory/unreproducible.txt.
+cmd.pipesteps.bare
+
 ## Phantom flags: documented but NOT registered (0)
 # Each is either a stale documentation page or a flag that was dropped.
 # The second is a real compatibility defect.

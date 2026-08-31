@@ -72,6 +72,35 @@ public class UTestFlagMatrixGenerator {
     }
 
     @Test
+    public void emitsABareInvocationForEveryCommand() {
+        // 32 of 108 commands declare no flags at all. Emitting cases only per flag
+        // left every one of them with no case, which is most of the uncovered
+        // command surface the report was reporting.
+        List<String> ids = result.cases.stream().map(c -> c.id).collect(Collectors.toList());
+        Assert.assertTrue(ids.toString(), ids.contains("cmd.distinct.bare"));
+        Assert.assertTrue(ids.toString(), ids.contains("cmd.countrows.bare"));
+        Assert.assertTrue(ids.toString(), ids.contains("cmd.top.bare"));
+    }
+
+    @Test
+    public void emitsNoBareInvocationWhereTheCommandDemandsAFlag() {
+        // JOIN cannot be invoked without a join type and MAP without -c, so their
+        // bare case would be byte-identical to the case for that required flag —
+        // a duplicate body, which corpus lint rejects.
+        List<String> ids = result.cases.stream().map(c -> c.id).collect(Collectors.toList());
+        Assert.assertFalse(ids.toString(), ids.contains("cmd.join.bare"));
+        Assert.assertFalse(ids.toString(), ids.contains("cmd.map.bare"));
+        Assert.assertTrue(ids.toString(), ids.contains("cmd.join.flag_snpsnp"));
+    }
+
+    @Test
+    public void doesNotEmitABareInvocationForAnExcludedCommand() {
+        List<String> ids = result.cases.stream().map(c -> c.id).collect(Collectors.toList());
+        Assert.assertFalse(ids.toString(), ids.contains("cmd.cmd.bare"));
+        Assert.assertFalse(ids.toString(), ids.contains("cmd.sql.bare"));
+    }
+
+    @Test
     public void producesCasesForALargeShareOfTheSurface() {
         // 108 commands with 217 valueless flags; a healthy run generates hundreds
         // of cases. A low number means flag parsing regressed.
