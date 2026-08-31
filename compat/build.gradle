@@ -62,6 +62,30 @@ project(':compat') {
         systemProperty 'compat.nightly', 'true'
     }
 
+    apply plugin: 'jacoco'
+
+    // Coverage is a diagnostic here, never a gate. Gating on a coverage ratio is
+    // what produced 381 single-token assertions in the suite this replaces:
+    // coverage rewards executing code, not pinning behaviour.
+    tasks.register('coverageReport', JacocoReport) {
+        group = 'compat'
+        description = 'Coverage of the engine by the compatibility corpus (report only)'
+        executionData tasks.named('test').get()
+        // Named by directory rather than through project(':gortools').sourceSets,
+        // which is not resolvable at configuration time from another project.
+        def engine = project(':gortools')
+        sourceDirectories.from files(
+                "${engine.projectDir}/src/main/java",
+                "${engine.projectDir}/src/main/scala")
+        classDirectories.from files(
+                "${engine.layout.buildDirectory.get().asFile}/classes/java/main",
+                "${engine.layout.buildDirectory.get().asFile}/classes/scala/main")
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
+
     tasks.named('test') {
         useJUnit {
             // gor.java-common.gradle's default `test` task configures

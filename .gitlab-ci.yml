@@ -140,6 +140,36 @@ integrationtest:
   script: ./gradlew --continue integrationTest
 
 
+# The compatibility suite needs neither the test-data submodule nor integration
+# secrets: :compat depends on :gortools only and generates its own fixtures.
+compat:
+  extends: .build_with_cache
+  stage: test
+  script: ./gradlew :compat:test
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - "compat/build/test-results/test/TEST-*.xml"
+    paths:
+      - compat/build/reports/tests/test/
+
+# Adds the expensive generators and coverage. Reports; never commits, and never
+# accepts baselines — :compat:accept refuses to run in CI by design.
+compat-nightly:
+  extends: .build_with_cache
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+  script:
+    - ./gradlew :compat:generateNightly
+    - ./gradlew :compat:test :compat:coverageReport
+  artifacts:
+    when: always
+    paths:
+      - compat/build/reports/jacoco/coverageReport/
+      - compat/inventory/gaps.txt
+
 testcoverage:
   rules:
     - when: never
