@@ -1,0 +1,29 @@
+- id: cmd.calc.add_two_integers
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "CALC evaluates an integer addition into a new trailing column"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 1+1"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	2
+
+- id: cmd.calc.string_literal
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "CALC assigns a quoted string literal without altering position columns"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "gorrow chr1,100 | calc Ref 'A'"
+  expected: |
+    chrom	pos	Ref
+    chr1	100	A
+
+- id: cmd.calc.missing_expression_errors
+  tier: spec
+  mode: error
+  source: review
+  behavior: "CALC with a column name but no expression is rejected"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X"

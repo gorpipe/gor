@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "tier", "mode", "query"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$" },
+    "tier": { "enum": ["spec", "baseline"] },
+    "mode": { "enum": ["exact", "error"] },
+    "source": { "enum": ["docs", "review"] },
+    "query": { "type": "string", "minLength": 1 },
+    "expected": { "type": "string" },
+    "errorContains": { "type": "string" },
+    "behavior": { "type": "string" },
+    "cites": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path"],
+        "properties": {
+          "path": { "type": "string" },
+          "content": { "type": "string" },
+          "contentFile": { "type": "string" }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "tier": { "const": "spec" } }, "required": ["tier"] },
+      "then": { "required": ["cites", "source"] }
+    },
+    {
+      "if": { "properties": { "tier": { "const": "baseline" } }, "required": ["tier"] },
+      "then": { "not": { "required": ["expected"] } }
+    },
+    {
+      "if": {
+        "properties": { "tier": { "const": "spec" }, "mode": { "const": "exact" } },
+        "required": ["tier", "mode"]
+      },
+      "then": { "required": ["expected"] }
+    }
+  ]
+}
