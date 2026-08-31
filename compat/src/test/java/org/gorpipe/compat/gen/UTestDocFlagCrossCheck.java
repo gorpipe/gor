@@ -30,6 +30,33 @@ public class UTestDocFlagCrossCheck {
     }
 
     @Test
+    public void doesNotCountFlagsMentionedInProse() {
+        // The CSVSEL page discusses the GOR command's -f and -ff filtering options
+        // in its body text. Counting those as CSVSEL's own documented flags made
+        // them look like phantom flags of CSVSEL, which they are not.
+        Assert.assertFalse(result.phantom.toString(), result.phantom.contains("CSVSEL -f"));
+        Assert.assertFalse(result.phantom.toString(), result.phantom.contains("CSVSEL -ff"));
+        Assert.assertFalse(result.phantom.toString(), result.phantom.contains("CSVSEL -nf"));
+        // Nor does a deprecation note elsewhere on the CIGARSEGS page.
+        Assert.assertFalse(result.phantom.toString(), result.phantom.contains("CIGARSEGS -ref"));
+    }
+
+    @Test
+    public void reportsAFlagThatTheOptionsTableDocumentsButTheRegistryLacks() {
+        // CMD's Options table documents -n; the registry declares only -e -f -h -s -u.
+        Assert.assertTrue(result.phantom.toString(), result.phantom.contains("CMD -n"));
+    }
+
+    @Test
+    public void countsAnOptionsTableEntryAsDocumented() {
+        // GROUP's table documents -count and the registry declares it, so it must
+        // appear in neither list.
+        Assert.assertFalse(result.undocumented.toString(),
+                result.undocumented.contains("GROUP -count"));
+        Assert.assertFalse(result.phantom.toString(), result.phantom.contains("GROUP -count"));
+    }
+
+    @Test
     public void everyFindingNamesACommandAndAFlag() {
         for (String entry : result.undocumented) {
             Assert.assertTrue(entry, entry.contains(" -"));

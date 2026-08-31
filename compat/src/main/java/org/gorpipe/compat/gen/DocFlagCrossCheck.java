@@ -86,16 +86,76 @@ public final class DocFlagCrossCheck {
         return new CrossCheckResult(undocumented, phantom, pagesParsed);
     }
 
+    /**
+     * The flags a page's Options table declares.
+     *
+     * Scoped to the Options section, and within it to the first cell of each grid
+     * table row, because pages routinely discuss other commands' flags in prose —
+     * the CSVSEL page explains GOR's -f and -ff, and CIGARSEGS notes a deprecated
+     * -ref. Counting those as the page's own flags reported them as phantom flags
+     * of the wrong command. All 73 command pages that document flags use the same
+     * grid table under an Options heading; the other 43 declare none.
+     */
     private static Set<String> documentedFlags(Path page) {
         Set<String> flags = new TreeSet<>();
-        try {
-            Matcher m = DOC_FLAG.matcher(Files.readString(page, StandardCharsets.UTF_8));
+        for (String line : optionsSection(page)) {
+            String trimmed = line.trim();
+            if (!trimmed.startsWith("|")) {
+                continue;
+            }
+            int closing = trimmed.indexOf('|', 1);
+            String firstCell = closing < 0 ? trimmed.substring(1)
+                    : trimmed.substring(1, closing);
+            Matcher m = DOC_FLAG.matcher(firstCell);
             while (m.find()) {
                 flags.add(m.group(1));
             }
+        }
+        return flags;
+    }
+
+    /** Lines from the Options heading up to the next section heading. */
+    private static List<String> optionsSection(Path page) {
+        List<String> lines = readLines(page);
+        List<String> section = new ArrayList<>();
+        boolean inSection = false;
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            if (line.trim().equals("Options") && isHeading(lines, i)) {
+                inSection = true;
+                continue;
+            }
+            if (inSection) {
+                if (!line.trim().isEmpty() && isHeading(lines, i)) {
+                    break;
+                }
+                section.add(line);
+            }
+        }
+        return section;
+    }
+
+    /** True when the next line is a reStructuredText underline for this one. */
+    private static boolean isHeading(List<String> lines, int index) {
+        if (index + 1 >= lines.size()) {
+            return false;
+        }
+        String underline = lines.get(index + 1).trim();
+        if (underline.length() < lines.get(index).trim().length() || underline.isEmpty()) {
+            return false;
+        }
+        char first = underline.charAt(0);
+        if ("=-~^\"'".indexOf(first) < 0) {
+            return false;
+        }
+        return underline.chars().allMatch(c -> c == first);
+    }
+
+    private static List<String> readLines(Path page) {
+        try {
+            return Files.readAllLines(page, StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot read " + page, e);
         }
-        return flags;
     }
 }
