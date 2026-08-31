@@ -1,0 +1,28 @@
+# Sample values for value-taking flags, used by the flag matrix generator.
+# Keys are command names; '*' supplies a default for a flag name that means the
+# same thing across commands. A flag with no entry here is reported as a gap and
+# no case is generated for it — never guessed at.
+"*":
+  "-s": "Gene"
+  "-p": "chr1:1-1000"
+  "-e": "0"
+  "-c": "Chrom"
+  "-gc": "Chrom"
+  "-sc": "Chrom"
+  "-f": "1"
+  "-n": "1"
+  "-b": "100"
+  "-span": "100"
+  "-sep": ","
+
+JOIN:
+  "-maxseg": "1000"
+  "-rprefix": "r"
+  "-lstop": "0"
+  "-rstop": "0"
+  "-xl": "Chrom"
+  "-xr": "Chrom"
+
+GROUP:
+  "-gc": "Chrom"
+  "-sc": "Ref"
