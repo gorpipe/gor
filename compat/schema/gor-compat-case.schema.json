@@ -12,6 +12,7 @@
     "expected": { "type": "string" },
     "errorContains": { "type": "string" },
     "behavior": { "type": "string" },
+    "needsReference": { "type": "boolean" },
     "cites": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
     "inputs": {
       "type": "array",

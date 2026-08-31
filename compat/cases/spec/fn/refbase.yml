@@ -1,0 +1,11 @@
+- id: fn.refbase.single_base_lookup
+  tier: spec
+  mode: exact
+  source: review
+  needsReference: true
+  behavior: "refbase returns the reference base at a 1-based position"
+  cites: ["scripts/refbuild/README.md"]
+  query: "gorrow chr1,10 | calc R refbase(chrom,pos)"
+  expected: |
+    chrom	pos	R
+    chr1	10	C

@@ -76,6 +76,9 @@ public final class CaseRunner {
     }
 
     private static CompatResult execute(CompatCase c, Path root) {
+        if (c.needsReference) {
+            Fixtures.writeReferenceBuild(root);
+        }
         materialiseInputs(c, root);
         String query = c.query.replace("${ROOT}", root.toAbsolutePath().toString());
         return CompatExecutor.run(query, root, Fixtures.configFileIfPresent(root));

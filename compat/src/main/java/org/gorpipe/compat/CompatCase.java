@@ -23,6 +23,9 @@ public final class CompatCase {
     public List<String> cites = new ArrayList<>();
     public List<CompatInput> inputs = new ArrayList<>();
 
+    /** When true, a synthetic chromSeq reference build is written into the root. */
+    public boolean needsReference;
+
     /** Absolute path of the file this case was loaded from; used in messages. */
     public String sourceFile;
 
