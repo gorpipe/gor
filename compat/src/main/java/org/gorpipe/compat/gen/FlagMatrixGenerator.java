@@ -6,12 +6,9 @@ import org.gorpipe.compat.Fixtures;
 import org.gorpipe.compat.SurfaceInventory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 /**
  * Emits one baseline case per command flag, plus a bare invocation per command.
@@ -33,29 +30,22 @@ public final class FlagMatrixGenerator {
         }
     }
 
-    /**
-     * Commands that cannot run hermetically in a generated case: they shell out,
-     * touch a database, or block. Excluded here rather than allowed to produce
-     * noise; the exclusions file in Task 13 records the reasoning.
-     */
-    private static final Set<String> SKIP_COMMANDS = new HashSet<>(Arrays.asList(
-            "CMD", "SQL", "BINARYWRITE", "WRITE", "TEE", "WAIT", "BUG", "LOG",
-            "LOGLEVEL", "ROOTLOGLEVEL", "GORSQL", "NORSQL", "PGOR", "PARTGOR"));
-
     private FlagMatrixGenerator() {
     }
 
     public static GenerationResult generate(SurfaceInventory inventory, FlagValues values) {
-        return generate(inventory, values, CommandArgs.load());
+        return generate(inventory, values, CommandArgs.load(), Exclusions.load());
     }
 
     public static GenerationResult generate(SurfaceInventory inventory, FlagValues values,
-                                            CommandArgs commandArgs) {
+                                            CommandArgs commandArgs, Exclusions exclusions) {
         List<CompatCase> cases = new ArrayList<>();
         List<String> unmapped = new ArrayList<>();
 
         for (SurfaceInventory.CommandSurface command : inventory.commands().values()) {
-            if (SKIP_COMMANDS.contains(command.name)) {
+            // Skipping a command requires an entry in inventory/exclusions.yml
+            // stating why, rather than a list buried in this file.
+            if (exclusions.excludesCommand(command.name)) {
                 continue;
             }
 

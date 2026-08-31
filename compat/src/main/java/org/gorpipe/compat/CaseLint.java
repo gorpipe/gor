@@ -67,14 +67,28 @@ public final class CaseLint {
         }
     }
 
-    private static void checkDeterminism(CompatCase c, List<String> violations) {
-        String q = c.query.toLowerCase(Locale.ROOT).replace(" ", "");
+    /**
+     * The non-deterministic construct a query uses, or null when it uses none.
+     *
+     * Public so that generators can screen a candidate query before emitting it:
+     * a case that trips this rule must never reach the corpus, and the rule should
+     * be stated in exactly one place.
+     */
+    public static String nonDeterministicToken(String query) {
+        String q = query.toLowerCase(Locale.ROOT).replace(" ", "");
         for (String token : NON_DETERMINISTIC) {
             if (q.contains(token)) {
-                violations.add("[" + c.id + "] query uses the non-deterministic construct '"
-                        + token + "'");
-                return;
+                return token;
             }
+        }
+        return null;
+    }
+
+    private static void checkDeterminism(CompatCase c, List<String> violations) {
+        String token = nonDeterministicToken(c.query);
+        if (token != null) {
+            violations.add("[" + c.id + "] query uses the non-deterministic construct '"
+                    + token + "'");
         }
     }
 

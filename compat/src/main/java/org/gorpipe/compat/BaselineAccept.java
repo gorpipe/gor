@@ -1,10 +1,16 @@
 package org.gorpipe.compat;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Re-captures every baseline output and rewrites the committed files.
@@ -55,13 +61,44 @@ public final class BaselineAccept {
         for (Map.Entry<Path, Map<String, String>> e : byFile.entrySet()) {
             BaselineStore.write(e.getKey(), e.getValue());
         }
+        int pruned = pruneOrphanedBaselineFiles(byFile.keySet());
 
-        System.out.printf("Accepted %d baseline cases across %d files: %d new, %d changed.%n",
-                baselineCases, byFile.size(), added, changed);
+        System.out.printf("Accepted %d baseline cases across %d files: %d new, %d changed, "
+                + "%d orphaned file(s) removed.%n",
+                baselineCases, byFile.size(), added, changed, pruned);
         if (changed > 0) {
             System.out.println("Review the rewritten baselines before committing — each changed "
                     + "case is a behaviour change someone must vouch for.");
         }
+    }
+
+    /**
+     * Deletes baseline files that no case maps to any more.
+     *
+     * A file still holding at least one live case is rewritten with only that
+     * case's blocks, so orphaned blocks disappear on their own; a file whose every
+     * case is gone would otherwise be left behind as a permanent artefact.
+     */
+    private static int pruneOrphanedBaselineFiles(Set<Path> live) {
+        Path root = CaseLoader.moduleRoot().resolve("baselines");
+        if (!Files.isDirectory(root)) {
+            return 0;
+        }
+        int removed = 0;
+        try (Stream<Path> walk = Files.walk(root)) {
+            List<Path> orphaned = walk
+                    .filter(p -> p.toString().endsWith(".out"))
+                    .filter(p -> !live.contains(p))
+                    .sorted()
+                    .collect(Collectors.toList());
+            for (Path file : orphaned) {
+                Files.delete(file);
+                removed++;
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Cannot prune orphaned baselines under " + root, e);
+        }
+        return removed;
     }
 
     private static boolean inContinuousIntegration() {

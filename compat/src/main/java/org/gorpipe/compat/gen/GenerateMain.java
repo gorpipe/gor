@@ -12,7 +12,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Regenerates the baseline case corpus from the registry and the documentation.
@@ -55,16 +58,48 @@ public final class GenerateMain {
         for (Map.Entry<Path, List<CompatCase>> e : byFile.entrySet()) {
             CaseWriter.writeFeatureFile(e.getKey(), e.getValue());
         }
+        int pruned = pruneStaleCaseFiles(byFile.keySet());
 
         writeGapReport(flags, docs);
 
-        System.out.printf("Generated %d baseline cases across %d files.%n",
-                byFile.values().stream().mapToInt(List::size).sum(), byFile.size());
+        System.out.printf("Generated %d baseline cases across %d files (%d stale file(s) "
+                + "removed).%n",
+                byFile.values().stream().mapToInt(List::size).sum(), byFile.size(), pruned);
         System.out.printf("  flag matrix:  %d cases, %d value-flags unmapped%n",
                 flags.cases.size(), flags.unmappedValueFlags.size());
         System.out.printf("  doc harvest:  %d cases, %d snippets skipped%n",
                 docs.cases.size(), docs.skipped.size());
         System.out.println("Next: ./gradlew :compat:accept to record baselines for new cases.");
+    }
+
+    /**
+     * Deletes generated case files the generators no longer produce.
+     *
+     * Without this a case that stops being generated — a flag that was removed, a
+     * doc snippet that became non-deterministic — would linger on disk forever and
+     * the freshness gate could never pass again. Confined to cases/baseline, which
+     * is generator-owned in its entirety.
+     */
+    private static int pruneStaleCaseFiles(Set<Path> intended) {
+        Path root = CaseLoader.moduleRoot().resolve("cases/baseline");
+        if (!Files.isDirectory(root)) {
+            return 0;
+        }
+        int removed = 0;
+        try (Stream<Path> walk = Files.walk(root)) {
+            List<Path> stale = walk
+                    .filter(p -> p.toString().endsWith(".yml"))
+                    .filter(p -> !intended.contains(p))
+                    .sorted()
+                    .collect(Collectors.toList());
+            for (Path file : stale) {
+                Files.delete(file);
+                removed++;
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Cannot prune stale case files under " + root, e);
+        }
+        return removed;
     }
 
     private static void writeGapReport(FlagMatrixGenerator.GenerationResult flags,

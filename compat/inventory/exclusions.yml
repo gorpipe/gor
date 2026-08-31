@@ -1,0 +1,54 @@
+# Surface deliberately not covered, with a reason for each entry.
+#
+# This file is load-bearing: the flag matrix generator reads it, so an entry here
+# is the only way a command is left out. The count is printed on every run and
+# additions are reviewable diffs, so it cannot quietly become a dumping ground.
+#
+# Commands whose generated cases all error for a *fixture* reason are NOT listed
+# here — PILEUP wanting BAM columns or ADJUST wanting a p-value column is
+# recorded behaviour like any other, and a change in that message is still a
+# compatibility change worth catching. Only surface that cannot run hermetically
+# at all belongs here.
+
+- element: cmd.CMD
+  reason: "Shells out to an external process; not hermetic"
+  ticket: null
+- element: cmd.SQL
+  reason: "Requires a live database connection"
+  ticket: null
+- element: cmd.GORSQL
+  reason: "Requires a live database connection"
+  ticket: null
+- element: cmd.NORSQL
+  reason: "Requires a live database connection"
+  ticket: null
+- element: cmd.WAIT
+  reason: "Blocks on wall-clock time; would make the suite slow and flaky"
+  ticket: null
+- element: cmd.WRITE
+  reason: "Writes files outside the result stream; output is not the row set"
+  ticket: null
+- element: cmd.BINARYWRITE
+  reason: "Writes files outside the result stream; output is not the row set"
+  ticket: null
+- element: cmd.TEE
+  reason: "Forks the stream to a file; output is not the row set"
+  ticket: null
+- element: cmd.BUG
+  reason: "Deliberately raises an error for diagnostics; pins nothing about the language"
+  ticket: null
+- element: cmd.LOG
+  reason: "Emits to the log rather than the row set"
+  ticket: null
+- element: cmd.LOGLEVEL
+  reason: "Mutates global logger state, which would leak across cases"
+  ticket: null
+- element: cmd.ROOTLOGLEVEL
+  reason: "Mutates global logger state, which would leak across cases"
+  ticket: null
+- element: cmd.PGOR
+  reason: "Parallel macro; expands into a script rather than running as a pipe step"
+  ticket: null
+- element: cmd.PARTGOR
+  reason: "Parallel macro; expands into a script rather than running as a pipe step"
+  ticket: null
