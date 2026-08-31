@@ -45,6 +45,14 @@ project(':compat') {
         workingDir = projectDir
     }
 
+    tasks.register('report', JavaExec) {
+        group = 'compat'
+        description = 'Print surface coverage and documentation cross-check diagnostics'
+        mainClass = 'org.gorpipe.compat.ReportMain'
+        classpath = sourceSets.main.runtimeClasspath
+        workingDir = projectDir
+    }
+
     tasks.named('test') {
         useJUnit {
             // gor.java-common.gradle's default `test` task configures
@@ -67,5 +75,7 @@ project(':compat') {
             junitXml.required = true
             html.required = true
         }
+        // Diagnostics on every run: the report is how the next gap gets found.
+        finalizedBy tasks.named('report')
     }
 }
