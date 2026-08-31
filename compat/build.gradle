@@ -29,6 +29,14 @@ project(':compat') {
         workingDir = projectDir
     }
 
+    tasks.register('inventory', JavaExec) {
+        group = 'compat'
+        description = 'Regenerate inventory/surface.json from the live registries'
+        mainClass = 'org.gorpipe.compat.InventoryMain'
+        classpath = sourceSets.main.runtimeClasspath
+        workingDir = projectDir
+    }
+
     tasks.named('test') {
         useJUnit {
             // gor.java-common.gradle's default `test` task configures

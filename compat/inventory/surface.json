@@ -1,0 +1,653 @@
+{
+  "commands": {
+    "ADJUST": {
+      "valuelessFlags": ["-bh", "-bonf", "-by", "-gcc", "-holm", "-qq", "-sd", "-ss"],
+      "valueFlags": ["-gc", "-pc"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "ATMAX": {
+      "valuelessFlags": ["-last", "-ordered", "-s"],
+      "valueFlags": ["-gc"],
+      "minArgs": 1,
+      "maxArgs": 2
+    },
+    "ATMIN": {
+      "valuelessFlags": ["-last", "-ordered", "-s"],
+      "valueFlags": ["-gc"],
+      "minArgs": 1,
+      "maxArgs": 2
+    },
+    "BAMFLAG": {
+      "valuelessFlags": ["-h", "-v"],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "BASES": {
+      "valuelessFlags": ["-count"],
+      "valueFlags": ["-gc", "-readlength"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "BINARYWRITE": {
+      "valuelessFlags": ["-gv", "-imp"],
+      "valueFlags": ["-batch", "-threshold"],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "BUCKETSPLIT": {
+      "valuelessFlags": ["-cs"],
+      "valueFlags": ["-b", "-s", "-vs"],
+      "minArgs": 2,
+      "maxArgs": 2
+    },
+    "BUG": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 1
+    },
+    "CALC": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 2,
+      "maxArgs": -1
+    },
+    "CALCIFMISSING": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 2,
+      "maxArgs": -1
+    },
+    "CIGARSEGS": {
+      "valuelessFlags": ["-seq"],
+      "valueFlags": ["-gc", "-readlength"],
+      "minArgs": 0,
+      "maxArgs": -1
+    },
+    "CMD": {
+      "valuelessFlags": ["-e", "-h", "-u"],
+      "valueFlags": ["-f", "-s"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "COLLECT": {
+      "valuelessFlags": ["-ave", "-std", "-sum", "-var"],
+      "valueFlags": [],
+      "minArgs": 2,
+      "maxArgs": 2
+    },
+    "COLNUM": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "COLS2LIST": {
+      "valuelessFlags": [],
+      "valueFlags": ["-gc", "-map", "-sep"],
+      "minArgs": 2,
+      "maxArgs": 2
+    },
+    "COLSPLIT": {
+      "valuelessFlags": ["-o"],
+      "valueFlags": ["-m", "-s"],
+      "minArgs": 3,
+      "maxArgs": 3
+    },
+    "COLTYPE": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "COLUMNREORDER": {
+      "valuelessFlags": ["-t"],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "COLUMNSORT": {
+      "valuelessFlags": ["-s", "-sort", "-t"],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "COUNTROWS": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "CSVCC": {
+      "valuelessFlags": ["-probphased", "-probunphased"],
+      "valueFlags": ["-gc", "-s", "-threshold", "-u", "-vs"],
+      "minArgs": 2,
+      "maxArgs": 2
+    },
+    "CSVSEL": {
+      "valuelessFlags": ["-dose", "-nopar", "-vcf"],
+      "valueFlags": ["-gc", "-hide", "-s", "-tag", "-threshold", "-u", "-vs"],
+      "minArgs": 2,
+      "maxArgs": -1
+    },
+    "DAGMAP": {
+      "valuelessFlags": ["-cis", "-dp"],
+      "valueFlags": ["-c", "-dl", "-m", "-ps"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "DEFLATECOLUMN": {
+      "valuelessFlags": [],
+      "valueFlags": ["-m"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "DISTINCT": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "DISTLOC": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 1
+    },
+    "FILTERINVALIDROWS": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "FIRST": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 1
+    },
+    "GAVA": {
+      "valuelessFlags": ["-debug", "-dominant", "-noMaxAlleleCounts", "-protective", "-recessive"],
+      "valueFlags": ["-bailout", "-casefile", "-caselist", "-casepene", "-ctrlfile", "-ctrllist", "-ctrlpene", "-grouping", "-maxAf"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "GORROW": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": -1,
+      "maxArgs": -1
+    },
+    "GRANNO": {
+      "valuelessFlags": ["-avg", "-cdist", "-count", "-dis", "-h", "-lis", "-max", "-med", "-min", "-ordered", "-range", "-set", "-std", "-sum"],
+      "valueFlags": ["-ac", "-fc", "-gc", "-ic", "-len", "-s", "-sc"],
+      "minArgs": 0,
+      "maxArgs": 1
+    },
+    "GREP": {
+      "valuelessFlags": ["-i", "-s", "-v"],
+      "valueFlags": ["-c"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "GROUP": {
+      "valuelessFlags": ["-avg", "-cdist", "-count", "-dis", "-h", "-lis", "-max", "-med", "-min", "-notruncate", "-ordered", "-set", "-std", "-sum"],
+      "valueFlags": ["-ac", "-fc", "-gc", "-ic", "-len", "-s", "-sc", "-steps"],
+      "minArgs": 0,
+      "maxArgs": 1
+    },
+    "GTGEN": {
+      "valuelessFlags": [],
+      "valueFlags": ["-gc", "-maxseg", "-tag"],
+      "minArgs": 2,
+      "maxArgs": 2
+    },
+    "GTLD": {
+      "valuelessFlags": ["-calc", "-sum"],
+      "valueFlags": ["-f"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "GTTRANSPOSE": {
+      "valuelessFlags": ["-cols"],
+      "valueFlags": ["-sep", "-vs"],
+      "minArgs": 3,
+      "maxArgs": 3
+    },
+    "HIDE": {
+      "valuelessFlags": ["-sort", "-t"],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "IHE": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "INFLATECOLUMN": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "INSET": {
+      "valuelessFlags": ["-b", "-cartesian", "-cis", "-e", "-h", "-not", "-ordered", "-s"],
+      "valueFlags": ["-c", "-m", "-n"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "IOTEST": {
+      "valuelessFlags": ["-p"],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "JOIN": {
+      "valuelessFlags": ["-c", "-i", "-ic", "-ir", "-l", "-m", "-n", "-r", "-segseg", "-segsnp", "-segvar", "-snpseg", "-snpsnp", "-stdin", "-t", "-varseg", "-xcis"],
+      "valueFlags": ["-e", "-f", "-lstop", "-maxseg", "-o", "-p", "-ref", "-refl", "-refr", "-rprefix", "-rstop", "-s", "-xl", "-xr"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "KING": {
+      "valuelessFlags": ["-sym"],
+      "valueFlags": ["-gc", "-maxvars", "-phithr", "-pi0thr", "-s", "-thetathr", "-vs"],
+      "minArgs": 3,
+      "maxArgs": -1
+    },
+    "KING2": {
+      "valuelessFlags": [],
+      "valueFlags": ["-gc", "-phithr", "-pi0thr", "-s", "-thetathr", "-vs"],
+      "minArgs": 2,
+      "maxArgs": -1
+    },
+    "LEFTJOIN": {
+      "valuelessFlags": ["-c", "-h", "-i", "-ic", "-ir", "-l", "-m", "-n", "-r", "-segseg", "-segsnp", "-segvar", "-snpseg", "-snpsnp", "-stdin", "-t", "-varseg", "-xcis"],
+      "valueFlags": ["-e", "-f", "-lstop", "-maxseg", "-o", "-p", "-ref", "-refl", "-refr", "-rprefix", "-rstop", "-s", "-xl", "-xr"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "LEFTWHERE": {
+      "valuelessFlags": [],
+      "valueFlags": ["-e"],
+      "minArgs": 2,
+      "maxArgs": -1
+    },
+    "LIFTOVER": {
+      "valuelessFlags": ["-all", "-bam", "-seg", "-snp", "-var"],
+      "valueFlags": ["-alt", "-build", "-ref"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "LOG": {
+      "valuelessFlags": [],
+      "valueFlags": ["-a", "-l", "-t"],
+      "minArgs": 0,
+      "maxArgs": 1
+    },
+    "LOGLEVEL": {
+      "valuelessFlags": [],
+      "valueFlags": ["-label"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "MAP": {
+      "valuelessFlags": ["-b", "-cartesian", "-cis", "-e", "-h", "-l", "-not", "-ordered"],
+      "valueFlags": ["-c", "-m", "-n"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "MERGE": {
+      "valuelessFlags": ["-i", "-s", "-u"],
+      "valueFlags": ["-c", "-e"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "MULTIMAP": {
+      "valuelessFlags": ["-b", "-cartesian", "-cis", "-e", "-h", "-not", "-ordered"],
+      "valueFlags": ["-c", "-m", "-n"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "PEDPIVOT": {
+      "valuelessFlags": ["-a", "-v"],
+      "valueFlags": ["-e", "-gc"],
+      "minArgs": 2,
+      "maxArgs": 2
+    },
+    "PILEUP": {
+      "valuelessFlags": ["-depth", "-df", "-gt", "-nf", "-sex", "-soc"],
+      "valueFlags": ["-bq", "-gc", "-i", "-mprob", "-p", "-q", "-span"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "PIPESTEPS": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "PIVOT": {
+      "valuelessFlags": ["-h", "-ordered"],
+      "valueFlags": ["-e", "-gc", "-v", "-vf", "-vp"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "PLINKADJUSTMENT": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": -1
+    },
+    "PLINKREGRESSION": {
+      "valuelessFlags": ["-1", "-cvs", "-dom", "-firth", "-hc", "-imp", "-qn", "-rec", "-vcf", "-vs"],
+      "valueFlags": ["-covar", "-geno", "-hwe", "-maf", "-residualize", "-threshold"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "PREFIX": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 2,
+      "maxArgs": -1
+    },
+    "PRGTGEN": {
+      "valuelessFlags": ["-combgt"],
+      "valueFlags": ["-anc", "-crc", "-e", "-fpab", "-fpbb", "-gc", "-gl", "-gp", "-ld", "-maxit", "-maxseg", "-osep", "-pabc", "-pbbc", "-pl", "-pn", "-prgc", "-psep", "-rd", "-th", "-tol"],
+      "minArgs": 2,
+      "maxArgs": 3
+    },
+    "QUEEN": {
+      "valuelessFlags": [],
+      "valueFlags": ["-gc", "-minSharing", "-s", "-vs"],
+      "minArgs": 3,
+      "maxArgs": -1
+    },
+    "RANGE": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "RANK": {
+      "valuelessFlags": ["-b", "-c", "-q", "-z"],
+      "valueFlags": ["-gc", "-o", "-rmax"],
+      "minArgs": 1,
+      "maxArgs": 2
+    },
+    "REGRESSION": {
+      "valuelessFlags": ["-imp", "-linear", "-logistic"],
+      "valueFlags": ["-covar", "-s"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "REGSEL": {
+      "valuelessFlags": [],
+      "valueFlags": ["-e"],
+      "minArgs": 3,
+      "maxArgs": 3
+    },
+    "RELREMOVE": {
+      "valuelessFlags": ["-sepcc"],
+      "valueFlags": ["-rsymb", "-weightcol"],
+      "minArgs": 0,
+      "maxArgs": 1
+    },
+    "RENAME": {
+      "valuelessFlags": ["-s"],
+      "valueFlags": [],
+      "minArgs": 2,
+      "maxArgs": -1
+    },
+    "REPLACE": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 2,
+      "maxArgs": -1
+    },
+    "ROOTLOGLEVEL": {
+      "valuelessFlags": [],
+      "valueFlags": ["-label"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "ROWNUM": {
+      "valuelessFlags": [],
+      "valueFlags": ["-gc"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "SED": {
+      "valuelessFlags": ["-f", "-i"],
+      "valueFlags": ["-c"],
+      "minArgs": 2,
+      "maxArgs": 2
+    },
+    "SEGHIST": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "SEGPROJ": {
+      "valuelessFlags": [],
+      "valueFlags": ["-f", "-gc", "-maxseg", "-sumcol"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "SEGSPAN": {
+      "valuelessFlags": [],
+      "valueFlags": ["-gc", "-maxseg"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "SEGWHERE": {
+      "valuelessFlags": ["-eh", "-sh"],
+      "valueFlags": ["-minseg"],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "SELECT": {
+      "valuelessFlags": ["-append", "-s", "-sort", "-t"],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "SELFJOIN": {
+      "valuelessFlags": ["-h"],
+      "valueFlags": ["-f", "-x"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "SELWHERE": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 2,
+      "maxArgs": -1
+    },
+    "SEQ": {
+      "valuelessFlags": [],
+      "valueFlags": ["-c", "-l"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "SETCOLTYPE": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 2,
+      "maxArgs": -1
+    },
+    "SIGNATURE": {
+      "valuelessFlags": [],
+      "valueFlags": ["-file", "-filecontent", "-timeres"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "SKIP": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 1
+    },
+    "SORT": {
+      "valuelessFlags": [],
+      "valueFlags": ["-c"],
+      "minArgs": 0,
+      "maxArgs": 1
+    },
+    "SPAN": {
+      "valuelessFlags": [],
+      "valueFlags": ["-gc", "-maxseg"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "SPLIT": {
+      "valuelessFlags": [],
+      "valueFlags": ["-e", "-s"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "TEE": {
+      "valuelessFlags": ["-h"],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "THROWIF": {
+      "valuelessFlags": ["-retriable"],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "TOGOR": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "TOP": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 1
+    },
+    "TRYHIDE": {
+      "valuelessFlags": ["-sort"],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "TRYSELECT": {
+      "valuelessFlags": ["-s", "-sort"],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "TRYWHERE": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "TSVAPPEND": {
+      "valuelessFlags": ["-noheader"],
+      "valueFlags": ["-link", "-linkmeta", "-prefix"],
+      "minArgs": 0,
+      "maxArgs": -1
+    },
+    "UNPIVOT": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "UNTIL": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "UPTO": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "VALIDATECOLUMNS": {
+      "valuelessFlags": [],
+      "valueFlags": ["-n"],
+      "minArgs": 0,
+      "maxArgs": 1
+    },
+    "VARGROUP": {
+      "valuelessFlags": [],
+      "valueFlags": ["-gc", "-sep"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "VARIANTS": {
+      "valuelessFlags": ["-count"],
+      "valueFlags": ["-bpmergedist", "-gc", "-readlength"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "VARJOIN": {
+      "valuelessFlags": ["-i", "-ic", "-ir", "-l", "-n", "-nonorm", "-norm", "-r", "-stdin", "-xcis"],
+      "valueFlags": ["-alt", "-altl", "-altr", "-as", "-e", "-maxseg", "-p", "-ref", "-refl", "-refr", "-rprefix", "-s", "-span", "-xl", "-xr"],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "VARMERGE": {
+      "valuelessFlags": ["-nonorm", "-seg"],
+      "valueFlags": ["-span"],
+      "minArgs": 2,
+      "maxArgs": 2
+    },
+    "VARNORM": {
+      "valuelessFlags": ["-left", "-right", "-seg", "-trim"],
+      "valueFlags": ["-span"],
+      "minArgs": 2,
+      "maxArgs": 2
+    },
+    "VERIFYCOLTYPE": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "VERIFYORDER": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "VERIFYVARIANT": {
+      "valuelessFlags": [],
+      "valueFlags": ["-alt", "-maxlen", "-ref"],
+      "minArgs": 0,
+      "maxArgs": 0
+    },
+    "WAIT": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": 1
+    },
+    "WHERE": {
+      "valuelessFlags": [],
+      "valueFlags": [],
+      "minArgs": 1,
+      "maxArgs": -1
+    },
+    "WRITE": {
+      "valuelessFlags": ["-c", "-inferschema", "-m", "-maxseg", "-noheader", "-r"],
+      "valueFlags": ["-card", "-d", "-f", "-i", "-l", "-link", "-linkmeta", "-prefix", "-t", "-tags"],
+      "minArgs": 0,
+      "maxArgs": -1
+    }
+  },
+  "functions": ["ABS", "ACOS", "ADDDAYS", "ADDMONTHS", "ADDYEARS", "ARCH", "ASIN", "ATAN", "AVAILCPU", "AVGBASESPERMILLIS", "AVGROWSPERMILLIS", "AVGSEEKTIMEMILLIS", "BAMTAG", "BASE26", "BASEPN", "BETA", "BETAC", "BINOMIAL", "BINOMIALC", "BRACKETS", "CATCH", "CEIL", "CHAR", "CHAR2PR", "CHARS2DOSE", "CHARS2GT", "CHARS2PRHET", "CHARS2PRHOM", "CHARS2PRPR", "CHARS2PRPRPR", "CHARSPHASED2GT", "CHI", "CHI2", "CHISQUARE", "CHISQUARECOMPL", "CODONS2AMINOS", "CODONS2SHORTAMINOS", "COLS2LIST", "COLS2LISTMAP", "CONTAINS", "CONTAINSALL", "CONTAINSANY", "CONTAINSCOUNT", "COS", "CPULOAD", "CSCONTAINS", "CSCONTAINSALL", "CSCONTAINSANY", "CSCONTAINSCOUNT", "CSLISTHASANY", "CSLISTHASCOUNT", "CURRENTDATE", "DATE", "DAYDIFF", "DAYOFMONTH", "DAYOFWEEK", "DAYOFYEAR", "DECODE", "DIV", "DQUOTE", "DUNQUOTE", "EDATE", "EFORM", "EPOCH", "ERF", "ERFC", "EVAL", "EXP", "FILECONTENT", "FILEINFO", "FILEPATH", "FLOAT", "FLOOR", "FORM", "FREE", "FREEMEM", "FSVMAP", "GAMMA", "GAMMAC", "GFFTAG", "GFORM", "GORVERSION", "GTFA", "GTMA", "GTSHARE", "GTSTAT", "HAPLDIFF", "HOSTNAME", "IHA", "INT", "INVCHISQUARE", "INVNORMAL", "INVSTUDENT", "IOOA", "IP", "ISFLOAT", "ISINT", "ISLONG", "IUPAC2GT", "IUPACFA", "IUPACGTSTAT", "IUPACMA", "JAVAVERSION", "LEFT", "LEN", "LISTADD", "LISTCOMB", "LISTCOUNT", "LISTDIST", "LISTFILTER", "LISTFIRST", "LISTHASANY", "LISTHASCOUNT", "LISTINDEX", "LISTLAST", "LISTMAP", "LISTMAX", "LISTMIN", "LISTNTH", "LISTNUMAVG", "LISTNUMMAX", "LISTNUMMIN", "LISTNUMSORTASC", "LISTNUMSORTDESC", "LISTNUMSTD", "LISTNUMSUM", "LISTREVERSE", "LISTSECOND", "LISTSIZE", "LISTSORTASC", "LISTSORTDESC", "LISTTAIL", "LISTTRIM", "LISTZIP", "LISTZIPFILTER", "LN", "LOG", "LONG", "LOWER", "MAJORVERSION", "MATCHLEN", "MAX", "MAXFILES", "MAXMEM", "MD5", "MID", "MIN", "MINORVERSION", "MOD", "MONTH", "MONTHDIFF", "NEGBINOMIAL", "NEGBINOMIALC", "NORMAL", "NUMBER", "ONCE", "OPENFILES", "POISSON", "POISSONC", "POSOF", "POW", "PR2CHAR", "PRPR2CHARS", "PRPRPR2CHARS", "PVAL", "PVALONE", "RANDOM", "RANDOMACCESSTIMING", "RC", "REFBASE", "REFBASES", "REFBASES_WITH_BUILD", "REGSEL", "REPLACE", "REVCIGAR", "REVCOMPL", "REVERSE", "RIGHT", "ROUND", "SEGDIST", "SEGOVERLAP", "SIN", "SLEEP", "SQR", "SQRT", "SQUOTE", "STR", "STR2LIST", "STRING", "STUDENT", "SUBSTR", "SUNQUOTE", "SYSCPULOAD", "SYSTEM", "TAG", "TAN", "THREADID", "TIME", "TIMESIGNATURE", "TOTALMEM", "TRIM", "UNBRACKET", "UPPER", "VARSIG", "VCFFORMATTAG", "VCFGTITEM", "YEAR", "YEARDIFF"]
+}
