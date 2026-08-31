@@ -83,6 +83,34 @@ public class UTestCaseRunner {
     }
 
     @Test
+    public void outputIsCanonicalisedSoTheTempRootNeverLeaksIn() {
+        // The project root is a fresh temp directory per run, so any output that
+        // echoes a path — engine error messages routinely do — would differ on
+        // every run and could never be pinned to a baseline.
+        CompatCase c = specCase("cmd.bucketsplit.t1", "exact",
+                "gor ${ROOT}/left.gor | BUCKETSPLIT -b 100 ${ROOT}/right.gor", null);
+        CompatInput left = new CompatInput();
+        left.path = "left.gor";
+        left.content = "Chrom\tPos\tVal\nchr1\t1\t10\n";
+        c.inputs.add(left);
+        CompatInput right = new CompatInput();
+        right.path = "right.gor";
+        right.content = "Chrom\tPos\tGene\nchr1\t1\tBRCA1\n";
+        c.inputs.add(right);
+
+        CompatResult first = CaseRunner.run(c);
+        CompatResult second = CaseRunner.run(c);
+
+        Assert.assertTrue("expected this query to fail", first.failed());
+        Assert.assertFalse("temp root leaked into the output: " + first.errorMessage,
+                first.errorMessage.contains("gor-compat-"));
+        Assert.assertTrue("the root path should be reported as ${ROOT}: " + first.errorMessage,
+                first.errorMessage.contains("${ROOT}"));
+        Assert.assertEquals("output must be identical across runs to be baselineable",
+                first.errorMessage, second.errorMessage);
+    }
+
+    @Test
     public void runReturnsResultWithoutAsserting() {
         CompatResult r = CaseRunner.run(specCase("cmd.calc.t5", "exact", "norrows 2", null));
         Assert.assertFalse(r.failed());

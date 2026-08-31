@@ -1,0 +1,22 @@
+- id: cmd.norrows.basic_one_row
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "NORROWS emits the requested number of rows"
+  cites: ["documentation/src/command/NORROWS.rst"]
+  query: "norrows 1"
+  expected: |
+    ChromNOR	PosNOR	RowNum
+    chrN	0	0
+
+- id: cmd.norrows.two_rows
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "NORROWS row numbering starts at zero"
+  query: "norrows 2"
+  cites: ["documentation/src/command/NORROWS.rst"]
+  expected: |
+    ChromNOR	PosNOR	RowNum
+    chrN	0	0
+    chrN	0	1

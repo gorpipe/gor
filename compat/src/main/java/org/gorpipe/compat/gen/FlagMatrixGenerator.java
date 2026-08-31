@@ -46,6 +46,11 @@ public final class FlagMatrixGenerator {
     }
 
     public static GenerationResult generate(SurfaceInventory inventory, FlagValues values) {
+        return generate(inventory, values, CommandArgs.load());
+    }
+
+    public static GenerationResult generate(SurfaceInventory inventory, FlagValues values,
+                                            CommandArgs commandArgs) {
         List<CompatCase> cases = new ArrayList<>();
         List<String> unmapped = new ArrayList<>();
 
@@ -55,7 +60,7 @@ public final class FlagMatrixGenerator {
             }
 
             for (String flag : command.valuelessFlags) {
-                cases.add(caseFor(command, flag, null));
+                cases.add(caseFor(command, flag, null, commandArgs));
             }
             for (String flag : command.valueFlags) {
                 String value = values.valueFor(command.name, flag);
@@ -63,22 +68,22 @@ public final class FlagMatrixGenerator {
                     unmapped.add(command.name + " " + flag);
                     continue;
                 }
-                cases.add(caseFor(command, flag, value));
+                cases.add(caseFor(command, flag, value, commandArgs));
             }
         }
         return new GenerationResult(cases, unmapped);
     }
 
     private static CompatCase caseFor(SurfaceInventory.CommandSurface command,
-                                      String flag, String value) {
+                                      String flag, String value, CommandArgs commandArgs) {
         CompatCase c = new CompatCase();
         c.id = "cmd." + command.name.toLowerCase(Locale.ROOT)
                 + ".flag_" + flag.substring(1).toLowerCase(Locale.ROOT);
         c.tier = "baseline";
         c.mode = "exact";
         c.behavior = "Generated: " + command.name + " with " + flag;
-        c.query = buildQuery(command, flag, value);
-        c.inputs.addAll(requiredInputs(command));
+        c.query = buildQuery(command, flag, value, commandArgs);
+        c.inputs.addAll(inputsReferencedBy(c.query));
         return c;
     }
 
@@ -86,30 +91,45 @@ public final class FlagMatrixGenerator {
      * A minimal invocation: read the canonical gor fixture, apply the command with
      * one flag, and cap the output so a baseline stays small.
      *
-     * Positional arguments are supplied when the command declares a minimum, using
-     * the canonical right-hand fixture. Whether the result succeeds or errors is
-     * not this generator's concern — either outcome is a behaviour worth pinning.
+     * Companion flags and the positional argument come from the curated
+     * CommandArgs mapping, because a case that dies on a missing join type or on a
+     * file supplied where a bin size was wanted records nothing about the flag it
+     * was meant to exercise. Whether the result then succeeds or errors is not this
+     * generator's concern — either outcome is a behaviour worth pinning.
      */
     private static String buildQuery(SurfaceInventory.CommandSurface command,
-                                     String flag, String value) {
+                                     String flag, String value, CommandArgs commandArgs) {
         StringBuilder q = new StringBuilder("gor ${ROOT}/left.gor | ");
-        q.append(command.name).append(' ').append(flag);
+        q.append(command.name);
+
+        String required = commandArgs.requiredFlags(command.name);
+        // Skipped when the flag under test is itself the required one, so that a
+        // case never passes the same flag twice.
+        if (!required.isEmpty() && !required.startsWith(flag)) {
+            q.append(' ').append(required);
+        }
+
+        q.append(' ').append(flag);
         if (value != null) {
             q.append(' ').append(value);
         }
-        if (command.minArgs > 0) {
-            q.append(" ${ROOT}/right.gor");
+        if (command.minArgs > 0 || commandArgs.hasExplicitPositional(command.name)) {
+            q.append(' ').append(commandArgs.positional(command.name));
         }
         q.append(" | top 5");
         return q.toString();
     }
 
-    private static List<CompatInput> requiredInputs(SurfaceInventory.CommandSurface command) {
-        List<CompatInput> all = Fixtures.canonicalInputs();
+    /**
+     * The canonical fixtures the finished query actually mentions. Derived from the
+     * query rather than from the command's declared arity so that a curated
+     * positional such as a bin size never drags in an unused fixture, which corpus
+     * lint would — correctly — reject.
+     */
+    private static List<CompatInput> inputsReferencedBy(String query) {
         List<CompatInput> needed = new ArrayList<>();
-        for (CompatInput in : all) {
-            if (in.path.equals("left.gor")
-                    || (command.minArgs > 0 && in.path.equals("right.gor"))) {
+        for (CompatInput in : Fixtures.canonicalInputs()) {
+            if (query.contains(in.path)) {
                 needed.add(in);
             }
         }

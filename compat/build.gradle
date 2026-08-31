@@ -37,6 +37,14 @@ project(':compat') {
         workingDir = projectDir
     }
 
+    tasks.register('generate', JavaExec) {
+        group = 'compat'
+        description = 'Regenerate the baseline case corpus from the registry and docs'
+        mainClass = 'org.gorpipe.compat.gen.GenerateMain'
+        classpath = sourceSets.main.runtimeClasspath
+        workingDir = projectDir
+    }
+
     tasks.named('test') {
         useJUnit {
             // gor.java-common.gradle's default `test` task configures

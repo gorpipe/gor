@@ -1,0 +1,61 @@
+# Per-command invocation details the registry does not carry, used by the flag
+# matrix generator.
+#
+# The registry says a command needs N positional arguments but not what they are:
+# JOIN wants a right-hand source, GROUP wants a bin size. It also does not record
+# that some commands reject every invocation lacking a particular flag — JOIN
+# demands a join type regardless of which other flag is under test.
+#
+#   requiredFlags: emitted before the flag under test, unless it IS the flag
+#                  under test.
+#   positional:    emitted in place of the default '${ROOT}/right.gor', and
+#                  emitted even when the registry declares no required arguments.
+#                  GROUP and GRANNO report minArgs 0 yet reject an invocation with
+#                  no bin size, so declared arity cannot be trusted on its own.
+#
+# A command with no entry gets the default: no required flags, and the canonical
+# right-hand source as its positional argument when the registry says it needs
+# one. Values here are chosen to make a
+# case exercise the flag rather than to make it succeed; a command that still
+# errors records that error as its behaviour.
+
+JOIN:
+  requiredFlags: "-snpsnp"
+  positional: "${ROOT}/right.gor"
+
+# right.gor carries no Ref/Alt columns, which VARJOIN requires of its right
+# source; left.gor does.
+VARJOIN:
+  positional: "${ROOT}/left.gor"
+
+LEFTJOIN:
+  requiredFlags: "-snpsnp"
+  positional: "${ROOT}/right.gor"
+
+MAP:
+  requiredFlags: "-c Chrom"
+  positional: "${ROOT}/right.gor"
+
+MULTIMAP:
+  requiredFlags: "-c Chrom"
+  positional: "${ROOT}/right.gor"
+
+# Documented as 'GROUP binsize [ attributes ]'.
+GROUP:
+  positional: "1000"
+
+GRANNO:
+  positional: "1000"
+
+SORT:
+  positional: "1000"
+
+# Documented as 'ATMAX binsize column [ attributes ]'.
+ATMIN:
+  positional: "1000 Pos"
+
+ATMAX:
+  positional: "1000 Pos"
+
+RANK:
+  positional: "1000 Pos"

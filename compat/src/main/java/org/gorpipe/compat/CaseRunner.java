@@ -5,7 +5,9 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -81,7 +83,50 @@ public final class CaseRunner {
         }
         materialiseInputs(c, root);
         String query = c.query.replace("${ROOT}", root.toAbsolutePath().toString());
-        return CompatExecutor.run(query, root, Fixtures.configFileIfPresent(root));
+        return canonicalise(CompatExecutor.run(query, root, Fixtures.configFileIfPresent(root)),
+                root);
+    }
+
+    /**
+     * Puts ${ROOT} back wherever the temporary project root appears in the output.
+     *
+     * The root is a fresh directory per run and engine error messages routinely
+     * quote paths, so without this an affected case's output would differ on every
+     * run and could never be pinned to a baseline. Both the temp path and its
+     * resolved form are replaced: on macOS /var/folders is a symlink into
+     * /private/var/folders, and the engine reports whichever it was handed.
+     */
+    private static CompatResult canonicalise(CompatResult result, Path root) {
+        List<String> paths = new ArrayList<>();
+        paths.add(root.toAbsolutePath().toString());
+        try {
+            String real = root.toRealPath().toString();
+            if (!paths.contains(real)) {
+                paths.add(real);
+            }
+        } catch (IOException ignored) {
+            // The root is gone or unreadable; the absolute form is all we can strip.
+        }
+        // Longest first, so replacing the shorter form cannot leave a fragment of
+        // the longer one behind.
+        paths.sort(Comparator.comparingInt(String::length).reversed());
+
+        if (result.failed()) {
+            return CompatResult.error(replaceAll(result.errorMessage, paths));
+        }
+        List<String> rows = new ArrayList<>(result.rows.size());
+        for (String row : result.rows) {
+            rows.add(replaceAll(row, paths));
+        }
+        return CompatResult.ok(replaceAll(result.header, paths), rows);
+    }
+
+    private static String replaceAll(String text, List<String> paths) {
+        String out = text;
+        for (String path : paths) {
+            out = out.replace(path, "${ROOT}");
+        }
+        return out;
     }
 
     private static void compare(CompatCase c, CompatResult result, Path root) {
