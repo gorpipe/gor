@@ -13,3 +13,6 @@ ERROR: Value option -c is not found
 >>> cmd.dagmap.flag_dp
 ERROR: Value option -c is not found
 <<<
+>>> cmd.dagmap.flag_m
+ERROR: Value option -c is not found
+<<<

@@ -15,6 +15,11 @@ chr2	0	1000	1
 >>> cmd.group.flag_dis
 ERROR: No columns selected for aggregation. Use -gc, -sc, -ic, or -fc to specify which columns should be aggregated.
 <<<
+>>> cmd.group.flag_fc
+Chrom	bpStart	bpStop
+chr1	0	1000
+chr2	0	1000
+<<<
 >>> cmd.group.flag_gc
 Chrom	bpStart	bpStop	Chromx
 chr1	0	1000	chr1
@@ -24,6 +29,14 @@ chr2	0	1000	chr2
 Chrom	Pos	Ref	Alt
 chr1	0	1000
 chr2	0	1000
+<<<
+>>> cmd.group.flag_ic
+Chrom	bpStart	bpStop
+chr1	0	1000
+chr2	0	1000
+<<<
+>>> cmd.group.flag_len
+ERROR: Value 1 for option -len cannot be lower than 10
 <<<
 >>> cmd.group.flag_lis
 ERROR: No columns selected for aggregation. Use -gc, -sc, -ic, or -fc to specify which columns should be aggregated.
@@ -61,6 +74,11 @@ ERROR: No columns selected for aggregation. Use -gc, -sc, -ic, or -fc to specify
 <<<
 >>> cmd.group.flag_std
 ERROR: No columns selected for aggregation. Use -gc, -sc, -ic, or -fc to specify which columns should be aggregated.
+<<<
+>>> cmd.group.flag_steps
+Chrom	bpStart	bpStop
+chr1	0	1000
+chr2	0	1000
 <<<
 >>> cmd.group.flag_sum
 ERROR: No columns selected for aggregation. Use -gc, -sc, -ic, or -fc to specify which columns should be aggregated.

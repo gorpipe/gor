@@ -32,6 +32,14 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.group.flag_fc
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GROUP with -fc"
+  query: "gor ${ROOT}/left.gor | GROUP -fc Pos 1000 | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
 - id: cmd.group.flag_gc
   tier: baseline
   mode: exact
@@ -45,6 +53,22 @@
   mode: exact
   behavior: "Generated: GROUP with -h"
   query: "gor ${ROOT}/left.gor | GROUP -h 1000 | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.group.flag_ic
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GROUP with -ic"
+  query: "gor ${ROOT}/left.gor | GROUP -ic Pos 1000 | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.group.flag_len
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GROUP with -len"
+  query: "gor ${ROOT}/left.gor | GROUP -len 1 1000 | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
@@ -125,6 +149,14 @@
   mode: exact
   behavior: "Generated: GROUP with -std"
   query: "gor ${ROOT}/left.gor | GROUP -std 1000 | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.group.flag_steps
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GROUP with -steps"
+  query: "gor ${ROOT}/left.gor | GROUP -steps 1 1000 | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"

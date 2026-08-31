@@ -22,7 +22,158 @@ JOIN:
   "-rstop": "0"
   "-xl": "Chrom"
   "-xr": "Chrom"
+  "-o": "1"
 
 GROUP:
   "-gc": "Chrom"
   "-sc": "Ref"
+  "-fc": "Pos"
+  "-ic": "Pos"
+  "-len": "1"
+  "-steps": "1"
+
+# ---------------------------------------------------------------------------
+
+# Values below are derived from each flag's documented argument name in its
+# Options table (``-gc cols`` -> a column, ``-maxseg size`` -> a bp size), with
+# one curated sample value per argument kind:
+#
+#   sep, separator                                   -> ','
+#   prior, thres, threshold                          -> '0.5'
+#   n, num, number, val, value                       -> '1'
+#   binsize, bpsize, size                            -> '1000'
+#   missing, missval, undefsymbol                    -> 'NA'
+#   col, cols, column, columns                       -> 'Pos'
+#
+# A flag whose argument is a file path, an expression, or a column the
+# canonical fixtures do not carry is left unmapped and stays in gaps.txt.
+# Correct any of these in place; they are data, not generated at runtime.
+# ---------------------------------------------------------------------------
+
+BUCKETSPLIT:
+  "-vs": "1000"
+
+COLSPLIT:
+  "-m": "NA"
+
+CSVCC:
+  "-threshold": "1"
+  "-u": "NA"
+  "-vs": "1000"
+
+CSVSEL:
+  "-threshold": "0.5"
+  "-u": "NA"
+  "-vs": "1000"
+
+DAGMAP:
+  "-m": "NA"
+
+DEFLATECOLUMN:
+  "-m": "1000"
+
+GAVA:
+  "-bailout": "1"
+  "-casepene": "1"
+  "-ctrlpene": "1"
+  "-grouping": "1"
+  "-maxAf": "1"
+
+GRANNO:
+  "-fc": "Pos"
+  "-ic": "Pos"
+  "-len": "1"
+
+GTGEN:
+  "-maxseg": "1000"
+
+KING:
+  "-maxvars": "1"
+  "-phithr": "1"
+  "-pi0thr": "1"
+  "-thetathr": "1"
+  "-vs": "1000"
+
+KING2:
+  "-phithr": "1"
+  "-pi0thr": "1"
+  "-thetathr": "1"
+  "-vs": "1000"
+
+LIFTOVER:
+  "-alt": "Pos"
+  "-build": "1"
+  "-ref": "Pos"
+
+MAP:
+  "-m": "NA"
+
+PILEUP:
+  "-bq": "1"
+  "-i": "1"
+  "-mprob": "1"
+  "-q": "1"
+
+PLINKREGRESSION:
+  "-geno": "0.5"
+  "-hwe": "0.5"
+  "-maf": "0.5"
+
+PRGTGEN:
+  "-anc": "Pos"
+  "-crc": "Pos"
+  "-fpab": "0.5"
+  "-fpbb": "0.5"
+  "-gl": "Pos"
+  "-gp": "Pos"
+  "-ld": "Pos"
+  "-maxseg": "1000"
+  "-osep": ","
+  "-pabc": "Pos"
+  "-pbbc": "Pos"
+  "-pl": "Pos"
+  "-prgc": "Pos"
+  "-psep": ","
+  "-rd": "Pos"
+  "-th": "0.5"
+
+QUEEN:
+  "-vs": "1000"
+
+RANK:
+  "-rmax": "1"
+
+RELREMOVE:
+  "-rsymb": "1"
+  "-weightcol": "Pos"
+
+SEGPROJ:
+  "-maxseg": "1000"
+  "-sumcol": "Pos"
+
+SEGSPAN:
+  "-maxseg": "1000"
+
+SEGWHERE:
+  "-minseg": "1000"
+
+SEQ:
+  "-l": "1"
+
+VARIANTS:
+  "-bpmergedist": "1000"
+
+VARJOIN:
+  "-alt": "Pos"
+  "-altl": "Pos"
+  "-altr": "Pos"
+  "-maxseg": "1000"
+  "-ref": "Pos"
+  "-refl": "Pos"
+  "-refr": "Pos"
+  "-xl": "Pos"
+  "-xr": "Pos"
+
+VERIFYVARIANT:
+  "-alt": "Pos"
+  "-ref": "Pos"

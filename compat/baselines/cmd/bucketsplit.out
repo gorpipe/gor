@@ -8,3 +8,6 @@ ERROR: Invalid arguments in BUCKETSPLIT. Argument(s) ${ROOT}/right.gor not a par
 >>> cmd.bucketsplit.flag_s
 ERROR: Invalid arguments in BUCKETSPLIT. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
+>>> cmd.bucketsplit.flag_vs
+ERROR: Invalid arguments in BUCKETSPLIT. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<

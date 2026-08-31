@@ -2,9 +2,24 @@
 >>> cmd.king.flag_gc
 ERROR: Invalid arguments in KING. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
+>>> cmd.king.flag_maxvars
+ERROR: Invalid arguments in KING. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.king.flag_phithr
+ERROR: Invalid arguments in KING. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.king.flag_pi0thr
+ERROR: Invalid arguments in KING. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
 >>> cmd.king.flag_s
 ERROR: Invalid arguments in KING. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
 >>> cmd.king.flag_sym
+ERROR: Invalid arguments in KING. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.king.flag_thetathr
+ERROR: Invalid arguments in KING. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.king.flag_vs
 ERROR: Invalid arguments in KING. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<

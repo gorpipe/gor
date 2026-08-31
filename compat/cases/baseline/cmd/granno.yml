@@ -32,6 +32,14 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.granno.flag_fc
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GRANNO with -fc"
+  query: "gor ${ROOT}/left.gor | GRANNO -fc Pos 1000 | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
 - id: cmd.granno.flag_gc
   tier: baseline
   mode: exact
@@ -45,6 +53,22 @@
   mode: exact
   behavior: "Generated: GRANNO with -h"
   query: "gor ${ROOT}/left.gor | GRANNO -h 1000 | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.granno.flag_ic
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GRANNO with -ic"
+  query: "gor ${ROOT}/left.gor | GRANNO -ic Pos 1000 | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.granno.flag_len
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GRANNO with -len"
+  query: "gor ${ROOT}/left.gor | GRANNO -len 1 1000 | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"

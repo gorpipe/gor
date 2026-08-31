@@ -23,6 +23,11 @@ chr1	100	A	G	2	1.0000	0.5000
 chr1	200	C	T	1	0.5000	0.5000
 chr2	150	G	A	1	1.0000	1.0000
 <<<
+>>> cmd.rank.flag_rmax
+Chrom	Pos	Ref	Alt	rank_Pos
+chr1	200	C	T	1
+chr2	150	G	A	1
+<<<
 >>> cmd.rank.flag_z
 Chrom	Pos	Ref	Alt	rank_Pos	z_Pos
 chr1	100	A	G	2	-0.7071

@@ -10,11 +10,51 @@
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
     - path: "right.gor"
       content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.king2.flag_phithr
+  tier: baseline
+  mode: exact
+  behavior: "Generated: KING2 with -phithr"
+  query: "gor ${ROOT}/left.gor | KING2 -phithr 1 ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.king2.flag_pi0thr
+  tier: baseline
+  mode: exact
+  behavior: "Generated: KING2 with -pi0thr"
+  query: "gor ${ROOT}/left.gor | KING2 -pi0thr 1 ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.king2.flag_s
   tier: baseline
   mode: exact
   behavior: "Generated: KING2 with -s"
   query: "gor ${ROOT}/left.gor | KING2 -s Gene ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.king2.flag_thetathr
+  tier: baseline
+  mode: exact
+  behavior: "Generated: KING2 with -thetathr"
+  query: "gor ${ROOT}/left.gor | KING2 -thetathr 1 ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.king2.flag_vs
+  tier: baseline
+  mode: exact
+  behavior: "Generated: KING2 with -vs"
+  query: "gor ${ROOT}/left.gor | KING2 -vs 1000 ${ROOT}/right.gor | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"

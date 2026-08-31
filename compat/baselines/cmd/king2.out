@@ -2,6 +2,18 @@
 >>> cmd.king2.flag_gc
 ERROR: Invalid arguments in KING2. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
+>>> cmd.king2.flag_phithr
+ERROR: Invalid arguments in KING2. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.king2.flag_pi0thr
+ERROR: Invalid arguments in KING2. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
 >>> cmd.king2.flag_s
+ERROR: Invalid arguments in KING2. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.king2.flag_thetathr
+ERROR: Invalid arguments in KING2. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.king2.flag_vs
 ERROR: Invalid arguments in KING2. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<

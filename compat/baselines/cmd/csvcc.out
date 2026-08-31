@@ -11,3 +11,12 @@ ERROR: Invalid arguments in CSVCC. Argument(s) ${ROOT}/right.gor not a part of t
 >>> cmd.csvcc.flag_s
 ERROR: Invalid arguments in CSVCC. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
+>>> cmd.csvcc.flag_threshold
+ERROR: Invalid arguments in CSVCC. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.csvcc.flag_u
+ERROR: Invalid arguments in CSVCC. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.csvcc.flag_vs
+ERROR: Invalid arguments in CSVCC. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<

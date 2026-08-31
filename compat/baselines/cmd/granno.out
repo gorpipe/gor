@@ -17,11 +17,20 @@ chr2	150	G	A	1
 >>> cmd.granno.flag_dis
 ERROR: Error in aggregate calculation - no columns to calculate an aggregate. Use -gc, -sc, -ic or -fc to select aggregation columns.
 <<<
+>>> cmd.granno.flag_fc
+ERROR: Error in aggregate calculation - no columns to calculate an aggregate. Use -gc, -sc, -ic or -fc to select aggregation columns.
+<<<
 >>> cmd.granno.flag_gc
 ERROR: Error in aggregate calculation - no columns to calculate an aggregate. Use -gc, -sc, -ic or -fc to select aggregation columns.
 <<<
 >>> cmd.granno.flag_h
 ERROR: Error in aggregate calculation - no columns to calculate an aggregate. Use -gc, -sc, -ic or -fc to select aggregation columns.
+<<<
+>>> cmd.granno.flag_ic
+ERROR: Error in aggregate calculation - no columns to calculate an aggregate. Use -gc, -sc, -ic or -fc to select aggregation columns.
+<<<
+>>> cmd.granno.flag_len
+ERROR: Value 1 for option -len cannot be lower than 10
 <<<
 >>> cmd.granno.flag_lis
 ERROR: Error in aggregate calculation - no columns to calculate an aggregate. Use -gc, -sc, -ic or -fc to select aggregation columns.

@@ -43,6 +43,12 @@ chr1	200	C	T	100	BRCA1
 chr1	200	C	T	250	TP53
 chr2	150	G	A	150	EGFR
 <<<
+>>> cmd.map.flag_m
+Chrom	Pos	Ref	Alt	Posx	Gene
+chr1	100	A	G	100,250	BRCA1,TP53
+chr1	200	C	T	100,250	BRCA1,TP53
+chr2	150	G	A	150	EGFR
+<<<
 >>> cmd.map.flag_n
 Chrom	Pos	Ref	Alt	1
 chr1	100	A	G	chr1,chr1

@@ -32,6 +32,14 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.rank.flag_rmax
+  tier: baseline
+  mode: exact
+  behavior: "Generated: RANK with -rmax"
+  query: "gor ${ROOT}/left.gor | RANK -rmax 1 1000 Pos | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
 - id: cmd.rank.flag_z
   tier: baseline
   mode: exact

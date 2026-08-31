@@ -16,3 +16,19 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.segproj.flag_maxseg
+  tier: baseline
+  mode: exact
+  behavior: "Generated: SEGPROJ with -maxseg"
+  query: "gor ${ROOT}/left.gor | SEGPROJ -maxseg 1000 | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.segproj.flag_sumcol
+  tier: baseline
+  mode: exact
+  behavior: "Generated: SEGPROJ with -sumcol"
+  query: "gor ${ROOT}/left.gor | SEGPROJ -sumcol Pos | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"

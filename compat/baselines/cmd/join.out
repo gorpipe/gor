@@ -53,6 +53,11 @@ chr2	150	G	A	EGFR
 Chrom	Pos	Ref	Alt
 chr1	200	C	T
 <<<
+>>> cmd.join.flag_o
+Chrom	Pos	Ref	Alt	Gene
+chr1	100	A	G	BRCA1
+chr2	150	G	A	EGFR
+<<<
 >>> cmd.join.flag_p
 Chrom	Pos	Ref	Alt	Gene
 chr1	100	A	G	BRCA1

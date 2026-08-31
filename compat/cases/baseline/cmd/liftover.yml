@@ -10,11 +10,41 @@
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
     - path: "right.gor"
       content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.liftover.flag_alt
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LIFTOVER with -alt"
+  query: "gor ${ROOT}/left.gor | LIFTOVER -alt Pos ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.liftover.flag_bam
   tier: baseline
   mode: exact
   behavior: "Generated: LIFTOVER with -bam"
   query: "gor ${ROOT}/left.gor | LIFTOVER -bam ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.liftover.flag_build
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LIFTOVER with -build"
+  query: "gor ${ROOT}/left.gor | LIFTOVER -build 1 ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.liftover.flag_ref
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LIFTOVER with -ref"
+  query: "gor ${ROOT}/left.gor | LIFTOVER -ref Pos ${ROOT}/right.gor | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"

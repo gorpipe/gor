@@ -2,3 +2,9 @@
 >>> cmd.seq.flag_c
 ERROR: class java.lang.NumberFormatException: Error in chr1. Row: chr1	100	A	G column: 0
 <<<
+>>> cmd.seq.flag_l
+Chrom	Pos	Ref	Alt	refSeq
+chr1	100	A	G	N(N)N
+chr1	200	C	T	N(N)N
+chr2	150	G	A	N(N)N
+<<<

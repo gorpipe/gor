@@ -40,3 +40,33 @@
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
     - path: "right.gor"
       content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.csvcc.flag_threshold
+  tier: baseline
+  mode: exact
+  behavior: "Generated: CSVCC with -threshold"
+  query: "gor ${ROOT}/left.gor | CSVCC -threshold 1 ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.csvcc.flag_u
+  tier: baseline
+  mode: exact
+  behavior: "Generated: CSVCC with -u"
+  query: "gor ${ROOT}/left.gor | CSVCC -u NA ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.csvcc.flag_vs
+  tier: baseline
+  mode: exact
+  behavior: "Generated: CSVCC with -vs"
+  query: "gor ${ROOT}/left.gor | CSVCC -vs 1000 ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"

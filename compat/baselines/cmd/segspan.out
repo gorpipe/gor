@@ -2,3 +2,6 @@
 >>> cmd.segspan.flag_gc
 ERROR: class java.lang.NumberFormatException: Error in A. Row: chr1	100	A	G column: 2
 <<<
+>>> cmd.segspan.flag_maxseg
+ERROR: class java.lang.NumberFormatException: Error in A. Row: chr1	100	A	G column: 2
+<<<

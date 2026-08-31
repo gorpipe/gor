@@ -11,10 +11,19 @@ ERROR: There must be a reference allele column, alternative allele column and va
 >>> cmd.plinkregression.flag_firth
 ERROR: There must be a reference allele column, alternative allele column and value column.
 <<<
+>>> cmd.plinkregression.flag_geno
+ERROR: There must be a reference allele column, alternative allele column and value column.
+<<<
 >>> cmd.plinkregression.flag_hc
 ERROR: There must be a reference allele column, alternative allele column and value column.
 <<<
+>>> cmd.plinkregression.flag_hwe
+ERROR: There must be a reference allele column, alternative allele column and value column.
+<<<
 >>> cmd.plinkregression.flag_imp
+ERROR: There must be a reference allele column, alternative allele column and value column.
+<<<
+>>> cmd.plinkregression.flag_maf
 ERROR: There must be a reference allele column, alternative allele column and value column.
 <<<
 >>> cmd.plinkregression.flag_qn

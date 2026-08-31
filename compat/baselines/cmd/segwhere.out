@@ -2,6 +2,9 @@
 >>> cmd.segwhere.flag_eh
 ERROR: Value -1 for option -minseg cannot be lower than 1
 <<<
+>>> cmd.segwhere.flag_minseg
+ERROR: string matching regex '(?i)\QISLONG\E' expected but '/' found
+<<<
 >>> cmd.segwhere.flag_sh
 ERROR: Value -1 for option -minseg cannot be lower than 1
 <<<

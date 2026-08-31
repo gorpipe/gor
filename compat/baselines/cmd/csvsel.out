@@ -11,6 +11,15 @@ ERROR: Invalid arguments in CSVSEL. Argument(s) ${ROOT}/right.gor not a part of 
 >>> cmd.csvsel.flag_s
 ERROR: Invalid arguments in CSVSEL. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
+>>> cmd.csvsel.flag_threshold
+ERROR: Invalid arguments in CSVSEL. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.csvsel.flag_u
+ERROR: Invalid arguments in CSVSEL. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
 >>> cmd.csvsel.flag_vcf
+ERROR: Invalid arguments in CSVSEL. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.csvsel.flag_vs
 ERROR: Invalid arguments in CSVSEL. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
