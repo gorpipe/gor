@@ -1,0 +1,86 @@
+- id: cmd.top.first_two_rows
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "TOP passes through the first N rows unchanged and drops the rest"
+  cites: ["documentation/src/command/TOP.rst"]
+  query: "gor ${ROOT}/left.gor | TOP 2"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+    chr1	200	C	T
+
+- id: cmd.where.filters_on_column_value
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "WHERE keeps only rows whose condition holds, leaving the schema unchanged"
+  cites: ["documentation/src/command/WHERE.rst"]
+  query: "gor ${ROOT}/left.gor | WHERE Chrom = 'chr2'"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr2	150	G	A
+
+- id: cmd.rename.renames_a_column
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "RENAME changes a column name and leaves its values untouched"
+  cites: ["documentation/src/command/RENAME.rst"]
+  query: "gor ${ROOT}/left.gor | RENAME Ref Reference | TOP 1"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Reference	Alt
+    chr1	100	A	G
+
+- id: cmd.replace.rewrites_column_values
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "REPLACE rewrites a column's values via an expression, keeping the column name"
+  cites: ["documentation/src/command/REPLACE.rst"]
+  query: "gor ${ROOT}/left.gor | REPLACE Ref 'N' | TOP 1"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	N	G
+
+- id: cmd.distinct.removes_duplicate_rows
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "DISTINCT collapses identical adjacent rows to one"
+  cites: ["documentation/src/command/DISTINCT.rst"]
+  query: "gor ${ROOT}/left.gor | DISTINCT"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	100	A	G\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+    chr2	150	G	A
+
+- id: cmd.select.projects_named_columns
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "SELECT projects the named columns in the order given"
+  cites: ["documentation/src/command/SELECT.rst"]
+  query: "gor ${ROOT}/left.gor | SELECT Chrom,Pos,Alt | TOP 1"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Alt
+    chr1	100	G
+
