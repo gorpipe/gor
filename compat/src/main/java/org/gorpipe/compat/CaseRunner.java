@@ -8,6 +8,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 /**
@@ -18,6 +22,10 @@ import java.util.stream.Stream;
  * impractical.
  */
 public final class CaseRunner {
+
+    /** Seconds a single case may run before it is recorded as a timeout. */
+    public static final String TIMEOUT_PROPERTY = "compat.caseTimeoutSeconds";
+    private static final int DEFAULT_TIMEOUT_SECONDS = 20;
 
     /** Result of a run plus the fixture directory, if it was kept for debugging. */
     public static final class CaseOutcome {
@@ -94,8 +102,58 @@ public final class CaseRunner {
         }
         materialiseInputs(c, root);
         String query = c.query.replace("${ROOT}", root.toAbsolutePath().toString());
-        return canonicalise(CompatExecutor.run(query, root, Fixtures.configFileIfPresent(root)),
-                root);
+        Path config = Fixtures.configFileIfPresent(root);
+        return canonicalise(runBounded(query, root, config), root);
+    }
+
+    /**
+     * Runs the query with a time bound, recording a timeout rather than hanging.
+     *
+     * Some queries never terminate: INVSTUDENT with a probability outside [0,1]
+     * sends colt's root finder into an endless loop. An unbounded suite would wedge
+     * CI on one such case, so the bound is part of the harness rather than
+     * something each case has to avoid. "This query does not finish" is itself a
+     * behaviour worth pinning, and it stays stable across runs.
+     *
+     * The worker is a daemon thread: a query stuck in a tight numeric loop does not
+     * observe an interrupt, so it cannot be joined, and the JVM must still be able
+     * to exit.
+     */
+    private static CompatResult runBounded(String query, Path root, Path config) {
+        int seconds = timeoutSeconds();
+        FutureTask<CompatResult> task =
+                new FutureTask<>(() -> CompatExecutor.run(query, root, config));
+        Thread worker = new Thread(task, "gor-compat-case");
+        worker.setDaemon(true);
+        worker.start();
+        try {
+            return task.get(seconds, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            task.cancel(true);
+            return CompatResult.error("TIMEOUT: query did not finish within "
+                    + seconds + "s");
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause() == null ? e : e.getCause();
+            String message = cause.getMessage();
+            return CompatResult.error(message == null || message.isEmpty()
+                    ? cause.getClass().getName() : message);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return CompatResult.error("INTERRUPTED while running the case");
+        }
+    }
+
+    private static int timeoutSeconds() {
+        String configured = System.getProperty(TIMEOUT_PROPERTY);
+        if (configured == null) {
+            return DEFAULT_TIMEOUT_SECONDS;
+        }
+        try {
+            int value = Integer.parseInt(configured.trim());
+            return value > 0 ? value : DEFAULT_TIMEOUT_SECONDS;
+        } catch (NumberFormatException e) {
+            return DEFAULT_TIMEOUT_SECONDS;
+        }
     }
 
     /**

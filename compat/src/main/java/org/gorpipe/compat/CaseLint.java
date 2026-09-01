@@ -23,8 +23,20 @@ public final class CaseLint {
      * intermittently later.
      */
     private static final String[] NON_DETERMINISTIC = {
+            // Clock and randomness.
             "random(", "rand(", "now(", "currentdate", "curdate", "today(",
-            "hostname(", "gettime", "systime", "timestamp("
+            "gettime", "systime", "timestamp(", "time(", "date(", "edate(",
+            // Machine identity.
+            "hostname(", "threadid(", "availcpu(",
+            // JVM and host state. These are stable within a single JVM, which is
+            // why the runtime reproducibility probe cannot see them: the probe
+            // runs both attempts in one process, while the suite runs in another.
+            "maxmem(", "totalmem(", "freemem(", "free(", "openfiles(", "maxfiles(",
+            "cpuload(", "syscpuload(",
+            // Timing measurements of the host's storage.
+            "avgseektimemillis(", "randomaccesstiming(",
+            // Depends on files in the project rather than on the query.
+            "fileinfo(", "timesignature("
     };
 
     /**

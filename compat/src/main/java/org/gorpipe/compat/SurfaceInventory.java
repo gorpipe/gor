@@ -55,15 +55,18 @@ public final class SurfaceInventory {
     private final Map<String, CommandSurface> inputSources;
     private final Map<String, CommandSurface> macros;
     private final Set<String> functionNames;
+    private final Map<String, List<String>> functionSignatures;
 
     private SurfaceInventory(Map<String, CommandSurface> commands,
                              Map<String, CommandSurface> inputSources,
                              Map<String, CommandSurface> macros,
-                             Set<String> functionNames) {
+                             Set<String> functionNames,
+                             Map<String, List<String>> functionSignatures) {
         this.commands = Collections.unmodifiableMap(commands);
         this.inputSources = Collections.unmodifiableMap(inputSources);
         this.macros = Collections.unmodifiableMap(macros);
         this.functionNames = Collections.unmodifiableSet(functionNames);
+        this.functionSignatures = Collections.unmodifiableMap(functionSignatures);
     }
 
     public static SurfaceInventory read() {
@@ -97,7 +100,8 @@ public final class SurfaceInventory {
         // FunctionRegistry is a class; the CALC/WHERE surface lives in the
         // self-registering CalcFunctions.registry singleton.
         return new SurfaceInventory(commands, inputSources, macros,
-                new TreeSet<>(CalcFunctions.registry().functionNames()));
+                new TreeSet<>(CalcFunctions.registry().functionNames()),
+                new TreeMap<>(CalcFunctions.registry().functionSignatures()));
     }
 
     private static CommandSurface surfaceOf(String name, CommandArguments args) {
@@ -144,6 +148,17 @@ public final class SurfaceInventory {
 
     public Set<String> functionNames() {
         return functionNames;
+    }
+
+    /**
+     * The signatures registered under each function name.
+     *
+     * A signature encodes the argument types and the return type — "sv:iv2sv" is a
+     * String and an Int argument returning a String — which is what a generator
+     * needs to build a call.
+     */
+    public Map<String, List<String>> functionSignatures() {
+        return functionSignatures;
     }
 
     public int totalFlagCount() {

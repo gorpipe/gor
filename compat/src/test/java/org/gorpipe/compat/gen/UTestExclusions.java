@@ -21,6 +21,14 @@ public class UTestExclusions {
     }
 
     @Test
+    public void excludesNonHermeticFunctions() {
+        Exclusions exclusions = Exclusions.load();
+        Assert.assertTrue(exclusions.excludesFunction("SYSTEM"));
+        Assert.assertTrue(exclusions.excludesFunction("EVAL"));
+        Assert.assertFalse(exclusions.excludesFunction("UPPER"));
+    }
+
+    @Test
     public void everyEntryCarriesAReason() {
         Exclusions exclusions = Exclusions.load();
         Assert.assertFalse(exclusions.entries().isEmpty());

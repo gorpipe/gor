@@ -36,6 +36,36 @@ public class UTestFunctionRegistryAccess {
     }
 
     @Test
+    public void reportsTheSignaturesOfEachFunction() {
+        // A name alone cannot be called: the generator needs the argument types.
+        // Signatures encode them as "sv:iv2sv" — String and Int arguments,
+        // returning String.
+        java.util.Map<String, java.util.List<String>> signatures = registry().functionSignatures();
+
+        Assert.assertEquals("every named function must report signatures",
+                registry().functionNames().size(), signatures.size());
+        Assert.assertTrue(signatures.containsKey("UPPER"));
+        for (java.util.Map.Entry<String, java.util.List<String>> e : signatures.entrySet()) {
+            Assert.assertFalse(e.getKey() + " reports no signature", e.getValue().isEmpty());
+            for (String sig : e.getValue()) {
+                Assert.assertTrue(e.getKey() + " has a signature with no return type: " + sig,
+                        sig.contains("2"));
+            }
+        }
+    }
+
+    @Test
+    public void reportedSignatureMapIsNotMutable() {
+        java.util.Map<String, java.util.List<String>> signatures = registry().functionSignatures();
+        try {
+            signatures.put("SHOULD_NOT_BE_POSSIBLE", java.util.Collections.emptyList());
+            Assert.fail("functionSignatures must not expose a mutable view");
+        } catch (UnsupportedOperationException expected) {
+            // this is the contract
+        }
+    }
+
+    @Test
     public void reportedSetIsNotMutable() {
         Set<String> names = registry().functionNames();
         try {

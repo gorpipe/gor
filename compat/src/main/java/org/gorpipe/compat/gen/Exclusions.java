@@ -38,10 +38,13 @@ public final class Exclusions {
 
     private final List<Entry> entries;
     private final Set<String> excludedCommands;
+    private final Set<String> excludedFunctions;
 
-    private Exclusions(List<Entry> entries, Set<String> excludedCommands) {
+    private Exclusions(List<Entry> entries, Set<String> excludedCommands,
+                       Set<String> excludedFunctions) {
         this.entries = Collections.unmodifiableList(entries);
         this.excludedCommands = Collections.unmodifiableSet(excludedCommands);
+        this.excludedFunctions = Collections.unmodifiableSet(excludedFunctions);
     }
 
     public static Exclusions load() {
@@ -52,8 +55,9 @@ public final class Exclusions {
     public static Exclusions loadFrom(Path file) {
         List<Entry> entries = new ArrayList<>();
         Set<String> commands = new TreeSet<>();
+        Set<String> functions = new TreeSet<>();
         if (!Files.exists(file)) {
-            return new Exclusions(entries, commands);
+            return new Exclusions(entries, commands, functions);
         }
         try (InputStream in = Files.newInputStream(file)) {
             Object raw = new Yaml().load(in);
@@ -71,13 +75,15 @@ public final class Exclusions {
                             asString(map.get("ticket"))));
                     if (element.startsWith("cmd.")) {
                         commands.add(element.substring("cmd.".length()));
+                    } else if (element.startsWith("fn.")) {
+                        functions.add(element.substring("fn.".length()));
                     }
                 }
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot read " + file, e);
         }
-        return new Exclusions(entries, commands);
+        return new Exclusions(entries, commands, functions);
     }
 
     private static String asString(Object value) {
@@ -90,6 +96,10 @@ public final class Exclusions {
 
     public boolean excludesCommand(String command) {
         return excludedCommands.contains(command);
+    }
+
+    public boolean excludesFunction(String function) {
+        return excludedFunctions.contains(function);
     }
 
     public int size() {

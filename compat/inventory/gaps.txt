@@ -57,6 +57,31 @@ VARJOIN -as
 VARJOIN -rprefix
 VERIFYVARIANT -maxlen
 
+## Functions with no callable signature (0)
+# No sample value exists for one of the argument types, so no call was built.
+
+## Functions screened out as non-deterministic (19)
+# Report JVM state, the clock, or the machine, so no stable baseline exists.
+AVAILCPU uses availcpu(
+AVGSEEKTIMEMILLIS uses avgseektimemillis(
+CPULOAD uses cpuload(
+CURRENTDATE uses currentdate
+DATE uses date(
+EDATE uses date(
+FILEINFO uses fileinfo(
+FREE uses free(
+FREEMEM uses freemem(
+HOSTNAME uses hostname(
+MAXFILES uses maxfiles(
+MAXMEM uses maxmem(
+OPENFILES uses openfiles(
+RANDOM uses random(
+RANDOMACCESSTIMING uses randomaccesstiming(
+SYSCPULOAD uses cpuload(
+THREADID uses threadid(
+TIME uses time(
+TOTALMEM uses totalmem(
+
 ## Documentation snippets skipped (475)
 basicGORqueries.rst block 1: usage template, not a runnable query
 basicGORqueries.rst block 2: references project data (#ref#)

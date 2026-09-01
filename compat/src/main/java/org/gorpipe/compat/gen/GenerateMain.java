@@ -37,6 +37,7 @@ public final class GenerateMain {
 
         List<CompatCase> generated = new ArrayList<>(
                 FlagMatrixGenerator.generate(inventory, values).cases);
+        generated.addAll(FunctionMatrixGenerator.generate(inventory).cases);
         generated.addAll(DocHarvester.harvest().cases);
 
         // Nightly only: these are noisier and far more expensive than the flag
@@ -125,9 +126,12 @@ public final class GenerateMain {
         FlagValues values = FlagValues.load();
         FlagMatrixGenerator.GenerationResult flags =
                 FlagMatrixGenerator.generate(inventory, values);
+        FunctionMatrixGenerator.GenerationResult functions =
+                FunctionMatrixGenerator.generate(inventory);
         DocHarvester.HarvestResult docs = DocHarvester.harvest();
 
         List<CompatCase> candidates = new ArrayList<>(flags.cases);
+        candidates.addAll(functions.cases);
         candidates.addAll(docs.cases);
         List<String> unreproducible = screenForReproducibility(candidates);
 
@@ -137,13 +141,18 @@ public final class GenerateMain {
         }
         int pruned = pruneStaleCaseFiles(byFile.keySet());
 
-        writeGapReport(flags, docs, DocFlagCrossCheck.run(inventory), unreproducible);
+        writeGapReport(flags, functions, docs, DocFlagCrossCheck.run(inventory),
+                unreproducible);
 
         System.out.printf("Generated %d baseline cases across %d files (%d stale file(s) "
                 + "removed).%n",
                 byFile.values().stream().mapToInt(List::size).sum(), byFile.size(), pruned);
         System.out.printf("  flag matrix:  %d cases, %d value-flags unmapped%n",
                 flags.cases.size(), flags.unmappedValueFlags.size());
+        System.out.printf("  functions:    %d cases, %d not callable from signatures, "
+                        + "%d non-deterministic%n",
+                functions.cases.size(), functions.unsupported.size(),
+                functions.nonDeterministic.size());
         System.out.printf("  doc harvest:  %d cases, %d snippets skipped%n",
                 docs.cases.size(), docs.skipped.size());
         System.out.printf("  dropped:      %d case(s) whose output is not reproducible%n",
@@ -182,6 +191,7 @@ public final class GenerateMain {
     }
 
     private static void writeGapReport(FlagMatrixGenerator.GenerationResult flags,
+                                       FunctionMatrixGenerator.GenerationResult functions,
                                        DocHarvester.HarvestResult docs,
                                        DocFlagCrossCheck.CrossCheckResult crossCheck,
                                        List<String> unreproducible) {
@@ -191,6 +201,22 @@ public final class GenerateMain {
         sb.append("## Value-taking flags with no entry in inventory/flag-values.yml (")
           .append(flags.unmappedValueFlags.size()).append(")\n");
         for (String entry : flags.unmappedValueFlags) {
+            sb.append(entry).append('\n');
+        }
+
+        sb.append("\n## Functions with no callable signature (")
+          .append(functions.unsupported.size()).append(")\n");
+        sb.append("# No sample value exists for one of the argument types, so no "
+                + "call was built.\n");
+        for (String entry : functions.unsupported) {
+            sb.append(entry).append('\n');
+        }
+
+        sb.append("\n## Functions screened out as non-deterministic (")
+          .append(functions.nonDeterministic.size()).append(")\n");
+        sb.append("# Report JVM state, the clock, or the machine, so no stable "
+                + "baseline exists.\n");
+        for (String entry : functions.nonDeterministic) {
             sb.append(entry).append('\n');
         }
 

@@ -52,3 +52,19 @@
 - element: cmd.PARTGOR
   reason: "Parallel macro; expands into a script rather than running as a pipe step"
   ticket: null
+
+# CALC functions. The function matrix reads this file the same way the flag
+# matrix does, so a function is left out only with a reason.
+- element: fn.SYSTEM
+  reason: "Shells out to an external process; not hermetic"
+  ticket: null
+- element: fn.EVAL
+  reason: "Evaluates its argument as a nested GOR query; cost and failure mode are unbounded"
+  ticket: null
+- element: fn.TIMESIGNATURE
+  reason: "Reads a file signature from the project; output depends on the environment"
+  ticket: null
+- element: fn.SLEEP
+  reason: "Blocks the query for its argument in milliseconds; pins nothing about the language"
+  ticket: null
+
