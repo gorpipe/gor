@@ -59,19 +59,53 @@ Add an entry to `cases/spec/<category>/<feature>.yml`:
 Expected blocks use real tab characters. `./gradlew :compat:report` prints which
 surface has no case yet — that is the worklist.
 
+## What the generators produce
+
+- **Flag matrix** — one case per command flag, plus a bare invocation per command
+  so the 32 commands that declare no flags are covered too.
+- **Function matrix** — one case per registered CALC function, with arguments built
+  from the function's signature (`String:Int2String` becomes `FN('a',1)`).
+- **Doc harvest** — self-contained snippets lifted from `documentation/src`.
+- **Nightly only** (`:compat:generateNightly`) — deterministic mutants and
+  grammar-fuzz cases.
+
 ## Curated inputs the generators need
 
 The registries do not carry everything a runnable case needs, so three files supply
 the rest. Each is curated deliberately; nothing here is guessed.
 
-- `inventory/flag-values.yml` — sample values for value-taking flags. A flag with no
-  entry is reported in `inventory/gaps.txt` rather than turned into a broken case.
+- `inventory/flag-values.yml` — sample values for value-taking flags. Most entries
+  come from the flag's documented argument name (`-gc cols` is a column), one
+  curated value per argument kind. A flag with no entry is reported in
+  `inventory/gaps.txt` rather than turned into a broken case.
 - `inventory/command-args.yml` — per-command positional arguments and required
   companion flags. `GROUP` takes a bin size where a file would be wrong, and `JOIN`
   rejects any invocation with no join type.
 - `inventory/exclusions.yml` — surface deliberately left uncovered, each entry with
-  a reason. The generator reads this file, so leaving a command out means writing
-  down why.
+  a reason. Both the flag matrix and the function matrix read this file, so leaving
+  a command (`cmd.CMD`) or a function (`fn.SYSTEM`) out means writing down why.
+
+## Keeping baselines meaningful
+
+A baseline that changes on its own is worse than no baseline: it teaches reviewers
+to approve baseline diffs without reading them. Three mechanisms prevent it, and
+each catches what the others cannot.
+
+- **Root canonicalisation.** The project root is a fresh temp directory per run, so
+  `CaseRunner` puts `${ROOT}` back wherever it appears in output — including in
+  engine error messages, which quote paths freely.
+- **A static screen.** `CaseLint` rejects queries using the clock, randomness,
+  machine identity, JVM state (`MAXMEM`, `OPENFILES`) or build identity
+  (`GORVERSION` embeds the git SHA). These are stable within one process, so only a
+  list can catch them.
+- **A runtime probe.** `CaseStability` runs each candidate under two roots of
+  different path length and drops it if the output differs — `PIPESTEPS` reports the
+  *length* of a path, which no list would have predicted. Drops are recorded in
+  `inventory/unreproducible.txt`, and each one is a finding about the engine.
+
+Every case also runs under a time bound (20s by default,
+`-Dcompat.caseTimeoutSeconds`). A query that never returns records a timeout rather
+than wedging CI.
 
 ## What gates, and what does not
 
