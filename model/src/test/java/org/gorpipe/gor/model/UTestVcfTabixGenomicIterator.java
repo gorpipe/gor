@@ -23,6 +23,7 @@
 package org.gorpipe.gor.model;
 
 import gorsat.TestUtils;
+import htsjdk.samtools.util.BlockCompressedOutputStream;
 import htsjdk.tribble.index.IndexFactory;
 import htsjdk.tribble.index.tabix.TabixIndex;
 import htsjdk.variant.vcf.VCFCodec;
@@ -32,10 +33,13 @@ import org.gorpipe.gor.util.DataUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,10 +50,16 @@ public class UTestVcfTabixGenomicIterator {
     FileSource fs;
     FileSource fi;
     ChromoLookup cl;
+
+    @Rule
+    public TemporaryFolder workDir = new TemporaryFolder();
+    private Path workDirPath;
+
     String ipath = DataUtil.toFile(DataUtil.toFile( "../tests/data/external/samtools/testTabixIndex", DataType.VCFGZ), DataType.TBI);
 
     @Before
     public void init() throws IOException {
+        workDirPath = workDir.getRoot().toPath();
         tabixIndexPath = Paths.get(ipath);
         cl = new DefaultChromoLookup();
         String path = DataUtil.toFile( "../tests/data/external/samtools/testTabixIndex", DataType.VCFGZ);
@@ -103,6 +113,61 @@ public class UTestVcfTabixGenomicIterator {
         try (VcfGzTabixGenomicIterator vcfit = new VcfGzTabixGenomicIterator(cl, fs, fi)) {
             Assert.assertTrue("Tabix indexed vcf file seek failed", vcfit.seek("chr1", 327));
         }
+    }
+
+    /**
+     * A header-only bgzipped vcf produces a valid tabix index with an empty sequence dictionary,
+     * see ENGKNOW-3766.
+     */
+    private Path createHeaderOnlyVcf() throws IOException {
+        Path vcfPath = workDirPath.resolve(DataUtil.toFile("empty", DataType.VCFGZ));
+        try (BlockCompressedOutputStream os = new BlockCompressedOutputStream(vcfPath.toFile())) {
+            os.write(("##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
+                    .getBytes(StandardCharsets.UTF_8));
+        }
+        TabixIndex index = IndexFactory.createTabixIndex(vcfPath.toFile(), new VCFCodec(), null);
+        index.write(Paths.get(DataUtil.toFile(vcfPath.toString(), DataType.TBI)));
+        return vcfPath;
+    }
+
+    @Test
+    public void testHeaderOnlyVcfTabixHasNextIsFalse() throws IOException {
+        Path vcfPath = createHeaderOnlyVcf();
+        try (VcfGzTabixGenomicIterator vcfit = new VcfGzTabixGenomicIterator(cl,
+                new FileSource(vcfPath.toString()),
+                new FileSource(DataUtil.toFile(vcfPath.toString(), DataType.TBI)))) {
+            Assert.assertFalse("Header only vcf file should have no rows", vcfit.hasNext());
+        }
+    }
+
+    @Test
+    public void testHeaderOnlyVcfTabixNextIsNull() throws IOException {
+        Path vcfPath = createHeaderOnlyVcf();
+        try (VcfGzTabixGenomicIterator vcfit = new VcfGzTabixGenomicIterator(cl,
+                new FileSource(vcfPath.toString()),
+                new FileSource(DataUtil.toFile(vcfPath.toString(), DataType.TBI)))) {
+            Assert.assertNull("Header only vcf file should return no row", vcfit.next());
+        }
+    }
+
+    @Test
+    public void testHeaderOnlyVcfTabixGetHeader() throws IOException {
+        Path vcfPath = createHeaderOnlyVcf();
+        try (VcfGzTabixGenomicIterator vcfit = new VcfGzTabixGenomicIterator(cl,
+                new FileSource(vcfPath.toString()),
+                new FileSource(DataUtil.toFile(vcfPath.toString(), DataType.TBI)))) {
+            Assert.assertEquals("Wrong header from header only vcf file",
+                    "CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO",
+                    String.join("\t", vcfit.getHeader()));
+        }
+    }
+
+    @Test
+    public void testHeaderOnlyVcfTabixQuery() throws IOException {
+        Path vcfPath = createHeaderOnlyVcf();
+        String results = TestUtils.runGorPipe("gor " + vcfPath + " | top 5");
+        Assert.assertEquals("Header only vcf file should give an empty result",
+                "CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n", results);
     }
 
     @After
