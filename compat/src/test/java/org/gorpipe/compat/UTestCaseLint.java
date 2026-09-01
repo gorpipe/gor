@@ -36,6 +36,17 @@ public class UTestCaseLint {
     }
 
     @Test
+    public void buildIdentityIsAViolation() {
+        // GORVERSION embeds the git SHA, so a baseline for it changes on every
+        // commit. Reviewers who see baseline churn every commit stop reading the
+        // diffs, which is the one habit that makes the whole tier worthless.
+        List<String> v = CaseLint.check(
+                Collections.singletonList(c("fn.gorversion.a", "norrows 1 | calc X GORVERSION()")));
+        Assert.assertEquals(v.toString(), 1, v.size());
+        Assert.assertTrue(v.get(0), v.get(0).contains("gorversion"));
+    }
+
+    @Test
     public void absolutePathOutsideRootIsAViolation() {
         List<String> v = CaseLint.check(
                 Collections.singletonList(c("cmd.a.abs", "gor /Users/someone/data.gor")));

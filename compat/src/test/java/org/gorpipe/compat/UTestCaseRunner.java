@@ -112,15 +112,16 @@ public class UTestCaseRunner {
 
     @Test
     public void aHangingQueryTimesOutInsteadOfWedgingTheSuite() {
-        // INVSTUDENT(1.5,1.5) passes 1.5 as a probability, and colt's root finder
-        // never terminates for it. Without a bound the suite hangs in CI, so a
-        // case that does not finish records a timeout as its behaviour.
+        // SLEEP blocks for its argument in milliseconds, so it hangs on purpose
+        // and this test does not depend on an engine defect existing. Without a
+        // bound the suite hangs in CI, so a case that does not finish records a
+        // timeout as its behaviour.
         String previous = System.getProperty(CaseRunner.TIMEOUT_PROPERTY);
         System.setProperty(CaseRunner.TIMEOUT_PROPERTY, "2");
         try {
             long start = System.currentTimeMillis();
-            CompatResult r = CaseRunner.run(specCase("fn.invstudent.t1", "exact",
-                    "norrows 1 | calc X INVSTUDENT(1.5,1.5)", null));
+            CompatResult r = CaseRunner.run(specCase("fn.sleep.t1", "exact",
+                    "norrows 1 | calc X SLEEP(60000)", null));
             long elapsed = System.currentTimeMillis() - start;
 
             Assert.assertTrue("expected the case to fail on timeout", r.failed());

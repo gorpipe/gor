@@ -36,7 +36,12 @@ public final class CaseLint {
             // Timing measurements of the host's storage.
             "avgseektimemillis(", "randomaccesstiming(",
             // Depends on files in the project rather than on the query.
-            "fileinfo(", "timesignature("
+            "fileinfo(", "timesignature(",
+            // Build and runtime identity. GORVERSION embeds the git SHA, so its
+            // output changes on every commit — a baseline that churns with each
+            // commit is worse than no baseline, because it teaches reviewers to
+            // approve baseline diffs without reading them.
+            "gorversion(", "javaversion("
     };
 
     /**

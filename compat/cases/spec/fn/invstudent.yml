@@ -1,0 +1,19 @@
+- id: fn.invstudent.rejects_probability_above_one
+  tier: spec
+  mode: error
+  source: review
+  behavior: "INVSTUDENT rejects a probability outside (0,1) instead of looping forever"
+  cites: ["gortools/src/main/scala/gorsat/parser/StatisticalFunctions.scala"]
+  query: "norrows 1 | calc X INVSTUDENT(1.5,1.5)"
+  errorContains: "INVSTUDENT"
+
+- id: fn.invstudent.two_tailed_quantile
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "INVSTUDENT(alpha,df) is the two-tailed Student t quantile: alpha=0.5, df=10 is 0.700 in a published t-table"
+  cites: ["gortools/src/main/scala/gorsat/parser/StatisticalFunctions.scala"]
+  query: "norrows 1 | calc X INVSTUDENT(0.5,10)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	0.6998121397488263

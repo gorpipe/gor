@@ -60,7 +60,7 @@ VERIFYVARIANT -maxlen
 ## Functions with no callable signature (0)
 # No sample value exists for one of the argument types, so no call was built.
 
-## Functions screened out as non-deterministic (19)
+## Functions screened out as non-deterministic (21)
 # Report JVM state, the clock, or the machine, so no stable baseline exists.
 AVAILCPU uses availcpu(
 AVGSEEKTIMEMILLIS uses avgseektimemillis(
@@ -71,7 +71,9 @@ EDATE uses date(
 FILEINFO uses fileinfo(
 FREE uses free(
 FREEMEM uses freemem(
+GORVERSION uses gorversion(
 HOSTNAME uses hostname(
+JAVAVERSION uses javaversion(
 MAXFILES uses maxfiles(
 MAXMEM uses maxmem(
 OPENFILES uses openfiles(
