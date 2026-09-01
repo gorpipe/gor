@@ -143,56 +143,40 @@ public class VcfGzTabixGenomicIterator extends GenomicIteratorBase {
 
     @Override
     public boolean hasNext() {
-        if (nextRow != null) {
-            return true;
-        }
-        if (iterator == null) {
-            var chr = hgSeekIndex.next();
-            var seekChr = chrs.get(chr);
-            iterator = reader.query(seekChr, 0, Integer.MAX_VALUE);
-        }
-        if (iterator != null) {
+        // The chromosomes come from the tabix index, which is empty for a header only vcf file, so
+        // hgSeekIndex must always be guarded before advancing it.
+        while (nextRow == null) {
+            if (iterator == null) {
+                if (!hgSeekIndex.hasNext()) {
+                    return false;
+                }
+                iterator = reader.query(chrs.get(hgSeekIndex.next()), 0, Integer.MAX_VALUE);
+                if (iterator == null) {
+                    continue;
+                }
+            }
             try {
                 String s = iterator.next();
                 if (s == null) {
                     iterator = null;
-                    if(hgSeekIndex.hasNext()) {
-                        return hasNext();
-                    } else {
-                        return false;
-                    }
                 } else {
                     nextRow = createRow(s);
-                    return true;
                 }
             } catch (IOException e) {
                 throw new GorResourceException("Error reading file", fileName, e);
             }
         }
-        return false;
+        return true;
     }
 
     @Override
     public Row next() {
-        if (nextRow != null) {
-            Row row = nextRow;
-            nextRow = null;
-            return row;
+        if (!hasNext()) {
+            return null;
         }
-        if (iterator == null) {
-            iterator = reader.query(chrs.get(hgSeekIndex.next()), 0, Integer.MAX_VALUE);
-        }
-
-        if (iterator != null) {
-            try {
-                final String s = iterator.next();
-                return createRow(s);
-            } catch (IOException e) {
-                throw new GorResourceException("Error reading file", fileName, e);
-            }
-        }
-
-        return null;
+        Row row = nextRow;
+        nextRow = null;
+        return row;
     }
 
     @Override
