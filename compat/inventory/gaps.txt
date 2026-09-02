@@ -57,6 +57,43 @@ VARJOIN -as
 VARJOIN -rprefix
 VERIFYVARIANT -maxlen
 
+## Input source value-flags with no curated value (35)
+GOR -H
+GOR -X
+GOR -Z
+GOR -dict
+GOR -ff
+GOR -idx
+GOR -parts
+GOR -ref
+GOR -seek
+GOR -time
+GORIF -H
+GORIF -X
+GORIF -Z
+GORIF -dh
+GORIF -dict
+GORIF -ff
+GORIF -idx
+GORIF -parts
+GORIF -ref
+GORIF -seek
+GORIF -time
+GORNOR -d
+GORNOR -ff
+GORNOR -time
+GORROWS -segment
+GORROWS -step
+NOR -d
+NOR -ff
+NOR -time
+NORIF -d
+NORIF -dh
+NORIF -ff
+NORIF -time
+NORROWS -offset
+NORROWS -step
+
 ## Functions with no callable signature (0)
 # No sample value exists for one of the argument types, so no call was built.
 

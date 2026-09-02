@@ -68,3 +68,28 @@
   reason: "Blocks the query for its argument in milliseconds; pins nothing about the language"
   ticket: null
 
+# Input sources. The input source matrix reads these with the 'is.' prefix, so a
+# source is left out only with a reason. CMD and SQL exist as both a pipe command
+# and an input source, and each needs its own entry.
+- element: is.CMD
+  reason: "Shells out to an external process; not hermetic"
+  ticket: null
+- element: is.GORCMD
+  reason: "Shells out to an external process; not hermetic"
+  ticket: null
+- element: is.NORCMD
+  reason: "Shells out to an external process; not hermetic"
+  ticket: null
+- element: is.EXEC
+  reason: "Executes an external command; not hermetic"
+  ticket: null
+- element: is.SQL
+  reason: "Requires a live database connection"
+  ticket: null
+- element: is.GORSQL
+  reason: "Requires a live database connection"
+  ticket: null
+- element: is.NORSQL
+  reason: "Requires a live database connection"
+  ticket: null
+

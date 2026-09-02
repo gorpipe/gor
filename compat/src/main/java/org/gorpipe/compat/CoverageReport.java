@@ -30,6 +30,7 @@ public final class CoverageReport {
     private final Set<String> coveredFunctions = new TreeSet<>();
     private final Set<String> coveredInputSources = new TreeSet<>();
     private final Set<String> coveredMacros = new TreeSet<>();
+    private final Set<String> coveredInputSourceFlags = new TreeSet<>();
     private final int excluded;
 
     private CoverageReport(List<CompatCase> cases, SurfaceInventory inventory) {
@@ -57,8 +58,14 @@ public final class CoverageReport {
                 // A name can belong to more than one registry, so each is checked
                 // rather than matched exclusively: CMD is both a pipe command and
                 // an input source.
-                if (inventory.inputSources().containsKey(first)) {
+                SurfaceInventory.CommandSurface asSource = inventory.inputSources().get(first);
+                if (asSource != null) {
                     coveredInputSources.add(first);
+                    for (String flag : asSource.allFlags()) {
+                        if (mentionsFlag(trimmed, flag)) {
+                            coveredInputSourceFlags.add(first + " " + flag);
+                        }
+                    }
                 }
                 if (inventory.macros().containsKey(first)) {
                     coveredMacros.add(first);
@@ -70,9 +77,7 @@ public final class CoverageReport {
                 }
                 coveredCommands.add(first);
                 for (String flag : surface.allFlags()) {
-                    // Word-boundary match so that -s does not match -snpsnp.
-                    if (trimmed.matches(".*(^|\\s)" + java.util.regex.Pattern.quote(flag)
-                            + "($|\\s).*")) {
+                    if (mentionsFlag(trimmed, flag)) {
                         coveredFlags.add(first + " " + flag);
                     }
                 }
@@ -84,6 +89,11 @@ public final class CoverageReport {
                 }
             }
         }
+    }
+
+    /** Word-boundary match, so that -s does not count as -snpsnp. */
+    private static boolean mentionsFlag(String stage, String flag) {
+        return stage.matches(".*(^|\\s)" + java.util.regex.Pattern.quote(flag) + "($|\\s).*");
     }
 
     @SuppressWarnings("unchecked")
@@ -118,6 +128,10 @@ public final class CoverageReport {
 
     public int macrosCovered() {
         return coveredMacros.size();
+    }
+
+    public int inputSourceFlagsCovered() {
+        return coveredInputSourceFlags.size();
     }
 
     public int excludedCount() {
@@ -160,6 +174,11 @@ public final class CoverageReport {
                 totalInputSources - inputSourcesCovered()));
         sb.append(String.format(Locale.ROOT, "    macros     %4d/%-4d  %d gaps%n",
                 macrosCovered(), totalMacros, totalMacros - macrosCovered()));
+        int totalSourceFlags = inventory.inputSources().values().stream()
+                .mapToInt(c -> c.allFlags().size()).sum();
+        sb.append(String.format(Locale.ROOT, "    src flags  %4d/%-4d  %d gaps%n",
+                inputSourceFlagsCovered(), totalSourceFlags,
+                totalSourceFlags - inputSourceFlagsCovered()));
         sb.append(String.format(Locale.ROOT, "  EXCLUDED  %d element(s)"
                 + " (see inventory/exclusions.yml)%n", excluded));
         return sb.toString();

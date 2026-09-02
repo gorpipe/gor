@@ -37,6 +37,7 @@ public final class GenerateMain {
 
         List<CompatCase> generated = new ArrayList<>(
                 FlagMatrixGenerator.generate(inventory, values).cases);
+        generated.addAll(InputSourceMatrixGenerator.generate(inventory).cases);
         generated.addAll(FunctionMatrixGenerator.generate(inventory).cases);
         generated.addAll(DocHarvester.harvest().cases);
 
@@ -126,11 +127,14 @@ public final class GenerateMain {
         FlagValues values = FlagValues.load();
         FlagMatrixGenerator.GenerationResult flags =
                 FlagMatrixGenerator.generate(inventory, values);
+        InputSourceMatrixGenerator.GenerationResult sources =
+                InputSourceMatrixGenerator.generate(inventory);
         FunctionMatrixGenerator.GenerationResult functions =
                 FunctionMatrixGenerator.generate(inventory);
         DocHarvester.HarvestResult docs = DocHarvester.harvest();
 
         List<CompatCase> candidates = new ArrayList<>(flags.cases);
+        candidates.addAll(sources.cases);
         candidates.addAll(functions.cases);
         candidates.addAll(docs.cases);
         List<String> unreproducible = screenForReproducibility(candidates);
@@ -141,7 +145,7 @@ public final class GenerateMain {
         }
         int pruned = pruneStaleCaseFiles(byFile.keySet());
 
-        writeGapReport(flags, functions, docs, DocFlagCrossCheck.run(inventory),
+        writeGapReport(flags, sources, functions, docs, DocFlagCrossCheck.run(inventory),
                 unreproducible);
 
         System.out.printf("Generated %d baseline cases across %d files (%d stale file(s) "
@@ -149,6 +153,8 @@ public final class GenerateMain {
                 byFile.values().stream().mapToInt(List::size).sum(), byFile.size(), pruned);
         System.out.printf("  flag matrix:  %d cases, %d value-flags unmapped%n",
                 flags.cases.size(), flags.unmappedValueFlags.size());
+        System.out.printf("  input src:    %d cases, %d value-flags unmapped%n",
+                sources.cases.size(), sources.unmappedValueFlags.size());
         System.out.printf("  functions:    %d cases, %d not callable from signatures, "
                         + "%d non-deterministic%n",
                 functions.cases.size(), functions.unsupported.size(),
@@ -191,6 +197,7 @@ public final class GenerateMain {
     }
 
     private static void writeGapReport(FlagMatrixGenerator.GenerationResult flags,
+                                       InputSourceMatrixGenerator.GenerationResult sources,
                                        FunctionMatrixGenerator.GenerationResult functions,
                                        DocHarvester.HarvestResult docs,
                                        DocFlagCrossCheck.CrossCheckResult crossCheck,
@@ -201,6 +208,12 @@ public final class GenerateMain {
         sb.append("## Value-taking flags with no entry in inventory/flag-values.yml (")
           .append(flags.unmappedValueFlags.size()).append(")\n");
         for (String entry : flags.unmappedValueFlags) {
+            sb.append(entry).append('\n');
+        }
+
+        sb.append("\n## Input source value-flags with no curated value (")
+          .append(sources.unmappedValueFlags.size()).append(")\n");
+        for (String entry : sources.unmappedValueFlags) {
             sb.append(entry).append('\n');
         }
 

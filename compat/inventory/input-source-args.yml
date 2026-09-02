@@ -1,0 +1,41 @@
+# Per-input-source invocation details, in the same shape as command-args.yml.
+#
+# An input source leads a query rather than sitting in the pipe, and what its
+# positional argument means varies more than for pipe commands: GOR wants a file,
+# GORROW a position, NORROWS a row count. The registry records only how many
+# arguments there are, so the argument itself is curated here.
+#
+#   positional:    the argument text, in place of the default '${ROOT}/left.gor'.
+#   requiredFlags: emitted before the flag under test, when the source needs one.
+
+# The genomic sources read the primary canonical fixture.
+GOR:
+  positional: "${ROOT}/left.gor"
+
+GORIF:
+  positional: "${ROOT}/left.gor"
+
+GORROW:
+  positional: "chr1,1,1"
+
+GORROWS:
+  positional: "-p chr1:1-10"
+
+NORROWS:
+  positional: "2"
+
+# META reads a file's metadata; the canonical fixture is enough.
+META:
+  positional: "${ROOT}/left.gor"
+
+# NOR-family sources read a tabular file. pheno.tsv is the canonical non-genomic
+# fixture; left.gor works too but a NOR source on genomic data is the less
+# interesting shape.
+NOR:
+  positional: "${ROOT}/pheno.tsv"
+
+NORIF:
+  positional: "${ROOT}/pheno.tsv"
+
+GORNOR:
+  positional: "${ROOT}/pheno.tsv"

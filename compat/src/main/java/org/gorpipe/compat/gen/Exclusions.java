@@ -39,12 +39,14 @@ public final class Exclusions {
     private final List<Entry> entries;
     private final Set<String> excludedCommands;
     private final Set<String> excludedFunctions;
+    private final Set<String> excludedInputSources;
 
     private Exclusions(List<Entry> entries, Set<String> excludedCommands,
-                       Set<String> excludedFunctions) {
+                       Set<String> excludedFunctions, Set<String> excludedInputSources) {
         this.entries = Collections.unmodifiableList(entries);
         this.excludedCommands = Collections.unmodifiableSet(excludedCommands);
         this.excludedFunctions = Collections.unmodifiableSet(excludedFunctions);
+        this.excludedInputSources = Collections.unmodifiableSet(excludedInputSources);
     }
 
     public static Exclusions load() {
@@ -56,8 +58,9 @@ public final class Exclusions {
         List<Entry> entries = new ArrayList<>();
         Set<String> commands = new TreeSet<>();
         Set<String> functions = new TreeSet<>();
+        Set<String> inputSources = new TreeSet<>();
         if (!Files.exists(file)) {
-            return new Exclusions(entries, commands, functions);
+            return new Exclusions(entries, commands, functions, inputSources);
         }
         try (InputStream in = Files.newInputStream(file)) {
             Object raw = new Yaml().load(in);
@@ -77,13 +80,15 @@ public final class Exclusions {
                         commands.add(element.substring("cmd.".length()));
                     } else if (element.startsWith("fn.")) {
                         functions.add(element.substring("fn.".length()));
+                    } else if (element.startsWith("is.")) {
+                        inputSources.add(element.substring("is.".length()));
                     }
                 }
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot read " + file, e);
         }
-        return new Exclusions(entries, commands, functions);
+        return new Exclusions(entries, commands, functions, inputSources);
     }
 
     private static String asString(Object value) {
@@ -100,6 +105,10 @@ public final class Exclusions {
 
     public boolean excludesFunction(String function) {
         return excludedFunctions.contains(function);
+    }
+
+    public boolean excludesInputSource(String inputSource) {
+        return excludedInputSources.contains(inputSource);
     }
 
     public int size() {
