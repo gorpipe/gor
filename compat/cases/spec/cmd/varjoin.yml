@@ -1,0 +1,15 @@
+- id: cmd.varjoin.ic_adds_an_overlap_column
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "VARJOIN -ic adds an OverlapCount column, matching JOIN; its page documented the column as overlap too"
+  cites: ["documentation/src/command/VARJOIN.rst"]
+  query: "gor ${ROOT}/left.gor | VARJOIN -ic ${ROOT}/left.gor"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	OverlapCount
+    chr1	100	A	G	1
+    chr1	200	C	T	1
+    chr2	150	G	A	1

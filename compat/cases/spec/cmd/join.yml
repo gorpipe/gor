@@ -1,0 +1,61 @@
+- id: cmd.join.i_keeps_only_overlapping_left_rows
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "JOIN -i keeps the left rows that overlap and drops the right-source columns entirely"
+  cites: ["documentation/src/command/JOIN.rst"]
+  query: "gor ${ROOT}/left.gor | JOIN -snpsnp -i ${ROOT}/right.gor"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+    - path: "right.gor"
+      content: "Chrom	Pos	Gene\nchr1	100	BRCA1\nchr1	250	TP53\nchr2	150	EGFR\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+    chr2	150	G	A
+
+- id: cmd.join.ic_adds_an_overlap_column
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "JOIN -ic keeps every left row and adds an OverlapCount column holding the number of overlaps; the docs called the column overlap, which was wrong"
+  cites: ["documentation/src/command/JOIN.rst"]
+  query: "gor ${ROOT}/left.gor | JOIN -snpsnp -ic ${ROOT}/right.gor"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+    - path: "right.gor"
+      content: "Chrom	Pos	Gene\nchr1	100	BRCA1\nchr1	250	TP53\nchr2	150	EGFR\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	OverlapCount
+    chr1	100	A	G	1
+    chr1	200	C	T	0
+    chr2	150	G	A	1
+
+- id: cmd.top.zero_returns_the_header_only
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "TOP 0 emits no rows but still reports the schema"
+  cites: ["documentation/src/command/TOP.rst"]
+  query: "gor ${ROOT}/left.gor | TOP 0"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+
+- id: cmd.where.no_matching_row_returns_the_header_only
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "WHERE that matches nothing emits no rows and leaves the schema unchanged"
+  cites: ["documentation/src/command/WHERE.rst"]
+  query: "gor ${ROOT}/left.gor | WHERE Ref = 'Z'"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+
