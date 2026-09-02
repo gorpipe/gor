@@ -68,7 +68,14 @@ public abstract class LinkFile {
     public static final String LINK_FILE_VALIDATE_LOAD = "gor.driver.link.validate.load";
     public static final String LINK_FILE_VALIDATE_SAVE = "gor.driver.link.validate.save";
 
-    private static final Cache<StreamSource, String> staticLinkCache = Caffeine.newBuilder()
+    private static final Cache<String, CachedLinkContent> staticLinkCache = Caffeine.newBuilder()
+            .maximumSize(10000)
+            .expireAfterWrite(5, TimeUnit.MINUTES).build();
+
+    // A save cannot reach the link caches of other sessions, so it leaves a mark here instead and any
+    // cached entry for the path whose read started before the mark is dropped on lookup.  Bounded and
+    // expiring like the content caches, so a mark outlives every entry it has to retire.
+    private static final Cache<String, Long> linkWriteMarks = Caffeine.newBuilder()
             .maximumSize(10000)
             .expireAfterWrite(5, TimeUnit.MINUTES).build();
 
@@ -300,6 +307,14 @@ public abstract class LinkFile {
             save(os, timestamp, reader);
         } catch (IOException e) {
             throw new GorResourceException("Could not save: " + source.getFullPath(), source.getFullPath(), e);
+        } finally {
+            // Whatever we cached for this link file is now wrong.  The cache tolerates a link rewritten
+            // by another process going unnoticed until it expires, but never one rewritten here.
+            //
+            // After the stream is closed, not before: closing is what renames the temp file into place
+            // for an atomic write, so a resolution running in between would otherwise read the old
+            // content and re-cache it behind us.  In a finally so a failed write drops it too.
+            invalidateCachedContent(source);
         }
     }
 
@@ -426,32 +441,79 @@ public abstract class LinkFile {
             return null;
         }
 
-        if (USE_LINK_CACHE) {
-            try {
-                Cache<StreamSource, String> linkCache;
-                if (GorSession.currentSession.get() != null && USE_LINK_CACHE_SESSION) {
-                    linkCache = GorSession.currentSession.get().getCache().getLinkCache();
-                } else {
-                    log.warn("No session available, can not use session link cache for " + source);
-                    linkCache = staticLinkCache;
-                }
+        var path = source.getFullPath();
+        var linkCache = USE_LINK_CACHE ? linkCache(source) : null;
 
-                return linkCache.get(source, (k) -> {
-                    try {
-                        return readLimitedLinkContent(k);
-                    } catch (Exception e) {
-                        throw new UncheckedExecutionException(e);
-                    }
-                });
-            } catch (UncheckedExecutionException e) {
-                if (e.getCause() instanceof IOException) {
-                    throw (IOException) e.getCause();
+        if (linkCache != null) {
+            var cached = linkCache.getIfPresent(path);
+            if (cached != null) {
+                if (isRetiredByWrite(path, cached)) {
+                    linkCache.invalidate(path);
+                } else {
+                    LinkFileCacheStats.recordCacheHit(path);
+                    return cached.content();
                 }
-                throw new IOException(e.getCause());
             }
-        } else {
-            return readLimitedLinkContent(source);
         }
+
+        var readStartedNanos = System.nanoTime();
+        var content = readLimitedLinkContent(source);
+        LinkFileCacheStats.recordRead(path, content);
+
+        if (linkCache != null && isSimpleLinkFile(content)) {
+            linkCache.put(path, new CachedLinkContent(content, readStartedNanos));
+        }
+
+        return content;
+    }
+
+    /** True if a save of this link file completed after the read behind this entry began. */
+    private static boolean isRetiredByWrite(String path, CachedLinkContent cached) {
+        var writtenAtNanos = linkWriteMarks.getIfPresent(path);
+        return writtenAtNanos != null && cached.readStartedNanos() - writtenAtNanos <= 0;
+    }
+
+    /**
+     * Retires every cached copy of this link file's content, in this session and in any other.
+     *
+     * <p>Dropping the entries we can reach is not enough on its own: the session caches belong to
+     * whichever session was bound to the reading thread, and a resolution already in flight can put its
+     * pre-write content into one of them after this call.  The mark covers both -- it outlives the
+     * entries it retires, and it is checked on every lookup, so no cache has to be reachable from here.
+     */
+    private static void invalidateCachedContent(StreamSource source) {
+        var path = source.getFullPath();
+        linkWriteMarks.put(path, System.nanoTime());
+        staticLinkCache.invalidate(path);
+        var session = GorSession.currentSession.get();
+        if (session != null) {
+            session.getCache().getLinkCache().invalidate(path);
+        }
+    }
+
+    private static Cache<String, CachedLinkContent> linkCache(StreamSource source) {
+        if (GorSession.currentSession.get() != null && USE_LINK_CACHE_SESSION) {
+            return GorSession.currentSession.get().getCache().getLinkCache();
+        }
+        log.warn("No session available, can not use session link cache for " + source);
+        return staticLinkCache;
+    }
+
+    /**
+     * Only simple link files are cached.
+     *
+     * <p>A simple link file is a bare data path, rewritten so rarely that serving one up to the cache
+     * expiry stale is an accepted trade -- and they are the common case, so this is where the saving is.
+     *
+     * <p>A versioned link file is rewritten in normal operation, by {@code appendEntry} and by
+     * versioned-link GC.  A stale entry for one could resolve to a generation that GC has already
+     * deleted, and it would do so silently.  Keying on the object length and last modified instead does
+     * not help: that metadata is itself served from a cache with its own expiry, so the key would be
+     * built from stale values and would match.  See ENGKNOW-3770.
+     */
+    private static boolean isSimpleLinkFile(String content) {
+        return !Strings.isNullOrEmpty(content)
+                && LinkFileV0.VERSION.equals(LinkFileMeta.createOrLoad(content, null, false).getVersion());
     }
 
     private static String readLimitedLinkContent(StreamSource source) {
@@ -464,6 +526,18 @@ public abstract class LinkFile {
             return content;
         } catch (IOException e) {
             throw new GorResourceException("Failed to read link file: " + source.getFullPath(), source.getFullPath(), e);
+        } finally {
+            // Release the handle this method acquired.  Sources reopen lazily (FileSource.open goes
+            // through ensureOpenForRead, S3Source.close is a no-op), so this is transparent to anything
+            // that uses the source afterwards -- LinkFile.save reopens it for writing.  While the cache
+            // was keyed on the source object it pinned every source it was handed, which hid the fact
+            // that callers do not close them; keyed on the path, they become collectable and an unclosed
+            // read handle would survive only until the garbage collector ran the finalizer.
+            try {
+                source.close();
+            } catch (Exception e) {
+                log.debug("Failed to close link file source {} after reading", source.getFullPath(), e);
+            }
         }
     }
 
