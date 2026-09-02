@@ -17,6 +17,12 @@ project(':compat') {
         implementation "org.yaml:snakeyaml:_"
         implementation "com.fasterxml.jackson.core:jackson-databind:_"
         implementation "com.networknt:json-schema-validator:_"
+        // Reads the coverage the engine produced for one case, so the nightly
+        // mutation generator can keep only mutants that reach new branches. The
+        // agent itself is reached by reflection, so it is not a dependency: when
+        // no agent is attached the probe reports unavailable and generation falls
+        // back to plain enumeration.
+        implementation "org.jacoco:org.jacoco.core:_"
 
         testImplementation "junit:junit:_"
     }
@@ -45,6 +51,7 @@ project(':compat') {
         workingDir = projectDir
     }
 
+
     tasks.register('report', JavaExec) {
         group = 'compat'
         description = 'Print surface coverage and documentation cross-check diagnostics'
@@ -60,6 +67,23 @@ project(':compat') {
         classpath = sourceSets.main.runtimeClasspath
         workingDir = projectDir
         systemProperty 'compat.nightly', 'true'
+
+        // The mutation generator keeps only mutants that reach new probes, which
+        // needs the agent in this JVM. jacoco.applyTo extracts the real agent from
+        // the wrapper jar and adds the -javaagent argument; pointing -javaagent at
+        // the wrapper directly fails with "Failed to find Premain-Class". Without
+        // the agent generation still works, just unguided, and it says so.
+    }
+
+    jacoco {
+        applyTo tasks.named('generateNightly').get()
+    }
+
+    tasks.named('generateNightly').configure {
+        jacoco {
+            destinationFile = layout.buildDirectory
+                    .file('jacoco/generateNightly.exec').get().asFile
+        }
     }
 
     apply plugin: 'jacoco'

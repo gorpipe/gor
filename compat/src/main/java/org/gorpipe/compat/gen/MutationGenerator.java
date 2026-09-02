@@ -1,22 +1,29 @@
 package org.gorpipe.compat.gen;
 
+import org.gorpipe.compat.CaseRunner;
 import org.gorpipe.compat.CompatCase;
 import org.gorpipe.compat.CompatInput;
+import org.gorpipe.compat.CoverageProbe;
 import org.gorpipe.compat.SurfaceInventory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Derives extra baseline cases by mutating existing ones: adding a second flag,
  * chaining another stage, or varying a numeric argument.
  *
  * Fully deterministic — mutants are enumerated in a fixed order rather than drawn
- * at random, so the corpus is reproducible and its diffs are meaningful. The
- * spec describes this as coverage-guided; enumerating deterministically first is
- * the cheaper half, and the JaCoCo filter can be layered on later without
- * changing this interface.
+ * at random, so the corpus is reproducible and its diffs are meaningful.
+ *
+ * {@link #mutateWithCoverageFeedback} adds the guidance the spec asks for: each
+ * candidate is run and kept only if it reached a probe nothing had reached before.
+ * Without that filter, mutation broadens the corpus without making it cover more —
+ * hundreds of extra cases and hundreds of extra baselines to review for no new
+ * behaviour reached.
  */
 public final class MutationGenerator {
 
@@ -56,6 +63,50 @@ public final class MutationGenerator {
             }
         }
         return out;
+    }
+
+    /**
+     * Enumerates mutants and keeps those that reach code the run has not reached.
+     *
+     * A wider pool is enumerated than the limit, since most mutants add nothing:
+     * the filter needs candidates to discard.
+     */
+    public static List<CompatCase> mutateWithCoverageFeedback(List<CompatCase> seeds,
+                                                              SurfaceInventory inventory,
+                                                              int limit) {
+        List<CompatCase> candidates = mutate(seeds, inventory, limit * 4);
+        return selectByNewCoverage(candidates, limit, CoverageProbe.available());
+    }
+
+    /**
+     * Keeps candidates that grow the set of hit probes, up to the limit.
+     *
+     * With no agent this returns the first candidates unchanged: generation has to
+     * work in a plain JVM, and an unguided corpus is worse than none only if it is
+     * mistaken for a guided one — so callers report which happened.
+     */
+    public static List<CompatCase> selectByNewCoverage(List<CompatCase> candidates,
+                                                       int limit, boolean useCoverage) {
+        if (!useCoverage) {
+            return candidates.size() <= limit
+                    ? new ArrayList<>(candidates)
+                    : new ArrayList<>(candidates.subList(0, limit));
+        }
+
+        List<CompatCase> kept = new ArrayList<>();
+        Set<String> reached = new HashSet<>(CoverageProbe.hitProbes());
+        for (CompatCase candidate : candidates) {
+            if (kept.size() >= limit) {
+                break;
+            }
+            CaseRunner.run(candidate);
+            Set<String> now = CoverageProbe.hitProbes();
+            if (now.size() > reached.size()) {
+                kept.add(candidate);
+                reached = now;
+            }
+        }
+        return kept;
     }
 
     private static CompatCase derive(CompatCase seed, String extraStage, String idSuffix) {

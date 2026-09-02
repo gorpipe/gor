@@ -44,7 +44,7 @@ public final class GenerateMain {
         // Nightly only: these are noisier and far more expensive than the flag
         // matrix, and they must not change what the pull-request lane runs.
         if (Boolean.getBoolean("compat.nightly")) {
-            generated.addAll(MutationGenerator.mutate(
+            generated.addAll(MutationGenerator.mutateWithCoverageFeedback(
                     new ArrayList<>(generated), inventory, 500));
             generated.addAll(GrammarFuzzer.generate(inventory, 250));
         }
@@ -153,6 +153,12 @@ public final class GenerateMain {
                 byFile.values().stream().mapToInt(List::size).sum(), byFile.size(), pruned);
         System.out.printf("  flag matrix:  %d cases, %d value-flags unmapped%n",
                 flags.cases.size(), flags.unmappedValueFlags.size());
+        if (Boolean.getBoolean("compat.nightly")) {
+            System.out.printf("  mutation:     coverage feedback %s%n",
+                    org.gorpipe.compat.CoverageProbe.available()
+                            ? "ON — mutants kept only when they reach new probes"
+                            : "OFF — no jacoco agent attached, mutants unfiltered");
+        }
         System.out.printf("  input src:    %d cases, %d value-flags unmapped%n",
                 sources.cases.size(), sources.unmappedValueFlags.size());
         System.out.printf("  functions:    %d cases, %d not callable from signatures, "
