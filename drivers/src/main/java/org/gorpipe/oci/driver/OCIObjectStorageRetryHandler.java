@@ -42,6 +42,11 @@ public class OCIObjectStorageRetryHandler extends RetryHandlerWithFixedWait {
                 throw new GorResourceException(String.format("Access Denied. Detail: %s. Original message: %s", detail, cause.getMessage()), path, e);
             } else if (bmcException.getStatusCode() == 404) {
                 throw new GorResourceException(String.format("Not Found. Detail: %s. Original message: %s", detail, cause.getMessage()), path, e);
+            } else if (bmcException.getStatusCode() == 416) {
+                // Deterministic: the range asked for does not exist in the object, so retrying the same
+                // range cannot help.  OCIObjectStorageSource self-heals the stale-cached-length case
+                // before we get here, so anything reaching this point is a genuinely unsatisfiable range.
+                throw new GorResourceException(String.format("Requested byte range not satisfiable. Detail: %s. Original message: %s", detail, cause.getMessage()), path, e);
             }
         }
     }

@@ -66,6 +66,7 @@ project(':drivers') {
         testImplementation 'com.github.stefanbirkner:system-rules:_'
         testImplementation "com.amazonaws:aws-java-sdk-sts:_"
         testImplementation "com.amazonaws:aws-java-sdk-s3:_"
+        testImplementation Testing.mockito.core
 
         testRuntimeOnly 'org.apache.derby:derby:_'
         testRuntimeOnly 'org.apache.derby:derbytools:_'

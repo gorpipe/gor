@@ -48,8 +48,20 @@ public class GorSessionCache {
     private final Map<String, Object> objectHashMap = new ConcurrentHashMap<>();
     private final Map<String, Integer> fileSegMap = new ConcurrentHashMap<>();
     private final Map<String, Set<String>> sets = new HashMap<>();  // Synchronized on access
-    private final Cache<String, Object> s3MetadataCache = Caffeine.newBuilder().build();
-    private static final Cache<StreamSource, String> linkCache = Caffeine.newBuilder().maximumSize(10000).build();
+    // Bounded on purpose (ENGKNOW-3722): gor-worker sessions are long-lived, and an unbounded, never
+    // expiring cache could serve an object length for the lifetime of the process.  A .link file
+    // rewritten by another pod then leaves this session clamping ranges to a length that no longer
+    // exists.  Matches the expiry of the static fallback cache in S3Source.
+    private final Cache<String, Object> s3MetadataCache = Caffeine.newBuilder()
+            .maximumSize(10000)
+            .expireAfterWrite(5, TimeUnit.MINUTES).build();
+    // Per session and expiring (ENGKNOW-3722): as a static cache this held link content for the whole
+    // process, so content read by one session was served to every later one.  Link files get rewritten,
+    // so content held past its session may no longer be true.  Matches the bounds of the static
+    // fallback cache in LinkFile.
+    private final Cache<StreamSource, String> linkCache = Caffeine.newBuilder()
+            .maximumSize(10000)
+            .expireAfterWrite(5, TimeUnit.MINUTES).build();
 
 
     public Map<String, Long> getSeekTimes() {

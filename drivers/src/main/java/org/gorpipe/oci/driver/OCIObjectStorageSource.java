@@ -121,13 +121,43 @@ public class OCIObjectStorageSource implements StreamSource {
                         .bucketName(bucket)
                         .objectName(key);
 
-        if (range != null) {
-            range = range.limitTo(getSourceMetadata().getLength());
-            if (range.isEmpty()) return new ByteArrayInputStream(new byte[0]);
-            requestBuilder.range(new Range(range.getFirst(), range.getLast()));
+        if (range == null) {
+            return openRequest(requestBuilder.build());
         }
 
-        return openRequest(requestBuilder.build());
+        var clamped = range.limitTo(getSourceMetadata().getLength());
+        if (clamped.isEmpty()) return new ByteArrayInputStream(new byte[0]);
+
+        try {
+            return openRequest(rangedRequest(requestBuilder, clamped));
+        } catch (GorResourceException e) {
+            if (!isRangeNotSatisfiable(e)) throw e;
+
+            // The length we clamped to is stale - the object was rewritten smaller by another process.
+            // Object stores have no append, so a rewrite replaces the whole object and every other
+            // reader keeps the pre-rewrite length.  Refresh the metadata and reissue the range once.
+            log.info("Range {}-{} not satisfiable for {} - refreshing stale cached object length",
+                    clamped.getFirst(), clamped.getLast(), getName());
+            invalidateMeta();
+
+            var refreshed = range.limitTo(getSourceMetadata().getLength());
+            if (refreshed.isEmpty()) return new ByteArrayInputStream(new byte[0]);
+            return openRequest(rangedRequest(requestBuilder, refreshed));
+        }
+    }
+
+    private static GetObjectRequest rangedRequest(GetObjectRequest.Builder requestBuilder, RequestRange range) {
+        return requestBuilder.range(new Range(range.getFirst(), range.getLast())).build();
+    }
+
+    /**
+     * True for HTTP 416, which the object store returns when the requested range starts at or past the
+     * end of the object.  Deterministic for a given range and object, so it is only worth reacting to
+     * by correcting our idea of the object rather than by repeating the request.
+     */
+    private static boolean isRangeNotSatisfiable(Exception e) {
+        return ExceptionUtilities.getUnderlyingCause(e) instanceof BmcException bmcException
+                && bmcException.getStatusCode() == 416;
     }
 
     private InputStream openRequest(GetObjectRequest request) {
@@ -139,7 +169,7 @@ public class OCIObjectStorageSource implements StreamSource {
             Thread.currentThread().interrupt();
             throw new GorSystemException(e);
         } catch (Exception e) {
-            throw new GorResourceException("Failed to open S3 object: " + sourceReference.getUrl(), sourceReference.getUrl(), e).retry();
+            throw new GorResourceException("Failed to open OCI object: " + sourceReference.getUrl(), sourceReference.getUrl(), e).retry();
         }
     }
 
@@ -181,7 +211,7 @@ public class OCIObjectStorageSource implements StreamSource {
 
     private StreamSourceMetadata loadMetadataFromCache(String bucket, String key) {
         try {
-            return metadataCache.get(bucket + key, () -> createMetaData(bucket, key));
+            return metadataCache.get(metaCacheKey(), () -> createMetaData(bucket, key));
         } catch (Exception  e) {
             throw new GorResourceException("Failed to load metadata from cache for " + bucket + "/" + key, getName(), e).retry();
         }
@@ -253,7 +283,16 @@ public class OCIObjectStorageSource implements StreamSource {
 
     private void invalidateMeta() {
         meta = null;
-        metadataCache.invalidate(bucket + key);
+        metadataCache.invalidate(metaCacheKey());
+    }
+
+    /**
+     * Key for the shared metadata cache.  The namespace has to be part of it -- the same bucket and
+     * object name exist independently in different namespaces -- and the separators keep a split at a
+     * different offset from producing the same key.
+     */
+    private String metaCacheKey() {
+        return namespace + "/" + bucket + "/" + key;
     }
 
     @Override
