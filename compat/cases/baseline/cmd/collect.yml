@@ -4,49 +4,39 @@
   tier: baseline
   mode: exact
   behavior: "Generated: COLLECT with no flags"
-  query: "gor ${ROOT}/left.gor | COLLECT ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | COLLECT Pos 10 | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.collect.flag_ave
   tier: baseline
   mode: exact
   behavior: "Generated: COLLECT with -ave"
-  query: "gor ${ROOT}/left.gor | COLLECT -ave ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | COLLECT -ave Pos 10 | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.collect.flag_std
   tier: baseline
   mode: exact
   behavior: "Generated: COLLECT with -std"
-  query: "gor ${ROOT}/left.gor | COLLECT -std ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | COLLECT -std Pos 10 | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.collect.flag_sum
   tier: baseline
   mode: exact
   behavior: "Generated: COLLECT with -sum"
-  query: "gor ${ROOT}/left.gor | COLLECT -sum ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | COLLECT -sum Pos 10 | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.collect.flag_var
   tier: baseline
   mode: exact
   behavior: "Generated: COLLECT with -var"
-  query: "gor ${ROOT}/left.gor | COLLECT -var ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | COLLECT -var Pos 10 | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"

@@ -4,59 +4,47 @@
   tier: baseline
   mode: exact
   behavior: "Generated: VARNORM with no flags"
-  query: "gor ${ROOT}/left.gor | VARNORM ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | VARNORM Ref Alt | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.varnorm.flag_left
   tier: baseline
   mode: exact
   behavior: "Generated: VARNORM with -left"
-  query: "gor ${ROOT}/left.gor | VARNORM -left ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | VARNORM -left Ref Alt | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.varnorm.flag_right
   tier: baseline
   mode: exact
   behavior: "Generated: VARNORM with -right"
-  query: "gor ${ROOT}/left.gor | VARNORM -right ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | VARNORM -right Ref Alt | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.varnorm.flag_seg
   tier: baseline
   mode: exact
   behavior: "Generated: VARNORM with -seg"
-  query: "gor ${ROOT}/left.gor | VARNORM -seg ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | VARNORM -seg Ref Alt | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.varnorm.flag_span
   tier: baseline
   mode: exact
   behavior: "Generated: VARNORM with -span"
-  query: "gor ${ROOT}/left.gor | VARNORM -span 100 ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | VARNORM -span 100 Ref Alt | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.varnorm.flag_trim
   tier: baseline
   mode: exact
   behavior: "Generated: VARNORM with -trim"
-  query: "gor ${ROOT}/left.gor | VARNORM -trim ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | VARNORM -trim Ref Alt | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"

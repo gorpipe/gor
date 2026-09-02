@@ -4,39 +4,31 @@
   tier: baseline
   mode: exact
   behavior: "Generated: SED with no flags"
-  query: "gor ${ROOT}/left.gor | SED ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | SED A N | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.sed.flag_c
   tier: baseline
   mode: exact
   behavior: "Generated: SED with -c"
-  query: "gor ${ROOT}/left.gor | SED -c Chrom ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | SED -c Chrom A N | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.sed.flag_f
   tier: baseline
   mode: exact
   behavior: "Generated: SED with -f"
-  query: "gor ${ROOT}/left.gor | SED -f ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | SED -f A N | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.sed.flag_i
   tier: baseline
   mode: exact
   behavior: "Generated: SED with -i"
-  query: "gor ${ROOT}/left.gor | SED -i ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | SED -i A N | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"

@@ -4,29 +4,23 @@
   tier: baseline
   mode: exact
   behavior: "Generated: COLS2LIST with no flags"
-  query: "gor ${ROOT}/left.gor | COLS2LIST ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | COLS2LIST Ref,Alt listcol | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.cols2list.flag_gc
   tier: baseline
   mode: exact
   behavior: "Generated: COLS2LIST with -gc"
-  query: "gor ${ROOT}/left.gor | COLS2LIST -gc Chrom ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | COLS2LIST -gc Chrom Ref,Alt listcol | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.cols2list.flag_sep
   tier: baseline
   mode: exact
   behavior: "Generated: COLS2LIST with -sep"
-  query: "gor ${ROOT}/left.gor | COLS2LIST -sep , ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/left.gor | COLS2LIST -sep , Ref,Alt listcol | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"

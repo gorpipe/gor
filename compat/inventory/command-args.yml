@@ -87,3 +87,43 @@ ADJUST:
   source: "${ROOT}/pvalues.gor"
   requiredFlags: "-pc PVal"
 
+# ---------------------------------------------------------------------------
+# Commands taking two or three positional arguments, none of them a file. The
+# registry records the count but not the meaning, so each is taken from the
+# command's documented usage line.
+# ---------------------------------------------------------------------------
+
+# BUCKETSPLIT splitCol bucketSize (-s sepVal | -vs valueSize)
+BUCKETSPLIT:
+  positional: "Ref 2"
+  requiredFlags: "-vs 1"
+
+# COLLECT column window. The window has a documented minimum, and 2 is below it:
+# "Value 2 for option Windows size cannot be lower than ...".
+COLLECT:
+  positional: "Pos 10"
+
+# COLS2LIST columnsToCollapse outputColumn
+COLS2LIST:
+  positional: "Ref,Alt listcol"
+
+# COLSPLIT splitcol colnum prefix
+COLSPLIT:
+  positional: "Ref 2 part"
+
+# PREFIX cols prefix
+PREFIX:
+  positional: "Ref pre"
+
+# SED matchpattern replacepattern
+SED:
+  positional: "A N"
+
+# VARMERGE refcol altcol
+VARMERGE:
+  positional: "Ref Alt"
+
+# VARNORM refcol altcol
+VARNORM:
+  positional: "Ref Alt"
+

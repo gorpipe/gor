@@ -227,3 +227,9 @@ NORROWS:
 
 SPAN:
   "-maxseg": "1000"   # intValueOfOption; a bp span
+
+# BUCKETSPLIT validates that its separator is a single character, so the wildcard
+# '-s' value (a column name) is rejected before the flag is exercised.
+BUCKETSPLIT:
+  "-s": ","
+
