@@ -11,6 +11,12 @@ Header: Chrom	Pos	Ref	Alt
 Row: chr1	100	A	G
 Column: 2
 <<<
+>>> cmd.verifyvariant.flag_maxlen
+ERROR: Ref does not match the build
+Header: Chrom	Pos	Ref	Alt
+Row: chr1	100	A	G
+Column: 2
+<<<
 >>> cmd.verifyvariant.flag_ref
 ERROR: class java.lang.NullPointerException: Cannot load from byte/boolean array because the return value of "org.gorpipe.model.gor.iterators.RefSeqFromChromSeq.lastBuff()" is null
 <<<

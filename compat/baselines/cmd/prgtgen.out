@@ -32,6 +32,9 @@ ERROR: Invalid arguments in PRGTGEN. Argument(s) ${ROOT}/right.gor not a part of
 >>> cmd.prgtgen.flag_ld
 ERROR: Invalid arguments in PRGTGEN. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
+>>> cmd.prgtgen.flag_maxit
+ERROR: Invalid arguments in PRGTGEN. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
 >>> cmd.prgtgen.flag_maxseg
 ERROR: Invalid arguments in PRGTGEN. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
@@ -57,5 +60,8 @@ ERROR: Invalid arguments in PRGTGEN. Argument(s) ${ROOT}/right.gor not a part of
 ERROR: Invalid arguments in PRGTGEN. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
 >>> cmd.prgtgen.flag_th
+ERROR: Invalid arguments in PRGTGEN. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
+>>> cmd.prgtgen.flag_tol
 ERROR: Invalid arguments in PRGTGEN. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<

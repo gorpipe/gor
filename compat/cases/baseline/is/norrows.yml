@@ -5,3 +5,13 @@
   mode: exact
   behavior: "Generated: input source NORROWS with no flags"
   query: "NORROWS 2 | top 5"
+- id: is.norrows.flag_offset
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source NORROWS with -offset"
+  query: "NORROWS -offset 1 2 | top 5"
+- id: is.norrows.flag_step
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source NORROWS with -step"
+  query: "NORROWS -step 1 2 | top 5"

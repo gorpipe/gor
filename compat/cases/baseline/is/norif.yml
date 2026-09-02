@@ -24,6 +24,14 @@
   inputs:
     - path: "pheno.tsv"
       content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"
+- id: is.norif.flag_d
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source NORIF with -d"
+  query: "NORIF -d 1 ${ROOT}/pheno.tsv | top 5"
+  inputs:
+    - path: "pheno.tsv"
+      content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"
 - id: is.norif.flag_f
   tier: baseline
   mode: exact

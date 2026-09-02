@@ -43,6 +43,12 @@ Chrom	Pos	Ref	Alt
 chr1	100	A	G
 chr1	200	C	T
 <<<
+>>> is.gorif.flag_parts
+Chrom	Pos	Ref	Alt
+chr1	100	A	G
+chr1	200	C	T
+chr2	150	G	A
+<<<
 >>> is.gorif.flag_q
 ERROR: Invalid arguments in gor query. Argument(s) -q not a part of this command
 <<<

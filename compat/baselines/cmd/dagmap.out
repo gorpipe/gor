@@ -13,6 +13,9 @@ chr1	200	C	T	250	1
 >>> cmd.dagmap.flag_cis
 ERROR: Value option -c is not found
 <<<
+>>> cmd.dagmap.flag_dl
+ERROR: Value option -c is not found
+<<<
 >>> cmd.dagmap.flag_dp
 ERROR: Value option -c is not found
 <<<

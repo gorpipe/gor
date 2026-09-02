@@ -68,6 +68,7 @@ CSVSEL:
 
 DAGMAP:
   "-m": "NA"
+  "-dl": "1"   # intValueOfOption; a DAG level
 
 DEFLATECOLUMN:
   "-m": "1000"
@@ -136,9 +137,12 @@ PRGTGEN:
   "-psep": ","
   "-rd": "Pos"
   "-th": "0.5"
+  "-maxit": "10"   # intValueOfOption; an iteration cap
+  "-tol": "0.001"   # doubleValueOfOption; a convergence tolerance
 
 QUEEN:
   "-vs": "1000"
+  "-minSharing": "0.5"   # doubleValueOfOption; a sharing fraction
 
 RANK:
   "-rmax": "1"
@@ -162,6 +166,7 @@ SEQ:
 
 VARIANTS:
   "-bpmergedist": "1000"
+  "-readlength": "100"   # intValueOfOption; a read length
 
 VARJOIN:
   "-alt": "Pos"
@@ -173,7 +178,52 @@ VARJOIN:
   "-refr": "Pos"
   "-xl": "Pos"
   "-xr": "Pos"
+  "-as": "1"   # intValueOfOption
 
 VERIFYVARIANT:
   "-alt": "Pos"
   "-ref": "Pos"
+  "-maxlen": "100"   # intValueOfOption; a length in bases
+
+# ---------------------------------------------------------------------------
+# Values below are typed from the engine's own parser rather than from the docs:
+# these flags appear in no Options table, but the command reads each one through
+# intValueOfOption, doubleValueOfOption or similar, which settles the type beyond
+# doubt. The magnitude is then chosen to be plausible for the flag's name — a
+# read length of 100 rather than 1 — and the evidence is noted per entry.
+#
+# Flags whose value is read as a string are deliberately still unmapped: the type
+# says nothing about whether a column name, a file path or a tag is wanted, and a
+# case that fails on a missing file pins nothing about the flag.
+# ---------------------------------------------------------------------------
+
+BASES:
+  "-readlength": "100"   # intValueOfOption; a read length
+
+CIGARSEGS:
+  "-readlength": "100"   # intValueOfOption; a read length
+
+GOR:
+  "-parts": "2"   # intValueOfOption; a partition count
+
+GORIF:
+  "-parts": "2"   # intValueOfOption; a partition count
+
+GORNOR:
+  "-d": "1"   # intValueOfOption
+
+GTTRANSPOSE:
+  "-vs": "1"   # intValueOfOption; a value size
+
+NOR:
+  "-d": "1"   # intValueOfOption
+
+NORIF:
+  "-d": "1"   # intValueOfOption
+
+NORROWS:
+  "-offset": "1"   # intValueOfOption
+  "-step": "1"   # intValueOfOption
+
+SPAN:
+  "-maxseg": "1000"   # intValueOfOption; a bp span

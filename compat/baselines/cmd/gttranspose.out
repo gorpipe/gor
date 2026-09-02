@@ -8,3 +8,6 @@ ERROR: Invalid arguments in GTTRANSPOSE. Argument(s) ${ROOT}/right.gor not a par
 >>> cmd.gttranspose.flag_sep
 ERROR: Invalid arguments in GTTRANSPOSE. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
+>>> cmd.gttranspose.flag_vs
+ERROR: Invalid arguments in GTTRANSPOSE. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<

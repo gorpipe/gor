@@ -5,6 +5,9 @@ ERROR: Invalid arguments in QUEEN. Argument(s) ${ROOT}/right.gor not a part of t
 >>> cmd.queen.flag_gc
 ERROR: Invalid arguments in QUEEN. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<
+>>> cmd.queen.flag_minsharing
+ERROR: Invalid arguments in QUEEN. Argument(s) ${ROOT}/right.gor not a part of this command
+<<<
 >>> cmd.queen.flag_s
 ERROR: Invalid arguments in QUEEN. Argument(s) ${ROOT}/right.gor not a part of this command
 <<<

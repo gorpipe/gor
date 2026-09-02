@@ -8,3 +8,6 @@ ERROR: Column(s) CIGAR require at least 1 column(s)
 >>> cmd.bases.flag_gc
 ERROR: Column(s) CIGAR require at least 1 column(s)
 <<<
+>>> cmd.bases.flag_readlength
+ERROR: Column(s) CIGAR require at least 1 column(s)
+<<<

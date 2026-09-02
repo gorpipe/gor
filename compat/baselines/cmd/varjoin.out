@@ -17,6 +17,12 @@ Chrom	Pos	Ref	Alt	Posx	Refx	Altx
 >>> cmd.varjoin.flag_altr
 Chrom	Pos	Ref	Alt	Posx	Refx	Altx
 <<<
+>>> cmd.varjoin.flag_as
+Chrom	Pos	Ref	Alt	Posx	Refx	Altx
+chr1	100	A	G	100	A	G
+chr1	200	C	T	200	C	T
+chr2	150	G	A	150	G	A
+<<<
 >>> cmd.varjoin.flag_e
 Chrom	Pos	Ref	Alt	Posx	Refx	Altx
 chr1	100	A	G	100	A	G

@@ -4,3 +4,13 @@ ChromNOR	PosNOR	RowNum
 chrN	0	0
 chrN	0	1
 <<<
+>>> is.norrows.flag_offset
+ChromNOR	PosNOR	RowNum
+chrN	0	1
+chrN	0	2
+<<<
+>>> is.norrows.flag_step
+ChromNOR	PosNOR	RowNum
+chrN	0	0
+chrN	0	1
+<<<
