@@ -41,6 +41,45 @@ public class UTestLinkFileCacheStats {
         System.setProperty("gor.driver.link.cache.stats", String.valueOf(enabled));
     }
 
+    /**
+     * A link file gets converted from simple to versioned in normal operation (LinkUpdateCommand does
+     * exactly this). Reads follow the conversion because they derive the version from the content they
+     * just read; hits must follow it too, or the per-version hit rate -- the number this tally exists to
+     * produce -- is skewed in both directions.
+     */
+    @Test
+    public void hitsFollowThePathsCurrentVersion() {
+        var path = "s3://thebucket/ref/dbsnp.gorz.link";
+
+        LinkFileCacheStats.recordRead(path, SIMPLE);
+        LinkFileCacheStats.recordRead(path, VERSIONED);
+        LinkFileCacheStats.recordCacheHit(path);
+
+        assertEquals("a hit must count against the version the path holds now",
+                1, LinkFileCacheStats.summary("1").hits());
+        assertEquals(0, LinkFileCacheStats.summary("0").hits());
+        assertEquals(1, LinkFileCacheStats.summary("1").distinctPaths());
+        assertEquals(0, LinkFileCacheStats.summary("0").distinctPaths());
+    }
+
+    /**
+     * The first stats-enabled resolution registers a shutdown hook to dump the tally. If that first
+     * resolution happens while the JVM is already shutting down, registering throws -- and an
+     * observe-only tally must never be able to fail the read it is counting.
+     */
+    @Test
+    public void readsSurviveAJvmThatIsAlreadyShuttingDown() {
+        LinkFileCacheStats.shutdownHookRegistrar = hook -> {
+            throw new IllegalStateException("Shutdown in progress");
+        };
+
+        LinkFileCacheStats.recordRead("s3://thebucket/ref/dbsnp.gorz.link", SIMPLE);
+        LinkFileCacheStats.recordCacheHit("s3://thebucket/ref/dbsnp.gorz.link");
+
+        assertEquals(1, LinkFileCacheStats.summary("0").reads());
+        assertEquals(1, LinkFileCacheStats.summary("0").hits());
+    }
+
     @Test
     public void recordsNothingWhenDisabled() {
         enable(false);

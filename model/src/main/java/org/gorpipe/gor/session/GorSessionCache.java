@@ -24,6 +24,7 @@ package org.gorpipe.gor.session;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import org.gorpipe.gor.driver.linkfile.CachedLinkContent;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.util.Pair;
 
@@ -59,7 +60,7 @@ public class GorSessionCache {
     // process, so content read by one session was served to every later one.  Link files get rewritten,
     // so content held past its session may no longer be true.  Matches the bounds of the static
     // fallback cache in LinkFile.
-    private final Cache<String, String> linkCache = Caffeine.newBuilder()
+    private final Cache<String, CachedLinkContent> linkCache = Caffeine.newBuilder()
             .maximumSize(10000)
             .expireAfterWrite(5, TimeUnit.MINUTES).build();
 
@@ -107,7 +108,7 @@ public class GorSessionCache {
     public Cache<String, Object> getS3MetadataCache() {
         return s3MetadataCache;
     }
-    public Cache<String, String> getLinkCache() {
+    public Cache<String, CachedLinkContent> getLinkCache() {
         return linkCache;
     }
 

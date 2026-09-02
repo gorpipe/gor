@@ -2,13 +2,20 @@ package org.gorpipe.gor.driver.linkfile;
 
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
 import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.gor.session.GorSession;
+import org.gorpipe.gor.session.GorSessionCache;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertEquals;
 
@@ -56,8 +63,39 @@ public class UTestLinkFileCache {
         linkPath = workDir.getRoot().toPath().toAbsolutePath().resolve("test.gorz.link");
     }
 
+    @After
+    public void tearDown() {
+        // Set by the session tests below. It is an InheritableThreadLocal that nothing clears, so
+        // leaving it set would hand this thread's session to every later test in the same JVM.
+        GorSession.currentSession.remove();
+    }
+
     private String read() throws Exception {
         return LinkFile.loadContentFromSource(new FileSource(linkPath.toString()));
+    }
+
+    private void saveLinkFile(String link) {
+        try {
+            var linkFile = LinkFile.load(new FileSource(linkPath.toString()));
+            linkFile.appendEntry(link, "NEWMD5SUM");
+            linkFile.save(new DriverBackedFileReader(
+                    null, workDir.getRoot().toPath().toAbsolutePath().toString()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /** A session with its own link cache, bound to the calling thread the way a real one is. */
+    private static GorSession newSessionOnThisThread(String requestId) {
+        var cache = new GorSessionCache();
+        var session = new GorSession(requestId) {
+            @Override
+            public GorSessionCache getCache() {
+                return cache;
+            }
+        };
+        GorSession.currentSession.set(session);
+        return session;
     }
 
     @Test
@@ -97,6 +135,59 @@ public class UTestLinkFileCache {
         linkFile.save(new DriverBackedFileReader(null, workDir.getRoot().toPath().toAbsolutePath().toString()));
 
         assertEquals("content written in this process must not be served from cache",
+                Files.readString(linkPath), read());
+    }
+
+
+    /**
+     * A resolution that is already in flight when a save lands must not leave its content behind. The
+     * stream it read from was opened before the save replaced the file, so what it holds is the
+     * pre-write content -- and it caches that only after the save has dropped everything it could reach.
+     */
+    @Test
+    public void contentReadWhileASaveWasRunningIsNotLeftInTheCache() throws Exception {
+        Files.writeString(linkPath, SIMPLE);
+
+        var saved = new AtomicBoolean();
+        var source = new FileSource(linkPath.toString()) {
+            @Override
+            public InputStream open() {
+                var is = super.open();
+                if (saved.compareAndSet(false, true)) {
+                    saveLinkFile("source/appended.gorz");
+                }
+                return is;
+            }
+        };
+
+        assertEquals("the in-flight read holds the content the file had when it opened the stream",
+                SIMPLE, LinkFile.loadContentFromSource(source));
+
+        assertEquals("content read while a save was in flight must not outlive the save",
+                Files.readString(linkPath), read());
+    }
+
+    /**
+     * {@link GorSession#currentSession} is an InheritableThreadLocal that nothing clears, so a read and
+     * a save of the same link file can land on different session caches: the save invalidates the cache
+     * of the session bound to its own thread, which is not the one holding the entry.
+     */
+    @Test
+    public void savingOnAnotherSessionsThreadInvalidatesCachedContent() throws Exception {
+        Files.writeString(linkPath, SIMPLE);
+
+        var readingSession = newSessionOnThisThread("reader");
+        assertEquals(SIMPLE, read());
+
+        var writer = new Thread(() -> {
+            newSessionOnThisThread("writer");
+            saveLinkFile("source/appended.gorz");
+        });
+        writer.start();
+        writer.join();
+
+        GorSession.currentSession.set(readingSession);
+        assertEquals("a save in this process must not leave stale content in another session's cache",
                 Files.readString(linkPath), read());
     }
 

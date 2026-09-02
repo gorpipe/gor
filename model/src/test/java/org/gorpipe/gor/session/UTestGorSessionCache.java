@@ -1,5 +1,6 @@
 package org.gorpipe.gor.session;
 
+import org.gorpipe.gor.driver.linkfile.CachedLinkContent;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -51,7 +52,8 @@ public class UTestGorSessionCache {
         var readingSession = new GorSessionCache();
         var otherSession = new GorSessionCache();
 
-        readingSession.getLinkCache().put(linkPath, "source/versions/generation_1200.gorz");
+        readingSession.getLinkCache().put(linkPath,
+                new CachedLinkContent("source/versions/generation_1200.gorz", System.nanoTime()));
 
         assertNull("link content cached by one session must not be visible to another",
                 otherSession.getLinkCache().getIfPresent(linkPath));

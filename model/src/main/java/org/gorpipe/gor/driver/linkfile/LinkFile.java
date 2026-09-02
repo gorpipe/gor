@@ -68,7 +68,14 @@ public abstract class LinkFile {
     public static final String LINK_FILE_VALIDATE_LOAD = "gor.driver.link.validate.load";
     public static final String LINK_FILE_VALIDATE_SAVE = "gor.driver.link.validate.save";
 
-    private static final Cache<String, String> staticLinkCache = Caffeine.newBuilder()
+    private static final Cache<String, CachedLinkContent> staticLinkCache = Caffeine.newBuilder()
+            .maximumSize(10000)
+            .expireAfterWrite(5, TimeUnit.MINUTES).build();
+
+    // A save cannot reach the link caches of other sessions, so it leaves a mark here instead and any
+    // cached entry for the path whose read started before the mark is dropped on lookup.  Bounded and
+    // expiring like the content caches, so a mark outlives every entry it has to retire.
+    private static final Cache<String, Long> linkWriteMarks = Caffeine.newBuilder()
             .maximumSize(10000)
             .expireAfterWrite(5, TimeUnit.MINUTES).build();
 
@@ -300,6 +307,14 @@ public abstract class LinkFile {
             save(os, timestamp, reader);
         } catch (IOException e) {
             throw new GorResourceException("Could not save: " + source.getFullPath(), source.getFullPath(), e);
+        } finally {
+            // Whatever we cached for this link file is now wrong.  The cache tolerates a link rewritten
+            // by another process going unnoticed until it expires, but never one rewritten here.
+            //
+            // After the stream is closed, not before: closing is what renames the temp file into place
+            // for an atomic write, so a resolution running in between would otherwise read the old
+            // content and re-cache it behind us.  In a finally so a failed write drops it too.
+            invalidateCachedContent(source);
         }
     }
 
@@ -308,10 +323,6 @@ public abstract class LinkFile {
         if (PropsHelper.getBoolean(LINK_FILE_VALIDATE_SAVE, false)) {
             validate();
         }
-
-        // Whatever we cached for this link file is about to be wrong.  The cache tolerates a link
-        // rewritten by another process going unnoticed until it expires, but never one rewritten here.
-        invalidateCachedContent(source);
 
         meta.setProperty(LinkFileMeta.HEADER_SERIAL_KEY, Integer.toString(Integer.parseInt(meta.getProperty(LinkFileMeta.HEADER_SERIAL_KEY, "0")) + 1));
 
@@ -436,24 +447,43 @@ public abstract class LinkFile {
         if (linkCache != null) {
             var cached = linkCache.getIfPresent(path);
             if (cached != null) {
-                LinkFileCacheStats.recordCacheHit(path);
-                return cached;
+                if (isRetiredByWrite(path, cached)) {
+                    linkCache.invalidate(path);
+                } else {
+                    LinkFileCacheStats.recordCacheHit(path);
+                    return cached.content();
+                }
             }
         }
 
+        var readStartedNanos = System.nanoTime();
         var content = readLimitedLinkContent(source);
         LinkFileCacheStats.recordRead(path, content);
 
         if (linkCache != null && isSimpleLinkFile(content)) {
-            linkCache.put(path, content);
+            linkCache.put(path, new CachedLinkContent(content, readStartedNanos));
         }
 
         return content;
     }
 
-    /** Drops any cached content for this link file, from both the session and the fallback cache. */
+    /** True if a save of this link file completed after the read behind this entry began. */
+    private static boolean isRetiredByWrite(String path, CachedLinkContent cached) {
+        var writtenAtNanos = linkWriteMarks.getIfPresent(path);
+        return writtenAtNanos != null && cached.readStartedNanos() - writtenAtNanos <= 0;
+    }
+
+    /**
+     * Retires every cached copy of this link file's content, in this session and in any other.
+     *
+     * <p>Dropping the entries we can reach is not enough on its own: the session caches belong to
+     * whichever session was bound to the reading thread, and a resolution already in flight can put its
+     * pre-write content into one of them after this call.  The mark covers both -- it outlives the
+     * entries it retires, and it is checked on every lookup, so no cache has to be reachable from here.
+     */
     private static void invalidateCachedContent(StreamSource source) {
         var path = source.getFullPath();
+        linkWriteMarks.put(path, System.nanoTime());
         staticLinkCache.invalidate(path);
         var session = GorSession.currentSession.get();
         if (session != null) {
@@ -461,7 +491,7 @@ public abstract class LinkFile {
         }
     }
 
-    private static Cache<String, String> linkCache(StreamSource source) {
+    private static Cache<String, CachedLinkContent> linkCache(StreamSource source) {
         if (GorSession.currentSession.get() != null && USE_LINK_CACHE_SESSION) {
             return GorSession.currentSession.get().getCache().getLinkCache();
         }

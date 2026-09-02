@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 /**
  * Observe-only tally of link file resolutions (ENGKNOW-3770).
@@ -41,6 +42,10 @@ public final class LinkFileCacheStats {
 
     private static final AtomicBoolean dumpRegistered = new AtomicBoolean();
 
+    // Package private and not final so a test can make registration fail the way an already shutting
+    // down JVM does.
+    static Consumer<Thread> shutdownHookRegistrar = hook -> Runtime.getRuntime().addShutdownHook(hook);
+
     private LinkFileCacheStats() {}
 
     /** Tally for one link file version. */
@@ -53,7 +58,9 @@ public final class LinkFileCacheStats {
     }
 
     private static final class TrackedPath {
-        final String version;
+        // Not final: a link file gets converted from simple to versioned in normal operation, and the
+        // version has to follow the content or hits and reads for the path land in different buckets.
+        volatile String version;
         volatile String contentFingerprint;
 
         TrackedPath(String version, String contentFingerprint) {
@@ -101,6 +108,7 @@ public final class LinkFileCacheStats {
         if (tracked != null) {
             if (!tracked.contentFingerprint.equals(fingerprint)) {
                 tracked.contentFingerprint = fingerprint;
+                tracked.version = version;
                 counters.contentChanges.incrementAndGet();
             }
         } else if (trackedPaths.size() < maxPaths()) {
@@ -131,9 +139,15 @@ public final class LinkFileCacheStats {
         return new Summary(c.reads.get(), c.hits.get(), c.contentChanges.get(), distinct);
     }
 
+    /**
+     * Clears the tally.  A test hook: it also clears the shutdown hook registration, and leaves the
+     * registrar a no-op so repeated resets in one JVM do not pile up dump hooks.
+     */
     public static void reset() {
         counters.clear();
         trackedPaths.clear();
+        dumpRegistered.set(false);
+        shutdownHookRegistrar = hook -> { };
     }
 
     public static void logSummary() {
@@ -147,8 +161,14 @@ public final class LinkFileCacheStats {
 
     private static void registerDump() {
         if (dumpRegistered.compareAndSet(false, true)) {
-            Runtime.getRuntime().addShutdownHook(new Thread(LinkFileCacheStats::logSummary,
-                    "link-cache-stats-dump"));
+            try {
+                shutdownHookRegistrar.accept(new Thread(LinkFileCacheStats::logSummary,
+                        "link-cache-stats-dump"));
+            } catch (IllegalStateException e) {
+                // The JVM is already shutting down, so there is no hook to run and nothing to do about
+                // it.  This tally only observes -- it must never be able to fail the read it counts.
+                log.debug("Link file cache stats will not be dumped, the JVM is already shutting down", e);
+            }
         }
     }
 }
