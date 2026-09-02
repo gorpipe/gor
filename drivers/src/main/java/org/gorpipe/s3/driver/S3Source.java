@@ -173,12 +173,44 @@ public class S3Source implements StreamSource {
 
     private InputStream open(RequestRange range) {
         var reqBuilder = GetObjectRequest.builder().bucket(bucket).key(key);
-        if (range!=null) {
-            range = range.limitTo(getSourceMetadata().getLength());
-            if (range.isEmpty()) return new ByteArrayInputStream(new byte[0]);
-            reqBuilder.range(BytesRange.startLengthtoRange(range.getFirst(), range.getLength()));
+        if (range == null) {
+            return openRequest(reqBuilder.build());
         }
-        return openRequest(reqBuilder.build());
+
+        var clamped = range.limitTo(getSourceMetadata().getLength());
+        if (clamped.isEmpty()) return new ByteArrayInputStream(new byte[0]);
+
+        try {
+            return openRequest(rangedRequest(reqBuilder, clamped));
+        } catch (GorResourceException e) {
+            if (!isRangeNotSatisfiable(e)) throw e;
+
+            // The length we clamped to is stale.  S3 has no append, so both LinkFile.save and
+            // versioned link GC replace the whole object, and a writer in another process shrinking
+            // the object leaves our cached length pointing past the new end.  Refresh the metadata
+            // and reissue the range once against the current length.
+            log.info("Range {} not satisfiable for {} - refreshing stale cached object length",
+                    BytesRange.startLengthtoRange(clamped.getFirst(), clamped.getLength()), getFullS3Url());
+            invalidateMeta();
+
+            var refreshed = range.limitTo(getSourceMetadata().getLength());
+            if (refreshed.isEmpty()) return new ByteArrayInputStream(new byte[0]);
+            return openRequest(rangedRequest(reqBuilder, refreshed));
+        }
+    }
+
+    private static GetObjectRequest rangedRequest(GetObjectRequest.Builder reqBuilder, RequestRange range) {
+        return reqBuilder.range(BytesRange.startLengthtoRange(range.getFirst(), range.getLength())).build();
+    }
+
+    /**
+     * True for HTTP 416, which S3 returns when the requested range starts at or past the end of the
+     * object.  Deterministic for a given range and object, so it is only worth reacting to by
+     * correcting our idea of the object rather than by repeating the request.
+     */
+    private static boolean isRangeNotSatisfiable(Exception e) {
+        return ExceptionUtilities.getUnderlyingCause(e) instanceof S3Exception s3Exception
+                && s3Exception.statusCode() == 416;
     }
 
     private InputStream openWithFileSystem(RequestRange range) {
@@ -247,7 +279,7 @@ public class S3Source implements StreamSource {
     private S3SourceMetadata loadMetadataFromCache(String bucket, String key) {
         try {
             // We can not use the cache if the session is not available, as the cache needs to be cleared when the session ends.
-            return (S3SourceMetadata)metadataCache.get(bucket + key, k -> {
+            return (S3SourceMetadata)metadataCache.get(metaCacheKey(), k -> {
                 // TODO:  If the object does not exists we don't cache.  This method will throw exception and the loader will exit.
                 return createMetaData(bucket, key);
             });
@@ -414,7 +446,16 @@ public class S3Source implements StreamSource {
 
     private void invalidateMeta() {
         meta = null;
-        if (metadataCache != null) metadataCache.invalidate(bucket + key);
+        if (metadataCache != null) metadataCache.invalidate(metaCacheKey());
+    }
+
+    /**
+     * Key for the shared metadata cache.  The separator matters: without it bucket {@code ab} + key
+     * {@code c} and bucket {@code a} + key {@code bc} collide on {@code abc}, so two unrelated objects
+     * would share a cached length and invalidating one would clear the other.
+     */
+    private String metaCacheKey() {
+        return bucket + "/" + key;
     }
 
     public String copy(S3Source dest) throws IOException {
