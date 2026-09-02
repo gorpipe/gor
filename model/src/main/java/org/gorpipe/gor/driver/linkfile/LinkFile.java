@@ -68,7 +68,7 @@ public abstract class LinkFile {
     public static final String LINK_FILE_VALIDATE_LOAD = "gor.driver.link.validate.load";
     public static final String LINK_FILE_VALIDATE_SAVE = "gor.driver.link.validate.save";
 
-    private static final Cache<StreamSource, String> staticLinkCache = Caffeine.newBuilder()
+    private static final Cache<String, String> staticLinkCache = Caffeine.newBuilder()
             .maximumSize(10000)
             .expireAfterWrite(5, TimeUnit.MINUTES).build();
 
@@ -309,6 +309,10 @@ public abstract class LinkFile {
             validate();
         }
 
+        // Whatever we cached for this link file is about to be wrong.  The cache tolerates a link
+        // rewritten by another process going unnoticed until it expires, but never one rewritten here.
+        invalidateCachedContent(source);
+
         meta.setProperty(LinkFileMeta.HEADER_SERIAL_KEY, Integer.toString(Integer.parseInt(meta.getProperty(LinkFileMeta.HEADER_SERIAL_KEY, "0")) + 1));
 
         var currentTimestamp = timestamp > 0 ? timestamp : System.currentTimeMillis();
@@ -426,32 +430,60 @@ public abstract class LinkFile {
             return null;
         }
 
-        if (USE_LINK_CACHE) {
-            try {
-                Cache<StreamSource, String> linkCache;
-                if (GorSession.currentSession.get() != null && USE_LINK_CACHE_SESSION) {
-                    linkCache = GorSession.currentSession.get().getCache().getLinkCache();
-                } else {
-                    log.warn("No session available, can not use session link cache for " + source);
-                    linkCache = staticLinkCache;
-                }
+        var path = source.getFullPath();
+        var linkCache = USE_LINK_CACHE ? linkCache(source) : null;
 
-                return linkCache.get(source, (k) -> {
-                    try {
-                        return readLimitedLinkContent(k);
-                    } catch (Exception e) {
-                        throw new UncheckedExecutionException(e);
-                    }
-                });
-            } catch (UncheckedExecutionException e) {
-                if (e.getCause() instanceof IOException) {
-                    throw (IOException) e.getCause();
-                }
-                throw new IOException(e.getCause());
+        if (linkCache != null) {
+            var cached = linkCache.getIfPresent(path);
+            if (cached != null) {
+                LinkFileCacheStats.recordCacheHit(path);
+                return cached;
             }
-        } else {
-            return readLimitedLinkContent(source);
         }
+
+        var content = readLimitedLinkContent(source);
+        LinkFileCacheStats.recordRead(path, content);
+
+        if (linkCache != null && isSimpleLinkFile(content)) {
+            linkCache.put(path, content);
+        }
+
+        return content;
+    }
+
+    /** Drops any cached content for this link file, from both the session and the fallback cache. */
+    private static void invalidateCachedContent(StreamSource source) {
+        var path = source.getFullPath();
+        staticLinkCache.invalidate(path);
+        var session = GorSession.currentSession.get();
+        if (session != null) {
+            session.getCache().getLinkCache().invalidate(path);
+        }
+    }
+
+    private static Cache<String, String> linkCache(StreamSource source) {
+        if (GorSession.currentSession.get() != null && USE_LINK_CACHE_SESSION) {
+            return GorSession.currentSession.get().getCache().getLinkCache();
+        }
+        log.warn("No session available, can not use session link cache for " + source);
+        return staticLinkCache;
+    }
+
+    /**
+     * Only simple link files are cached.
+     *
+     * <p>A simple link file is a bare data path, rewritten so rarely that serving one up to the cache
+     * expiry stale is an accepted trade -- and they are the common case, so this is where the saving is.
+     *
+     * <p>A versioned link file is rewritten in normal operation, by {@code appendEntry} and by
+     * versioned-link GC.  A stale entry for one could resolve to a generation that GC has already
+     * deleted, and it would do so silently.  Keying on the object length and last modified instead does
+     * not help: that metadata is itself served from a cache with its own expiry, so the key would be
+     * built from stale values and would match.  See ENGKNOW-3770.
+     */
+    private static boolean isSimpleLinkFile(String content) {
+        return !Strings.isNullOrEmpty(content)
+                && LinkFileV0.VERSION.equals(LinkFileMeta.createOrLoad(content, null, false).getVersion());
     }
 
     private static String readLimitedLinkContent(StreamSource source) {
@@ -464,6 +496,18 @@ public abstract class LinkFile {
             return content;
         } catch (IOException e) {
             throw new GorResourceException("Failed to read link file: " + source.getFullPath(), source.getFullPath(), e);
+        } finally {
+            // Release the handle this method acquired.  Sources reopen lazily (FileSource.open goes
+            // through ensureOpenForRead, S3Source.close is a no-op), so this is transparent to anything
+            // that uses the source afterwards -- LinkFile.save reopens it for writing.  While the cache
+            // was keyed on the source object it pinned every source it was handed, which hid the fact
+            // that callers do not close them; keyed on the path, they become collectable and an unclosed
+            // read handle would survive only until the garbage collector ran the finalizer.
+            try {
+                source.close();
+            } catch (Exception e) {
+                log.debug("Failed to close link file source {} after reading", source.getFullPath(), e);
+            }
         }
     }
 

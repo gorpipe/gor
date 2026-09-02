@@ -1,6 +1,5 @@
 package org.gorpipe.gor.session;
 
-import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -8,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 /**
  * Tests for the caches held by a {@link GorSessionCache}.
@@ -49,14 +47,14 @@ public class UTestGorSessionCache {
      */
     @Test
     public void linkContentIsNotSharedBetweenSessions() {
-        var source = mock(StreamSource.class);
+        var linkPath = "s3://thebucket/ref/dbsnp.gorz.link";
         var readingSession = new GorSessionCache();
         var otherSession = new GorSessionCache();
 
-        readingSession.getLinkCache().put(source, "source/versions/generation_1200.gorz");
+        readingSession.getLinkCache().put(linkPath, "source/versions/generation_1200.gorz");
 
         assertNull("link content cached by one session must not be visible to another",
-                otherSession.getLinkCache().getIfPresent(source));
+                otherSession.getLinkCache().getIfPresent(linkPath));
     }
 
     @Test

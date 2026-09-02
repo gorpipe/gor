@@ -59,7 +59,7 @@ public class GorSessionCache {
     // process, so content read by one session was served to every later one.  Link files get rewritten,
     // so content held past its session may no longer be true.  Matches the bounds of the static
     // fallback cache in LinkFile.
-    private final Cache<StreamSource, String> linkCache = Caffeine.newBuilder()
+    private final Cache<String, String> linkCache = Caffeine.newBuilder()
             .maximumSize(10000)
             .expireAfterWrite(5, TimeUnit.MINUTES).build();
 
@@ -107,7 +107,7 @@ public class GorSessionCache {
     public Cache<String, Object> getS3MetadataCache() {
         return s3MetadataCache;
     }
-    public Cache<StreamSource, String> getLinkCache() {
+    public Cache<String, String> getLinkCache() {
         return linkCache;
     }
 
