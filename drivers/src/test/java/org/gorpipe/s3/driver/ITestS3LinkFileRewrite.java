@@ -126,8 +126,9 @@ public class ITestS3LinkFileRewrite {
             assertTrue("the compacted link file must be smaller than the original",
                     compactedLinkBody().length() < large.length());
 
-            assertTrue("a link file rewritten smaller must still be readable",
-                    latestEntryUrl(client, url).endsWith("compacted.gorz"));
+            var afterCompaction = latestEntryUrl(client, url);
+            assertTrue("a link file rewritten smaller must still be readable, got: " + afterCompaction,
+                    afterCompaction.endsWith("compacted.gorz"));
         } finally {
             try (var client = newClient()) {
                 client.deleteObject(DeleteObjectRequest.builder().bucket(BUCKET).key(key).build());
