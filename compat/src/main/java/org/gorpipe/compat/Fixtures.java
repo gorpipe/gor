@@ -107,6 +107,23 @@ public final class Fixtures {
                         + "chr1\t50\t150\tregionA\n"
                         + "chr1\t180\t260\tregionB\n"
                         + "chr2\t100\t200\tregionC\n"));
+        // SAM-shaped, for the commands that read a CIGAR or Flag column
+        // (BASES, CIGARSEGS, VARIANTS, BAMFLAG). Without it those commands could
+        // only ever fail on their input shape.
+        // Column names match what the commands look up: CIGAR, Flag, SEQ, QUAL.
+        // SEQ and QUAL are the same length as the CIGAR's read-consuming ops, so a
+        // case fails on the flag under test rather than on inconsistent input.
+        inputs.add(input("reads.gor",
+                "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\n"
+                        + "chr1\t100\t0\t60\t4M\tACGT\tIIII\n"
+                        + "chr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\n"
+                        + "chr2\t150\t0\t60\t3M\tTTG\tIII\n"));
+        // For the statistics commands that need a p-value column (ADJUST).
+        inputs.add(input("pvalues.gor",
+                "Chrom\tPos\tPVal\n"
+                        + "chr1\t100\t0.001\n"
+                        + "chr1\t200\t0.04\n"
+                        + "chr2\t150\t0.6\n"));
         inputs.add(input("pheno.tsv",
                 "PN\tSex\tAge\n"
                         + "PN001\tM\t42\n"

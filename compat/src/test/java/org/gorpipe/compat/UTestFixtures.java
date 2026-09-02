@@ -67,6 +67,26 @@ public class UTestFixtures {
     }
 
     @Test
+    public void carriesTheShapesTheReadAndStatisticsCommandsNeed() {
+        // A command that requires a CIGAR, Flag or p-value column cannot be
+        // exercised by the primary fixture, and errored on its input shape instead
+        // of on the flag being tested.
+        java.util.Map<String, String> byPath = new java.util.HashMap<>();
+        for (CompatInput in : Fixtures.canonicalInputs()) {
+            byPath.put(in.path, in.content);
+        }
+        Assert.assertTrue("reads.gor must carry a CIGAR column",
+                byPath.getOrDefault("reads.gor", "").contains("CIGAR"));
+        Assert.assertTrue("reads.gor must carry a Flag column",
+                byPath.getOrDefault("reads.gor", "").contains("Flag"));
+        Assert.assertTrue("reads.gor must carry SEQ and QUAL columns",
+                byPath.getOrDefault("reads.gor", "").contains("SEQ")
+                        && byPath.getOrDefault("reads.gor", "").contains("QUAL"));
+        Assert.assertTrue("pvalues.gor must carry a PVal column",
+                byPath.getOrDefault("pvalues.gor", "").contains("PVal"));
+    }
+
+    @Test
     public void canonicalInputsAreSelfConsistent() {
         for (CompatInput in : Fixtures.canonicalInputs()) {
             Assert.assertNotNull(in.path);

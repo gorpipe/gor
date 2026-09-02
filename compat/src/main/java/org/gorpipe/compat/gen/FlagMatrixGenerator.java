@@ -113,8 +113,10 @@ public final class FlagMatrixGenerator {
      */
     private static String buildQuery(SurfaceInventory.CommandSurface command,
                                      String flag, String value, CommandArgs commandArgs) {
-        StringBuilder q = new StringBuilder("gor ${ROOT}/left.gor | ");
-        q.append(command.name);
+        StringBuilder q = new StringBuilder("gor ")
+                .append(commandArgs.source(command.name))
+                .append(" | ")
+                .append(command.name);
 
         String required = commandArgs.requiredFlags(command.name);
         // Skipped when the flag under test is itself the required one, so that a

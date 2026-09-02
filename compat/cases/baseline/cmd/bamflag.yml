@@ -4,23 +4,23 @@
   tier: baseline
   mode: exact
   behavior: "Generated: BAMFLAG with no flags"
-  query: "gor ${ROOT}/left.gor | BAMFLAG | top 5"
+  query: "gor ${ROOT}/reads.gor | BAMFLAG | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "reads.gor"
+      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\nchr1\t100\t0\t60\t4M\tACGT\tIIII\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\nchr2\t150\t0\t60\t3M\tTTG\tIII\n"
 - id: cmd.bamflag.flag_h
   tier: baseline
   mode: exact
   behavior: "Generated: BAMFLAG with -h"
-  query: "gor ${ROOT}/left.gor | BAMFLAG -h | top 5"
+  query: "gor ${ROOT}/reads.gor | BAMFLAG -h | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "reads.gor"
+      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\nchr1\t100\t0\t60\t4M\tACGT\tIIII\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\nchr2\t150\t0\t60\t3M\tTTG\tIII\n"
 - id: cmd.bamflag.flag_v
   tier: baseline
   mode: exact
   behavior: "Generated: BAMFLAG with -v"
-  query: "gor ${ROOT}/left.gor | BAMFLAG -v | top 5"
+  query: "gor ${ROOT}/reads.gor | BAMFLAG -v | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "reads.gor"
+      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\nchr1\t100\t0\t60\t4M\tACGT\tIIII\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\nchr2\t150\t0\t60\t3M\tTTG\tIII\n"

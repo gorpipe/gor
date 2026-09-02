@@ -4,31 +4,31 @@
   tier: baseline
   mode: exact
   behavior: "Generated: BASES with no flags"
-  query: "gor ${ROOT}/left.gor | BASES | top 5"
+  query: "gor ${ROOT}/reads.gor | BASES | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "reads.gor"
+      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\nchr1\t100\t0\t60\t4M\tACGT\tIIII\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\nchr2\t150\t0\t60\t3M\tTTG\tIII\n"
 - id: cmd.bases.flag_count
   tier: baseline
   mode: exact
   behavior: "Generated: BASES with -count"
-  query: "gor ${ROOT}/left.gor | BASES -count | top 5"
+  query: "gor ${ROOT}/reads.gor | BASES -count | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "reads.gor"
+      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\nchr1\t100\t0\t60\t4M\tACGT\tIIII\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\nchr2\t150\t0\t60\t3M\tTTG\tIII\n"
 - id: cmd.bases.flag_gc
   tier: baseline
   mode: exact
   behavior: "Generated: BASES with -gc"
-  query: "gor ${ROOT}/left.gor | BASES -gc Chrom | top 5"
+  query: "gor ${ROOT}/reads.gor | BASES -gc Chrom | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "reads.gor"
+      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\nchr1\t100\t0\t60\t4M\tACGT\tIIII\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\nchr2\t150\t0\t60\t3M\tTTG\tIII\n"
 - id: cmd.bases.flag_readlength
   tier: baseline
   mode: exact
   behavior: "Generated: BASES with -readlength"
-  query: "gor ${ROOT}/left.gor | BASES -readlength 100 | top 5"
+  query: "gor ${ROOT}/reads.gor | BASES -readlength 100 | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "reads.gor"
+      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\nchr1\t100\t0\t60\t4M\tACGT\tIIII\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\nchr2\t150\t0\t60\t3M\tTTG\tIII\n"

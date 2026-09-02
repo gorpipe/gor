@@ -59,3 +59,31 @@ ATMAX:
 
 RANK:
   positional: "1000 Pos"
+
+# ---------------------------------------------------------------------------
+# source: the file the case reads, when the command needs a shape the primary
+# fixture does not have. Without these, every generated case for these commands
+# failed on the input rather than on the flag under test — an error that records
+# nothing about the flag.
+# ---------------------------------------------------------------------------
+
+# Read a CIGAR column.
+BASES:
+  source: "${ROOT}/reads.gor"
+
+CIGARSEGS:
+  source: "${ROOT}/reads.gor"
+
+VARIANTS:
+  source: "${ROOT}/reads.gor"
+
+# Reads a Flag column.
+BAMFLAG:
+  source: "${ROOT}/reads.gor"
+
+# Takes no positional argument and rejects any invocation without -pc naming a
+# column of p values.
+ADJUST:
+  source: "${ROOT}/pvalues.gor"
+  requiredFlags: "-pc PVal"
+

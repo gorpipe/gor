@@ -27,6 +27,9 @@ public final class CommandArgs {
     /** The canonical right-hand source, used when a command names no other. */
     public static final String DEFAULT_POSITIONAL = "${ROOT}/right.gor";
 
+    /** The primary fixture every case reads unless the command needs another shape. */
+    public static final String DEFAULT_SOURCE = "${ROOT}/left.gor";
+
     private final Map<String, Map<String, String>> byCommand;
 
     private CommandArgs(Map<String, Map<String, String>> byCommand) {
@@ -66,6 +69,17 @@ public final class CommandArgs {
     /** The positional argument to supply when the command declares a minimum. */
     public String positional(String command) {
         return entry(command).getOrDefault("positional", DEFAULT_POSITIONAL);
+    }
+
+    /**
+     * The file the case should read, for a command that needs a particular shape.
+     *
+     * BASES and CIGARSEGS require a CIGAR column and BAMFLAG a Flag column, none of
+     * which the primary fixture carries, so every generated case for them failed on
+     * the input rather than on the flag under test.
+     */
+    public String source(String command) {
+        return entry(command).getOrDefault("source", DEFAULT_SOURCE);
     }
 
     /**
