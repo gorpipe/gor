@@ -65,9 +65,14 @@ surface has no case yet — that is the worklist.
   so the 32 commands that declare no flags are covered too.
 - **Function matrix** — one case per registered CALC function, with arguments built
   from the function's signature (`String:Int2String` becomes `FN('a',1)`).
+- **Input source matrix** — a bare invocation plus one case per flag for each input
+  source. Every query begins with one, and `GOR` alone declares 23 flags.
 - **Doc harvest** — self-contained snippets lifted from `documentation/src`.
-- **Nightly only** (`:compat:generateNightly`) — deterministic mutants and
-  grammar-fuzz cases.
+- **Nightly only** (`:compat:generateNightly`) — mutants and grammar-fuzz cases.
+  Mutants are filtered by coverage feedback: each candidate runs under the JaCoCo
+  agent and is kept only if it reached a probe nothing had reached, which is why
+  the nightly run keeps about 109 of 500 rather than all of them. Without the
+  agent the filter is skipped and generation says so.
 
 ## Curated inputs the generators need
 
@@ -81,9 +86,13 @@ the rest. Each is curated deliberately; nothing here is guessed.
 - `inventory/command-args.yml` — per-command positional arguments and required
   companion flags. `GROUP` takes a bin size where a file would be wrong, and `JOIN`
   rejects any invocation with no join type.
+- `inventory/input-source-args.yml` — the same, for input sources, whose arguments
+  vary more: `GOR` wants a file, `GORROW` a position, `NORROWS` a row count.
 - `inventory/exclusions.yml` — surface deliberately left uncovered, each entry with
-  a reason. Both the flag matrix and the function matrix read this file, so leaving
-  a command (`cmd.CMD`) or a function (`fn.SYSTEM`) out means writing down why.
+  a reason. Every generator reads this file, so leaving out a command (`cmd.CMD`),
+  a function (`fn.SYSTEM`) or an input source (`is.SQL`) means writing down why.
+  `CMD` and `SQL` exist as both a pipe command and an input source, and each needs
+  its own entry.
 
 ## Keeping baselines meaningful
 
