@@ -81,6 +81,17 @@ public final class CommandArgs {
     }
 
     /**
+     * Whether the case must run in a NOR query rather than a GOR one.
+     *
+     * RELREMOVE and TSVAPPEND reject a GOR query outright — "trying to execute
+     * RELREMOVE in a gor query" — so a generated case for them could only ever
+     * record that refusal.
+     */
+    public boolean nor(String command) {
+        return Boolean.parseBoolean(entry(command).getOrDefault("nor", "false"));
+    }
+
+    /**
      * Whether the case needs the synthetic chromSeq reference build written into
      * its project root.
      *

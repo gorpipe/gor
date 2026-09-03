@@ -95,4 +95,7 @@
 - element: cmd.PLINKREGRESSION
   reason: "Shells out to the external plink2 binary; not hermetic"
   ticket: null
+- element: cmd.TSVAPPEND
+  reason: "Appends to a file outside the result stream; output is not the row set"
+  ticket: null
 

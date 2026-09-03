@@ -115,7 +115,7 @@ public final class FlagMatrixGenerator {
      */
     private static String buildQuery(SurfaceInventory.CommandSurface command,
                                      String flag, String value, CommandArgs commandArgs) {
-        StringBuilder q = new StringBuilder("gor ")
+        StringBuilder q = new StringBuilder(commandArgs.nor(command.name) ? "nor " : "gor ")
                 .append(commandArgs.source(command.name))
                 .append(" | ")
                 .append(command.name);

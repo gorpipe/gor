@@ -4,31 +4,39 @@
   tier: baseline
   mode: exact
   behavior: "Generated: RELREMOVE with no flags"
-  query: "gor ${ROOT}/left.gor | RELREMOVE | top 5"
+  query: "nor ${ROOT}/pheno.tsv | RELREMOVE ${ROOT}/tagpairs.tsv | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "tagpairs.tsv"
+      content: "#PN1\tPN2\nPN001\tPN002\n"
+    - path: "pheno.tsv"
+      content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"
 - id: cmd.relremove.flag_rsymb
   tier: baseline
   mode: exact
   behavior: "Generated: RELREMOVE with -rsymb"
-  query: "gor ${ROOT}/left.gor | RELREMOVE -rsymb 1 | top 5"
+  query: "nor ${ROOT}/pheno.tsv | RELREMOVE -rsymb 1 ${ROOT}/tagpairs.tsv | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "tagpairs.tsv"
+      content: "#PN1\tPN2\nPN001\tPN002\n"
+    - path: "pheno.tsv"
+      content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"
 - id: cmd.relremove.flag_sepcc
   tier: baseline
   mode: exact
   behavior: "Generated: RELREMOVE with -sepcc"
-  query: "gor ${ROOT}/left.gor | RELREMOVE -sepcc | top 5"
+  query: "nor ${ROOT}/pheno.tsv | RELREMOVE -sepcc ${ROOT}/tagpairs.tsv | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "tagpairs.tsv"
+      content: "#PN1\tPN2\nPN001\tPN002\n"
+    - path: "pheno.tsv"
+      content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"
 - id: cmd.relremove.flag_weightcol
   tier: baseline
   mode: exact
   behavior: "Generated: RELREMOVE with -weightcol"
-  query: "gor ${ROOT}/left.gor | RELREMOVE -weightcol Pos | top 5"
+  query: "nor ${ROOT}/pheno.tsv | RELREMOVE -weightcol Pos ${ROOT}/tagpairs.tsv | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "tagpairs.tsv"
+      content: "#PN1\tPN2\nPN001\tPN002\n"
+    - path: "pheno.tsv"
+      content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"

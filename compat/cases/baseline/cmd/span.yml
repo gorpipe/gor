@@ -4,23 +4,23 @@
   tier: baseline
   mode: exact
   behavior: "Generated: SPAN with no flags"
-  query: "gor ${ROOT}/left.gor | SPAN | top 5"
+  query: "gor ${ROOT}/segments.gor | SPAN | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "segments.gor"
+      content: "Chrom\tbpStart\tbpStop\tName\nchr1\t50\t150\tregionA\nchr1\t180\t260\tregionB\nchr2\t100\t200\tregionC\n"
 - id: cmd.span.flag_gc
   tier: baseline
   mode: exact
   behavior: "Generated: SPAN with -gc"
-  query: "gor ${ROOT}/left.gor | SPAN -gc Chrom | top 5"
+  query: "gor ${ROOT}/segments.gor | SPAN -gc Chrom | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "segments.gor"
+      content: "Chrom\tbpStart\tbpStop\tName\nchr1\t50\t150\tregionA\nchr1\t180\t260\tregionB\nchr2\t100\t200\tregionC\n"
 - id: cmd.span.flag_maxseg
   tier: baseline
   mode: exact
   behavior: "Generated: SPAN with -maxseg"
-  query: "gor ${ROOT}/left.gor | SPAN -maxseg 1000 | top 5"
+  query: "gor ${ROOT}/segments.gor | SPAN -maxseg 1000 | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "segments.gor"
+      content: "Chrom\tbpStart\tbpStop\tName\nchr1\t50\t150\tregionA\nchr1\t180\t260\tregionB\nchr2\t100\t200\tregionC\n"

@@ -27,6 +27,13 @@ public class UTestCommandArgs {
     }
 
     @Test
+    public void marksTheCommandsThatMustRunInANorQuery() {
+        CommandArgs args = CommandArgs.load();
+        Assert.assertTrue(args.nor("RELREMOVE"));
+        Assert.assertFalse(args.nor("CALC"));
+    }
+
+    @Test
     public void marksTheCommandsThatNeedAReferenceBuild() {
         CommandArgs args = CommandArgs.load();
         Assert.assertTrue(args.needsReference("VERIFYVARIANT"));

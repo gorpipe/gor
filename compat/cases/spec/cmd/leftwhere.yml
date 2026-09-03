@@ -1,0 +1,14 @@
+- id: cmd.leftwhere.last_column_leaves_nothing_to_blank
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "LEFTWHERE names the last column of the left source, so when the condition fails there are no right-source columns to blank and rows pass through unchanged; it used to fail with 'tail of empty list'"
+  cites: ["gortools/src/main/scala/gorsat/Analysis/LeftWhereAnalysis.scala"]
+  query: "gor ${ROOT}/left.gor | LEFTWHERE Alt Ref = 'A'"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+    chr1	200	C	T

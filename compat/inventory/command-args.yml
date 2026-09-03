@@ -220,3 +220,47 @@ GAVA:
   positional: "10"
   requiredFlags: "-caselist PN001 -ctrllist PN002"
 
+# ---------------------------------------------------------------------------
+# Arguments and shapes for the last of the all-error families, each from the
+# command's documented usage line.
+# ---------------------------------------------------------------------------
+
+# RENAME oldColname newColname
+RENAME:
+  positional: "Ref Reference"
+
+# LEFTWHERE lastcolinleftsource cond-expression
+LEFTWHERE:
+  positional: "Alt Ref = 'A'"
+
+# DEFLATECOLUMN column
+DEFLATECOLUMN:
+  positional: "Ref"
+
+# THROWIF condition. The condition is false for the fixture, so the case
+# exercises the command rather than the throw.
+THROWIF:
+  positional: "Pos > 1000000"
+
+# These read segment bounds and choke on a base in the third column, which is
+# what left.gor has there.
+SEGPROJ:
+  source: "${ROOT}/segments.gor"
+
+SEGSPAN:
+  source: "${ROOT}/segments.gor"
+
+SPAN:
+  source: "${ROOT}/segments.gor"
+
+# VARGROUP requires a values column holding genotypes and a column starting with
+# "ref", so it needs the marker-bearing bucket fixture rather than the plain one.
+VARGROUP:
+  source: "${ROOT}/markerbuckets.gor"
+
+# RELREMOVE refuses to run in a GOR query, and takes a relation of related pairs.
+RELREMOVE:
+  nor: true
+  source: "${ROOT}/pheno.tsv"
+  positional: "${ROOT}/tagpairs.tsv"
+
