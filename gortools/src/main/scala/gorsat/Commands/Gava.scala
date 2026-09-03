@@ -30,7 +30,7 @@ import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
 class Gava extends CommandInfo("GAVA",
-  CommandArguments("-recessive -dominant -noMaxAlleleCounts -protective -debug", "-caselist -casefile -ctrllist -ctrlfile -grouping -bailout -casepene -ctrlpene -maxAf", 1, 1),
+  CommandArguments("-recessive -dominant -noMaxAlleleCounts -protective -debug -usePhase", "-caselist -casefile -ctrllist -ctrlfile -grouping -bailout -casepene -ctrlpene -maxAf", 1, 1),
   CommandOptions(gorCommand = true, verifyCommand = true, cancelCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {

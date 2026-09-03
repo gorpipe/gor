@@ -26,6 +26,7 @@ import gorsat.Commands.Analysis
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.GorSession
 import org.gorpipe.gor.gava.VariantAssociation
+import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 
@@ -98,7 +99,44 @@ case class VaastAnalysis(session: GorSession, caseList : List[String], ctrlList 
   override def setup(): Unit = { vaastEngine.setModel(caseList,ctrlList,maxIterations,bailOutAfter,collapsingThreshold,
     recessive,dominant,casepene,ctrlpene,usePhase,protective,maxAf,session.getSystemContext.getMonitor,debug) }
 
+  private var columnsChecked = false
+
+  /**
+    * Checks the row is wide enough for the columns GAVA resolved, once, on the
+    * first row.
+    *
+    * Gava falls back to fixed column positions for any column the header does not
+    * name. Nothing verified those positions exist, so a narrower input failed with
+    * a bare ArrayIndexOutOfBoundsException from selectedColumns — naming no column
+    * and giving the caller nothing to act on. Checked here rather than at parse
+    * time because the header is not always final when the command is parsed.
+    */
+  private def checkColumns(r: Row): Unit = {
+    val required = Seq(
+      ("gene_symbol, gene or group", geneCol),
+      ("pos", posCol),
+      ("ref or reference", refCol),
+      ("alt, call or allele", altCol),
+      ("pn or subject", pnCol),
+      ("callcopies or zygosity", callCopiesCol),
+      ("phase", phaseCol),
+      ("score", scoreCol)
+    ).filter { case (_, column) => column >= 0 }
+
+    required.foreach { case (label, column) =>
+      if (column >= r.numCols()) {
+        throw new GorDataException(
+          s"GAVA: the input has no $label column, and the position it fell back to " +
+            s"(${column + 1}) is past the end of its ${r.numCols()} columns.")
+      }
+    }
+    columnsChecked = true
+  }
+
   override def process(r : Row): Unit = {
+    if (!columnsChecked) {
+      checkColumns(r)
+    }
     val gene = r.selectedColumns(geneSelArray)
 
     if (gene != lastGene) {
