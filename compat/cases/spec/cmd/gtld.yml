@@ -1,0 +1,11 @@
+- id: cmd.gtld.rejection_names_the_real_flags
+  tier: spec
+  mode: error
+  source: review
+  behavior: "GTLD rejecting an invocation with neither -sum nor -calc must name the flags it actually registers; it used to name -sumLD and -calcLD, which do not exist"
+  cites: ["documentation/src/command/GTLD.rst"]
+  query: "gor ${ROOT}/buckets.gor | GTLD"
+  errorContains: "either -sum, -calc"
+  inputs:
+    - path: "buckets.gor"
+      content: "Chrom	Pos	bucket	values	af\nchr1	100	b1	0,1,2	0.1\n"
