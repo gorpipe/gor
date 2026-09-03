@@ -208,3 +208,9 @@ GTLD:
   source: "${ROOT}/buckets.gor"
   requiredFlags: "-calc"
 
+# VERIFYVARIANT checks a variant against the reference build, so the case needs
+# one written into its project root and a Ref column that agrees with it.
+VERIFYVARIANT:
+  source: "${ROOT}/refvariants.gor"
+  needsReference: true
+

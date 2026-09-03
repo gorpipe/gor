@@ -27,6 +27,13 @@ public class UTestCommandArgs {
     }
 
     @Test
+    public void marksTheCommandsThatNeedAReferenceBuild() {
+        CommandArgs args = CommandArgs.load();
+        Assert.assertTrue(args.needsReference("VERIFYVARIANT"));
+        Assert.assertFalse(args.needsReference("CALC"));
+    }
+
+    @Test
     public void suppliesTheSourceFileACommandNeedsTheShapeOf() {
         // BASES reads a CIGAR column, which the primary fixture does not carry, so
         // every generated BASES case failed on the input shape rather than on the

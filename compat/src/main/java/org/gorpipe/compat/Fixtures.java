@@ -177,6 +177,16 @@ public final class Fixtures {
                         + "PN001\t1\n"
                         + "PN002\t2\n"
                         + "PN003\t1\n"));
+        // Variants whose Ref column agrees with the synthetic reference build, so
+        // a command that checks a variant against the reference has something that
+        // actually verifies. The bases are derived from the sequences above: chr1
+        // is ACGT repeated, so position 100 is T; chr2 is TTGCA repeated, so
+        // position 150 is A.
+        inputs.add(input("refvariants.gor",
+                "Chrom\tPos\tRef\tAlt\n"
+                        + "chr1\t1\tA\tG\n"
+                        + "chr1\t100\tT\tC\n"
+                        + "chr2\t150\tA\tG\n"));
         // For the statistics commands that need a p-value column (ADJUST).
         inputs.add(input("pvalues.gor",
                 "Chrom\tPos\tPVal\n"

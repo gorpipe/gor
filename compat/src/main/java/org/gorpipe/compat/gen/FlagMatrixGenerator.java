@@ -82,6 +82,7 @@ public final class FlagMatrixGenerator {
         c.tier = "baseline";
         c.mode = "exact";
         c.behavior = "Generated: " + command.name + " with no flags";
+        c.needsReference = commandArgs.needsReference(command.name);
         c.query = buildQuery(command, null, null, commandArgs);
         c.inputs.addAll(inputsReferencedBy(c.query));
         return c;
@@ -95,6 +96,7 @@ public final class FlagMatrixGenerator {
         c.tier = "baseline";
         c.mode = "exact";
         c.behavior = "Generated: " + command.name + " with " + flag;
+        c.needsReference = commandArgs.needsReference(command.name);
         c.query = buildQuery(command, flag, value, commandArgs);
         c.inputs.addAll(inputsReferencedBy(c.query));
         return c;

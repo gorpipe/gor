@@ -3,32 +3,36 @@
 - id: cmd.verifyvariant.bare
   tier: baseline
   mode: exact
+  needsReference: true
   behavior: "Generated: VERIFYVARIANT with no flags"
-  query: "gor ${ROOT}/left.gor | VERIFYVARIANT | top 5"
+  query: "gor ${ROOT}/refvariants.gor | VERIFYVARIANT | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "refvariants.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t1\tA\tG\nchr1\t100\tT\tC\nchr2\t150\tA\tG\n"
 - id: cmd.verifyvariant.flag_alt
   tier: baseline
   mode: exact
+  needsReference: true
   behavior: "Generated: VERIFYVARIANT with -alt"
-  query: "gor ${ROOT}/left.gor | VERIFYVARIANT -alt Pos | top 5"
+  query: "gor ${ROOT}/refvariants.gor | VERIFYVARIANT -alt Pos | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "refvariants.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t1\tA\tG\nchr1\t100\tT\tC\nchr2\t150\tA\tG\n"
 - id: cmd.verifyvariant.flag_maxlen
   tier: baseline
   mode: exact
+  needsReference: true
   behavior: "Generated: VERIFYVARIANT with -maxlen"
-  query: "gor ${ROOT}/left.gor | VERIFYVARIANT -maxlen 100 | top 5"
+  query: "gor ${ROOT}/refvariants.gor | VERIFYVARIANT -maxlen 100 | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "refvariants.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t1\tA\tG\nchr1\t100\tT\tC\nchr2\t150\tA\tG\n"
 - id: cmd.verifyvariant.flag_ref
   tier: baseline
   mode: exact
+  needsReference: true
   behavior: "Generated: VERIFYVARIANT with -ref"
-  query: "gor ${ROOT}/left.gor | VERIFYVARIANT -ref Pos | top 5"
+  query: "gor ${ROOT}/refvariants.gor | VERIFYVARIANT -ref Pos | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "refvariants.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t1\tA\tG\nchr1\t100\tT\tC\nchr2\t150\tA\tG\n"

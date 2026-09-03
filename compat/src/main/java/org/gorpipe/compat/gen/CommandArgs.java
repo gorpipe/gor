@@ -50,9 +50,18 @@ public final class CommandArgs {
             Object raw = new Yaml().load(in);
             if (raw instanceof Map) {
                 for (Map.Entry<String, Object> e : ((Map<String, Object>) raw).entrySet()) {
-                    if (e.getValue() instanceof Map) {
-                        parsed.put(e.getKey(), (Map<String, String>) e.getValue());
+                    if (!(e.getValue() instanceof Map)) {
+                        continue;
                     }
+                    // Values are coerced to String because YAML types them for us:
+                    // needsReference: true arrives as a Boolean, and reading it out
+                    // of a Map<String, String> would fail at the cast.
+                    Map<String, String> fields = new LinkedHashMap<>();
+                    for (Map.Entry<Object, Object> f
+                            : ((Map<Object, Object>) e.getValue()).entrySet()) {
+                        fields.put(String.valueOf(f.getKey()), String.valueOf(f.getValue()));
+                    }
+                    parsed.put(e.getKey(), fields);
                 }
             }
         } catch (IOException e) {
@@ -69,6 +78,19 @@ public final class CommandArgs {
     /** The positional argument to supply when the command declares a minimum. */
     public String positional(String command) {
         return entry(command).getOrDefault("positional", DEFAULT_POSITIONAL);
+    }
+
+    /**
+     * Whether the case needs the synthetic chromSeq reference build written into
+     * its project root.
+     *
+     * VERIFYVARIANT and its relatives read the reference to check a variant against
+     * it, and report "Ref does not match the build" without one. The harness has
+     * been able to write a reference build since the fixtures went in, but no
+     * generator asked for one.
+     */
+    public boolean needsReference(String command) {
+        return Boolean.parseBoolean(entry(command).getOrDefault("needsReference", "false"));
     }
 
     /**
