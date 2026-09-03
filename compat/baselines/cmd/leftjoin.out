@@ -38,7 +38,16 @@ chr1	100	A	G	BRCA1
 chr1	200	C	T	
 chr2	150	G	A	EGFR
 <<<
+>>> cmd.leftjoin.flag_lstop
+ERROR: Column number 0 is not in the following header with 4 columns: CHROM	POS	REF	ALT
+<<<
 >>> cmd.leftjoin.flag_m
+Chrom	Pos	Ref	Alt	Gene
+chr1	100	A	G	BRCA1
+chr1	200	C	T	
+chr2	150	G	A	EGFR
+<<<
+>>> cmd.leftjoin.flag_maxseg
 Chrom	Pos	Ref	Alt	Gene
 chr1	100	A	G	BRCA1
 chr1	200	C	T	
@@ -46,6 +55,12 @@ chr2	150	G	A	EGFR
 <<<
 >>> cmd.leftjoin.flag_n
 ERROR: The -n option is NOT compatible with any of the following options: -l,-m,-i,-o,-t
+<<<
+>>> cmd.leftjoin.flag_o
+Chrom	Pos	Ref	Alt	Gene
+chr1	100	A	G	BRCA1
+chr1	200	C	T	
+chr2	150	G	A	EGFR
 <<<
 >>> cmd.leftjoin.flag_p
 Chrom	Pos	Ref	Alt	Gene
@@ -57,6 +72,34 @@ Chrom	Pos	Ref	Alt	Gene
 chr1	100	A	G	BRCA1
 chr1	200	C	T	
 chr2	150	G	A	EGFR
+<<<
+>>> cmd.leftjoin.flag_ref
+Chrom	Pos	Ref	Alt	Gene
+chr1	100	A	G	BRCA1
+chr1	200	C	T	
+chr2	150	G	A	EGFR
+<<<
+>>> cmd.leftjoin.flag_refl
+Chrom	Pos	Ref	Alt	Gene
+chr1	100	A	G	BRCA1
+chr1	200	C	T	
+chr2	150	G	A	EGFR
+<<<
+>>> cmd.leftjoin.flag_refr
+ERROR: Column REF is not in header
+
+1: CHROM
+2: POS
+3: GENE
+<<<
+>>> cmd.leftjoin.flag_rprefix
+Chrom	Pos	Ref	Alt	r_Gene
+chr1	100	A	G	BRCA1
+chr1	200	C	T	
+chr2	150	G	A	EGFR
+<<<
+>>> cmd.leftjoin.flag_rstop
+ERROR: Column number 0 is not in the following header with 3 columns: CHROM	POS	GENE
 <<<
 >>> cmd.leftjoin.flag_s
 Chrom	Pos	Ref	Alt	Gene
@@ -108,4 +151,10 @@ Chrom	Pos	Ref	Alt	Gene
 chr1	100	A	G	BRCA1
 chr1	200	C	T	
 chr2	150	G	A	EGFR
+<<<
+>>> cmd.leftjoin.flag_xl
+ERROR: For equi-join, you MUST specify both -xl and -xr, NOT just one of them.
+<<<
+>>> cmd.leftjoin.flag_xr
+ERROR: For equi-join, you MUST specify both -xl and -xr, NOT just one of them.
 <<<

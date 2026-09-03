@@ -65,6 +65,25 @@ public class UTestCoverageReport {
     }
 
     @Test
+    public void separatesGapsThatAreExcludedFromGapsWorthChasing() {
+        // Most remaining gaps sit on deliberately excluded surface. Reporting one
+        // number for both makes the report read as dozens of leads when only a
+        // handful are real.
+        List<CompatCase> cases = new ArrayList<>();
+        cases.add(c("cmd.calc.a", "spec", "norrows 1 | calc X 1+1"));
+
+        CoverageReport report = CoverageReport.of(cases, SurfaceInventory.read());
+        Assert.assertTrue("some uncovered commands are excluded ones",
+                report.excludedCommandGaps() > 0);
+        Assert.assertTrue("the two must not double count",
+                report.excludedCommandGaps() <= report.uncoveredCommands().size());
+
+        String out = report.render();
+        Assert.assertTrue(out, out.contains("excluded"));
+        Assert.assertTrue(out, out.contains("reachable"));
+    }
+
+    @Test
     public void renderIncludesEveryHeadlineNumber() {
         List<CompatCase> cases = new ArrayList<>();
         cases.add(c("cmd.calc.a", "spec", "norrows 1 | calc X 1+1"));

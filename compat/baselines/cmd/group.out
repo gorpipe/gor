@@ -4,6 +4,11 @@ Chrom	bpStart	bpStop
 chr1	0	1000
 chr2	0	1000
 <<<
+>>> cmd.group.flag_ac
+Chrom	bpStart	bpStop
+chr1	0	1000
+chr2	0	1000
+<<<
 >>> cmd.group.flag_avg
 ERROR: No columns selected for aggregation. Use -gc, -sc, -ic, or -fc to specify which columns should be aggregated.
 <<<

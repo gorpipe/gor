@@ -67,6 +67,23 @@ Chrom	Pos	Ref	Alt	Gene
 chr1	100	A	G	BRCA1
 chr2	150	G	A	EGFR
 <<<
+>>> cmd.join.flag_ref
+Chrom	Pos	Ref	Alt	Gene
+chr1	100	A	G	BRCA1
+chr2	150	G	A	EGFR
+<<<
+>>> cmd.join.flag_refl
+Chrom	Pos	Ref	Alt	Gene
+chr1	100	A	G	BRCA1
+chr2	150	G	A	EGFR
+<<<
+>>> cmd.join.flag_refr
+ERROR: Column REF is not in header
+
+1: CHROM
+2: POS
+3: GENE
+<<<
 >>> cmd.join.flag_rprefix
 Chrom	Pos	Ref	Alt	r_Gene
 chr1	100	A	G	BRCA1

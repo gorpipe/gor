@@ -8,6 +8,14 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.granno.flag_ac
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GRANNO with -ac"
+  query: "gor ${ROOT}/left.gor | GRANNO -ac Ref 1000 | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
 - id: cmd.granno.flag_avg
   tier: baseline
   mode: exact

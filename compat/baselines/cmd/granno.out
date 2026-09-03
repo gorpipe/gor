@@ -2,6 +2,9 @@
 >>> cmd.granno.bare
 ERROR: Error in aggregate calculation - no columns to calculate an aggregate. Use -gc, -sc, -ic or -fc to select aggregation columns.
 <<<
+>>> cmd.granno.flag_ac
+ERROR: Error in aggregate calculation - no columns to calculate an aggregate. Use -gc, -sc, -ic or -fc to select aggregation columns.
+<<<
 >>> cmd.granno.flag_avg
 ERROR: Error in aggregate calculation - no columns to calculate an aggregate. Use -gc, -sc, -ic or -fc to select aggregation columns.
 <<<

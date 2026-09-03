@@ -11,6 +11,12 @@ chr1	100	A,G
 chr1	200	C,T
 chr2	150	G,A
 <<<
+>>> cmd.cols2list.flag_map
+Chrom	Pos	listcol
+chr1	100	A,G
+chr1	200	C,T
+chr2	150	G,A
+<<<
 >>> cmd.cols2list.flag_sep
 Chrom	Pos	listcol
 chr1	100	A,G

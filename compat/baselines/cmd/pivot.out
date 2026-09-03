@@ -29,3 +29,15 @@ chr1	100	G	?
 chr1	200	?	T
 chr2	150	?	?
 <<<
+>>> cmd.pivot.flag_vf
+Chrom	Pos	A_Alt	C_Alt
+chr1	100	G	?
+chr1	200	?	T
+chr2	150	?	?
+<<<
+>>> cmd.pivot.flag_vp
+Chrom	Pos	PN001_Alt	PN003_Alt
+chr1	100	G	?
+chr1	200	?	T
+chr2	150	?	?
+<<<

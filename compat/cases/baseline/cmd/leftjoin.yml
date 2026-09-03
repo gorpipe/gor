@@ -80,6 +80,16 @@
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
     - path: "right.gor"
       content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.leftjoin.flag_lstop
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LEFTJOIN with -lstop"
+  query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -lstop 0 ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.leftjoin.flag_m
   tier: baseline
   mode: exact
@@ -90,11 +100,31 @@
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
     - path: "right.gor"
       content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.leftjoin.flag_maxseg
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LEFTJOIN with -maxseg"
+  query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -maxseg 1000 ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.leftjoin.flag_n
   tier: baseline
   mode: exact
   behavior: "Generated: LEFTJOIN with -n"
   query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -n ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.leftjoin.flag_o
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LEFTJOIN with -o"
+  query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -o 1 ${ROOT}/right.gor | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
@@ -115,6 +145,56 @@
   mode: exact
   behavior: "Generated: LEFTJOIN with -r"
   query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -r ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.leftjoin.flag_ref
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LEFTJOIN with -ref"
+  query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -ref Ref ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.leftjoin.flag_refl
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LEFTJOIN with -refl"
+  query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -refl Ref ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.leftjoin.flag_refr
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LEFTJOIN with -refr"
+  query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -refr Ref ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.leftjoin.flag_rprefix
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LEFTJOIN with -rprefix"
+  query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -rprefix r ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.leftjoin.flag_rstop
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LEFTJOIN with -rstop"
+  query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -rstop 0 ${ROOT}/right.gor | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
@@ -215,6 +295,26 @@
   mode: exact
   behavior: "Generated: LEFTJOIN with -xcis"
   query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -xcis ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.leftjoin.flag_xl
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LEFTJOIN with -xl"
+  query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -xl Chrom ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.leftjoin.flag_xr
+  tier: baseline
+  mode: exact
+  behavior: "Generated: LEFTJOIN with -xr"
+  query: "gor ${ROOT}/left.gor | LEFTJOIN -snpsnp -xr Chrom ${ROOT}/right.gor | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"

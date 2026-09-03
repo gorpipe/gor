@@ -140,6 +140,36 @@
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
     - path: "right.gor"
       content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.join.flag_ref
+  tier: baseline
+  mode: exact
+  behavior: "Generated: JOIN with -ref"
+  query: "gor ${ROOT}/left.gor | JOIN -snpsnp -ref Ref ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.join.flag_refl
+  tier: baseline
+  mode: exact
+  behavior: "Generated: JOIN with -refl"
+  query: "gor ${ROOT}/left.gor | JOIN -snpsnp -refl Ref ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+- id: cmd.join.flag_refr
+  tier: baseline
+  mode: exact
+  behavior: "Generated: JOIN with -refr"
+  query: "gor ${ROOT}/left.gor | JOIN -snpsnp -refr Ref ${ROOT}/right.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
 - id: cmd.join.flag_rprefix
   tier: baseline
   mode: exact

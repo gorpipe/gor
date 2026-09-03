@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -96,6 +97,68 @@ public final class CoverageReport {
         return stage.matches(".*(^|\\s)" + java.util.regex.Pattern.quote(flag) + "($|\\s).*");
     }
 
+    /**
+     * The elements named in inventory/exclusions.yml, by prefix.
+     *
+     * A gap on excluded surface is deliberate; a gap anywhere else is a lead. The
+     * report separates them because most of what is left is the former, and one
+     * combined number reads as far more outstanding work than there is.
+     */
+    @SuppressWarnings("unchecked")
+    private Set<String> excludedElements(String prefix) {
+        Set<String> names = new TreeSet<>();
+        Path file = CaseLoader.moduleRoot().resolve("inventory/exclusions.yml");
+        if (!Files.exists(file)) {
+            return names;
+        }
+        try (InputStream in = Files.newInputStream(file)) {
+            Object parsed = new Yaml().load(in);
+            if (parsed instanceof List) {
+                for (Object item : (List<Object>) parsed) {
+                    if (!(item instanceof Map)) {
+                        continue;
+                    }
+                    Object element = ((Map<String, Object>) item).get("element");
+                    if (element != null && String.valueOf(element).startsWith(prefix)) {
+                        names.add(String.valueOf(element).substring(prefix.length()));
+                    }
+                }
+            }
+        } catch (IOException e) {
+            return names;
+        }
+        return names;
+    }
+
+    /** Uncovered commands that are uncovered on purpose. */
+    public int excludedCommandGaps() {
+        Set<String> excluded = excludedElements("cmd.");
+        int gaps = 0;
+        for (String name : uncoveredCommands()) {
+            if (excluded.contains(name)) {
+                gaps++;
+            }
+        }
+        return gaps;
+    }
+
+    /** Uncovered flags belonging to a command that is excluded. */
+    private int excludedFlagGaps() {
+        Set<String> excluded = excludedElements("cmd.");
+        int gaps = 0;
+        for (SurfaceInventory.CommandSurface c : inventory.commands().values()) {
+            if (!excluded.contains(c.name)) {
+                continue;
+            }
+            for (String flag : c.allFlags()) {
+                if (!coveredFlags.contains(c.name + " " + flag)) {
+                    gaps++;
+                }
+            }
+        }
+        return gaps;
+    }
+
     @SuppressWarnings("unchecked")
     private int countExclusions() {
         Path file = CaseLoader.moduleRoot().resolve("inventory/exclusions.yml");
@@ -161,10 +224,16 @@ public final class CoverageReport {
         sb.append(String.format(Locale.ROOT, "  SPEC      %5d cases%n", spec));
         sb.append(String.format(Locale.ROOT, "  BASELINE  %5d cases%n", baseline));
         sb.append("  SURFACE\n");
-        sb.append(String.format(Locale.ROOT, "    commands   %4d/%-4d  %d gaps%n",
-                commandsCovered(), totalCommands, totalCommands - commandsCovered()));
-        sb.append(String.format(Locale.ROOT, "    flags      %4d/%-4d  %d gaps%n",
-                flagsCovered(), totalFlags, totalFlags - flagsCovered()));
+        int commandGaps = totalCommands - commandsCovered();
+        int flagGaps = totalFlags - flagsCovered();
+        sb.append(String.format(Locale.ROOT,
+                "    commands   %4d/%-4d  %d gaps (%d excluded, %d reachable)%n",
+                commandsCovered(), totalCommands, commandGaps,
+                excludedCommandGaps(), commandGaps - excludedCommandGaps()));
+        sb.append(String.format(Locale.ROOT,
+                "    flags      %4d/%-4d  %d gaps (%d excluded, %d reachable)%n",
+                flagsCovered(), totalFlags, flagGaps,
+                excludedFlagGaps(), flagGaps - excludedFlagGaps()));
         sb.append(String.format(Locale.ROOT, "    functions  %4d/%-4d  %d gaps%n",
                 functionsCovered(), totalFunctions, totalFunctions - functionsCovered()));
         int totalInputSources = inventory.inputSources().size();

@@ -23,6 +23,9 @@ JOIN:
   "-xl": "Chrom"
   "-xr": "Chrom"
   "-o": "1"
+  "-ref": "Ref"   # documented as the column denoting the reference sequence
+  "-refl": "Ref"   # the reference column in the left source
+  "-refr": "Ref"   # the reference column in the right source
 
 GROUP:
   "-gc": "Chrom"
@@ -31,6 +34,7 @@ GROUP:
   "-ic": "Pos"
   "-len": "1"
   "-steps": "1"
+  "-ac": "Ref"   # a column list; -ac is the deprecated spelling of -sc
 
 # ---------------------------------------------------------------------------
 
@@ -89,6 +93,7 @@ GRANNO:
   "-fc": "Pos"
   "-ic": "Pos"
   "-len": "1"
+  "-ac": "Ref"   # a column list; -ac is the deprecated spelling of -sc
 
 GTGEN:
   "-maxseg": "1000"
@@ -265,6 +270,8 @@ ADJUST:
 
 PIVOT:
   "-v": "A,C"   # documented as "val, val2, .." — values present in the Ref column
+  "-vf": "${ROOT}/tagsel.tsv"   # documented as values read from a file
+  "-vp": "${ROOT}/tagsel.tsv"   # documented as column prefixes read from a file
 
 SIGNATURE:
   "-file": "${ROOT}/left.gor"   # documented as "filepath"
@@ -280,3 +287,23 @@ SIGNATURE:
 GORROWS:
   "-segment": "100"   # a bp segment size
   "-step": "100"   # a bp step size
+
+# ---------------------------------------------------------------------------
+# The last of the reachable command flags. LEFTJOIN declares the same flags as
+# JOIN and means the same by them, so it takes the same values.
+# ---------------------------------------------------------------------------
+
+COLS2LIST:
+  "-map": "upper(x)"   # documented as a mapping expression referring to the added column as x
+
+LEFTJOIN:
+  "-lstop": "0"   # as JOIN
+  "-maxseg": "1000"   # as JOIN
+  "-o": "1"   # as JOIN
+  "-rprefix": "r"   # as JOIN
+  "-rstop": "0"   # as JOIN
+  "-xl": "Chrom"   # as JOIN
+  "-xr": "Chrom"   # as JOIN
+  "-ref": "Ref"   # documented as the column denoting the reference sequence
+  "-refl": "Ref"   # the reference column in the left source
+  "-refr": "Ref"   # the reference column in the right source
