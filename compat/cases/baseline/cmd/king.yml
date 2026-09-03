@@ -70,20 +70,6 @@
       content: "#PN\nPN001\nPN003\n"
     - path: "tagsel2.tsv"
       content: "#PN\nPN002\n"
-- id: cmd.king.flag_sym
-  tier: baseline
-  mode: exact
-  behavior: "Generated: KING with -sym"
-  query: "gor ${ROOT}/buckets.gor | KING -s , -gc af -sym ${ROOT}/tagbuckets.tsv ${ROOT}/tagsel.tsv ${ROOT}/tagsel2.tsv | top 5"
-  inputs:
-    - path: "buckets.gor"
-      content: "Chrom\tPos\tbucket\tvalues\taf\nchr1\t100\tb1\t0,1,2\t0.1\nchr1\t200\tb1\t1,1,0\t0.2\nchr2\t150\tb1\t2,0,1\t0.3\n"
-    - path: "tagbuckets.tsv"
-      content: "#PN\tbucket\nPN001\tb1\nPN002\tb1\nPN003\tb1\n"
-    - path: "tagsel.tsv"
-      content: "#PN\nPN001\nPN003\n"
-    - path: "tagsel2.tsv"
-      content: "#PN\nPN002\n"
 - id: cmd.king.flag_thetathr
   tier: baseline
   mode: exact

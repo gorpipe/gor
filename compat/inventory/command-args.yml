@@ -264,3 +264,9 @@ RELREMOVE:
   source: "${ROOT}/pheno.tsv"
   positional: "${ROOT}/tagpairs.tsv"
 
+# PRGTGEN tagbucketrelation coverage, over a stream carrying pn and a genotype
+# likelihood column.
+PRGTGEN:
+  source: "${ROOT}/prgenotypes.gor"
+  positional: "${ROOT}/tagbuckets.tsv ${ROOT}/prcoverage.gor"
+

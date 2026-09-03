@@ -52,7 +52,7 @@ GROUP:
 
 BUCKETSPLIT:
   "-vs": "1000"
-
+  "-s": ","
 COLSPLIT:
   "-m": "NA"
 
@@ -139,7 +139,12 @@ PRGTGEN:
   "-th": "0.5"
   "-maxit": "10"   # intValueOfOption; an iteration cap
   "-tol": "0.001"   # doubleValueOfOption; a convergence tolerance
-
+  "-pl": "PL"
+  "-gl": "PL"
+  "-gp": "PL"
+  "-psep": ";"
+  "-osep": ","
+  "-rd": "1"
 QUEEN:
   "-vs": "1000"
   "-minSharing": "0.5"   # doubleValueOfOption; a sharing fraction
@@ -227,9 +232,3 @@ NORROWS:
 
 SPAN:
   "-maxseg": "1000"   # intValueOfOption; a bp span
-
-# BUCKETSPLIT validates that its separator is a single character, so the wildcard
-# '-s' value (a column name) is rejected before the flag is exercised.
-BUCKETSPLIT:
-  "-s": ","
-

@@ -46,6 +46,7 @@ public final class CommandArgs {
         if (!Files.exists(file)) {
             return new CommandArgs(parsed);
         }
+        CuratedYaml.requireUniqueTopLevelKeys(file);
         try (InputStream in = Files.newInputStream(file)) {
             Object raw = new Yaml().load(in);
             if (raw instanceof Map) {

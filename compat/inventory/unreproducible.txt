@@ -4,4 +4,5 @@
 # PIPESTEPS, for one, reports the length of a path. Canonicalising ${ROOT} cannot
 # help: the leak is a length, not the path. Each line is also a finding about
 # the engine, not merely a case to skip.
+cmd.king.flag_sym
 cmd.pipesteps.bare

@@ -40,6 +40,7 @@ public final class FlagValues {
         if (!Files.exists(file)) {
             return new FlagValues(parsed);
         }
+        CuratedYaml.requireUniqueTopLevelKeys(file);
         try (InputStream in = Files.newInputStream(file)) {
             Object raw = new Yaml().load(in);
             if (raw instanceof Map) {

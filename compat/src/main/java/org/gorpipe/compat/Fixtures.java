@@ -169,6 +169,21 @@ public final class Fixtures {
         inputs.add(input("pedigree.tsv",
                 "#PN\tfather\tmother\n"
                         + "PN001\tPN002\tPN003\n"));
+        // PRGTGEN needs a genotype-likelihood column and reads the triplet with
+        // semicolons by default (-psep defaults to ';'), not commas — a comma-
+        // separated value runs the parser off the end of the string.
+        inputs.add(input("prgenotypes.gor",
+                "Chrom\tPos\tPN\tPL\n"
+                        + "chr1\t100\tPN001\t0;10;20\n"
+                        + "chr1\t100\tPN002\t20;0;10\n"
+                        + "chr1\t200\tPN001\t10;0;20\n"));
+        // Its coverage source needs a depth column, which the GTGEN one does not
+        // carry; kept separate so GTGEN's baselines do not move.
+        inputs.add(input("prcoverage.gor",
+                "Chrom\tbpStart\tbpStop\tPN\tdepth\n"
+                        + "chr1\t50\t150\tPN001\t30\n"
+                        + "chr1\t50\t150\tPN002\t25\n"
+                        + "chr1\t150\t250\tPN001\t20\n"));
         // Tag pairs, which KING2 requires as (PN1, PN2) rather than a tag list.
         inputs.add(input("tagpairs.tsv", "#PN1\tPN2\nPN001\tPN002\n"));
         // Case-control status per tag, which CSVCC requires as (tag, cc-status).

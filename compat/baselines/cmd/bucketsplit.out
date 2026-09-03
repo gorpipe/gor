@@ -14,3 +14,6 @@ chr2	150	G	A	b_1
 >>> cmd.bucketsplit.flag_s
 ERROR: Options -vs and -s can not be specified at the same time
 <<<
+>>> cmd.bucketsplit.flag_vs
+ERROR: Column size (1) must be multiple of value size (1000)
+<<<

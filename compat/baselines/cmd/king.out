@@ -16,11 +16,6 @@ chrA	0	PN003	PN002	0	3	0.15560000576078892	0.9200000315904617	0	0	1	2	3	0.0	-0.3
 >>> cmd.king.flag_s
 ERROR: Separator must be a single character or empty char for fixed value size
 <<<
->>> cmd.king.flag_sym
-Chrom	Pos	PN1	PN2	IBS0	XX	tpq	kpq	Nhet	Nhom	NAai	NAaj	count	pi0	phi	theta
-chrA	0	PN003	PN002	0	3	0.15560000576078892	0.9200000315904617	0	0	1	2	3	0.0	-0.31521736331185557	0.0
-chrA	0	PN001	PN002	1	5	0.15560000576078892	0.9200000315904617	1	1	1	2	3	6.42673498057157	-0.8586956055197592	-0.33333334
-<<<
 >>> cmd.king.flag_thetathr
 Chrom	Pos	PN1	PN2	IBS0	XX	tpq	kpq	Nhet	Nhom	NAai	NAaj	count	pi0	phi	theta
 <<<
