@@ -53,6 +53,41 @@ class FunctionRegistry {
     allFunctions.contains(fn)
   }
 
+  /**
+    * The names of every function registered in this registry. Read-only; exposed
+    * for tooling that needs to enumerate the function surface, such as the
+    * compatibility suite's inventory generator.
+    *
+    * Returns a java.util.Set so Java call sites need no Scala collection interop,
+    * and is populated by iteration rather than a scala.jdk converter so it does
+    * not depend on a particular converter spelling.
+    */
+  def functionNames: java.util.Set[String] = {
+    val names = new java.util.TreeSet[String]()
+    allFunctions.keys.foreach(names.add)
+    java.util.Collections.unmodifiableSet(names)
+  }
+
+  /**
+    * The signatures registered for each function name, keyed by name.
+    *
+    * A name on its own is not callable: a caller needs the argument types, which
+    * the signature encodes ("sv:iv2sv" is a String and an Int argument returning
+    * a String). Exposed read-only for the same reason as functionNames — tooling
+    * that enumerates the function surface, such as the compatibility suite's
+    * generator, would otherwise have to reflect over a private field.
+    */
+  def functionSignatures: java.util.Map[String, java.util.List[String]] = {
+    val result = new java.util.TreeMap[String, java.util.List[String]]()
+    allFunctions.foreach { case (name, wrappers) =>
+      val signatures = new java.util.ArrayList[String]()
+      wrappers.foreach(w => signatures.add(w.signature))
+      java.util.Collections.sort(signatures)
+      result.put(name, java.util.Collections.unmodifiableList(signatures))
+    }
+    java.util.Collections.unmodifiableMap(result)
+  }
+
   def register[R](name: String, signature: String, f: () => R): Unit = {
     def helper(owner: ParseArith): R = {
       f()
