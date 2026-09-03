@@ -214,3 +214,9 @@ VERIFYVARIANT:
   source: "${ROOT}/refvariants.gor"
   needsReference: true
 
+# GAVA maxiterations, with case and control tags that exist in the fixture.
+GAVA:
+  source: "${ROOT}/gavavariants.gor"
+  positional: "10"
+  requiredFlags: "-caselist PN001 -ctrllist PN002"
+

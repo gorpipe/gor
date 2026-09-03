@@ -9,3 +9,15 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\n"
+
+- id: cmd.gava.narrow_input_is_rejected_not_crashed
+  tier: spec
+  mode: error
+  source: review
+  behavior: "GAVA falls back to fixed column positions when a column is not named; with an input too narrow for them it must say so rather than fail with a bare ArrayIndexOutOfBoundsException"
+  cites: ["gortools/src/main/scala/gorsat/Commands/Gava.scala"]
+  query: "gor ${ROOT}/left.gor | GAVA 10 -caselist PN001 -ctrllist PN002"
+  errorContains: "GAVA"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"

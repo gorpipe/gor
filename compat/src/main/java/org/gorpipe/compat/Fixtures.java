@@ -187,6 +187,16 @@ public final class Fixtures {
                         + "chr1\t1\tA\tG\n"
                         + "chr1\t100\tT\tC\n"
                         + "chr2\t150\tA\tG\n"));
+        // GAVA resolves gene, pos, ref, alt, pn, callcopies, phase and score by
+        // name, and falls back to fixed positions for any it cannot find. Naming
+        // all eight keeps the case exercising the analysis rather than the
+        // fallback.
+        inputs.add(input("gavavariants.gor",
+                "Chrom\tbpStart\tbpStop\tgene_symbol\tPos\tRef\tAlt\tPN"
+                        + "\tCallCopies\tPhase\tScore\n"
+                        + "chr1\t50\t250\tBRCA1\t100\tA\tG\tPN001\t1\t0\t1.0\n"
+                        + "chr1\t50\t250\tBRCA1\t200\tC\tT\tPN002\t2\t0\t2.0\n"
+                        + "chr2\t100\t200\tEGFR\t150\tG\tA\tPN001\t1\t0\t1.5\n"));
         // For the statistics commands that need a p-value column (ADJUST).
         inputs.add(input("pvalues.gor",
                 "Chrom\tPos\tPVal\n"
