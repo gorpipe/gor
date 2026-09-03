@@ -101,6 +101,25 @@ public class UTestFlagMatrixGenerator {
     }
 
     @Test
+    public void neverPassesTheFlagUnderTestTwice() {
+        // KING requires "-s , -gc af"; the case for -gc used to emit it twice,
+        // since the skip check only looked at the start of the required string.
+        // Duplicating the flag produced output that differed between runs.
+        for (CompatCase c : result.cases) {
+            String flagPart = c.id.contains(".flag_")
+                    ? "-" + c.id.substring(c.id.indexOf(".flag_") + ".flag_".length())
+                    : null;
+            if (flagPart == null) {
+                continue;
+            }
+            int occurrences = c.query.split("(^|\\s)" + java.util.regex.Pattern.quote(flagPart)
+                    + "($|\\s)", -1).length - 1;
+            Assert.assertTrue(c.id + " passes " + flagPart + " " + occurrences + " times: "
+                    + c.query, occurrences <= 1);
+        }
+    }
+
+    @Test
     public void producesCasesForALargeShareOfTheSurface() {
         // 108 commands with 217 valueless flags; a healthy run generates hundreds
         // of cases. A low number means flag parsing regressed.

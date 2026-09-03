@@ -59,7 +59,10 @@ chr1	200	C	T
 chr2	150	G	A	EGFR
 <<<
 >>> cmd.leftjoin.flag_s
-ERROR: Specify the type of join, e.g. -snpsnp, -snpseg, -segseg, -segsnp, -varseg, or -segvar.
+Chrom	Pos	Ref	Alt	Gene
+chr1	100	A	G	BRCA1
+chr1	200	C	T	
+chr2	150	G	A	EGFR
 <<<
 >>> cmd.leftjoin.flag_segseg
 ERROR: Illegal stop position in column #3 in the JOIN left-source :chr1	100	A	G

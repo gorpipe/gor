@@ -118,6 +118,35 @@ public final class Fixtures {
                         + "chr1\t100\t0\t60\t4M\tACGT\tIIII\n"
                         + "chr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\n"
                         + "chr2\t150\t0\t60\t3M\tTTG\tIII\n"));
+        // Horizontally bucketed genotypes, for the tag-bucket commands (CSVSEL,
+        // CSVCC, KING, QUEEN and friends). They look up "bucket" and "values"
+        // columns by name; values holds one element per tag in the bucket, in the
+        // order the tags appear in the relation below.
+        // The af column is there for KING and KING2, which look it up by name.
+        inputs.add(input("buckets.gor",
+                "Chrom\tPos\tbucket\tvalues\taf\n"
+                        + "chr1\t100\tb1\t0,1,2\t0.1\n"
+                        + "chr1\t200\tb1\t1,1,0\t0.2\n"
+                        + "chr2\t150\tb1\t2,0,1\t0.3\n"));
+        // The tag-to-bucket relation: exactly two columns, distinct tags, and the
+        // position of a tag within its bucket fixes the order of the values above.
+        inputs.add(input("tagbuckets.tsv",
+                "#PN\tbucket\n"
+                        + "PN001\tb1\n"
+                        + "PN002\tb1\n"
+                        + "PN003\tb1\n"));
+        // A tag selection: exactly one column of distinct tag ids.
+        inputs.add(input("tagsel.tsv", "#PN\nPN001\nPN003\n"));
+        // A second, disjoint selection, for the commands taking two tag lists.
+        inputs.add(input("tagsel2.tsv", "#PN\nPN002\n"));
+        // Tag pairs, which KING2 requires as (PN1, PN2) rather than a tag list.
+        inputs.add(input("tagpairs.tsv", "#PN1\tPN2\nPN001\tPN002\n"));
+        // Case-control status per tag, which CSVCC requires as (tag, cc-status).
+        inputs.add(input("pheno-cc.tsv",
+                "#PN\tcc\n"
+                        + "PN001\t1\n"
+                        + "PN002\t2\n"
+                        + "PN003\t1\n"));
         // For the statistics commands that need a p-value column (ADJUST).
         inputs.add(input("pvalues.gor",
                 "Chrom\tPos\tPVal\n"

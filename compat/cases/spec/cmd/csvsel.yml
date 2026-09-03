@@ -1,0 +1,19 @@
+- id: cmd.csvsel.selects_tags_by_position_in_the_bucket
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "CSVSEL crops each bucket's values down to the selected tags, keeping the order the tags have in the tag-bucket relation: selecting PN001 and PN003 from 0,1,2 yields 0,2"
+  cites: ["documentation/src/command/CSVSEL.rst"]
+  query: "gor ${ROOT}/buckets.gor | CSVSEL -s , ${ROOT}/tagbuckets.tsv ${ROOT}/tagsel.tsv"
+  inputs:
+    - path: "buckets.gor"
+      content: "Chrom	Pos	bucket	values	af\nchr1	100	b1	0,1,2	0.1\nchr1	200	b1	1,1,0	0.2\nchr2	150	b1	2,0,1	0.3\n"
+    - path: "tagbuckets.tsv"
+      content: "#PN	bucket\nPN001	b1\nPN002	b1\nPN003	b1\n"
+    - path: "tagsel.tsv"
+      content: "#PN\nPN001\nPN003\n"
+  expected: |
+    Chrom	Pos	values
+    chr1	100	0,2
+    chr1	200	1,0
+    chr2	150	2,1

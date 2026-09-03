@@ -127,3 +127,42 @@ VARMERGE:
 VARNORM:
   positional: "Ref Alt"
 
+# ---------------------------------------------------------------------------
+# The tag-bucket family. These read horizontally bucketed genotypes — the stream
+# needs bucket and values columns, and KING and KING2 an af column too — and take
+# tag relations as their positional arguments. Each requirement below comes from
+# the command's own validation message, and the second file differs per command:
+# a tag list, a case-control status file, or a file of tag pairs.
+# ---------------------------------------------------------------------------
+
+# CSVSEL tagbucketrelation tagselection; rejects any invocation with neither -s nor -vs.
+CSVSEL:
+  source: "${ROOT}/buckets.gor"
+  positional: "${ROOT}/tagbuckets.tsv ${ROOT}/tagsel.tsv"
+  requiredFlags: "-s ,"
+
+# CSVCC tagbucketrelation phenorelation, the second being (tag, cc-status).
+CSVCC:
+  source: "${ROOT}/buckets.gor"
+  positional: "${ROOT}/tagbuckets.tsv ${ROOT}/pheno-cc.tsv"
+  requiredFlags: "-s ,"
+
+# QUEEN tagbucketrelation tagselection1 tagselection2
+QUEEN:
+  source: "${ROOT}/buckets.gor"
+  positional: "${ROOT}/tagbuckets.tsv ${ROOT}/tagsel.tsv ${ROOT}/tagsel2.tsv"
+  requiredFlags: "-s ,"
+
+# KING also demands that af be named in -gc: "There must be a AF column in the
+# -gc column list."
+KING:
+  source: "${ROOT}/buckets.gor"
+  positional: "${ROOT}/tagbuckets.tsv ${ROOT}/tagsel.tsv ${ROOT}/tagsel2.tsv"
+  requiredFlags: "-s , -gc af"
+
+# KING2 takes a file of tag pairs rather than a tag list.
+KING2:
+  source: "${ROOT}/buckets.gor"
+  positional: "${ROOT}/tagbuckets.tsv ${ROOT}/tagpairs.tsv"
+  requiredFlags: "-s , -gc af"
+

@@ -91,8 +91,19 @@ public class UTestFixtures {
         for (CompatInput in : Fixtures.canonicalInputs()) {
             Assert.assertNotNull(in.path);
             Assert.assertNotNull("canonical fixture " + in.path + " has no content", in.content);
-            Assert.assertTrue("canonical fixture " + in.path + " must be tab separated",
-                    in.content.contains("\t"));
+            Assert.assertTrue("canonical fixture " + in.path + " must end in a newline",
+                    in.content.endsWith("\n"));
+
+            // Single-column fixtures carry no tab by definition, and some commands
+            // require exactly one column: CSVSEL rejects a tag selection that has
+            // more than one. So the invariant is that every row has the same number
+            // of columns, not that there is more than one.
+            String[] rows = in.content.split("\n");
+            long columns = rows[0].chars().filter(c -> c == '\t').count();
+            for (String row : rows) {
+                Assert.assertEquals("ragged row in canonical fixture " + in.path + ": " + row,
+                        columns, row.chars().filter(c -> c == '\t').count());
+            }
         }
     }
 }

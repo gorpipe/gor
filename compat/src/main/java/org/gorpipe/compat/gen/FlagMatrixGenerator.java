@@ -118,10 +118,8 @@ public final class FlagMatrixGenerator {
                 .append(" | ")
                 .append(command.name);
 
-        String required = commandArgs.requiredFlags(command.name);
-        // Skipped when the flag under test is itself the required one, so that a
-        // case never passes the same flag twice.
-        if (!required.isEmpty() && (flag == null || !required.startsWith(flag))) {
+        String required = withoutFlag(commandArgs.requiredFlags(command.name), flag);
+        if (!required.isEmpty()) {
             q.append(' ').append(required);
         }
 
@@ -136,6 +134,40 @@ public final class FlagMatrixGenerator {
         }
         q.append(" | top 5");
         return q.toString();
+    }
+
+    /**
+     * The required flags, minus the flag under test and its value.
+     *
+     * Matching on the start of the string was not enough: KING requires "-s , -gc
+     * af", and the case for -gc emitted it twice, which produced output that
+     * differed between runs. Only the conflicting pair is dropped, so the rest of
+     * the requirement survives.
+     */
+    private static String withoutFlag(String required, String flag) {
+        if (required.isEmpty() || flag == null) {
+            return required;
+        }
+        String[] tokens = required.trim().split("\\s+");
+        StringBuilder kept = new StringBuilder();
+        for (int i = 0; i < tokens.length; i++) {
+            boolean isFlag = tokens[i].startsWith("-");
+            boolean hasValue = isFlag && i + 1 < tokens.length && !tokens[i + 1].startsWith("-");
+            if (isFlag && tokens[i].equals(flag)) {
+                if (hasValue) {
+                    i++;
+                }
+                continue;
+            }
+            if (kept.length() > 0) {
+                kept.append(' ');
+            }
+            kept.append(tokens[i]);
+            if (hasValue) {
+                kept.append(' ').append(tokens[++i]);
+            }
+        }
+        return kept.toString();
     }
 
     /**
