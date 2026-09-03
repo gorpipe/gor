@@ -110,6 +110,50 @@ project(':compat') {
         }
     }
 
+    /**
+     * What the corpus adds on top of the unit tests, rather than what it covers on
+     * its own. Compare this against :gortools:jacocoTestReport: the unit tests
+     * already cover the common paths, so the corpus's own percentage overstates its
+     * marginal value considerably.
+     *
+     * Needs both exec files, so run :compat:test and :gortools:test first. Skips
+     * with a message rather than failing when either is missing.
+     */
+    tasks.register('marginalCoverageReport', JacocoReport) {
+        group = 'compat'
+        description = 'Coverage of :gortools by the compatibility corpus and the unit tests together'
+
+        def engine = project(':gortools')
+        def compatExec = layout.buildDirectory.file('jacoco/test.exec').get().asFile
+        def engineExec = engine.layout.buildDirectory.file('jacoco/test.exec').get().asFile
+
+        executionData files(compatExec, engineExec).filter { it.exists() }
+        sourceDirectories.from files(
+                "${engine.projectDir}/src/main/java",
+                "${engine.projectDir}/src/main/scala")
+        classDirectories.from files(
+                "${engine.layout.buildDirectory.get().asFile}/classes/java/main",
+                "${engine.layout.buildDirectory.get().asFile}/classes/scala/main")
+        reports {
+            xml.required = true
+            html.required = true
+        }
+
+        onlyIf {
+            if (!engineExec.exists()) {
+                logger.lifecycle("Skipping: ${engineExec} is missing. "
+                        + "Run :gortools:test first.")
+                return false
+            }
+            if (!compatExec.exists()) {
+                logger.lifecycle("Skipping: ${compatExec} is missing. "
+                        + "Run :compat:test first.")
+                return false
+            }
+            true
+        }
+    }
+
     tasks.named('test') {
         useJUnit {
             // gor.java-common.gradle's default `test` task configures
