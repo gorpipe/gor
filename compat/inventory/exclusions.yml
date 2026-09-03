@@ -92,4 +92,7 @@
 - element: is.NORSQL
   reason: "Requires a live database connection"
   ticket: null
+- element: cmd.PLINKREGRESSION
+  reason: "Shells out to the external plink2 binary; not hermetic"
+  ticket: null
 

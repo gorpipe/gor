@@ -24,6 +24,10 @@ public final class CaseStability {
     public static boolean isReproducible(CompatCase c) {
         String first = BaselineStore.render(CaseRunner.run(c, SHORT_ROOT));
         String second = BaselineStore.render(CaseRunner.run(c, LONG_ROOT));
-        return first.equals(second);
+        if (!first.equals(second)) {
+            return false;
+        }
+        String third = BaselineStore.render(CaseRunner.run(c, SHORT_ROOT));
+        return first.equals(third);
     }
 }

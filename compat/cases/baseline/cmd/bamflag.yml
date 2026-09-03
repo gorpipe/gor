@@ -7,7 +7,7 @@
   query: "gor ${ROOT}/reads.gor | BAMFLAG | top 5"
   inputs:
     - path: "reads.gor"
-      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\nchr1\t100\t0\t60\t4M\tACGT\tIIII\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\nchr2\t150\t0\t60\t3M\tTTG\tIII\n"
+      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\tiSize\tmrnm\tmpos\nchr1\t100\t0\t60\t4M\tACGT\tIIII\t0\t=\t140\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\t0\t=\t240\nchr2\t150\t0\t60\t3M\tTTG\tIII\t0\t=\t190\n"
 - id: cmd.bamflag.flag_h
   tier: baseline
   mode: exact
@@ -15,7 +15,7 @@
   query: "gor ${ROOT}/reads.gor | BAMFLAG -h | top 5"
   inputs:
     - path: "reads.gor"
-      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\nchr1\t100\t0\t60\t4M\tACGT\tIIII\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\nchr2\t150\t0\t60\t3M\tTTG\tIII\n"
+      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\tiSize\tmrnm\tmpos\nchr1\t100\t0\t60\t4M\tACGT\tIIII\t0\t=\t140\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\t0\t=\t240\nchr2\t150\t0\t60\t3M\tTTG\tIII\t0\t=\t190\n"
 - id: cmd.bamflag.flag_v
   tier: baseline
   mode: exact
@@ -23,4 +23,4 @@
   query: "gor ${ROOT}/reads.gor | BAMFLAG -v | top 5"
   inputs:
     - path: "reads.gor"
-      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\nchr1\t100\t0\t60\t4M\tACGT\tIIII\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\nchr2\t150\t0\t60\t3M\tTTG\tIII\n"
+      content: "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\tiSize\tmrnm\tmpos\nchr1\t100\t0\t60\t4M\tACGT\tIIII\t0\t=\t140\nchr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\t0\t=\t240\nchr2\t150\t0\t60\t3M\tTTG\tIII\t0\t=\t190\n"

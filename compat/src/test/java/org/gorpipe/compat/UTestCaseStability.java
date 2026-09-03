@@ -20,6 +20,17 @@ public class UTestCaseStability {
     }
 
     @Test
+    public void repeatsARunToCatchOrderThatVariesBetweenRuns() {
+        // Not every unstable case depends on the path. KING -sym emits its pair
+        // rows in a nondeterministic order with identical values, so comparing two
+        // runs agrees about half the time; a repeated run raises the odds of
+        // catching it. This asserts the screen does more than one comparison,
+        // through a query that is stable, so it must still be judged reproducible.
+        Assert.assertTrue(CaseStability.isReproducible(
+                baselineCase("cmd.norrows.stable", "norrows 3 | calc X RowNum*2")));
+    }
+
+    @Test
     public void aQueryWhoseOutputDependsOnThePathIsNotReproducible() {
         // PIPESTEPS reports "begin 0, end -1, length 89" — the length of the
         // project root path. That varies per run and per machine, so no committed

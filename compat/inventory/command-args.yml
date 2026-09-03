@@ -183,3 +183,28 @@ GTTRANSPOSE:
   positional: "${ROOT}/tagbuckets.tsv ${ROOT}/tagsel.tsv ${ROOT}/markers.gor"
   requiredFlags: "-sep ,"
 
+# PILEUP reads a full BAM-shaped row.
+PILEUP:
+  source: "${ROOT}/reads.gor"
+
+# REGRESSION phenotypes; demands exactly one of -logistic and -linear.
+REGRESSION:
+  source: "${ROOT}/buckets.gor"
+  positional: "${ROOT}/pheno-cc.tsv"
+  requiredFlags: "-s , -logistic"
+
+# PIVOT pivotCol -v value1,value2
+PIVOT:
+  positional: "Ref"
+  requiredFlags: "-v A,C"
+
+# SEGWHERE takes a condition, and -minseg has a documented minimum of 1.
+SEGWHERE:
+  positional: "Ref != 'T'"
+  requiredFlags: "-minseg 1000"
+
+# GTLD rejects an invocation with neither -sum nor -calc.
+GTLD:
+  source: "${ROOT}/buckets.gor"
+  requiredFlags: "-calc"
+

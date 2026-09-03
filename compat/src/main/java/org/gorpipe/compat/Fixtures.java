@@ -113,11 +113,13 @@ public final class Fixtures {
         // Column names match what the commands look up: CIGAR, Flag, SEQ, QUAL.
         // SEQ and QUAL are the same length as the CIGAR's read-consuming ops, so a
         // case fails on the flag under test rather than on inconsistent input.
+        // PILEUP looks up iSize, Seq, Flag, MapQ, Cigar, mrnm and mpos together,
+        // so all seven are present rather than only the ones BASES needs.
         inputs.add(input("reads.gor",
-                "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\n"
-                        + "chr1\t100\t0\t60\t4M\tACGT\tIIII\n"
-                        + "chr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\n"
-                        + "chr2\t150\t0\t60\t3M\tTTG\tIII\n"));
+                "Chrom\tPos\tFlag\tMAPQ\tCIGAR\tSEQ\tQUAL\tiSize\tmrnm\tmpos\n"
+                        + "chr1\t100\t0\t60\t4M\tACGT\tIIII\t0\t=\t140\n"
+                        + "chr1\t200\t16\t60\t2M1D2M\tACGT\tIIII\t0\t=\t240\n"
+                        + "chr2\t150\t0\t60\t3M\tTTG\tIII\t0\t=\t190\n"));
         // Horizontally bucketed genotypes, for the tag-bucket commands (CSVSEL,
         // CSVCC, KING, QUEEN and friends). They look up "bucket" and "values"
         // columns by name; values holds one element per tag in the bucket, in the

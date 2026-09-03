@@ -94,6 +94,28 @@ the rest. Each is curated deliberately; nothing here is guessed.
   `CMD` and `SQL` exist as both a pipe command and an input source, and each needs
   its own entry.
 
+## Fixtures
+
+`Fixtures.canonicalInputs()` generates every input the corpus uses, so the module
+depends on no test data submodule. A generated case attaches only the fixtures its
+finished query actually names.
+
+| Fixture | Shape | For |
+|---|---|---|
+| `left.gor`, `right.gor` | Chrom, Pos, Ref/Alt or Gene | the default sources |
+| `segments.gor` | Chrom, bpStart, bpStop | segment commands |
+| `pheno.tsv` | PN, Sex, Age | NOR-side sources |
+| `reads.gor` | Flag, MAPQ, CIGAR, SEQ, QUAL, iSize, mrnm, mpos | BASES, CIGARSEGS, VARIANTS, BAMFLAG, PILEUP |
+| `pvalues.gor` | Chrom, Pos, PVal | ADJUST |
+| `buckets.gor`, `markerbuckets.gor` | bucket, values, af (+ Ref/Alt) | CSVSEL, CSVCC, KING, KING2, QUEEN, GTTRANSPOSE, REGRESSION, GTLD |
+| `tagbuckets.tsv`, `tagsel.tsv`, `tagsel2.tsv`, `tagpairs.tsv`, `pheno-cc.tsv` | tag relations | the same family's positional arguments |
+| `genotypes.gor`, `coverage.gor`, `markers.gor`, `pedigree.tsv` | per-sample PN/GT and friends | GTGEN, PEDPIVOT, GTTRANSPOSE |
+
+A command needing a shape the default fixture lacks names its file through a
+`source` entry in `inventory/command-args.yml`. Every requirement in that file was
+established by running the command and reading what it complained about, not
+assumed.
+
 ## Keeping baselines meaningful
 
 A baseline that changes on its own is worse than no baseline: it teaches reviewers
@@ -107,10 +129,14 @@ each catches what the others cannot.
   machine identity, JVM state (`MAXMEM`, `OPENFILES`) or build identity
   (`GORVERSION` embeds the git SHA). These are stable within one process, so only a
   list can catch them.
-- **A runtime probe.** `CaseStability` runs each candidate under two roots of
-  different path length and drops it if the output differs — `PIPESTEPS` reports the
-  *length* of a path, which no list would have predicted. Drops are recorded in
-  `inventory/unreproducible.txt`, and each one is a finding about the engine.
+- **A runtime probe.** `CaseStability` runs each candidate three times — two roots
+  of different path length, then a repeat — and drops it if the outputs differ.
+  `PIPESTEPS` reports the *length* of a path, which no list would have predicted,
+  and `KING -sym` emits its pair rows in a nondeterministic order, which two runs
+  agree on about half the time. Three runs make such a case likely to be caught
+  rather than certain to be; one that slips through fails the next run, which is
+  noisy but never silent. Drops are recorded in `inventory/unreproducible.txt`, and
+  each is a finding about the engine.
 
 Every case also runs under a time bound (20s by default,
 `-Dcompat.caseTimeoutSeconds`). A query that never returns records a timeout rather
