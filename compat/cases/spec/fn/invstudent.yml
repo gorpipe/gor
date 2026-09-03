@@ -2,7 +2,7 @@
   tier: spec
   mode: error
   source: review
-  behavior: "INVSTUDENT rejects a probability outside (0,1) instead of looping forever"
+  behavior: "INVSTUDENT rejects a probability outside [0,1] instead of looping forever"
   cites: ["gortools/src/main/scala/gorsat/parser/StatisticalFunctions.scala"]
   query: "norrows 1 | calc X INVSTUDENT(1.5,1.5)"
   errorContains: "INVSTUDENT"
@@ -17,3 +17,14 @@
   expected: |
     ChromNOR	PosNOR	RowNum	X
     chrN	0	0	0.6998121397488263
+
+- id: fn.invstudent.probability_of_one_still_returns
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "INVSTUDENT(1,df) returns 0.0, as it did before the range check went in; the check rejects only the range that does not converge, so a boundary value that already had a defined outcome keeps it"
+  cites: ["gortools/src/main/scala/gorsat/parser/StatisticalFunctions.scala"]
+  query: "norrows 1 | calc X INVSTUDENT(1.0,10)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	0.0
