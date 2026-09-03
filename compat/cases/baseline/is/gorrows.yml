@@ -10,3 +10,13 @@
   mode: exact
   behavior: "Generated: input source GORROWS with -p"
   query: "GORROWS -p chr1:1-1000 -p chr1:1-10 | top 5"
+- id: is.gorrows.flag_segment
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source GORROWS with -segment"
+  query: "GORROWS -segment 100 -p chr1:1-10 | top 5"
+- id: is.gorrows.flag_step
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source GORROWS with -step"
+  query: "GORROWS -step 100 -p chr1:1-10 | top 5"

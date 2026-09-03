@@ -23,6 +23,9 @@ chr2	150	G	A
 >>> is.gorif.flag_f
 Chrom	Pos	Ref	Alt	Source
 <<<
+>>> is.gorif.flag_ff
+Chrom	Pos	Ref	Alt	Source
+<<<
 >>> is.gorif.flag_fs
 Chrom	Pos	Ref	Alt
 chr1	100	A	G
@@ -64,7 +67,16 @@ chr1	100	A	G	left.gor
 chr1	200	C	T	left.gor
 chr2	150	G	A	left.gor
 <<<
+>>> is.gorif.flag_seek
+ERROR: Failed to parse seek position: -seek,chr1:1-1000,${ROOT}/left.gor
+<<<
 >>> is.gorif.flag_stdin
+Chrom	Pos	Ref	Alt
+chr1	100	A	G
+chr1	200	C	T
+chr2	150	G	A
+<<<
+>>> is.gorif.flag_time
 Chrom	Pos	Ref	Alt
 chr1	100	A	G
 chr1	200	C	T

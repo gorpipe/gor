@@ -40,6 +40,16 @@
   inputs:
     - path: "pheno.tsv"
       content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"
+- id: is.nor.flag_ff
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source NOR with -ff"
+  query: "NOR -ff ${ROOT}/tagsel.tsv ${ROOT}/pheno.tsv | top 5"
+  inputs:
+    - path: "tagsel.tsv"
+      content: "#PN\nPN001\nPN003\n"
+    - path: "pheno.tsv"
+      content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"
 - id: is.nor.flag_fs
   tier: baseline
   mode: exact
@@ -101,6 +111,14 @@
   mode: exact
   behavior: "Generated: input source NOR with -s"
   query: "NOR -s Gene ${ROOT}/pheno.tsv | top 5"
+  inputs:
+    - path: "pheno.tsv"
+      content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"
+- id: is.nor.flag_time
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source NOR with -time"
+  query: "NOR -time 1700000000000 ${ROOT}/pheno.tsv | top 5"
   inputs:
     - path: "pheno.tsv"
       content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"

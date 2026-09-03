@@ -35,6 +35,12 @@ chrN	0	PN	Sex	Age
 chrN	0	PN001	M	42
 chrN	0	PN002	F	37
 <<<
+>>> is.norif.flag_ff
+ChromNOR	PosNOR	col1	col2	col3
+chrN	0	PN	Sex	Age
+chrN	0	PN001	M	42
+chrN	0	PN002	F	37
+<<<
 >>> is.norif.flag_fs
 ChromNOR	PosNOR	col1	col2	col3
 chrN	0	PN	Sex	Age
@@ -77,6 +83,12 @@ chrN	0	PN001	M	42
 chrN	0	PN002	F	37
 <<<
 >>> is.norif.flag_s
+ChromNOR	PosNOR	col1	col2	col3
+chrN	0	PN	Sex	Age
+chrN	0	PN001	M	42
+chrN	0	PN002	F	37
+<<<
+>>> is.norif.flag_time
 ChromNOR	PosNOR	col1	col2	col3
 chrN	0	PN	Sex	Age
 chrN	0	PN001	M	42

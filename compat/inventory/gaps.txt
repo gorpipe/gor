@@ -30,33 +30,19 @@ SELFJOIN -x
 SIGNATURE -timeres
 VARJOIN -rprefix
 
-## Input source value-flags with no curated value (26)
+## Input source value-flags with no curated value (12)
 GOR -H
 GOR -X
 GOR -Z
 GOR -dict
-GOR -ff
 GOR -idx
 GOR -ref
-GOR -seek
-GOR -time
 GORIF -H
 GORIF -X
 GORIF -Z
 GORIF -dict
-GORIF -ff
 GORIF -idx
 GORIF -ref
-GORIF -seek
-GORIF -time
-GORNOR -ff
-GORNOR -time
-GORROWS -segment
-GORROWS -step
-NOR -ff
-NOR -time
-NORIF -ff
-NORIF -time
 
 ## Functions with no callable signature (0)
 # No sample value exists for one of the argument types, so no call was built.

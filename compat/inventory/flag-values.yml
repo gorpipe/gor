@@ -216,23 +216,35 @@ CIGARSEGS:
 
 GOR:
   "-parts": "2"   # intValueOfOption; a partition count
+  "-ff": "${ROOT}/tagsel.tsv"   # stringValueOfOption; a file of tags to filter on
+  "-seek": "chr1:1-1000"   # rangeOfOption; a genomic range
+  "-time": "1700000000000"   # epochValueOfOption; an epoch in milliseconds
 
 GORIF:
   "-parts": "2"   # intValueOfOption; a partition count
   "-dh": "Chrom,Pos"   # documented as "col1,col2" — the header to use when the source is missing
+  "-ff": "${ROOT}/tagsel.tsv"   # as GOR
+  "-seek": "chr1:1-1000"   # as GOR
+  "-time": "1700000000000"   # as GOR
 
 GORNOR:
   "-d": "1"   # intValueOfOption
+  "-ff": "${ROOT}/tagsel.tsv"   # as GOR
+  "-time": "1700000000000"   # as GOR
 
 GTTRANSPOSE:
   "-vs": "1"   # intValueOfOption; a value size
 
 NOR:
   "-d": "1"   # intValueOfOption
+  "-ff": "${ROOT}/tagsel.tsv"   # as GOR
+  "-time": "1700000000000"   # as GOR
 
 NORIF:
   "-d": "1"   # intValueOfOption
   "-dh": "Chrom,Pos"   # documented as "col1,col2"
+  "-ff": "${ROOT}/tagsel.tsv"   # as GOR
+  "-time": "1700000000000"   # as GOR
 
 NORROWS:
   "-offset": "1"   # intValueOfOption
@@ -257,3 +269,14 @@ PIVOT:
 SIGNATURE:
   "-file": "${ROOT}/left.gor"   # documented as "filepath"
   "-filecontent": "${ROOT}/left.gor"   # documented as "filepath"
+
+# ---------------------------------------------------------------------------
+# Input source flags, typed from how the source parses each value:
+# epochValueOfOption for -time, rangeOfOption for -seek, and a file of tags for
+# -ff. GOR's -H, -X, -Z, -dict, -idx and -ref are still unmapped: they need a
+# real dictionary, index or reference file, which is more than a value here.
+# ---------------------------------------------------------------------------
+
+GORROWS:
+  "-segment": "100"   # a bp segment size
+  "-step": "100"   # a bp step size

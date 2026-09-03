@@ -15,3 +15,15 @@ chr1	3
 chr1	4
 chr1	5
 <<<
+>>> is.gorrows.flag_segment
+chrom	bpStart	bpStop
+chr1	1	101
+chr1	2	102
+chr1	3	103
+chr1	4	104
+chr1	5	105
+<<<
+>>> is.gorrows.flag_step
+chrom	pos
+chr1	1
+<<<

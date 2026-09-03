@@ -40,6 +40,16 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: is.gorif.flag_ff
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source GORIF with -ff"
+  query: "GORIF -ff ${ROOT}/tagsel.tsv ${ROOT}/left.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "tagsel.tsv"
+      content: "#PN\nPN001\nPN003\n"
 - id: is.gorif.flag_fs
   tier: baseline
   mode: exact
@@ -104,11 +114,27 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: is.gorif.flag_seek
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source GORIF with -seek"
+  query: "GORIF -seek chr1:1-1000 ${ROOT}/left.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
 - id: is.gorif.flag_stdin
   tier: baseline
   mode: exact
   behavior: "Generated: input source GORIF with -stdin"
   query: "GORIF -stdin ${ROOT}/left.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: is.gorif.flag_time
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source GORIF with -time"
+  query: "GORIF -time 1700000000000 ${ROOT}/left.gor | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"

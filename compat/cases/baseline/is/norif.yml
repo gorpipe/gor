@@ -48,6 +48,16 @@
   inputs:
     - path: "pheno.tsv"
       content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"
+- id: is.norif.flag_ff
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source NORIF with -ff"
+  query: "NORIF -ff ${ROOT}/tagsel.tsv ${ROOT}/pheno.tsv | top 5"
+  inputs:
+    - path: "tagsel.tsv"
+      content: "#PN\nPN001\nPN003\n"
+    - path: "pheno.tsv"
+      content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"
 - id: is.norif.flag_fs
   tier: baseline
   mode: exact
@@ -109,6 +119,14 @@
   mode: exact
   behavior: "Generated: input source NORIF with -s"
   query: "NORIF -s Gene ${ROOT}/pheno.tsv | top 5"
+  inputs:
+    - path: "pheno.tsv"
+      content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"
+- id: is.norif.flag_time
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source NORIF with -time"
+  query: "NORIF -time 1700000000000 ${ROOT}/pheno.tsv | top 5"
   inputs:
     - path: "pheno.tsv"
       content: "PN\tSex\tAge\nPN001\tM\t42\nPN002\tF\t37\n"

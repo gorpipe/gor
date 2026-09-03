@@ -32,6 +32,16 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: is.gor.flag_ff
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source GOR with -ff"
+  query: "GOR -ff ${ROOT}/tagsel.tsv ${ROOT}/left.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "tagsel.tsv"
+      content: "#PN\nPN001\nPN003\n"
 - id: is.gor.flag_fs
   tier: baseline
   mode: exact
@@ -96,11 +106,27 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: is.gor.flag_seek
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source GOR with -seek"
+  query: "GOR -seek chr1:1-1000 ${ROOT}/left.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
 - id: is.gor.flag_stdin
   tier: baseline
   mode: exact
   behavior: "Generated: input source GOR with -stdin"
   query: "GOR -stdin ${ROOT}/left.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: is.gor.flag_time
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source GOR with -time"
+  query: "GOR -time 1700000000000 ${ROOT}/left.gor | top 5"
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
