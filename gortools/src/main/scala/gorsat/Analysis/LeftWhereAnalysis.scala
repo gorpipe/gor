@@ -35,7 +35,19 @@ case class LeftWhereAnalysis(session: GorSession, executeNor: Boolean, paramStri
   var lastGroupID = ""
   var groupID = ""
   var buffer = new scala.collection.mutable.ArrayBuffer[Row]
-  val emptyLine: String = header.slice(colNum + 1, lastCol).toList.tail.foldLeft(empty) ((x, y) => x + "\t" + empty)
+  /**
+    * One blank field per right-source column, which is what replaces them when the
+    * condition fails.
+    *
+    * This used to slice the header *string* by column indices and fold over the
+    * tail of the result. The count came out right only because the fold discarded
+    * the elements and the slice happened to be as long as the column difference,
+    * and it threw "tail of empty list" whenever the named column was the last one,
+    * leaving nothing after it.
+    */
+  private val rightColumnCount: Int = lastCol - (colNum + 1)
+  val emptyLine: String =
+    if (rightColumnCount <= 0) "" else List.fill(rightColumnCount)(empty).mkString("\t")
 
   override def isTypeInformationNeeded: Boolean = true
 
@@ -63,7 +75,13 @@ case class LeftWhereAnalysis(session: GorSession, executeNor: Boolean, paramStri
         c += 1
       }
     })
-    if (c == 0) super.process(RowObj(lastGroupID + "\t" + emptyLine))
+    // The separator belongs to the blank fields, so it is omitted when the named
+    // column is the last one and there are none: appending it produced a row with
+    // a trailing tab, one column wider than the header.
+    if (c == 0) {
+      super.process(RowObj(
+        if (rightColumnCount <= 0) lastGroupID else lastGroupID + "\t" + emptyLine))
+    }
     buffer = new scala.collection.mutable.ArrayBuffer[Row]
   }
 
