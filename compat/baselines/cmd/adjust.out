@@ -40,6 +40,17 @@ chr1	100	0.001	0.0030000
 chr1	200	0.04	0.080000
 chr2	150	0.6	0.60000
 <<<
+>>> cmd.adjust.flag_pc
+ERROR: You must specify at least one of the following options:
+-gcc	: Genomic control correction
+-bonf	: Bonferroni correction
+-holm	: Holm-Bonferroni correction
+-ss	: Sidak single step correction.
+-sd	: Sidak step down correction.
+-bh	: Benjamini-Hochberg correction.
+-by	: Benjamini-Yekutieli correction.
+
+<<<
 >>> cmd.adjust.flag_qq
 ERROR: You must specify at least one of the following options:
 -gcc	: Genomic control correction

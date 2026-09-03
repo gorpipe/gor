@@ -32,3 +32,11 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.pivot.flag_v
+  tier: baseline
+  mode: exact
+  behavior: "Generated: PIVOT with -v"
+  query: "gor ${ROOT}/left.gor | PIVOT -v A,C Ref | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"

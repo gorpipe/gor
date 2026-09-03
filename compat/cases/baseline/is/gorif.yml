@@ -24,6 +24,14 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: is.gorif.flag_dh
+  tier: baseline
+  mode: exact
+  behavior: "Generated: input source GORIF with -dh"
+  query: "GORIF -dh Chrom,Pos ${ROOT}/left.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
 - id: is.gorif.flag_f
   tier: baseline
   mode: exact

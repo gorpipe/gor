@@ -1,0 +1,12 @@
+# Positional arguments for macros. A macro leads the query rather than sitting in
+# the pipe, and both of the ones covered here read a single genomic source.
+#
+# PARTGOR and PARALLEL are excluded in exclusions.yml instead: one needs a
+# dictionary table and a nested query carrying #{tags}, the other a nested
+# gorpipe command rather than a file.
+
+PGOR:
+  positional: "${ROOT}/left.gor"
+
+TABLEFUNCTION:
+  positional: "${ROOT}/left.gor"

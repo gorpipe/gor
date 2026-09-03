@@ -8,11 +8,47 @@
   inputs:
     - path: "gavavariants.gor"
       content: "Chrom\tbpStart\tbpStop\tgene_symbol\tPos\tRef\tAlt\tPN\tCallCopies\tPhase\tScore\nchr1\t50\t250\tBRCA1\t100\tA\tG\tPN001\t1\t0\t1.0\nchr1\t50\t250\tBRCA1\t200\tC\tT\tPN002\t2\t0\t2.0\nchr2\t100\t200\tEGFR\t150\tG\tA\tPN001\t1\t0\t1.5\n"
+- id: cmd.gava.flag_casefile
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GAVA with -casefile"
+  query: "gor ${ROOT}/gavavariants.gor | GAVA -caselist PN001 -ctrllist PN002 -casefile ${ROOT}/tagsel.tsv 10 | top 5"
+  inputs:
+    - path: "tagsel.tsv"
+      content: "#PN\nPN001\nPN003\n"
+    - path: "gavavariants.gor"
+      content: "Chrom\tbpStart\tbpStop\tgene_symbol\tPos\tRef\tAlt\tPN\tCallCopies\tPhase\tScore\nchr1\t50\t250\tBRCA1\t100\tA\tG\tPN001\t1\t0\t1.0\nchr1\t50\t250\tBRCA1\t200\tC\tT\tPN002\t2\t0\t2.0\nchr2\t100\t200\tEGFR\t150\tG\tA\tPN001\t1\t0\t1.5\n"
+- id: cmd.gava.flag_caselist
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GAVA with -caselist"
+  query: "gor ${ROOT}/gavavariants.gor | GAVA -ctrllist PN002 -caselist PN001 10 | top 5"
+  inputs:
+    - path: "gavavariants.gor"
+      content: "Chrom\tbpStart\tbpStop\tgene_symbol\tPos\tRef\tAlt\tPN\tCallCopies\tPhase\tScore\nchr1\t50\t250\tBRCA1\t100\tA\tG\tPN001\t1\t0\t1.0\nchr1\t50\t250\tBRCA1\t200\tC\tT\tPN002\t2\t0\t2.0\nchr2\t100\t200\tEGFR\t150\tG\tA\tPN001\t1\t0\t1.5\n"
 - id: cmd.gava.flag_casepene
   tier: baseline
   mode: exact
   behavior: "Generated: GAVA with -casepene"
   query: "gor ${ROOT}/gavavariants.gor | GAVA -caselist PN001 -ctrllist PN002 -casepene 1 10 | top 5"
+  inputs:
+    - path: "gavavariants.gor"
+      content: "Chrom\tbpStart\tbpStop\tgene_symbol\tPos\tRef\tAlt\tPN\tCallCopies\tPhase\tScore\nchr1\t50\t250\tBRCA1\t100\tA\tG\tPN001\t1\t0\t1.0\nchr1\t50\t250\tBRCA1\t200\tC\tT\tPN002\t2\t0\t2.0\nchr2\t100\t200\tEGFR\t150\tG\tA\tPN001\t1\t0\t1.5\n"
+- id: cmd.gava.flag_ctrlfile
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GAVA with -ctrlfile"
+  query: "gor ${ROOT}/gavavariants.gor | GAVA -caselist PN001 -ctrllist PN002 -ctrlfile ${ROOT}/tagsel2.tsv 10 | top 5"
+  inputs:
+    - path: "tagsel2.tsv"
+      content: "#PN\nPN002\n"
+    - path: "gavavariants.gor"
+      content: "Chrom\tbpStart\tbpStop\tgene_symbol\tPos\tRef\tAlt\tPN\tCallCopies\tPhase\tScore\nchr1\t50\t250\tBRCA1\t100\tA\tG\tPN001\t1\t0\t1.0\nchr1\t50\t250\tBRCA1\t200\tC\tT\tPN002\t2\t0\t2.0\nchr2\t100\t200\tEGFR\t150\tG\tA\tPN001\t1\t0\t1.5\n"
+- id: cmd.gava.flag_ctrllist
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GAVA with -ctrllist"
+  query: "gor ${ROOT}/gavavariants.gor | GAVA -caselist PN001 -ctrllist PN002 10 | top 5"
   inputs:
     - path: "gavavariants.gor"
       content: "Chrom\tbpStart\tbpStop\tgene_symbol\tPos\tRef\tAlt\tPN\tCallCopies\tPhase\tScore\nchr1\t50\t250\tBRCA1\t100\tA\tG\tPN001\t1\t0\t1.0\nchr1\t50\t250\tBRCA1\t200\tC\tT\tPN002\t2\t0\t2.0\nchr2\t100\t200\tEGFR\t150\tG\tA\tPN001\t1\t0\t1.5\n"

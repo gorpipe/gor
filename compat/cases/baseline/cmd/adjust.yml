@@ -48,6 +48,14 @@
   inputs:
     - path: "pvalues.gor"
       content: "Chrom\tPos\tPVal\nchr1\t100\t0.001\nchr1\t200\t0.04\nchr2\t150\t0.6\n"
+- id: cmd.adjust.flag_pc
+  tier: baseline
+  mode: exact
+  behavior: "Generated: ADJUST with -pc"
+  query: "gor ${ROOT}/pvalues.gor | ADJUST -pc PVal | top 5"
+  inputs:
+    - path: "pvalues.gor"
+      content: "Chrom\tPos\tPVal\nchr1\t100\t0.001\nchr1\t200\t0.04\nchr2\t150\t0.6\n"
 - id: cmd.adjust.flag_qq
   tier: baseline
   mode: exact

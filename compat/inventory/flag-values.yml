@@ -65,6 +65,7 @@ CSVSEL:
   "-threshold": "0.5"
   "-u": "NA"
   "-vs": "1000"
+  "-tag": "PN"   # documented as "tagcolname" — names the column the values unpivot into
 
 DAGMAP:
   "-m": "NA"
@@ -79,6 +80,10 @@ GAVA:
   "-ctrlpene": "1"
   "-grouping": "1"
   "-maxAf": "1"
+  "-caselist": "PN001"   # a comma-separated tag list; PN001 is in the fixture
+  "-ctrllist": "PN002"   # a comma-separated tag list; PN002 is in the fixture
+  "-casefile": "${ROOT}/tagsel.tsv"   # a file of case tags
+  "-ctrlfile": "${ROOT}/tagsel2.tsv"   # a file of control tags
 
 GRANNO:
   "-fc": "Pos"
@@ -87,6 +92,7 @@ GRANNO:
 
 GTGEN:
   "-maxseg": "1000"
+  "-tag": "PN"   # documented as "tagcolname"
 
 KING:
   "-maxvars": "1"
@@ -213,6 +219,7 @@ GOR:
 
 GORIF:
   "-parts": "2"   # intValueOfOption; a partition count
+  "-dh": "Chrom,Pos"   # documented as "col1,col2" — the header to use when the source is missing
 
 GORNOR:
   "-d": "1"   # intValueOfOption
@@ -225,6 +232,7 @@ NOR:
 
 NORIF:
   "-d": "1"   # intValueOfOption
+  "-dh": "Chrom,Pos"   # documented as "col1,col2"
 
 NORROWS:
   "-offset": "1"   # intValueOfOption
@@ -232,3 +240,20 @@ NORROWS:
 
 SPAN:
   "-maxseg": "1000"   # intValueOfOption; a bp span
+
+# ---------------------------------------------------------------------------
+# Flags whose argument is a file, a column name or a tag list. The kind comes
+# from the documented argument name where there is one, and from the command's
+# usage line otherwise; the value points at a canonical fixture so the case
+# exercises the flag rather than a missing file.
+# ---------------------------------------------------------------------------
+
+ADJUST:
+  "-pc": "PVal"   # documented as "p-value-col"; the fixture names it PVal
+
+PIVOT:
+  "-v": "A,C"   # documented as "val, val2, .." — values present in the Ref column
+
+SIGNATURE:
+  "-file": "${ROOT}/left.gor"   # documented as "filepath"
+  "-filecontent": "${ROOT}/left.gor"   # documented as "filepath"

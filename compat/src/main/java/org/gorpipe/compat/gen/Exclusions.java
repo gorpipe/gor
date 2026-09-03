@@ -40,13 +40,16 @@ public final class Exclusions {
     private final Set<String> excludedCommands;
     private final Set<String> excludedFunctions;
     private final Set<String> excludedInputSources;
+    private final Set<String> excludedMacros;
 
     private Exclusions(List<Entry> entries, Set<String> excludedCommands,
-                       Set<String> excludedFunctions, Set<String> excludedInputSources) {
+                       Set<String> excludedFunctions, Set<String> excludedInputSources,
+                       Set<String> excludedMacros) {
         this.entries = Collections.unmodifiableList(entries);
         this.excludedCommands = Collections.unmodifiableSet(excludedCommands);
         this.excludedFunctions = Collections.unmodifiableSet(excludedFunctions);
         this.excludedInputSources = Collections.unmodifiableSet(excludedInputSources);
+        this.excludedMacros = Collections.unmodifiableSet(excludedMacros);
     }
 
     public static Exclusions load() {
@@ -59,8 +62,9 @@ public final class Exclusions {
         Set<String> commands = new TreeSet<>();
         Set<String> functions = new TreeSet<>();
         Set<String> inputSources = new TreeSet<>();
+        Set<String> macros = new TreeSet<>();
         if (!Files.exists(file)) {
-            return new Exclusions(entries, commands, functions, inputSources);
+            return new Exclusions(entries, commands, functions, inputSources, macros);
         }
         try (InputStream in = Files.newInputStream(file)) {
             Object raw = new Yaml().load(in);
@@ -82,13 +86,15 @@ public final class Exclusions {
                         functions.add(element.substring("fn.".length()));
                     } else if (element.startsWith("is.")) {
                         inputSources.add(element.substring("is.".length()));
+                    } else if (element.startsWith("macro.")) {
+                        macros.add(element.substring("macro.".length()));
                     }
                 }
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot read " + file, e);
         }
-        return new Exclusions(entries, commands, functions, inputSources);
+        return new Exclusions(entries, commands, functions, inputSources, macros);
     }
 
     private static String asString(Object value) {
@@ -109,6 +115,10 @@ public final class Exclusions {
 
     public boolean excludesInputSource(String inputSource) {
         return excludedInputSources.contains(inputSource);
+    }
+
+    public boolean excludesMacro(String macro) {
+        return excludedMacros.contains(macro);
     }
 
     public int size() {

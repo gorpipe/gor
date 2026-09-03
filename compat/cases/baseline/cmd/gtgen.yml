@@ -36,3 +36,15 @@
       content: "Chrom\tPos\tPN\tGT\nchr1\t100\tPN001\t0/1\nchr1\t100\tPN002\t1/1\nchr1\t200\tPN001\t0/0\n"
     - path: "coverage.gor"
       content: "Chrom\tbpStart\tbpStop\tPN\nchr1\t50\t150\tPN001\nchr1\t50\t150\tPN002\nchr1\t150\t250\tPN001\n"
+- id: cmd.gtgen.flag_tag
+  tier: baseline
+  mode: exact
+  behavior: "Generated: GTGEN with -tag"
+  query: "gor ${ROOT}/genotypes.gor | GTGEN -tag PN ${ROOT}/tagbuckets.tsv ${ROOT}/coverage.gor | top 5"
+  inputs:
+    - path: "tagbuckets.tsv"
+      content: "#PN\tbucket\nPN001\tb1\nPN002\tb1\nPN003\tb1\n"
+    - path: "genotypes.gor"
+      content: "Chrom\tPos\tPN\tGT\nchr1\t100\tPN001\t0/1\nchr1\t100\tPN002\t1/1\nchr1\t200\tPN001\t0/0\n"
+    - path: "coverage.gor"
+      content: "Chrom\tbpStart\tbpStop\tPN\nchr1\t50\t150\tPN001\nchr1\t50\t150\tPN002\nchr1\t150\t250\tPN001\n"

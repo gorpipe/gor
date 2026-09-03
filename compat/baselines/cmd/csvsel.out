@@ -17,6 +17,14 @@ chr2	150	2,1
 >>> cmd.csvsel.flag_s
 ERROR: Separator must be a single character or empty char for fixed value size
 <<<
+>>> cmd.csvsel.flag_tag
+Chrom	Pos	PN	value
+chr1	100	PN001	0
+chr1	100	PN003	2
+chr1	200	PN001	1
+chr1	200	PN003	0
+chr2	150	PN001	2
+<<<
 >>> cmd.csvsel.flag_threshold
 ERROR: The -threshold option is only allowed together with -vcf
 <<<

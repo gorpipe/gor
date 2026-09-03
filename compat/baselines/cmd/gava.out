@@ -4,7 +4,27 @@ Chrom	gene_start	gene_end	gene_symbol	chiPVal	pVal	Iterations
 chr1	50	250	BRCA1	0.1889107000056922	0.1889107000056922	0
 chr2	100	200	EGFR	0.3387484301648984	0.3387484301648984	0
 <<<
+>>> cmd.gava.flag_casefile
+Chrom	gene_start	gene_end	gene_symbol	chiPVal	pVal	Iterations
+chr1	50	250	BRCA1	0.1889107000056922	0.1889107000056922	0
+chr2	100	200	EGFR	0.3387484301648984	0.3387484301648984	0
+<<<
+>>> cmd.gava.flag_caselist
+Chrom	gene_start	gene_end	gene_symbol	chiPVal	pVal	Iterations
+chr1	50	250	BRCA1	0.1889107000056922	0.1889107000056922	0
+chr2	100	200	EGFR	0.3387484301648984	0.3387484301648984	0
+<<<
 >>> cmd.gava.flag_casepene
+Chrom	gene_start	gene_end	gene_symbol	chiPVal	pVal	Iterations
+chr1	50	250	BRCA1	0.1889107000056922	0.1889107000056922	0
+chr2	100	200	EGFR	0.3387484301648984	0.3387484301648984	0
+<<<
+>>> cmd.gava.flag_ctrlfile
+Chrom	gene_start	gene_end	gene_symbol	chiPVal	pVal	Iterations
+chr1	50	250	BRCA1	0.1889107000056922	0.1889107000056922	0
+chr2	100	200	EGFR	0.3387484301648984	0.3387484301648984	0
+<<<
+>>> cmd.gava.flag_ctrllist
 Chrom	gene_start	gene_end	gene_symbol	chiPVal	pVal	Iterations
 chr1	50	250	BRCA1	0.1889107000056922	0.1889107000056922	0
 chr2	100	200	EGFR	0.3387484301648984	0.3387484301648984	0

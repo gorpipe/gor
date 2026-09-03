@@ -14,6 +14,12 @@ chr2	150	G	A
 >>> is.gorif.flag_c
 ERROR: Invalid arguments in gor query. Argument(s) -c not a part of this command
 <<<
+>>> is.gorif.flag_dh
+Chrom	Pos	Ref	Alt
+chr1	100	A	G
+chr1	200	C	T
+chr2	150	G	A
+<<<
 >>> is.gorif.flag_f
 Chrom	Pos	Ref	Alt	Source
 <<<

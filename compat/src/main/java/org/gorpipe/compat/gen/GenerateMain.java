@@ -38,6 +38,7 @@ public final class GenerateMain {
         List<CompatCase> generated = new ArrayList<>(
                 FlagMatrixGenerator.generate(inventory, values).cases);
         generated.addAll(InputSourceMatrixGenerator.generate(inventory).cases);
+        generated.addAll(MacroMatrixGenerator.generate(inventory).cases);
         generated.addAll(FunctionMatrixGenerator.generate(inventory).cases);
         generated.addAll(DocHarvester.harvest().cases);
 
@@ -129,12 +130,15 @@ public final class GenerateMain {
                 FlagMatrixGenerator.generate(inventory, values);
         InputSourceMatrixGenerator.GenerationResult sources =
                 InputSourceMatrixGenerator.generate(inventory);
+        MacroMatrixGenerator.GenerationResult macros =
+                MacroMatrixGenerator.generate(inventory);
         FunctionMatrixGenerator.GenerationResult functions =
                 FunctionMatrixGenerator.generate(inventory);
         DocHarvester.HarvestResult docs = DocHarvester.harvest();
 
         List<CompatCase> candidates = new ArrayList<>(flags.cases);
         candidates.addAll(sources.cases);
+        candidates.addAll(macros.cases);
         candidates.addAll(functions.cases);
         candidates.addAll(docs.cases);
         List<String> unreproducible = screenForReproducibility(candidates);
@@ -161,6 +165,8 @@ public final class GenerateMain {
         }
         System.out.printf("  input src:    %d cases, %d value-flags unmapped%n",
                 sources.cases.size(), sources.unmappedValueFlags.size());
+        System.out.printf("  macros:       %d cases, %d value-flags unmapped%n",
+                macros.cases.size(), macros.unmappedValueFlags.size());
         System.out.printf("  functions:    %d cases, %d not callable from signatures, "
                         + "%d non-deterministic%n",
                 functions.cases.size(), functions.unsupported.size(),

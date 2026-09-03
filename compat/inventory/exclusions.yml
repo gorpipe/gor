@@ -99,3 +99,12 @@
   reason: "Appends to a file outside the result stream; output is not the row set"
   ticket: null
 
+# Macros. A macro expands into a script rather than running as a pipe step, so it
+# leads the query. The two below need a construct the harness does not build.
+- element: macro.PARTGOR
+  reason: "Needs a dictionary table via -dict and a nested query carrying #{tags}"
+  ticket: null
+- element: macro.PARALLEL
+  reason: "Its argument must be a nested gorpipe command, not a file"
+  ticket: null
+
