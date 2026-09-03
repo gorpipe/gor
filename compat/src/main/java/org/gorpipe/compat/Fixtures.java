@@ -139,6 +139,34 @@ public final class Fixtures {
         inputs.add(input("tagsel.tsv", "#PN\nPN001\nPN003\n"));
         // A second, disjoint selection, for the commands taking two tag lists.
         inputs.add(input("tagsel2.tsv", "#PN\nPN002\n"));
+        // Per-sample genotypes, for the commands reading pn and gt columns rather
+        // than a bucketed stream (GTGEN, PEDPIVOT).
+        inputs.add(input("genotypes.gor",
+                "Chrom\tPos\tPN\tGT\n"
+                        + "chr1\t100\tPN001\t0/1\n"
+                        + "chr1\t100\tPN002\t1/1\n"
+                        + "chr1\t200\tPN001\t0/0\n"));
+        // Per-sample coverage segments, which GTGEN takes as its second source.
+        inputs.add(input("coverage.gor",
+                "Chrom\tbpStart\tbpStop\tPN\n"
+                        + "chr1\t50\t150\tPN001\n"
+                        + "chr1\t50\t150\tPN002\n"
+                        + "chr1\t150\t250\tPN001\n"));
+        // A bucketed stream that also carries Ref and Alt, which GTTRANSPOSE
+        // requires of its input.
+        inputs.add(input("markerbuckets.gor",
+                "Chrom\tPos\tRef\tAlt\tbucket\tvalues\taf\n"
+                        + "chr1\t100\tA\tG\tb1\t0,1,2\t0.1\n"
+                        + "chr1\t200\tC\tT\tb1\t1,1,0\t0.2\n"));
+        // A marker source for GTTRANSPOSE's third argument.
+        inputs.add(input("markers.gor",
+                "Chrom\tPos\tRef\tAlt\n"
+                        + "chr1\t100\tA\tG\n"
+                        + "chr1\t200\tC\tT\n"));
+        // A pedigree, for PEDPIVOT's second argument.
+        inputs.add(input("pedigree.tsv",
+                "#PN\tfather\tmother\n"
+                        + "PN001\tPN002\tPN003\n"));
         // Tag pairs, which KING2 requires as (PN1, PN2) rather than a tag list.
         inputs.add(input("tagpairs.tsv", "#PN1\tPN2\nPN001\tPN002\n"));
         // Case-control status per tag, which CSVCC requires as (tag, cc-status).

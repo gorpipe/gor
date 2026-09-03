@@ -4,49 +4,49 @@
   tier: baseline
   mode: exact
   behavior: "Generated: PEDPIVOT with no flags"
-  query: "gor ${ROOT}/left.gor | PEDPIVOT ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/genotypes.gor | PEDPIVOT PN ${ROOT}/pedigree.tsv | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+    - path: "genotypes.gor"
+      content: "Chrom\tPos\tPN\tGT\nchr1\t100\tPN001\t0/1\nchr1\t100\tPN002\t1/1\nchr1\t200\tPN001\t0/0\n"
+    - path: "pedigree.tsv"
+      content: "#PN\tfather\tmother\nPN001\tPN002\tPN003\n"
 - id: cmd.pedpivot.flag_a
   tier: baseline
   mode: exact
   behavior: "Generated: PEDPIVOT with -a"
-  query: "gor ${ROOT}/left.gor | PEDPIVOT -a ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/genotypes.gor | PEDPIVOT -a PN ${ROOT}/pedigree.tsv | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+    - path: "genotypes.gor"
+      content: "Chrom\tPos\tPN\tGT\nchr1\t100\tPN001\t0/1\nchr1\t100\tPN002\t1/1\nchr1\t200\tPN001\t0/0\n"
+    - path: "pedigree.tsv"
+      content: "#PN\tfather\tmother\nPN001\tPN002\tPN003\n"
 - id: cmd.pedpivot.flag_e
   tier: baseline
   mode: exact
   behavior: "Generated: PEDPIVOT with -e"
-  query: "gor ${ROOT}/left.gor | PEDPIVOT -e 0 ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/genotypes.gor | PEDPIVOT -e 0 PN ${ROOT}/pedigree.tsv | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+    - path: "genotypes.gor"
+      content: "Chrom\tPos\tPN\tGT\nchr1\t100\tPN001\t0/1\nchr1\t100\tPN002\t1/1\nchr1\t200\tPN001\t0/0\n"
+    - path: "pedigree.tsv"
+      content: "#PN\tfather\tmother\nPN001\tPN002\tPN003\n"
 - id: cmd.pedpivot.flag_gc
   tier: baseline
   mode: exact
   behavior: "Generated: PEDPIVOT with -gc"
-  query: "gor ${ROOT}/left.gor | PEDPIVOT -gc Chrom ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/genotypes.gor | PEDPIVOT -gc Chrom PN ${ROOT}/pedigree.tsv | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+    - path: "genotypes.gor"
+      content: "Chrom\tPos\tPN\tGT\nchr1\t100\tPN001\t0/1\nchr1\t100\tPN002\t1/1\nchr1\t200\tPN001\t0/0\n"
+    - path: "pedigree.tsv"
+      content: "#PN\tfather\tmother\nPN001\tPN002\tPN003\n"
 - id: cmd.pedpivot.flag_v
   tier: baseline
   mode: exact
   behavior: "Generated: PEDPIVOT with -v"
-  query: "gor ${ROOT}/left.gor | PEDPIVOT -v ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/genotypes.gor | PEDPIVOT -v PN ${ROOT}/pedigree.tsv | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+    - path: "genotypes.gor"
+      content: "Chrom\tPos\tPN\tGT\nchr1\t100\tPN001\t0/1\nchr1\t100\tPN002\t1/1\nchr1\t200\tPN001\t0/0\n"
+    - path: "pedigree.tsv"
+      content: "#PN\tfather\tmother\nPN001\tPN002\tPN003\n"

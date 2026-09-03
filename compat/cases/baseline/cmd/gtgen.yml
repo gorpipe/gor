@@ -4,29 +4,35 @@
   tier: baseline
   mode: exact
   behavior: "Generated: GTGEN with no flags"
-  query: "gor ${ROOT}/left.gor | GTGEN ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/genotypes.gor | GTGEN ${ROOT}/tagbuckets.tsv ${ROOT}/coverage.gor | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+    - path: "tagbuckets.tsv"
+      content: "#PN\tbucket\nPN001\tb1\nPN002\tb1\nPN003\tb1\n"
+    - path: "genotypes.gor"
+      content: "Chrom\tPos\tPN\tGT\nchr1\t100\tPN001\t0/1\nchr1\t100\tPN002\t1/1\nchr1\t200\tPN001\t0/0\n"
+    - path: "coverage.gor"
+      content: "Chrom\tbpStart\tbpStop\tPN\nchr1\t50\t150\tPN001\nchr1\t50\t150\tPN002\nchr1\t150\t250\tPN001\n"
 - id: cmd.gtgen.flag_gc
   tier: baseline
   mode: exact
   behavior: "Generated: GTGEN with -gc"
-  query: "gor ${ROOT}/left.gor | GTGEN -gc Chrom ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/genotypes.gor | GTGEN -gc Chrom ${ROOT}/tagbuckets.tsv ${ROOT}/coverage.gor | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+    - path: "tagbuckets.tsv"
+      content: "#PN\tbucket\nPN001\tb1\nPN002\tb1\nPN003\tb1\n"
+    - path: "genotypes.gor"
+      content: "Chrom\tPos\tPN\tGT\nchr1\t100\tPN001\t0/1\nchr1\t100\tPN002\t1/1\nchr1\t200\tPN001\t0/0\n"
+    - path: "coverage.gor"
+      content: "Chrom\tbpStart\tbpStop\tPN\nchr1\t50\t150\tPN001\nchr1\t50\t150\tPN002\nchr1\t150\t250\tPN001\n"
 - id: cmd.gtgen.flag_maxseg
   tier: baseline
   mode: exact
   behavior: "Generated: GTGEN with -maxseg"
-  query: "gor ${ROOT}/left.gor | GTGEN -maxseg 1000 ${ROOT}/right.gor | top 5"
+  query: "gor ${ROOT}/genotypes.gor | GTGEN -maxseg 1000 ${ROOT}/tagbuckets.tsv ${ROOT}/coverage.gor | top 5"
   inputs:
-    - path: "left.gor"
-      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
-    - path: "right.gor"
-      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+    - path: "tagbuckets.tsv"
+      content: "#PN\tbucket\nPN001\tb1\nPN002\tb1\nPN003\tb1\n"
+    - path: "genotypes.gor"
+      content: "Chrom\tPos\tPN\tGT\nchr1\t100\tPN001\t0/1\nchr1\t100\tPN002\t1/1\nchr1\t200\tPN001\t0/0\n"
+    - path: "coverage.gor"
+      content: "Chrom\tbpStart\tbpStop\tPN\nchr1\t50\t150\tPN001\nchr1\t50\t150\tPN002\nchr1\t150\t250\tPN001\n"

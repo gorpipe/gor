@@ -166,3 +166,20 @@ KING2:
   positional: "${ROOT}/tagbuckets.tsv ${ROOT}/tagpairs.tsv"
   requiredFlags: "-s , -gc af"
 
+# GTGEN tagbucketrelation coveragefile, over a per-sample pn/gt stream.
+GTGEN:
+  source: "${ROOT}/genotypes.gor"
+  positional: "${ROOT}/tagbuckets.tsv ${ROOT}/coverage.gor"
+
+# PEDPIVOT personCol pedigree_file
+PEDPIVOT:
+  source: "${ROOT}/genotypes.gor"
+  positional: "PN ${ROOT}/pedigree.tsv"
+
+# GTTRANSPOSE tagBucketSource pnSource markerSource; its input must carry Ref and
+# Alt as well as bucket and values.
+GTTRANSPOSE:
+  source: "${ROOT}/markerbuckets.gor"
+  positional: "${ROOT}/tagbuckets.tsv ${ROOT}/tagsel.tsv ${ROOT}/markers.gor"
+  requiredFlags: "-sep ,"
+
