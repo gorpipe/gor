@@ -68,7 +68,7 @@ Further options on joins are specified in the table below.
 +-------------------+-----------------------------------------------------------------------------------------------------------------+
 | ``-i``            | Return only rows from leftfile.gor that are included in the overlap (without the columns from the right-source).|
 +-------------------+-----------------------------------------------------------------------------------------------------------------+
-| ``-ic``           | Return the rows in left-source and a column named overlap.                                                      |
+| ``-ic``           | Return the rows in left-source and a column named OverlapCount.                                                 |
 |                   | Count which shows how many rows in right-source overlap.                                                        |
 +-------------------+-----------------------------------------------------------------------------------------------------------------+
 | ``-ir``           | Return the rows from right-source that overlap with the left-source.                                            |

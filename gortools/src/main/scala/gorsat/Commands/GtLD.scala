@@ -40,7 +40,7 @@ class GtLD extends CommandInfo("GTLD",
     val fuzzFactor = intValueOfOptionWithDefaultWithRangeCheck(args, "-f", 0, 0)
 
     if (!hasOption(args, "-calc") && !hasOption(args, "-sum")) {
-      throw new GorParsingException("Pease specify either -sumLD, -calcLD, or both of these options if not running in parallel over partitions.")
+      throw new GorParsingException("Please specify either -sum, -calc, or both of these options if not running in parallel over partitions.")
     }
 
     var combinedHeader = leftHeader
