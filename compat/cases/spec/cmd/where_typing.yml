@@ -1,0 +1,70 @@
+- id: cmd.where.column_names_are_case_insensitive
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "A column can be referred to in any case: the column is Ref and the filter names it ref"
+  cites: ["documentation/src/command/WHERE.rst"]
+  query: "gor ${ROOT}/left.gor | where ref = 'A'"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+
+- id: cmd.where.values_are_case_sensitive
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Values are compared case-sensitively, so Ref of A does not match 'a'. Column names being case-insensitive and values case-sensitive is the combination worth pinning, since either could reasonably have gone the other way"
+  cites: ["documentation/src/command/WHERE.rst"]
+  query: "gor ${ROOT}/left.gor | where Ref = 'a'"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+
+- id: cmd.where.unquoted_number_compares_numerically
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "An unquoted number compares numerically: Pos > 99 keeps both 100 and 200"
+  cites: ["documentation/src/command/WHERE.rst"]
+  query: "gor ${ROOT}/left.gor | where Pos > 99"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+    chr1	200	C	T
+
+- id: cmd.where.quoted_number_compares_as_text
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Quoting a number makes the comparison lexicographic rather than numeric: Pos > '99' keeps nothing, because '100' and '200' both sort before '99' as text. The query does not fail — it silently returns the wrong rows — so this trap is pinned deliberately"
+  cites: ["documentation/src/command/WHERE.rst"]
+  query: "gor ${ROOT}/left.gor | where Pos > '99'"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+
+- id: cmd.where.quoted_number_reverses_the_expected_answer
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "The other half of the same trap: Pos < '99' keeps both rows, the opposite of the numeric answer"
+  cites: ["documentation/src/command/WHERE.rst"]
+  query: "gor ${ROOT}/left.gor | where Pos < '99'"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+    chr1	200	C	T
+
