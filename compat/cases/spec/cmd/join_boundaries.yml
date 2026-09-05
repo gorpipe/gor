@@ -1,0 +1,64 @@
+- id: cmd.join.snpseg_boundary_is_start_exclusive_stop_inclusive
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "JOIN -snpseg documents the overlap as seg.start < snp.pos and snp.pos <= seg.stop, so with no fuzz factor a SNP exactly at the segment start does not overlap and one exactly at the stop does"
+  cites: ["documentation/src/command/JOIN.rst"]
+  query: "gor ${ROOT}/snps.gor | JOIN -snpseg -i ${ROOT}/seg.gor"
+  inputs:
+    - path: "snps.gor"
+      content: "Chrom	Pos	Name\nchr1	100	at_start\nchr1	101	inside_low\nchr1	200	at_stop\nchr1	201	past_stop\n"
+    - path: "seg.gor"
+      content: "Chrom	bpStart	bpStop	Region\nchr1	100	200	regionA\n"
+  expected: |
+    Chrom	Pos	Name
+    chr1	101	inside_low
+    chr1	200	at_stop
+
+- id: cmd.join.segseg_touching_segments_do_not_overlap
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "JOIN -segseg documents the overlap as segA.start < segB.stop && segA.stop > segB.start, so two segments that merely touch at a coordinate — [100,200] and [200,300] — do not overlap"
+  cites: ["documentation/src/command/JOIN.rst"]
+  query: "gor ${ROOT}/sega.gor | JOIN -segseg -i ${ROOT}/segb.gor"
+  inputs:
+    - path: "sega.gor"
+      content: "Chrom	bpStart	bpStop	Region\nchr1	100	200	regionA\n"
+    - path: "segb.gor"
+      content: "Chrom	bpStart	bpStop	Region\nchr1	200	300	regionB\n"
+  expected: |
+    Chrom	bpStart	bpStop	Region
+
+- id: cmd.join.snpsnp_requires_an_exact_position_match
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "JOIN -snpsnp with no fuzz factor documents an exact match on the first two columns, so a neighbouring position does not join"
+  cites: ["documentation/src/command/JOIN.rst"]
+  query: "gor ${ROOT}/snps.gor | JOIN -snpsnp -i ${ROOT}/other.gor"
+  inputs:
+    - path: "snps.gor"
+      content: "Chrom	Pos	Name\nchr1	100	at_start\nchr1	101	inside_low\nchr1	200	at_stop\nchr1	201	past_stop\n"
+    - path: "other.gor"
+      content: "Chrom	Pos	Tag\nchr1	101	t1\nchr1	202	t2\n"
+  expected: |
+    Chrom	Pos	Name
+    chr1	101	inside_low
+
+- id: cmd.join.snpsnp_fuzz_widens_the_match_symmetrically
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "JOIN -snpsnp with a fuzz factor documents the condition as snpB.pos-fuzz <= snpA.pos <= snpB.pos+fuzz, so -f 1 against a right position of 200 matches 199, 200 and 201 but nothing further out"
+  cites: ["documentation/src/command/JOIN.rst"]
+  query: "gor ${ROOT}/snps.gor | JOIN -snpsnp -f 1 -i ${ROOT}/other.gor"
+  inputs:
+    - path: "snps.gor"
+      content: "Chrom	Pos	Name\nchr1	100	at_start\nchr1	101	inside_low\nchr1	200	at_stop\nchr1	201	past_stop\n"
+    - path: "other.gor"
+      content: "Chrom	Pos	Tag\nchr1	200	t1\n"
+  expected: |
+    Chrom	Pos	Name
+    chr1	200	at_stop
+    chr1	201	past_stop
