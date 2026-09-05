@@ -1,0 +1,63 @@
+- id: cmd.hide.removes_the_named_column
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "HIDE drops the named column and leaves the rest in order"
+  cites: ["documentation/src/command/HIDE.rst"]
+  query: "gor ${ROOT}/left.gor | HIDE Ref"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Alt
+    chr1	100	G
+    chr1	200	T
+
+- id: cmd.hide.cannot_hide_the_position_columns
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "HIDE cannot remove the first two columns; naming one leaves the schema intact"
+  cites: ["documentation/src/command/HIDE.rst"]
+  query: "gor ${ROOT}/left.gor | HIDE Chrom"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+    chr1	200	C	T
+
+- id: cmd.split.emits_one_row_per_value
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "SPLIT turns a comma-separated column into one row per value, repeating the other columns"
+  cites: ["documentation/src/command/SPLIT.rst"]
+  query: "gor ${ROOT}/left.gor | calc L 'x,y' | SPLIT L"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	L
+    chr1	100	A	G	x
+    chr1	100	A	G	y
+    chr1	200	C	T	x
+    chr1	200	C	T	y
+
+- id: cmd.unpivot.emits_attribute_value_pairs
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "UNPIVOT turns the named columns into one row each as attribute-value pairs, in the order named; the pair columns are Col_Name and Col_Value"
+  cites: ["documentation/src/command/UNPIVOT.rst"]
+  query: "gor ${ROOT}/left.gor | UNPIVOT Ref,Alt"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Col_Name	Col_Value
+    chr1	100	Ref	A
+    chr1	100	Alt	G
+    chr1	200	Ref	C
+    chr1	200	Alt	T
