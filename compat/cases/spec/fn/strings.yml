@@ -1,0 +1,76 @@
+- id: fn.upper.converts_to_upper_case
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "UPPER converts a string to upper case"
+  cites: ["documentation/src/functions/upper.rst"]
+  query: "norrows 1 | calc X UPPER('abc')"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	ABC
+
+- id: fn.len.counts_characters_not_list_items
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "LEN counts characters: the documentation's own example gives 10 for '0123456789'"
+  cites: ["documentation/src/functions/len.rst"]
+  query: "norrows 1 | calc X LEN('0123456789')"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	10
+
+- id: fn.len.counts_separators_too
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "LEN counts the separators in a list rather than its items: the documentation states 19 for this value"
+  cites: ["documentation/src/functions/len.rst"]
+  query: "norrows 1 | calc X LEN('0,1,2,3,4,5,6,7,8,9')"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	19
+
+- id: fn.left.takes_the_leftmost_characters
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "LEFT returns the left-most characters of a string"
+  cites: ["documentation/src/functions/left.rst"]
+  query: "norrows 1 | calc X LEFT('ACGT',2)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	AC
+
+- id: fn.right.takes_the_rightmost_characters
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "RIGHT returns the right-most characters of a string"
+  cites: ["documentation/src/functions/right.rst"]
+  query: "norrows 1 | calc X RIGHT('ACGT',2)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	GT
+
+- id: fn.substr.start_is_zero_based_and_end_is_exclusive
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "SUBSTR indexes from zero and excludes the end: the documentation calls substr(x,2,3) the middle character of a five-character string, which is only true of C in ABCDE"
+  cites: ["documentation/src/functions/substr.rst"]
+  query: "norrows 1 | calc X SUBSTR('ABCDE',2,3)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	C
+
+- id: fn.posof.position_is_zero_based
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "POSOF reports a zero-based position: G is the third character of ACGT and POSOF returns 2. The documentation does not say which base it uses, so this case fixes it, and it agrees with SUBSTR indexing from zero"
+  cites: ["documentation/src/functions/posof.rst"]
+  query: "norrows 1 | calc X POSOF('ACGT','G')"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	2
