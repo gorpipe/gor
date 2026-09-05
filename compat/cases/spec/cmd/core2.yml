@@ -50,3 +50,20 @@
     chr2	150	G	A
     chr2	150	G	A
 
+
+- id: cmd.columnsort.moves_named_columns_to_the_front
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "COLUMNSORT moves the named columns to the front, the rest following; naming fewer than three used to discard them and duplicate the position columns instead"
+  cites: ["documentation/src/command/COLUMNSORT.rst"]
+  query: "gor ${ROOT}/left.gor | COLUMNSORT Alt"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Alt	Ref
+    chr1	100	G	A
+    chr1	200	T	C
+    chr2	150	A	G
+

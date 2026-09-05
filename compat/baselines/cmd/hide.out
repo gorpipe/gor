@@ -6,10 +6,10 @@ chr1	200	C	T
 chr2	150	G	A
 <<<
 >>> cmd.hide.flag_sort
-Chrom	Pos	Ref	Alt	Altx	Chromx	Posx	Refx
-chr1	100	A	G	G	chr1	100	A
-chr1	200	C	T	T	chr1	200	C
-chr2	150	G	A	A	chr2	150	G
+Chrom	Pos	Ref	Alt
+chr1	100	A	G
+chr1	200	C	T
+chr2	150	G	A
 <<<
 >>> cmd.hide.flag_t
 Chrom	Pos	Ref	Alt
