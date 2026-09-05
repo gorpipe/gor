@@ -59,6 +59,22 @@ Add an entry to `cases/spec/<category>/<feature>.yml`:
 Expected blocks use real tab characters. `./gradlew :compat:report` prints which
 surface has no case yet — that is the worklist.
 
+**Write the expectation before you run the query.** Derive it from what the
+documentation says the command does, then run it. If the two agree you have a
+spec case; if they disagree you have a finding, and the case tells you which of
+the engine and the documentation to trust. Recording the output first and calling
+it an expectation produces a baseline case wearing a spec case's clothes.
+
+That is not theoretical. COLUMNSORT was asserted this way, the derived expectation
+did not match, and the command turned out to be discarding the columns it was
+asked to move — in six commands, not one. Three earlier findings came the same
+way, including the `-ic` column name that two documentation pages had wrong.
+
+Where the documentation genuinely leaves something open — whether POSOF counts
+from zero, how ROUND breaks a tie — say so in `behavior` and pin the engine's
+answer deliberately. That is still worth asserting, because it is compatibility
+surface either way; it just is not a claim the documentation supports.
+
 ## What the generators produce
 
 - **Flag matrix** — one case per command flag, plus a bare invocation per command
