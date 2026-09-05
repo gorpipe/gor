@@ -36,6 +36,16 @@ public class UTestCaseLint {
     }
 
     @Test
+    public void machineIdentityIsAViolation() {
+        // IP returns the host's address, which changes with the network rather
+        // than with the engine.
+        List<String> v = CaseLint.check(
+                Collections.singletonList(c("fn.ip.a", "norrows 1 | calc X IP()")));
+        Assert.assertEquals(v.toString(), 1, v.size());
+        Assert.assertTrue(v.get(0), v.get(0).contains("ip("));
+    }
+
+    @Test
     public void buildIdentityIsAViolation() {
         // GORVERSION embeds the git SHA, so a baseline for it changes on every
         // commit. Reviewers who see baseline churn every commit stop reading the

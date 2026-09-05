@@ -29,8 +29,9 @@ GORIF -ref
 ## Functions with no callable signature (0)
 # No sample value exists for one of the argument types, so no call was built.
 
-## Functions screened out as non-deterministic (21)
+## Functions screened out as non-deterministic (24)
 # Report JVM state, the clock, or the machine, so no stable baseline exists.
+ARCH uses arch(
 AVAILCPU uses availcpu(
 AVGSEEKTIMEMILLIS uses avgseektimemillis(
 CPULOAD uses cpuload(
@@ -42,7 +43,9 @@ FREE uses free(
 FREEMEM uses freemem(
 GORVERSION uses gorversion(
 HOSTNAME uses hostname(
+IP uses ip(
 JAVAVERSION uses javaversion(
+LISTZIP uses ip(
 MAXFILES uses maxfiles(
 MAXMEM uses maxmem(
 OPENFILES uses openfiles(
@@ -53,7 +56,7 @@ THREADID uses threadid(
 TIME uses time(
 TOTALMEM uses totalmem(
 
-## Documentation snippets skipped (475)
+## Documentation snippets skipped (477)
 basicGORqueries.rst block 1: usage template, not a runnable query
 basicGORqueries.rst block 2: references project data (#ref#)
 basicGORqueries.rst block 3: references project data (#ref#)
@@ -422,6 +425,8 @@ functions/listtail.rst block 1: usage template, not a runnable query
 functions/listtail.rst block 2: not self-contained; needs a data file
 functions/listtail.rst block 3: not self-contained; needs a data file
 functions/listtail.rst block 4: not self-contained; needs a data file
+functions/listzip.rst block 1: non-deterministic construct 'ip('
+functions/listzip.rst block 2: non-deterministic construct 'ip('
 functions/listzip.rst block 3: not self-contained; needs a data file
 functions/lower.rst block 1: references project data (#ref#)
 functions/max.rst block 2: non-deterministic construct 'random('

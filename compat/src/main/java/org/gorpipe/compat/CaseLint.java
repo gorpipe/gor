@@ -26,8 +26,11 @@ public final class CaseLint {
             // Clock and randomness.
             "random(", "rand(", "now(", "currentdate", "curdate", "today(",
             "gettime", "systime", "timestamp(", "time(", "date(", "edate(",
-            // Machine identity.
-            "hostname(", "threadid(", "availcpu(",
+            // Machine identity. IP surfaced late, when the machine's address
+            // changed between runs and its baseline moved with it — stable within
+            // a run and even across two runs on one machine, so only a list can
+            // catch it.
+            "hostname(", "threadid(", "availcpu(", "ip(", "arch(",
             // JVM and host state. These are stable within a single JVM, which is
             // why the runtime reproducibility probe cannot see them: the probe
             // runs both attempts in one process, while the suite runs in another.
