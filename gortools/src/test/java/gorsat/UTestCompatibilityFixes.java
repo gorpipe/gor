@@ -109,6 +109,50 @@ public class UTestCompatibilityFixes {
         Assert.assertEquals("chr1\t1\t0.6998121397488263\n", lines[1]);
     }
 
+    // --- COLUMNSORT / COLUMNREORDER ------------------------------------------
+
+    @Test
+    public void columnSortMovesOneNamedColumnToTheFront() {
+        // Naming fewer than three columns used to discard them: this returned
+        // "Chrom Pos Chromx Posx Ref", with Alt gone and the position columns
+        // duplicated.
+        String[] lines = TestUtils.runGorPipeLines(
+                "gorrow chr1,1 | calc Ref 'A' | calc Alt 'G' | COLUMNSORT Alt");
+
+        Assert.assertEquals("chrom\tpos\tAlt\tRef\n", lines[0]);
+        Assert.assertEquals("chr1\t1\tG\tA\n", lines[1]);
+    }
+
+    @Test
+    public void columnSortKeepsBothNamedColumnsAndTheirOrder() {
+        // Two named columns used to leave the output with neither of them.
+        String[] lines = TestUtils.runGorPipeLines(
+                "gorrow chr1,1 | calc Ref 'A' | calc Alt 'G' | COLUMNSORT Alt,Ref");
+
+        Assert.assertEquals("chrom\tpos\tAlt\tRef\n", lines[0]);
+        Assert.assertEquals("chr1\t1\tG\tA\n", lines[1]);
+    }
+
+    @Test
+    public void columnReorderMovesOneNamedColumnToTheFront() {
+        String[] lines = TestUtils.runGorPipeLines(
+                "gorrow chr1,1 | calc Ref 'A' | calc Alt 'G' | COLUMNREORDER Alt");
+
+        Assert.assertEquals("chrom\tpos\tAlt\tRef\n", lines[0]);
+        Assert.assertEquals("chr1\t1\tG\tA\n", lines[1]);
+    }
+
+    @Test
+    public void columnReorderIsUnchangedWhenThreeColumnsAreNamed() {
+        // Three or more named columns skipped the broken branch, so this is the
+        // behaviour that already worked and must stay put.
+        String[] lines = TestUtils.runGorPipeLines(
+                "gorrow chr1,1 | calc Ref 'A' | calc Alt 'G' | COLUMNREORDER chrom,pos,Alt");
+
+        Assert.assertEquals("chrom\tpos\tAlt\tRef\n", lines[0]);
+        Assert.assertEquals("chr1\t1\tG\tA\n", lines[1]);
+    }
+
     // --- GTLD ----------------------------------------------------------------
 
     @Test
