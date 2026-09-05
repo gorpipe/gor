@@ -1,0 +1,35 @@
+- id: cmd.merge.orders_chromosomes_lexicographically
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Chromosomes order lexicographically, not numerically: chr10 comes before chr2 and chr9 before chrX. MERGE has to choose an order, so it shows the contract every ordered operation rests on. Nothing in the documentation states it, and a change to natural ordering would silently reorder every merged and joined result"
+  cites: ["documentation/src/command/MERGE.rst"]
+  query: "gor ${ROOT}/left.gor | MERGE ${ROOT}/right.gor"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	V\nchr1	1	a\nchr2	1	b\nchrM	1	c\n"
+    - path: "right.gor"
+      content: "Chrom	Pos	V\nchr10	1	d\nchr9	1	e\nchrX	1	f\n"
+  expected: |
+    Chrom	Pos	V
+    chr1	1	a
+    chr10	1	d
+    chr2	1	b
+    chr9	1	e
+    chrM	1	c
+    chrX	1	f
+
+- id: cmd.gor.does_not_reorder_or_reject_an_unsorted_source
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Reading a source with GOR streams its rows as they are: a file whose chromosomes are out of the engine's order is neither reordered nor rejected. Worth pinning because it means the ordering contract is the caller's to keep, and a change to validating or sorting here would be a compatibility break in either direction"
+  cites: ["documentation/src/command/GOR.rst"]
+  query: "gor ${ROOT}/unsorted.gor"
+  inputs:
+    - path: "unsorted.gor"
+      content: "Chrom	Pos	V\nchr2	1	first\nchr1	1	second\n"
+  expected: |
+    Chrom	Pos	V
+    chr2	1	first
+    chr1	1	second
