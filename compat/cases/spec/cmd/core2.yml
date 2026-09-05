@@ -1,0 +1,52 @@
+- id: cmd.rownum.numbers_rows_sequentially
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "ROWNUM appends a rownum column numbering the rows in order"
+  cites: ["documentation/src/command/ROWNUM.rst"]
+  query: "gor ${ROOT}/left.gor | ROWNUM"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	rownum
+    chr1	100	A	G	1
+    chr1	200	C	T	2
+    chr2	150	G	A	3
+
+- id: cmd.inset.keeps_rows_whose_value_is_in_the_set
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "INSET passes only the rows whose named column holds a value present in the single-column setfile"
+  cites: ["documentation/src/command/INSET.rst"]
+  query: "gor ${ROOT}/left.gor | INSET ${ROOT}/refset.txt -c Ref"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+    - path: "refset.txt"
+      content: "#Ref\nA\nG\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+    chr2	150	G	A
+
+- id: cmd.merge.interleaves_both_sources_in_genomic_order
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "MERGE emits the rows of both sources in genomic order, so merging a source with itself yields each row twice"
+  cites: ["documentation/src/command/MERGE.rst"]
+  query: "gor ${ROOT}/left.gor | MERGE ${ROOT}/left.gor"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+    chr1	100	A	G
+    chr1	200	C	T
+    chr1	200	C	T
+    chr2	150	G	A
+    chr2	150	G	A
+
