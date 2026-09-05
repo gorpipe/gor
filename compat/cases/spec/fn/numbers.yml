@@ -1,0 +1,76 @@
+- id: fn.ceil.returns_the_smallest_integer_at_least_the_value
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "CEIL returns the smallest integer greater than or equal to the number"
+  cites: ["documentation/src/functions/ceil.rst"]
+  query: "norrows 1 | calc X CEIL(1.2)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	2
+
+- id: fn.ceil.of_a_negative_moves_toward_zero
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "CEIL of a negative number is the smallest integer at least as large, so -1.2 gives -1 rather than -2"
+  cites: ["documentation/src/functions/ceil.rst"]
+  query: "norrows 1 | calc X CEIL(-1.2)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	-1
+
+- id: fn.floor.returns_the_largest_integer_at_most_the_value
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "FLOOR returns the largest integer less than or equal to the number"
+  cites: ["documentation/src/functions/floor.rst"]
+  query: "norrows 1 | calc X FLOOR(1.8)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	1
+
+- id: fn.floor.of_a_negative_moves_away_from_zero
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "FLOOR of a negative number is the largest integer no greater, so -1.2 gives -2 rather than -1"
+  cites: ["documentation/src/functions/floor.rst"]
+  query: "norrows 1 | calc X FLOOR(-1.2)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	-2
+
+- id: fn.listfirst.takes_the_first_item
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "LISTFIRST returns the first item of a comma-separated list"
+  cites: ["documentation/src/functions/listfirst.rst"]
+  query: "norrows 1 | calc X LISTFIRST('a,b,c',',')"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	a
+
+- id: fn.round.half_way_goes_up
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "ROUND sends a half-way value up: 2.5 gives 3. The documentation says only nearest integer, which does not settle the tie"
+  cites: ["documentation/src/functions/round.rst"]
+  query: "norrows 1 | calc X ROUND(2.5)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	3
+
+- id: fn.round.negative_half_way_goes_toward_positive
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "ROUND breaks a negative tie toward positive infinity rather than away from zero: -2.5 gives -2, not -3. This is Java's Math.round rule and is the surprising half of it, so it is pinned rather than left to be discovered"
+  cites: ["documentation/src/functions/round.rst"]
+  query: "norrows 1 | calc X ROUND(-2.5)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	-2
