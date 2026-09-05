@@ -1,0 +1,50 @@
+- id: cmd.calc.division_is_floating_point
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "CALC divides in floating point even between two integers: 1/2 is 0.5, not 0. Nothing in the documentation says which it is, and the difference is silent — an integer-division engine would return 0 and look plausible"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 1/2"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	0.5
+
+- id: cmd.calc.division_of_larger_integers_keeps_the_fraction
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "CALC keeps the fractional part rather than truncating: 3/2 is 1.5"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 3/2"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	1.5
+
+- id: cmd.calc.integer_times_double_is_a_double
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "CALC promotes to a double when either operand is one, and renders the result with its fractional part: 2*1.5 is 3.0 rather than 3"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 2*1.5"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	3.0
+
+- id: cmd.calc.plus_does_not_join_a_string_and_a_number
+  tier: spec
+  mode: error
+  source: review
+  behavior: "CALC rejects + between a string literal and a number rather than concatenating them or coercing the string: neither '21' nor 3. Pinned because silently choosing either would change results without failing"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X '2'+1"
+  errorContains: "Invalid String variable name"
+
+- id: cmd.calc.has_no_modulo_operator
+  tier: spec
+  mode: error
+  source: review
+  behavior: "CALC has no % operator; 7%3 is rejected rather than evaluated"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 7%3"
+  errorContains: "CALC X 7%3"
