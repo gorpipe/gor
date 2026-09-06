@@ -1,0 +1,55 @@
+- id: cmd.calc.a_double_below_ten_million_prints_in_full
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "A double smaller than ten million prints in full: 1000000.0 stays 1000000.0. Paired with the case below, which crosses the threshold"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 1000000.0"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	1000000.0
+
+- id: cmd.calc.a_double_at_ten_million_switches_to_scientific_notation
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "At ten million the same value prints as 1.0E7. The output text is the compatibility surface — anything parsing a column of numbers has to cope with the notation changing shape at this threshold, and a change to the threshold would be invisible until a parser downstream fell over"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 10000000.0"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	1.0E7
+
+- id: cmd.calc.a_small_double_switches_to_scientific_notation_below_a_thousandth
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Small values switch the same way: 0.0001 prints as 1.0E-4 rather than in full"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 0.0001"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	1.0E-4
+
+- id: cmd.calc.exact_division_still_produces_a_double
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Division that divides evenly still yields a double: 4/2 prints as 2.0, not 2. A downstream comparison against the text 2 would not match"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 4/2"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	2.0
+
+- id: cmd.calc.double_precision_is_sixteen_significant_digits
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "A repeating fraction prints to sixteen significant digits: 1.0/3 gives 0.3333333333333333. That is the precision carried into any comparison or output"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 1.0/3"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	0.3333333333333333
+
