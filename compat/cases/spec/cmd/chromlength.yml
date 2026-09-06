@@ -1,0 +1,30 @@
+- id: cmd.group.chromosome_length_falls_back_to_a_default
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Grouping by whole chromosome with no reference build in the project reports the bin as 0 to 250000000 — a fixed default chromosome length rather than a real one. The number is arbitrary and silent, so it is pinned to make a change to it visible"
+  cites: ["documentation/src/command/GROUP.rst"]
+  query: "gor ${ROOT}/left.gor | group chrom -count"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr2	150	G	A\n"
+  expected: |
+    Chrom	bpStart	bpStop	allCount
+    chr1	0	250000000	1
+    chr2	0	250000000	1
+
+- id: cmd.group.chromosome_length_comes_from_the_reference_build
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "With a reference build in the project the same query reports each chromosome's real length instead of the default: the synthetic build makes chr1 and chr2 a thousand bases, so the bin becomes 0 to 1000. Paired with the case above, this shows the length is taken from the build when there is one and invented when there is not"
+  cites: ["scripts/refbuild/README.md"]
+  needsReference: true
+  query: "gor ${ROOT}/left.gor | group chrom -count"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr2	150	G	A\n"
+  expected: |
+    Chrom	bpStart	bpStop	allCount
+    chr1	0	1000	1
+    chr2	0	1000	1
