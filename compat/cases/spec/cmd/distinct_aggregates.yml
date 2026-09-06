@@ -1,0 +1,28 @@
+- id: cmd.distinct.removes_a_duplicate_that_is_not_adjacent
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "DISTINCT removes a repeated row even when another row sits between it and its twin: A, B, A yields A, B. Adjacency is not what decides it, which is worth pinning because a stream-oriented engine could reasonably have collapsed only neighbours and this case is the difference between the two designs"
+  cites: ["documentation/src/command/DISTINCT.rst"]
+  query: "gor ${ROOT}/n.gor | DISTINCT"
+  inputs:
+    - path: "n.gor"
+      content: "Chrom	Pos	V\nchr1	100	A\nchr1	100	B\nchr1	100	A\n"
+  expected: |
+    Chrom	Pos	V
+    chr1	100	A
+    chr1	100	B
+
+- id: cmd.group.aggregate_columns_are_named_and_ordered_by_the_engine
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Each aggregate becomes a column named for the function and the source column — min_V, max_V, avg_V, sum_V — and they appear in that fixed order whatever order the flags were written in; this query asks for -sum -min -max -avg and gets min, max, avg, sum. Anything selecting these by position downstream depends on that order, so it is pinned. Note also that avg renders as a double and sum as an integer"
+  cites: ["documentation/src/command/GROUP.rst"]
+  query: "gor ${ROOT}/num.gor | group 1000 -ic V -sum -min -max -avg"
+  inputs:
+    - path: "num.gor"
+      content: "Chrom	Pos	V\nchr1	100	10\nchr1	200	30\n"
+  expected: |
+    Chrom	bpStart	bpStop	min_V	max_V	avg_V	sum_V
+    chr1	0	1000	10	30	20.0	40

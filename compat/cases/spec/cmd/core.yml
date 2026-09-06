@@ -59,7 +59,7 @@
   tier: spec
   mode: exact
   source: docs
-  behavior: "DISTINCT collapses identical adjacent rows to one"
+  behavior: "DISTINCT collapses identical rows to one. The duplicates here are adjacent; the non-adjacent case alongside shows adjacency is not what decides it"
   cites: ["documentation/src/command/DISTINCT.rst"]
   query: "gor ${ROOT}/left.gor | DISTINCT"
   inputs:
