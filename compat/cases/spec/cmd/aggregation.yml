@@ -1,0 +1,63 @@
+- id: cmd.gor.reads_a_source_unchanged
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "Reading a source yields its rows unchanged. Paired with the PGOR case below, which asserts the identical output: the two must agree"
+  cites: ["documentation/src/command/GOR.rst"]
+  query: "gor ${ROOT}/left.gor"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+    chr1	200	C	T
+    chr2	150	G	A
+
+- id: macro.pgor.matches_gor_for_the_same_source
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "PGOR splits the work by chromosome and must produce exactly what GOR produces for the same source. The expected block is identical to the GOR case above on purpose: a split that lost or duplicated a row at a chromosome boundary would show here and nowhere else"
+  cites: ["documentation/src/command/PGOR.rst"]
+  query: "pgor ${ROOT}/left.gor"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
+    chr1	200	C	T
+    chr2	150	G	A
+
+- id: cmd.group.bins_by_size_and_names_the_count_allcount
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "GROUP with a bin size groups per chromosome into bins of that width starting at zero, reporting bpStart and bpStop of the bin and naming the count allCount: positions 100 and 200 share the chr1 bin 0-1000, chr2's 150 is alone in its own"
+  cites: ["documentation/src/command/GROUP.rst"]
+  query: "gor ${ROOT}/left.gor | group 1000 -count"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	bpStart	bpStop	allCount
+    chr1	0	1000	2
+    chr2	0	1000	1
+
+- id: cmd.group.gc_splits_each_bin_by_the_named_column
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "GROUP -gc adds the named column to the grouping key and to the output after the bin bounds, so each distinct Ref within a bin becomes its own row"
+  cites: ["documentation/src/command/GROUP.rst"]
+  query: "gor ${ROOT}/left.gor | group 1000 -gc Ref -count"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\nchr2	150	G	A\n"
+  expected: |
+    Chrom	bpStart	bpStop	Ref	allCount
+    chr1	0	1000	A	1
+    chr1	0	1000	C	1
+    chr2	0	1000	G	1
+
