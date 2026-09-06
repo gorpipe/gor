@@ -1,0 +1,56 @@
+- id: cmd.gor.hash_prefixed_header_is_stripped
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "A header line may start with # and the marker is stripped from the reported column name: #Chrom is read as Chrom"
+  cites: ["documentation/src/command/GOR.rst"]
+  query: "gor ${ROOT}/h.gor"
+  inputs:
+    - path: "h.gor"
+      content: "#Chrom	Pos	Ref\nchr1	100	A\n"
+  expected: |
+    Chrom	Pos	Ref
+    chr1	100	A
+
+- id: cmd.gor.header_without_the_hash_is_equivalent
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "The # marker is optional: the same file without it produces the same header and rows, so both conventions are readable and neither is normalised away in the output"
+  cites: ["documentation/src/command/GOR.rst"]
+  query: "gor ${ROOT}/p.gor"
+  inputs:
+    - path: "p.gor"
+      content: "Chrom	Pos	Ref\nchr1	100	A\n"
+  expected: |
+    Chrom	Pos	Ref
+    chr1	100	A
+
+- id: cmd.where.an_empty_field_equals_the_empty_string
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "An empty field is a value rather than an absence: it compares equal to '' and the row is kept, and it is emitted as an empty column rather than dropped"
+  cites: ["documentation/src/command/WHERE.rst"]
+  query: "gor ${ROOT}/e.gor | where Ref = ''"
+  inputs:
+    - path: "e.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100		G\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100		G
+
+- id: is.nor.prepends_synthetic_position_columns
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "NOR reads a non-genomic file and prepends ChromNOR and PosNOR, constant at chrN and 0, so a NOR row carries two synthetic position columns in the stream. The command line strips them again when printing, which is why this shape is worth pinning explicitly rather than inferring from CLI output"
+  cites: ["documentation/src/command/NOR.rst"]
+  query: "nor ${ROOT}/n.tsv"
+  inputs:
+    - path: "n.tsv"
+      content: "#PN	Sex\nPN001	M\nPN002	F\n"
+  expected: |
+    ChromNOR	PosNOR	PN	Sex
+    chrN	0	PN001	M
+    chrN	0	PN002	F
