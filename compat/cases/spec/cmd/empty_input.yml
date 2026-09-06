@@ -1,0 +1,40 @@
+- id: cmd.group.an_empty_input_yields_no_summary_row
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Grouping an input with no rows emits the aggregate schema and nothing else — not a row carrying a count of zero. Either would be defensible, and downstream code that reads the first row of a grouping depends on which"
+  cites: ["documentation/src/command/GROUP.rst"]
+  query: "gor ${ROOT}/e.gor | group 1000 -count"
+  inputs:
+    - path: "e.gor"
+      content: "Chrom	Pos	Ref	Alt\n"
+  expected: |
+    Chrom	bpStart	bpStop	allCount
+
+- id: cmd.join.an_empty_left_source_still_reports_the_joined_schema
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Joining from an empty left source still announces the joined schema, with the right source's columns appended, so the shape of the result comes from the query rather than from the data that happened to flow through it"
+  cites: ["documentation/src/command/JOIN.rst"]
+  query: "gor ${ROOT}/e.gor | JOIN -snpsnp ${ROOT}/r.gor"
+  inputs:
+    - path: "e.gor"
+      content: "Chrom	Pos	Ref	Alt\n"
+    - path: "r.gor"
+      content: "Chrom	Pos	Gene\nchr1	100	BRCA1\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	Gene
+
+- id: cmd.calc.an_empty_input_never_evaluates_the_expression
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "CALC over an empty input adds its column and evaluates nothing: the expression here divides by zero, which would yield Infinity on any row, and no such row appears. Expressions are per-row, so a query that would produce nonsense on data produces a clean empty result on none"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "gor ${ROOT}/e.gor | calc X 1/0"
+  inputs:
+    - path: "e.gor"
+      content: "Chrom	Pos	Ref	Alt\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	X
