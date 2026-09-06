@@ -1,0 +1,74 @@
+- id: cmd.calc.integer_arithmetic_overflows_silently
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Integer arithmetic wraps at 32 bits instead of promoting or failing: 2147483647+1 gives -2147483648. Pinned because it is silent — a count or coordinate past two billion produces a negative number and no error anywhere"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 2147483647+1"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	-2147483648
+
+- id: cmd.calc.division_by_zero_is_infinity_not_an_error
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Dividing by zero yields Infinity rather than failing, so a query with a zero denominator completes and carries Infinity downstream"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 1/0"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	Infinity
+
+- id: cmd.calc.zero_over_zero_is_nan
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Zero divided by zero yields NaN, again without failing"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X 0/0"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	NaN
+
+- id: fn.substr.end_beyond_the_string_is_clamped
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "SUBSTR clamps an end position past the end of the string rather than failing: SUBSTR('AB',0,10) gives AB"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X SUBSTR('AB',0,10)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	AB
+
+- id: fn.left.count_beyond_the_string_is_clamped
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "LEFT clamps a count larger than the string rather than failing or padding"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X LEFT('AB',10)"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	AB
+
+- id: fn.len.of_an_empty_string_is_zero
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "LEN of an empty string is 0"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "norrows 1 | calc X LEN('')"
+  expected: |
+    ChromNOR	PosNOR	RowNum	X
+    chrN	0	0	0
+
+- id: fn.substr.start_beyond_the_string_fails
+  tier: spec
+  mode: error
+  source: review
+  behavior: "SUBSTR clamps an end past the string but fails on a start past it — the asymmetry is the point of this pair, since one out-of-range argument is forgiven and the other is not"
+  cites: ["documentation/src/functions/substr.rst"]
+  query: "norrows 1 | calc X SUBSTR('AB',5,6)"
+  errorContains: "begin 5, end 2, length 2"
