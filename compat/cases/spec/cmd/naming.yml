@@ -1,0 +1,54 @@
+- id: cmd.calc.refuses_to_shadow_an_existing_column
+  tier: spec
+  mode: error
+  source: review
+  behavior: "CALC will not create a column whose name is already taken: it fails rather than overwriting the existing one or adding a second column of the same name. Silently overwriting would be the dangerous alternative, so the refusal is pinned"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "gor ${ROOT}/left.gor | calc Ref 'X'"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  errorContains: "Duplicate column name"
+
+- id: cmd.join.colliding_right_columns_gain_an_x_suffix
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "Joining a source to itself collides on every column name. The right source's position columns are dropped by the snp-to-snp join and its remaining columns are renamed with an x suffix — Refx and Altx — rather than the join failing or the names being left ambiguous. Anything reading a self-join or a join between similar sources depends on that convention"
+  cites: ["documentation/src/command/JOIN.rst"]
+  query: "gor ${ROOT}/left.gor | JOIN -snpsnp ${ROOT}/left.gor | top 1"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	Refx	Altx
+    chr1	100	A	G	A	G
+
+- id: cmd.calc.can_use_a_column_it_created_earlier_in_the_pipe
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "A later CALC can refer to a column an earlier one created: A is 1 and B is A+1, giving 2. The columns are added in order and each step sees the ones before it"
+  cites: ["documentation/src/command/CALC.rst"]
+  query: "gor ${ROOT}/left.gor | calc A 1 | calc B A+1 | top 1"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	A	B
+    chr1	100	A	G	1	2
+
+- id: cmd.sort.equal_positions_are_ordered_by_the_remaining_columns
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "SORT does not merely leave rows at the same position in the order they arrived: given 'second' before 'first' at the same position it emits 'first' before 'second', ordering by the columns after the position. A stable sort that preserved input order would be an equally reasonable design, which is why the difference is worth fixing in a case"
+  cites: ["documentation/src/command/SORT.rst"]
+  query: "gor ${ROOT}/eq.gor | sort 1000"
+  inputs:
+    - path: "eq.gor"
+      content: "Chrom	Pos	V\nchr1	100	second\nchr1	100	first\n"
+  expected: |
+    Chrom	Pos	V
+    chr1	100	first
+    chr1	100	second
