@@ -4,6 +4,11 @@ Black-box end-to-end tests over the GOR query language. Every case is a query pl
 an expected output. Completely separate from the unit and integration suites: this
 module depends on `:gortools` and `:model` only, never on `:test`.
 
+Findings from building the suite — defects fixed, behaviour pinned but not
+decided, and surface deliberately not reached — are kept in
+[FINDINGS.md](FINDINGS.md). Add to it when the suite turns something up, rather
+than leaving it in a commit message.
+
 ## The two tiers
 
 | | SPEC | BASELINE |
@@ -69,6 +74,10 @@ That is not theoretical. COLUMNSORT was asserted this way, the derived expectati
 did not match, and the command turned out to be discarding the columns it was
 asked to move — in six commands, not one. Three earlier findings came the same
 way, including the `-ic` column name that two documentation pages had wrong.
+
+When a case turns up a defect or an oddity worth someone's decision, record it in
+[FINDINGS.md](FINDINGS.md) with the case id, so the finding outlives the pull
+request that produced it.
 
 Where the documentation genuinely leaves something open — whether POSOF counts
 from zero, how ROUND breaks a tie — say so in `behavior` and pin the engine's
