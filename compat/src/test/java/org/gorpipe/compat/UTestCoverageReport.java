@@ -65,6 +65,24 @@ public class UTestCoverageReport {
     }
 
     @Test
+    public void countsNorContextCoverageSeparately() {
+        // A command covered in GOR is not thereby covered in NOR: the contexts
+        // differ in arguments and in which commands are allowed at all.
+        List<CompatCase> gorOnly = new ArrayList<>();
+        gorOnly.add(c("cmd.calc.a", "baseline", "gor x.gor | calc X 1"));
+        Assert.assertEquals(0, CoverageReport.of(gorOnly, SurfaceInventory.read())
+                .norCommandsCovered());
+
+        List<CompatCase> withNor = new ArrayList<>(gorOnly);
+        withNor.add(c("nor.calc.bare", "baseline", "nor x.gor | calc X 1"));
+        Assert.assertEquals(1, CoverageReport.of(withNor, SurfaceInventory.read())
+                .norCommandsCovered());
+
+        String out = CoverageReport.of(withNor, SurfaceInventory.read()).render();
+        Assert.assertTrue(out, out.contains("nor ctx"));
+    }
+
+    @Test
     public void separatesGapsThatAreExcludedFromGapsWorthChasing() {
         // Most remaining gaps sit on deliberately excluded surface. Reporting one
         // number for both makes the report read as dozens of leads when only a

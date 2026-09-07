@@ -1,0 +1,26 @@
+- id: cmd.group.in_nor_takes_no_bin_size
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "GROUP is documented as 'GROUP binsize [ attributes ]' in a GOR query and 'GROUP [ attributes ]' in a NOR one, so in NOR it groups without a bin: the synthetic position columns are carried through and the grouping columns follow. The same command taking different arguments by context is the sort of thing a caller only discovers by trying it"
+  cites: ["documentation/src/command/GROUP.rst"]
+  query: "nor ${ROOT}/left.gor | group -gc Ref -count"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  expected: |
+    ChromNOR	PosNOR	Ref	allCount
+    chrN	0	A	1
+    chrN	0	C	1
+
+- id: cmd.join.is_refused_in_a_nor_query
+  tier: spec
+  mode: error
+  source: review
+  behavior: "JOIN is registered as a GOR command only and is refused outright in a NOR query rather than being attempted and failing on the data. The registry records this for every command — 66 of 108 accept NOR — and the refusal is what makes that record enforceable"
+  cites: ["documentation/src/command/JOIN.rst"]
+  query: "nor ${ROOT}/left.gor | JOIN -snpsnp ${ROOT}/left.gor"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+  errorContains: "trying to execute JOIN in a nor query"

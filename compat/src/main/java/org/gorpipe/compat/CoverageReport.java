@@ -32,6 +32,7 @@ public final class CoverageReport {
     private final Set<String> coveredInputSources = new TreeSet<>();
     private final Set<String> coveredMacros = new TreeSet<>();
     private final Set<String> coveredInputSourceFlags = new TreeSet<>();
+    private final Set<String> coveredNorCommands = new TreeSet<>();
     private final int excluded;
 
     private CoverageReport(List<CompatCase> cases, SurfaceInventory inventory) {
@@ -48,6 +49,9 @@ public final class CoverageReport {
     private void attribute() {
         for (CompatCase c : cases) {
             String upper = c.query.toUpperCase(Locale.ROOT);
+            // A command covered in GOR is not thereby covered in NOR: the contexts
+            // differ in which commands are allowed and in what they take.
+            boolean isNorQuery = c.query.trim().toLowerCase(Locale.ROOT).startsWith("nor ");
 
             for (String stage : c.query.split("\\|")) {
                 String trimmed = stage.trim();
@@ -77,6 +81,9 @@ public final class CoverageReport {
                     continue;
                 }
                 coveredCommands.add(first);
+                if (isNorQuery) {
+                    coveredNorCommands.add(first);
+                }
                 for (String flag : surface.allFlags()) {
                     if (mentionsFlag(trimmed, flag)) {
                         coveredFlags.add(first + " " + flag);
@@ -197,6 +204,11 @@ public final class CoverageReport {
         return coveredInputSourceFlags.size();
     }
 
+    /** Commands exercised inside a NOR query, as opposed to a GOR one. */
+    public int norCommandsCovered() {
+        return coveredNorCommands.size();
+    }
+
     public int excludedCount() {
         return excluded;
     }
@@ -243,6 +255,10 @@ public final class CoverageReport {
                 totalInputSources - inputSourcesCovered()));
         sb.append(String.format(Locale.ROOT, "    macros     %4d/%-4d  %d gaps%n",
                 macrosCovered(), totalMacros, totalMacros - macrosCovered()));
+        long norCapable = inventory.commands().values().stream()
+                .filter(c -> c.norCommand).count();
+        sb.append(String.format(Locale.ROOT, "    nor ctx    %4d/%-4d  %d gaps%n",
+                norCommandsCovered(), norCapable, norCapable - norCommandsCovered()));
         int totalSourceFlags = inventory.inputSources().values().stream()
                 .mapToInt(c -> c.allFlags().size()).sum();
         sb.append(String.format(Locale.ROOT, "    src flags  %4d/%-4d  %d gaps%n",
