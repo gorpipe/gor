@@ -158,8 +158,10 @@ Limitations of the harness, worth knowing before trusting a number from it.
 - **The static screen and the probe cover different blind spots**, and both are
   needed. The probe found `CPULOAD`, `FREEMEM`, `THREADID`; it could not find
   `MAXMEM`, `GORVERSION`, `IP` or `ARCH`, which are stable within a run and change
-  between machines or commits. Three separate additions to the list came from
-  baselines moving for no reason.
+  between machines or commits. Four separate additions to the list came from
+  baselines moving for no reason — the last, `MAJORVERSION`/`MINORVERSION`, from
+  rebasing onto an upstream VERSION bump, which is exactly the event they track and
+  exactly what makes them useless as behaviour.
 - **Coverage is a poor measure of this suite.** It reaches 21.4% of `:gortools`
   instructions alone, but only **+2.2pp of branch coverage on top of the unit
   tests** — 85% of what it executes, they already cover. Its value is the 902

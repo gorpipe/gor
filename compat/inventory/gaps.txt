@@ -27,7 +27,7 @@ GORIF -ref
 ## Functions with no callable signature (0)
 # No sample value exists for one of the argument types, so no call was built.
 
-## Functions screened out as non-deterministic (24)
+## Functions screened out as non-deterministic (26)
 # Report JVM state, the clock, or the machine, so no stable baseline exists.
 ARCH uses arch(
 AVAILCPU uses availcpu(
@@ -44,8 +44,10 @@ HOSTNAME uses hostname(
 IP uses ip(
 JAVAVERSION uses javaversion(
 LISTZIP uses ip(
+MAJORVERSION uses majorversion(
 MAXFILES uses maxfiles(
 MAXMEM uses maxmem(
+MINORVERSION uses minorversion(
 OPENFILES uses openfiles(
 RANDOM uses random(
 RANDOMACCESSTIMING uses randomaccesstiming(

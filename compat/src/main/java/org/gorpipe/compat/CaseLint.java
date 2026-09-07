@@ -44,7 +44,7 @@ public final class CaseLint {
             // output changes on every commit — a baseline that churns with each
             // commit is worse than no baseline, because it teaches reviewers to
             // approve baseline diffs without reading them.
-            "gorversion(", "javaversion("
+            "gorversion(", "javaversion(", "majorversion(", "minorversion("
     };
 
     /**
