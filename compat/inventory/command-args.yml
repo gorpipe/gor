@@ -40,25 +40,33 @@ MULTIMAP:
   requiredFlags: "-c Chrom"
   positional: "${ROOT}/right.gor"
 
-# Documented as 'GROUP binsize [ attributes ]'.
+# Documented as 'GROUP binsize [ attributes ]' in gor and 'GROUP [ attributes ]'
+# in nor, so the bin size must not be passed in a NOR query.
 GROUP:
   positional: "1000"
+  norPositional: ""
 
 GRANNO:
   positional: "1000"
+  norPositional: ""
 
 SORT:
   positional: "1000"
+  norPositional: ""
 
-# Documented as 'ATMAX binsize column [ attributes ]'.
+# Documented as 'ATMAX binsize column [ attributes ]' in gor and 'ATMAX column
+# [ attributes ]' in nor.
 ATMIN:
   positional: "1000 Pos"
+  norPositional: "Pos"
 
 ATMAX:
   positional: "1000 Pos"
+  norPositional: "Pos"
 
 RANK:
   positional: "1000 Pos"
+  norPositional: "Pos"
 
 # ---------------------------------------------------------------------------
 # source: the file the case reads, when the command needs a shape the primary

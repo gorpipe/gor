@@ -115,7 +115,13 @@ public final class FlagMatrixGenerator {
      */
     private static String buildQuery(SurfaceInventory.CommandSurface command,
                                      String flag, String value, CommandArgs commandArgs) {
-        StringBuilder q = new StringBuilder(commandArgs.nor(command.name) ? "nor " : "gor ")
+        // A command the registry marks nor-only cannot run in a GOR query at all,
+        // so the context comes from the registry rather than from curation: those
+        // cases used to be generated as gor and could only ever record "trying to
+        // execute X in a gor query".
+        boolean useNor = commandArgs.nor(command.name)
+                || (command.norCommand && !command.gorCommand);
+        StringBuilder q = new StringBuilder(useNor ? "nor " : "gor ")
                 .append(commandArgs.source(command.name))
                 .append(" | ")
                 .append(command.name);
@@ -131,8 +137,10 @@ public final class FlagMatrixGenerator {
                 q.append(' ').append(value);
             }
         }
-        if (command.minArgs > 0 || commandArgs.hasExplicitPositional(command.name)) {
-            q.append(' ').append(commandArgs.positional(command.name));
+        if (command.minArgs > 0 || commandArgs.hasExplicitPositional(command.name)
+                || (useNor && commandArgs.hasNorPositional(command.name))) {
+            q.append(' ').append(useNor ? commandArgs.norPositional(command.name)
+                                        : commandArgs.positional(command.name));
         }
         q.append(" | top 5");
         return q.toString();

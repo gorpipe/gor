@@ -4,649 +4,865 @@
       "valuelessFlags": ["-bh", "-bonf", "-by", "-gcc", "-holm", "-qq", "-sd", "-ss"],
       "valueFlags": ["-gc", "-pc"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": true
     },
     "ATMAX": {
       "valuelessFlags": ["-last", "-ordered", "-s"],
       "valueFlags": ["-gc"],
       "minArgs": 1,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": true
     },
     "ATMIN": {
       "valuelessFlags": ["-last", "-ordered", "-s"],
       "valueFlags": ["-gc"],
       "minArgs": 1,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": true
     },
     "BAMFLAG": {
       "valuelessFlags": ["-h", "-v"],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "BASES": {
       "valuelessFlags": ["-count"],
       "valueFlags": ["-gc", "-readlength"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "BINARYWRITE": {
       "valuelessFlags": ["-gv", "-imp"],
       "valueFlags": ["-batch", "-threshold"],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "BUCKETSPLIT": {
       "valuelessFlags": ["-cs"],
       "valueFlags": ["-b", "-s", "-vs"],
       "minArgs": 2,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": true
     },
     "BUG": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "CALC": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 2,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "CALCIFMISSING": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 2,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "CIGARSEGS": {
       "valuelessFlags": ["-seq"],
       "valueFlags": ["-gc", "-readlength"],
       "minArgs": 0,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "CMD": {
       "valuelessFlags": ["-e", "-h", "-u"],
       "valueFlags": ["-f", "-s"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "COLLECT": {
       "valuelessFlags": ["-ave", "-std", "-sum", "-var"],
       "valueFlags": [],
       "minArgs": 2,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": true
     },
     "COLNUM": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": true
     },
     "COLS2LIST": {
       "valuelessFlags": [],
       "valueFlags": ["-gc", "-map", "-sep"],
       "minArgs": 2,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": true
     },
     "COLSPLIT": {
       "valuelessFlags": ["-o"],
       "valueFlags": ["-m", "-s"],
       "minArgs": 3,
-      "maxArgs": 3
+      "maxArgs": 3,
+      "gorCommand": true,
+      "norCommand": true
     },
     "COLTYPE": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": true
     },
     "COLUMNREORDER": {
       "valuelessFlags": ["-t"],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "COLUMNSORT": {
       "valuelessFlags": ["-s", "-sort", "-t"],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "COUNTROWS": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": false,
+      "norCommand": true
     },
     "CSVCC": {
       "valuelessFlags": ["-probphased", "-probunphased"],
       "valueFlags": ["-gc", "-s", "-threshold", "-u", "-vs"],
       "minArgs": 2,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": true
     },
     "CSVSEL": {
       "valuelessFlags": ["-dose", "-nopar", "-vcf"],
       "valueFlags": ["-gc", "-hide", "-s", "-tag", "-threshold", "-u", "-vs"],
       "minArgs": 2,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "DAGMAP": {
       "valuelessFlags": ["-cis", "-dp"],
       "valueFlags": ["-c", "-dl", "-m", "-ps"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "DEFLATECOLUMN": {
       "valuelessFlags": [],
       "valueFlags": ["-m"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "DISTINCT": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": true
     },
     "DISTLOC": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "FILTERINVALIDROWS": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": true
     },
     "FIRST": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "GAVA": {
       "valuelessFlags": ["-debug", "-dominant", "-noMaxAlleleCounts", "-protective", "-recessive", "-usePhase"],
       "valueFlags": ["-bailout", "-casefile", "-caselist", "-casepene", "-ctrlfile", "-ctrllist", "-ctrlpene", "-grouping", "-maxAf"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "GORROW": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": -1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": false,
+      "norCommand": false
     },
     "GRANNO": {
       "valuelessFlags": ["-avg", "-cdist", "-count", "-dis", "-h", "-lis", "-max", "-med", "-min", "-ordered", "-range", "-set", "-std", "-sum"],
       "valueFlags": ["-ac", "-fc", "-gc", "-ic", "-len", "-s", "-sc"],
       "minArgs": 0,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "GREP": {
       "valuelessFlags": ["-i", "-s", "-v"],
       "valueFlags": ["-c"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "GROUP": {
       "valuelessFlags": ["-avg", "-cdist", "-count", "-dis", "-h", "-lis", "-max", "-med", "-min", "-notruncate", "-ordered", "-set", "-std", "-sum"],
       "valueFlags": ["-ac", "-fc", "-gc", "-ic", "-len", "-s", "-sc", "-steps"],
       "minArgs": 0,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "GTGEN": {
       "valuelessFlags": [],
       "valueFlags": ["-gc", "-maxseg", "-tag"],
       "minArgs": 2,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": false
     },
     "GTLD": {
       "valuelessFlags": ["-calc", "-sum"],
       "valueFlags": ["-f"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "GTTRANSPOSE": {
       "valuelessFlags": ["-cols"],
       "valueFlags": ["-sep", "-vs"],
       "minArgs": 3,
-      "maxArgs": 3
+      "maxArgs": 3,
+      "gorCommand": true,
+      "norCommand": false
     },
     "HIDE": {
       "valuelessFlags": ["-sort", "-t"],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "IHE": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "INFLATECOLUMN": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "INSET": {
       "valuelessFlags": ["-b", "-cartesian", "-cis", "-e", "-h", "-not", "-ordered", "-s"],
       "valueFlags": ["-c", "-m", "-n"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "IOTEST": {
       "valuelessFlags": ["-p"],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "JOIN": {
       "valuelessFlags": ["-c", "-i", "-ic", "-ir", "-l", "-m", "-n", "-r", "-segseg", "-segsnp", "-segvar", "-snpseg", "-snpsnp", "-stdin", "-t", "-varseg", "-xcis"],
       "valueFlags": ["-e", "-f", "-lstop", "-maxseg", "-o", "-p", "-ref", "-refl", "-refr", "-rprefix", "-rstop", "-s", "-xl", "-xr"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "KING": {
       "valuelessFlags": ["-sym"],
       "valueFlags": ["-gc", "-maxvars", "-phithr", "-pi0thr", "-s", "-thetathr", "-vs"],
       "minArgs": 3,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "KING2": {
       "valuelessFlags": [],
       "valueFlags": ["-gc", "-phithr", "-pi0thr", "-s", "-thetathr", "-vs"],
       "minArgs": 2,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "LEFTJOIN": {
       "valuelessFlags": ["-c", "-h", "-i", "-ic", "-ir", "-l", "-m", "-n", "-r", "-segseg", "-segsnp", "-segvar", "-snpseg", "-snpsnp", "-stdin", "-t", "-varseg", "-xcis"],
       "valueFlags": ["-e", "-f", "-lstop", "-maxseg", "-o", "-p", "-ref", "-refl", "-refr", "-rprefix", "-rstop", "-s", "-xl", "-xr"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "LEFTWHERE": {
       "valuelessFlags": [],
       "valueFlags": ["-e"],
       "minArgs": 2,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "LIFTOVER": {
       "valuelessFlags": ["-all", "-bam", "-seg", "-snp", "-var"],
       "valueFlags": ["-alt", "-build", "-ref"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "LOG": {
       "valuelessFlags": [],
       "valueFlags": ["-a", "-l", "-t"],
       "minArgs": 0,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "LOGLEVEL": {
       "valuelessFlags": [],
       "valueFlags": ["-label"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "MAP": {
       "valuelessFlags": ["-b", "-cartesian", "-cis", "-e", "-h", "-l", "-not", "-ordered"],
       "valueFlags": ["-c", "-m", "-n"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "MERGE": {
       "valuelessFlags": ["-i", "-s", "-u"],
       "valueFlags": ["-c", "-e"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "MULTIMAP": {
       "valuelessFlags": ["-b", "-cartesian", "-cis", "-e", "-h", "-not", "-ordered"],
       "valueFlags": ["-c", "-m", "-n"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "PEDPIVOT": {
       "valuelessFlags": ["-a", "-v"],
       "valueFlags": ["-e", "-gc"],
       "minArgs": 2,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": true
     },
     "PILEUP": {
       "valuelessFlags": ["-depth", "-df", "-gt", "-nf", "-sex", "-soc"],
       "valueFlags": ["-bq", "-gc", "-i", "-mprob", "-p", "-q", "-span"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "PIPESTEPS": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "PIVOT": {
       "valuelessFlags": ["-h", "-ordered"],
       "valueFlags": ["-e", "-gc", "-v", "-vf", "-vp"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "PLINKADJUSTMENT": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "PLINKREGRESSION": {
       "valuelessFlags": ["-1", "-cvs", "-dom", "-firth", "-hc", "-imp", "-qn", "-rec", "-vcf", "-vs"],
       "valueFlags": ["-covar", "-geno", "-hwe", "-maf", "-residualize", "-threshold"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "PREFIX": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 2,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "PRGTGEN": {
       "valuelessFlags": ["-combgt"],
       "valueFlags": ["-anc", "-crc", "-e", "-fpab", "-fpbb", "-gc", "-gl", "-gp", "-ld", "-maxit", "-maxseg", "-osep", "-pabc", "-pbbc", "-pl", "-pn", "-prgc", "-psep", "-rd", "-th", "-tol"],
       "minArgs": 2,
-      "maxArgs": 3
+      "maxArgs": 3,
+      "gorCommand": true,
+      "norCommand": false
     },
     "QUEEN": {
       "valuelessFlags": [],
       "valueFlags": ["-gc", "-minSharing", "-s", "-vs"],
       "minArgs": 3,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "RANGE": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": false,
+      "norCommand": false
     },
     "RANK": {
       "valuelessFlags": ["-b", "-c", "-q", "-z"],
       "valueFlags": ["-gc", "-o", "-rmax"],
       "minArgs": 1,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": true
     },
     "REGRESSION": {
       "valuelessFlags": ["-imp", "-linear", "-logistic"],
       "valueFlags": ["-covar", "-s"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "REGSEL": {
       "valuelessFlags": [],
       "valueFlags": ["-e"],
       "minArgs": 3,
-      "maxArgs": 3
+      "maxArgs": 3,
+      "gorCommand": true,
+      "norCommand": true
     },
     "RELREMOVE": {
       "valuelessFlags": ["-sepcc"],
       "valueFlags": ["-rsymb", "-weightcol"],
       "minArgs": 0,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": false,
+      "norCommand": true
     },
     "RENAME": {
       "valuelessFlags": ["-s"],
       "valueFlags": [],
       "minArgs": 2,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "REPLACE": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 2,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "ROOTLOGLEVEL": {
       "valuelessFlags": [],
       "valueFlags": ["-label"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "ROWNUM": {
       "valuelessFlags": [],
       "valueFlags": ["-gc"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": true
     },
     "SED": {
       "valuelessFlags": ["-f", "-i"],
       "valueFlags": ["-c"],
       "minArgs": 2,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": true
     },
     "SEGHIST": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "SEGPROJ": {
       "valuelessFlags": [],
       "valueFlags": ["-f", "-gc", "-maxseg", "-sumcol"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "SEGSPAN": {
       "valuelessFlags": [],
       "valueFlags": ["-gc", "-maxseg"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "SEGWHERE": {
       "valuelessFlags": ["-eh", "-sh"],
       "valueFlags": ["-minseg"],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "SELECT": {
       "valuelessFlags": ["-append", "-s", "-sort", "-t"],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "SELFJOIN": {
       "valuelessFlags": ["-h"],
       "valueFlags": ["-f", "-x"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "SELWHERE": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 2,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "SEQ": {
       "valuelessFlags": [],
       "valueFlags": ["-c", "-l"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "SETCOLTYPE": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 2,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "SIGNATURE": {
       "valuelessFlags": [],
       "valueFlags": ["-file", "-filecontent", "-timeres"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": true
     },
     "SKIP": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "SORT": {
       "valuelessFlags": [],
       "valueFlags": ["-c"],
       "minArgs": 0,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "SPAN": {
       "valuelessFlags": [],
       "valueFlags": ["-gc", "-maxseg"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "SPLIT": {
       "valuelessFlags": [],
       "valueFlags": ["-e", "-s"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "TEE": {
       "valuelessFlags": ["-h"],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "THROWIF": {
       "valuelessFlags": ["-retriable"],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "TOGOR": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": false,
+      "norCommand": true
     },
     "TOP": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "TRYHIDE": {
       "valuelessFlags": ["-sort"],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "TRYSELECT": {
       "valuelessFlags": ["-s", "-sort"],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "TRYWHERE": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "TSVAPPEND": {
       "valuelessFlags": ["-noheader"],
       "valueFlags": ["-link", "-linkmeta", "-prefix"],
       "minArgs": 0,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": false,
+      "norCommand": true
     },
     "UNPIVOT": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "UNTIL": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "UPTO": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "VALIDATECOLUMNS": {
       "valuelessFlags": [],
       "valueFlags": ["-n"],
       "minArgs": 0,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "VARGROUP": {
       "valuelessFlags": [],
       "valueFlags": ["-gc", "-sep"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "VARIANTS": {
       "valuelessFlags": ["-count"],
       "valueFlags": ["-bpmergedist", "-gc", "-readlength"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "VARJOIN": {
       "valuelessFlags": ["-i", "-ic", "-ir", "-l", "-n", "-nonorm", "-norm", "-r", "-stdin", "-xcis"],
       "valueFlags": ["-alt", "-altl", "-altr", "-as", "-e", "-maxseg", "-p", "-ref", "-refl", "-refr", "-rprefix", "-s", "-span", "-xl", "-xr"],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
     },
     "VARMERGE": {
       "valuelessFlags": ["-nonorm", "-seg"],
       "valueFlags": ["-span"],
       "minArgs": 2,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": false
     },
     "VARNORM": {
       "valuelessFlags": ["-left", "-right", "-seg", "-trim"],
       "valueFlags": ["-span"],
       "minArgs": 2,
-      "maxArgs": 2
+      "maxArgs": 2,
+      "gorCommand": true,
+      "norCommand": false
     },
     "VERIFYCOLTYPE": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": true
     },
     "VERIFYORDER": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "VERIFYVARIANT": {
       "valuelessFlags": [],
       "valueFlags": ["-alt", "-maxlen", "-ref"],
       "minArgs": 0,
-      "maxArgs": 0
+      "maxArgs": 0,
+      "gorCommand": true,
+      "norCommand": false
     },
     "WAIT": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": 1
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "WHERE": {
       "valuelessFlags": [],
       "valueFlags": [],
       "minArgs": 1,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     },
     "WRITE": {
       "valuelessFlags": ["-c", "-inferschema", "-m", "-maxseg", "-noheader", "-r"],
       "valueFlags": ["-card", "-d", "-f", "-i", "-l", "-link", "-linkmeta", "-prefix", "-t", "-tags"],
       "minArgs": 0,
-      "maxArgs": -1
+      "maxArgs": -1,
+      "gorCommand": true,
+      "norCommand": true
     }
   },
   "inputSources": {

@@ -39,6 +39,7 @@ public final class GenerateMain {
                 FlagMatrixGenerator.generate(inventory, values).cases);
         generated.addAll(InputSourceMatrixGenerator.generate(inventory).cases);
         generated.addAll(MacroMatrixGenerator.generate(inventory).cases);
+        generated.addAll(NorContextGenerator.generate(inventory).cases);
         generated.addAll(FunctionMatrixGenerator.generate(inventory).cases);
         generated.addAll(DocHarvester.harvest().cases);
 
@@ -132,6 +133,8 @@ public final class GenerateMain {
                 InputSourceMatrixGenerator.generate(inventory);
         MacroMatrixGenerator.GenerationResult macros =
                 MacroMatrixGenerator.generate(inventory);
+        NorContextGenerator.GenerationResult norCases =
+                NorContextGenerator.generate(inventory);
         FunctionMatrixGenerator.GenerationResult functions =
                 FunctionMatrixGenerator.generate(inventory);
         DocHarvester.HarvestResult docs = DocHarvester.harvest();
@@ -139,6 +142,7 @@ public final class GenerateMain {
         List<CompatCase> candidates = new ArrayList<>(flags.cases);
         candidates.addAll(sources.cases);
         candidates.addAll(macros.cases);
+        candidates.addAll(norCases.cases);
         candidates.addAll(functions.cases);
         candidates.addAll(docs.cases);
         List<String> unreproducible = screenForReproducibility(candidates);
@@ -167,6 +171,8 @@ public final class GenerateMain {
                 sources.cases.size(), sources.unmappedValueFlags.size());
         System.out.printf("  macros:       %d cases, %d value-flags unmapped%n",
                 macros.cases.size(), macros.unmappedValueFlags.size());
+        System.out.printf("  nor context:  %d cases, %d commands are gor-only%n",
+                norCases.cases.size(), norCases.gorOnly.size());
         System.out.printf("  functions:    %d cases, %d not callable from signatures, "
                         + "%d non-deterministic%n",
                 functions.cases.size(), functions.unsupported.size(),

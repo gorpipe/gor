@@ -82,6 +82,25 @@ public final class CommandArgs {
     }
 
     /**
+     * The positional argument to use in a NOR query, when it differs.
+     *
+     * Some commands take a bin size in GOR and none in NOR — the documentation
+     * gives "GROUP binsize [attributes]" for gor and "GROUP [attributes]" for nor —
+     * so the GOR positional would be read as an attribute there.
+     */
+    public String norPositional(String command) {
+        Map<String, String> entry = entry(command);
+        return entry.containsKey("norPositional")
+                ? entry.get("norPositional")
+                : positional(command);
+    }
+
+    /** Whether a NOR-specific positional was curated for this command. */
+    public boolean hasNorPositional(String command) {
+        return entry(command).containsKey("norPositional");
+    }
+
+    /**
      * Whether the case must run in a NOR query rather than a GOR one.
      *
      * RELREMOVE and TSVAPPEND reject a GOR query outright — "trying to execute

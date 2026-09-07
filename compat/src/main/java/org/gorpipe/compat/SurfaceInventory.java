@@ -34,14 +34,19 @@ public final class SurfaceInventory {
         public final List<String> valueFlags;
         public final int minArgs;
         public final int maxArgs;
+        /** Whether the command may appear in a GOR query, a NOR query, or both. */
+        public final boolean gorCommand;
+        public final boolean norCommand;
 
         CommandSurface(String name, List<String> valuelessFlags, List<String> valueFlags,
-                       int minArgs, int maxArgs) {
+                       int minArgs, int maxArgs, boolean gorCommand, boolean norCommand) {
             this.name = name;
             this.valuelessFlags = Collections.unmodifiableList(valuelessFlags);
             this.valueFlags = Collections.unmodifiableList(valueFlags);
             this.minArgs = minArgs;
             this.maxArgs = maxArgs;
+            this.gorCommand = gorCommand;
+            this.norCommand = norCommand;
         }
 
         public List<String> allFlags() {
@@ -78,7 +83,9 @@ public final class SurfaceInventory {
         while (it.hasNext()) {
             scala.Tuple2<String, CommandInfo> entry = it.next();
             String name = entry._1();
-            commands.put(name, surfaceOf(name, entry._2().commandArguments()));
+            commands.put(name, surfaceOf(name, entry._2().commandArguments(),
+                    entry._2().commandOptions().gorCommand(),
+                    entry._2().commandOptions().norCommand()));
         }
 
         Map<String, CommandSurface> inputSources = new TreeMap<>();
@@ -86,7 +93,8 @@ public final class SurfaceInventory {
                 GorInputSources.commandMap().iterator();
         while (sources.hasNext()) {
             scala.Tuple2<String, InputSourceInfo> entry = sources.next();
-            inputSources.put(entry._1(), surfaceOf(entry._1(), entry._2().commandArguments()));
+            inputSources.put(entry._1(),
+                    surfaceOf(entry._1(), entry._2().commandArguments(), true, true));
         }
 
         Map<String, CommandSurface> macros = new TreeMap<>();
@@ -94,7 +102,8 @@ public final class SurfaceInventory {
                 GorPipeMacros.macrosMap().iterator();
         while (macroEntries.hasNext()) {
             scala.Tuple2<String, MacroInfo> entry = macroEntries.next();
-            macros.put(entry._1(), surfaceOf(entry._1(), entry._2().commandArguments()));
+            macros.put(entry._1(),
+                    surfaceOf(entry._1(), entry._2().commandArguments(), true, false));
         }
 
         // FunctionRegistry is a class; the CALC/WHERE surface lives in the
@@ -104,12 +113,14 @@ public final class SurfaceInventory {
                 new TreeMap<>(CalcFunctions.registry().functionSignatures()));
     }
 
-    private static CommandSurface surfaceOf(String name, CommandArguments args) {
+    private static CommandSurface surfaceOf(String name, CommandArguments args,
+                                            boolean gorCommand, boolean norCommand) {
         return new CommandSurface(name,
                 splitFlags(args.options()),
                 splitFlags(args.valueOptions()),
                 args.minimumNumberOfArguments(),
-                args.maximumNumberOfArguments());
+                args.maximumNumberOfArguments(),
+                gorCommand, norCommand);
     }
 
     /** Flags are declared as one space-separated string, e.g. "-snpsnp -segseg -l". */
@@ -182,7 +193,9 @@ public final class SurfaceInventory {
             sb.append("      \"valuelessFlags\": ").append(jsonArray(c.valuelessFlags)).append(",\n");
             sb.append("      \"valueFlags\": ").append(jsonArray(c.valueFlags)).append(",\n");
             sb.append("      \"minArgs\": ").append(c.minArgs).append(",\n");
-            sb.append("      \"maxArgs\": ").append(c.maxArgs).append('\n');
+            sb.append("      \"maxArgs\": ").append(c.maxArgs).append(",\n");
+            sb.append("      \"gorCommand\": ").append(c.gorCommand).append(",\n");
+            sb.append("      \"norCommand\": ").append(c.norCommand).append('\n');
             sb.append("    }").append(++ci < commands.size() ? "," : "").append('\n');
         }
         sb.append("  },\n");
