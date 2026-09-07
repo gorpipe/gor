@@ -83,6 +83,13 @@ surface either way; it just is not a claim the documentation supports.
   from the function's signature (`String:Int2String` becomes `FN('a',1)`).
 - **Input source matrix** — a bare invocation plus one case per flag for each input
   source. Every query begins with one, and `GOR` alone declares 23 flags.
+- **Macro matrix** — a bare invocation plus one case per flag for each macro. A
+  macro expands into a script rather than running as a pipe step, so it leads the
+  query and neither of the matrices above could reach one.
+- **NOR context** — one case per command that is valid in a NOR query as well as a
+  GOR one. NOR is a second execution context, not a variation: rows carry synthetic
+  position columns, some commands are refused outright, and others take different
+  arguments. 66 of 108 commands accept NOR.
 - **Doc harvest** — self-contained snippets lifted from `documentation/src`.
 - **Nightly only** (`:compat:generateNightly`) — mutants and grammar-fuzz cases.
   Mutants are filtered by coverage feedback: each candidate runs under the JaCoCo
@@ -104,11 +111,20 @@ the rest. Each is curated deliberately; nothing here is guessed.
   rejects any invocation with no join type.
 - `inventory/input-source-args.yml` — the same, for input sources, whose arguments
   vary more: `GOR` wants a file, `GORROW` a position, `NORROWS` a row count.
+- `inventory/macro-args.yml` — the same, for macros.
 - `inventory/exclusions.yml` — surface deliberately left uncovered, each entry with
   a reason. Every generator reads this file, so leaving out a command (`cmd.CMD`),
-  a function (`fn.SYSTEM`) or an input source (`is.SQL`) means writing down why.
-  `CMD` and `SQL` exist as both a pipe command and an input source, and each needs
-  its own entry.
+  a function (`fn.SYSTEM`), an input source (`is.SQL`) or a macro
+  (`macro.PARTGOR`) means writing down why. `CMD` and `SQL` exist as both a pipe
+  command and an input source, and each needs its own entry. A single generated
+  case can also be named — `case.cmd.king.flag_sym` — for when one case is
+  unstable and the command around it is fine.
+
+Beyond a positional argument, a command entry may also carry `requiredFlags` (a
+companion flag the command refuses to run without), `source` (a fixture of a
+different shape), `needsReference` (write the synthetic chromSeq build into the
+case root), `nor` (run it as a NOR query) and `norPositional` (a different
+positional in NOR — `GROUP` takes a bin size in GOR and none in NOR).
 
 ## Fixtures
 
@@ -126,6 +142,10 @@ finished query actually names.
 | `buckets.gor`, `markerbuckets.gor` | bucket, values, af (+ Ref/Alt) | CSVSEL, CSVCC, KING, KING2, QUEEN, GTTRANSPOSE, REGRESSION, GTLD |
 | `tagbuckets.tsv`, `tagsel.tsv`, `tagsel2.tsv`, `tagpairs.tsv`, `pheno-cc.tsv` | tag relations | the same family's positional arguments |
 | `genotypes.gor`, `coverage.gor`, `markers.gor`, `pedigree.tsv` | per-sample PN/GT and friends | GTGEN, PEDPIVOT, GTTRANSPOSE |
+| `prgenotypes.gor`, `prcoverage.gor` | PL triplets and depth | PRGTGEN |
+| `refvariants.gor` | Ref agreeing with the synthetic build | VERIFYVARIANT |
+| `gavavariants.gor` | gene, pos, ref, alt, pn, callcopies, phase, score | GAVA |
+| `steps.yml` | a gor dialog holding analysis steps | PIPESTEPS |
 
 A command needing a shape the default fixture lacks names its file through a
 `source` entry in `inventory/command-args.yml`. Every requirement in that file was
@@ -162,6 +182,16 @@ than wedging CI.
 
 Gates: a failing spec case, an unaccepted baseline diff, a lint violation, a stale
 inventory, or a baseline case with no committed output.
+
+`./gradlew :compat:report` splits each surface gap into what is excluded on
+purpose and what is still reachable, because most of what remains is the former
+and one combined number reads as far more outstanding work than there is. It
+counts NOR coverage separately: a command covered in GOR is not thereby covered
+in NOR.
+
+`./gradlew :compat:marginalCoverageReport` answers a different question — what the
+corpus adds *on top of* the unit tests, which is a much smaller number than its
+own coverage and the honest one to quote.
 
 Does not gate: code coverage, surface completeness, or the documentation
 cross-check. All are printed on every run as diagnostics. The suite this replaced
