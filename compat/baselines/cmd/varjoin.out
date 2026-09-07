@@ -98,6 +98,12 @@ Chrom	Pos	Ref	Alt	Posx	Refx	Altx
 >>> cmd.varjoin.flag_refr
 Chrom	Pos	Ref	Alt	Posx	Refx	Altx
 <<<
+>>> cmd.varjoin.flag_rprefix
+Chrom	Pos	Ref	Alt	r_Pos	r_Ref	r_Alt
+chr1	100	A	G	100	A	G
+chr1	200	C	T	200	C	T
+chr2	150	G	A	150	G	A
+<<<
 >>> cmd.varjoin.flag_s
 Chrom	Pos	Ref	Alt	Posx	Refx	Altx	Gene
 chr1	100	A	G	100	A	G	left.gor

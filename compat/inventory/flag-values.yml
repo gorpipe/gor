@@ -195,6 +195,7 @@ VARJOIN:
   "-xl": "Pos"
   "-xr": "Pos"
   "-as": "1"   # intValueOfOption
+  "-rprefix": "r"   # JOIN documents -rprefix as a prefix added to the right-source columns; VARJOIN takes it the same way
 
 VERIFYVARIANT:
   "-alt": "Pos"
@@ -307,3 +308,6 @@ LEFTJOIN:
   "-ref": "Ref"   # documented as the column denoting the reference sequence
   "-refl": "Ref"   # the reference column in the left source
   "-refr": "Ref"   # the reference column in the right source
+
+REGRESSION:
+  "-covar": "${ROOT}/pheno-cc.tsv"   # documented in the usage line as -covar covariates, a file

@@ -152,6 +152,14 @@
   inputs:
     - path: "left.gor"
       content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+- id: cmd.varjoin.flag_rprefix
+  tier: baseline
+  mode: exact
+  behavior: "Generated: VARJOIN with -rprefix"
+  query: "gor ${ROOT}/left.gor | VARJOIN -rprefix r ${ROOT}/left.gor | top 5"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
 - id: cmd.varjoin.flag_s
   tier: baseline
   mode: exact
