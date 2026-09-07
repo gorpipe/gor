@@ -1,0 +1,80 @@
+- id: cmd.map.drops_a_row_whose_lookup_misses
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "MAP is an inner join by default: a row whose key is absent from the map file is dropped rather than kept with an empty value"
+  cites: ["documentation/src/command/MAP.rst"]
+  query: "gor ${ROOT}/left.gor | MAP -c Ref ${ROOT}/m.tsv"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+    - path: "m.tsv"
+      content: "#Ref	Label\nA	alpha\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	Label
+    chr1	100	A	G	alpha
+
+- id: cmd.map.m_supplies_the_value_for_a_failed_lookup
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "MAP -m is documented as the value used when the lookup is unsuccessful, and supplying it changes the join from inner to outer: the unmatched row is kept and carries that value"
+  cites: ["documentation/src/command/MAP.rst"]
+  query: "gor ${ROOT}/left.gor | MAP -c Ref -m none ${ROOT}/m.tsv"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+    - path: "m.tsv"
+      content: "#Ref	Label\nA	alpha\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	Label
+    chr1	100	A	G	alpha
+    chr1	200	C	T	none
+
+- id: cmd.map.the_data_lookup_is_case_sensitive
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "The documentation says the match on column *name* is not case-sensitive; the data is another matter. A map keyed on lowercase a matches no row whose Ref is A, so every row is dropped"
+  cites: ["documentation/src/command/MAP.rst"]
+  query: "gor ${ROOT}/left.gor | MAP -c Ref ${ROOT}/mlow.tsv"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+    - path: "mlow.tsv"
+      content: "#Ref	Label\na	alpha\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	Label
+
+- id: cmd.map.cis_makes_the_data_lookup_case_insensitive
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "MAP -cis is documented as case-insensitive column data lookup, and with it the same lowercase key matches. The pair states plainly which half of MAP is case-sensitive: names never, data only with -cis"
+  cites: ["documentation/src/command/MAP.rst"]
+  query: "gor ${ROOT}/left.gor | MAP -c Ref -cis ${ROOT}/mlow.tsv"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+    - path: "mlow.tsv"
+      content: "#Ref	Label\na	alpha\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	Label
+    chr1	100	A	G	alpha
+
+- id: cmd.inset.not_keeps_only_the_rows_absent_from_the_set
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "INSET -not keeps exactly the rows whose value is not in the set and adds no column, which is what negating a set membership test should do"
+  cites: ["documentation/src/command/INSET.rst"]
+  query: "gor ${ROOT}/left.gor | INSET -c Ref -not ${ROOT}/m.tsv"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+    - path: "m.tsv"
+      content: "#Ref	Label\nA	alpha\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	200	C	T
+

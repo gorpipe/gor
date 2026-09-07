@@ -103,7 +103,41 @@ A comma-separated `PL` value where the separator is `;` by default runs the pars
 off the end of the string: `StringIndexOutOfBoundsException`. Same class as 1.5 —
 bad data producing an internal exception rather than a message.
 
-### 2.8 Undocumented conventions now pinned
+### 2.9 `MAP -not` emits rows narrower than its own header
+
+Documented as "Negate condition, i.e. NOTINSET", but it does not negate anything:
+
+```
+gor left.gor | MAP -c Ref -not map.tsv
+
+Chrom  Pos  Ref  Alt  Label      <- 5 columns
+chr1   100  A    G    alpha      <- 5, and this row matched, so NOTINSET should have dropped it
+chr1   200  C    T               <- 4 columns
+chr2   150  G    A               <- 4 columns
+```
+
+Every row is kept, including the matched one, and the rows that missed the lookup
+are emitted one field short of the header. The harm is not cosmetic — a following
+step cannot read them:
+
+```
+gor left.gor | MAP -c Ref -not map.tsv | calc N len(Label)   ->  ERROR
+```
+
+`MAP -not -b` is well formed (a 0/1 column, five fields throughout, though the
+matched row still carries the mapped value rather than 1), and `INSET -c Ref -not`
+does the sane thing: keeps only the unmatched rows and adds no column.
+
+Not fixed, because the right behaviour is a judgement call — drop the matched rows
+as NOTINSET implies, keep them all with the missing value, or reject `-not`
+without `-b`. Same family as 1.3, where LEFTWHERE emitted a row one field *too
+wide*; that one broke a parse downstream, this one breaks the next pipe step.
+
+Correct behaviour around it is pinned by `cmd.map.drops_a_row_whose_lookup_misses`,
+`cmd.map.m_supplies_the_value_for_a_failed_lookup` and
+`cmd.inset.not_keeps_only_the_rows_absent_from_the_set`.
+
+### 2.10 Undocumented conventions now pinned
 
 Each of these is a real contract that nothing stated. A change to any would look
 like an improvement and break callers silently.
