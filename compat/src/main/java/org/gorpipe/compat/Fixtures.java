@@ -184,6 +184,15 @@ public final class Fixtures {
                         + "chr1\t50\t150\tPN001\t30\n"
                         + "chr1\t50\t150\tPN002\t25\n"
                         + "chr1\t150\t250\tPN001\t20\n"));
+        // A gor dialog holding analysis steps, which PIPESTEPS reads and applies.
+        // The shape is the one the PIPESTEPS page documents: a named dialog with a
+        // Description and a stepentry holding the pipe steps.
+        inputs.add(input("steps.yml",
+                "MySteps:\n"
+                        + " Description: |\n"
+                        + "     steps used by the compatibility suite\n"
+                        + " stepentry: |\n"
+                        + "     calc X 1 | top 1\n"));
         // Tag pairs, which KING2 requires as (PN1, PN2) rather than a tag list.
         inputs.add(input("tagpairs.tsv", "#PN1\tPN2\nPN001\tPN002\n"));
         // Case-control status per tag, which CSVCC requires as (tag, cc-status).

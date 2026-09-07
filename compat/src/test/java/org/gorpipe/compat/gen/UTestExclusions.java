@@ -29,6 +29,15 @@ public class UTestExclusions {
     }
 
     @Test
+    public void excludesOneCaseWithoutExcludingItsCommand() {
+        Exclusions exclusions = Exclusions.load();
+        Assert.assertTrue(exclusions.excludesCase("cmd.king.flag_sym"));
+        Assert.assertFalse("excluding one case must not exclude the whole command",
+                exclusions.excludesCommand("KING"));
+        Assert.assertFalse(exclusions.excludesCase("cmd.king.bare"));
+    }
+
+    @Test
     public void everyEntryCarriesAReason() {
         Exclusions exclusions = Exclusions.load();
         Assert.assertFalse(exclusions.entries().isEmpty());

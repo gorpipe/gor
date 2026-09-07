@@ -41,15 +41,17 @@ public final class Exclusions {
     private final Set<String> excludedFunctions;
     private final Set<String> excludedInputSources;
     private final Set<String> excludedMacros;
+    private final Set<String> excludedCases;
 
     private Exclusions(List<Entry> entries, Set<String> excludedCommands,
                        Set<String> excludedFunctions, Set<String> excludedInputSources,
-                       Set<String> excludedMacros) {
+                       Set<String> excludedMacros, Set<String> excludedCases) {
         this.entries = Collections.unmodifiableList(entries);
         this.excludedCommands = Collections.unmodifiableSet(excludedCommands);
         this.excludedFunctions = Collections.unmodifiableSet(excludedFunctions);
         this.excludedInputSources = Collections.unmodifiableSet(excludedInputSources);
         this.excludedMacros = Collections.unmodifiableSet(excludedMacros);
+        this.excludedCases = Collections.unmodifiableSet(excludedCases);
     }
 
     public static Exclusions load() {
@@ -63,8 +65,9 @@ public final class Exclusions {
         Set<String> functions = new TreeSet<>();
         Set<String> inputSources = new TreeSet<>();
         Set<String> macros = new TreeSet<>();
+        Set<String> cases = new TreeSet<>();
         if (!Files.exists(file)) {
-            return new Exclusions(entries, commands, functions, inputSources, macros);
+            return new Exclusions(entries, commands, functions, inputSources, macros, cases);
         }
         try (InputStream in = Files.newInputStream(file)) {
             Object raw = new Yaml().load(in);
@@ -88,13 +91,15 @@ public final class Exclusions {
                         inputSources.add(element.substring("is.".length()));
                     } else if (element.startsWith("macro.")) {
                         macros.add(element.substring("macro.".length()));
+                    } else if (element.startsWith("case.")) {
+                        cases.add(element.substring("case.".length()));
                     }
                 }
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot read " + file, e);
         }
-        return new Exclusions(entries, commands, functions, inputSources, macros);
+        return new Exclusions(entries, commands, functions, inputSources, macros, cases);
     }
 
     private static String asString(Object value) {
@@ -119,6 +124,16 @@ public final class Exclusions {
 
     public boolean excludesMacro(String macro) {
         return excludedMacros.contains(macro);
+    }
+
+    /**
+     * Whether one specific generated case is excluded by id.
+     *
+     * For a case that is known to be unstable rather than a whole command that is:
+     * excluding KING outright would lose the seven of its cases that are fine.
+     */
+    public boolean excludesCase(String caseId) {
+        return excludedCases.contains(caseId);
     }
 
     public int size() {

@@ -1,0 +1,15 @@
+- id: cmd.pipesteps.applies_the_steps_named_in_the_dialog
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "PIPESTEPS reads analysis steps out of a gor dialog yml and runs them as if they had been written in the query: the entry here holds 'calc X 1 | top 1', and the result is the source with an X column and a single row"
+  cites: ["documentation/src/command/PIPESTEPS.rst"]
+  query: "gor ${ROOT}/left.gor | PIPESTEPS ${ROOT}/steps.yml(stepentry)"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+    - path: "steps.yml"
+      content: "MySteps:\n Description: |\n     steps used by the compatibility suite\n stepentry: |\n     calc X 1 | top 1\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	X
+    chr1	100	A	G	1

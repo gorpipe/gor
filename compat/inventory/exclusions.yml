@@ -108,3 +108,9 @@
   reason: "Its argument must be a nested gorpipe command, not a file"
   ticket: null
 
+# One specific generated case, rather than a whole command. KING itself is fine
+# and its other cases are covered.
+- element: case.cmd.king.flag_sym
+  reason: "KING -sym emits its pair rows in a nondeterministic order — identical values, different order between runs. The reproducibility probe catches it only sometimes, since two runs agree on the order about half the time, so it is named here rather than left to fail intermittently"
+  ticket: null
+

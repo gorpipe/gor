@@ -278,3 +278,10 @@ PRGTGEN:
   source: "${ROOT}/prgenotypes.gor"
   positional: "${ROOT}/tagbuckets.tsv ${ROOT}/prcoverage.gor"
 
+# PIPESTEPS reads its steps from a gor dialog yml, named as file(entry). Given a
+# file it can read, its output is the result of those steps and carries no path —
+# which is why its generated case used to be dropped as unreproducible: the error
+# it produced instead quoted the project root and reported its length.
+PIPESTEPS:
+  positional: "${ROOT}/steps.yml(stepentry)"
+
