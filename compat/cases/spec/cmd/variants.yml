@@ -1,0 +1,43 @@
+- id: cmd.varnorm.trim_removes_the_shared_leading_base_and_advances_the_position
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "VARNORM -trim is documented as deleting redundant bases from the ref and alt representations. AT to AG share a leading A, so trimming leaves T to G — and the position advances by one to stay on the base that is left. Getting that shift wrong by one is the classic way variant normalisation breaks, and it breaks quietly"
+  cites: ["documentation/src/command/VARNORM.rst"]
+  query: "gor ${ROOT}/snv.gor | VARNORM Ref Alt -trim"
+  inputs:
+    - path: "snv.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	AT	AG\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	101	T	G
+
+- id: cmd.varnorm.trim_of_a_deletion_leaves_an_empty_alt
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "Trimming a deletion written as ATT to A removes the shared A and leaves the deleted bases against an empty alt, at the position after the anchor. An empty column rather than a dash or the anchor base is the representation to expect downstream"
+  cites: ["documentation/src/command/VARNORM.rst"]
+  query: "gor ${ROOT}/del.gor | VARNORM Ref Alt -trim"
+  inputs:
+    - path: "del.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	ATT	A\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	101	TT	
+
+- id: cmd.varjoin.matches_on_the_allele_not_only_the_position
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "VARJOIN matches variants, not positions: the right source has a row at each of the left source's positions, but only the one whose ref and alt both agree joins. The row at 200 shares chrom, pos and ref and differs only in alt, and it does not match"
+  cites: ["documentation/src/command/VARJOIN.rst"]
+  query: "gor ${ROOT}/vl.gor | VARJOIN -i ${ROOT}/vr.gor"
+  inputs:
+    - path: "vl.gor"
+      content: "Chrom	Pos	Ref	Alt\nchr1	100	A	G\nchr1	200	C	T\n"
+    - path: "vr.gor"
+      content: "Chrom	Pos	Ref	Alt	Tag\nchr1	100	A	G	same\nchr1	200	C	A	diffalt\n"
+  expected: |
+    Chrom	Pos	Ref	Alt
+    chr1	100	A	G
