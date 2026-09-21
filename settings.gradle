@@ -4,7 +4,8 @@ plugins {
 
 refreshVersions {
     rejectVersionIf {
-        candidate.stabilityLevel.isLessStableThan(current.stabilityLevel)
+        candidate.stabilityLevel.isLessStableThan(current.stabilityLevel) ||
+                (moduleId.group == "io.netty" && !candidate.value.startsWith("4.1."))
     }
 }
 
