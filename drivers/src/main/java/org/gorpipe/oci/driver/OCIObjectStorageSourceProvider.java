@@ -39,7 +39,7 @@ import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import java.util.regex.Pattern;
 
 import static org.gorpipe.oci.driver.OCIUrl.DEFAULT_OCI_ENDPOINT;
@@ -75,7 +75,7 @@ public class OCIObjectStorageSourceProvider extends StreamSourceProvider {
     private static final String OCI_SIMPLE_FINGERPRINT = System.getProperty("gor.oci.simple.fingerprint","");
 
     private static final Cache<String, ObjectStorage> clientCache = CacheBuilder.newBuilder()
-            .expireAfterAccess(1, TimeUnit.HOURS)
+            .expireAfterAccess(Duration.ofHours(1))
             .build();
 
     private static final CredentialClientCache<ObjectStorageAsync> clientCredCache =

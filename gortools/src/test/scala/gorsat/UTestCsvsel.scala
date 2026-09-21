@@ -37,7 +37,7 @@ class UTestCsvsel2 extends AnyFunSuite with BeforeAndAfter {
   var pnFile: String =_
   var gorFileHC: String =_
   var gorFilePr: String =_
-  val bucketCont: String = "TAG\tBUCKET\n" + Range(0, 25).map(id => id + "\t" + (id / 5)).mkString("\n") + "\n"
+  val bucketCont: String = "TAG\tBUCKET\n" + Range(0, 25).map(id => s"$id\t${id / 5}").mkString("\n") + "\n"
   val pnCont: String = Range(0, 25).mkString("\n") + "\n"
   val gorContHC: String = "CHROM\tPOS\tREF\tALT\tBUCKET\tVALUES\n" +
     "chr1\t1\tA\tC\t0\t01230\n" +

@@ -72,7 +72,7 @@ class UTestPrGtGenAnalysis extends AnyFunSuite with BeforeAndAfter {
     moreGorPath = writeLinesToFile(tmpDirPath, "moreGorFile.gor", gorLines, "CHROM\tPOS\tREF\tALT\tGP\tPN")
   }
 
-  def writeLinesToFile(dir: String, fileName: String, lines: Traversable[String], header: String = null): String = {
+  def writeLinesToFile(dir: String, fileName: String, lines: Iterable[String], header: String = null): String = {
     val file = new File(dir, fileName)
     val writer = new BufferedWriter(new FileWriter(file))
     if (header != null) writer.write(header + "\n")
@@ -437,7 +437,7 @@ val priorFile = writeLinesToFile(tmpDirPath, "prior1.gor", priorLines, "CHROM\tP
       PrGtGen.getGtCols(args, leftCols, leftHeader, false)
     } catch {
       case _: GorParsingException => success = true
-      case _ => //
+      case _: Throwable => //
     }
     assert(success)
   }
@@ -451,7 +451,7 @@ val priorFile = writeLinesToFile(tmpDirPath, "prior1.gor", priorLines, "CHROM\tP
       PrGtGen.getGtCols(args, leftCols, leftHeader, false)
     } catch {
       case _: GorParsingException => success = true
-      case _ => //
+      case _: Throwable => //
     }
     assert(success)
   }

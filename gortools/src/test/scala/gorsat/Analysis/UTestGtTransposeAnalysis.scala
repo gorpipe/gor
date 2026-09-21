@@ -33,7 +33,7 @@ class UTestGtTransposeAnalysis extends AnyFunSuite with BeforeAndAfter {
       factory1.getAnalysis()
     } catch {
       case _: GorParsingException => success = true
-      case _=>
+      case _: Throwable => 
     }
     assert(success)
 
@@ -43,7 +43,7 @@ class UTestGtTransposeAnalysis extends AnyFunSuite with BeforeAndAfter {
       factory2.getAnalysis()
     } catch {
       case _: GorParsingException => success = true
-      case _=>
+      case _: Throwable => 
     }
     assert(success)
   }
@@ -296,7 +296,7 @@ class UTestGtTransposeAnalysis extends AnyFunSuite with BeforeAndAfter {
     }
   }
 
-  def writeFile(name: String, content: Traversable[String], header: String = ""): String = {
+  def writeFile(name: String, content: Iterable[String], header: String = ""): String = {
     val file = new File(dir, name)
     val writer = new BufferedWriter(new FileWriter(file))
     if (header != "") {

@@ -74,7 +74,7 @@ class UTestPGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
 
     buffer.drop(12).forall(b => b == 0)
 
-    val src = Source.fromFile(tmpDir + "/pgenFileImp.pvar")
+    val src = Source.fromFile(tmpDir.toString + "/pgenFileImp.pvar")
     val pvarFileSource = src.getLines()
     Assert.assertEquals("#CHROM\tID\tPOS\tALT\tREF", pvarFileSource.next())
     Assert.assertEquals("1\tchr1:1:A:C\t1\tC\tA", pvarFileSource.next())
@@ -114,7 +114,7 @@ class UTestPGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
 
     buffer.drop(12).forall(b => b == 0)
 
-    val src = Source.fromFile(tmpDir + "/pgenFileImpGorp.pvar");
+    val src = Source.fromFile(tmpDir.toString + "/pgenFileImpGorp.pvar");
     val pvarFileSource = src.getLines()
     Assert.assertEquals("#CHROM\tID\tPOS\tALT\tREF", pvarFileSource.next())
     Assert.assertEquals("1\tchr1:1:A:C\t1\tC\tA", pvarFileSource.next())
@@ -151,7 +151,7 @@ class UTestPGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
 
     buffer.drop(12).forall(b => b == 0)
 
-    val pvarFileSource = Source.fromFile(tmpDir + "/pgenFileHardCalls.pvar").getLines()
+    val pvarFileSource = Source.fromFile(tmpDir.toString + "/pgenFileHardCalls.pvar").getLines()
     Assert.assertEquals("#CHROM\tID\tPOS\tALT\tREF", pvarFileSource.next())
     Assert.assertEquals("1\tchr1:1:A:C\t1\tC\tA", pvarFileSource.next())
     Assert.assertFalse(pvarFileSource.hasNext)
@@ -189,7 +189,7 @@ class UTestPGenWriteAnalysis extends AnyFunSuite with BeforeAndAfter {
 
     buffer.drop(12).forall(b => b == 0)
 
-    val src = Source.fromFile(tmpDir + "/pgenFileHardCallsGorp.pvar")
+    val src = Source.fromFile(tmpDir.toString + "/pgenFileHardCallsGorp.pvar")
     val pvarFileSource = src.getLines()
     Assert.assertEquals("#CHROM\tID\tPOS\tALT\tREF", pvarFileSource.next())
     Assert.assertEquals("1\tchr1:1:A:C\t1\tC\tA", pvarFileSource.next())

@@ -31,7 +31,7 @@ import java.net.MalformedURLException;
 import java.nio.file.attribute.FileAttribute;
 import java.util.*;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import java.util.stream.Stream;
 
 /**
@@ -50,7 +50,7 @@ public class OCIObjectStorageSource implements StreamSource {
     private StreamSourceMetadata meta;
 
     private static final Cache<String, StreamSourceMetadata> metadataCache
-            = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(5, TimeUnit.MINUTES).build();
+            = CacheBuilder.newBuilder().concurrencyLevel(4).expireAfterWrite(Duration.ofMinutes(5)).build();
 
     private final static int MAX_CHUNKS = 10000;
     private int writeChunkSize = Integer.parseInt(System.getProperty("gor.s3.write.chunksize", String.valueOf(1 << 26)));

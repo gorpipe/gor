@@ -54,7 +54,7 @@ ext {
         project.distributions.main.contents.into("bin") {
             from(task)
             fileMode = 0755
-            duplicatesStrategy 'exclude'
+            duplicatesStrategy = 'exclude'
         }
     }
 }
