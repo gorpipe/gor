@@ -127,7 +127,7 @@ ext {
 }
 
 // -----------------------------------------------------
-// Common repositories and contraints
+// Common repositories and dependencies
 // -----------------------------------------------------
 
 dependencies {
@@ -137,31 +137,6 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:_"
 
     testImplementation 'junit:junit:_'
-
-    constraints {
-        // https://nvd.nist.gov/vuln/detail/CVE-2021-36090 and more
-        implementation('org.apache.commons:commons-compress:1.21')
-
-        implementation('io.netty:netty-handler:4.1.69.Final')
-        implementation('io.netty:netty-transport-native-epoll:4.1.69.Final')
-
-        implementation('net.minidev:json-smart:2.4.1')
-
-        implementation("org.apache.logging.log4j:log4j-core") {
-            version {
-                strictly("[2.17, 3[")
-                prefer("2.17.0")
-            }
-            because("CVE-2021-44228: Log4j vulnerable to remote code execution")
-        }
-
-        implementation("org.apache.tika:tika-core") {
-            version {
-                strictly("[ 1.28.4, 2[")
-            }
-            because("CVE-2016-6809: Deserialization of Untrusted Data in org.apache.tika/tika-core")
-        }
-    }
 }
 
 tasks.withType(JavaCompile) {
