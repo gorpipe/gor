@@ -61,7 +61,7 @@ class UTestGorPipeSession extends AnyFunSuite {
     val seed = System.nanoTime()
     val random = new Random(seed)
     logger.info("UTestGorPipeSession - HashMap - NotOutOfMemory - Seed: {}", seed)
-    val input: File = fileGenerator("TestHashMap", ".nor", 10000, _ => random.nextInt(25) + "\t" + random.nextInt(1000000))
+    val input: File = fileGenerator("TestHashMap", ".nor", 10000, _ => s"${random.nextInt(25)}\t${random.nextInt(1000000)}")
 
     val originalMemoryMonitorMinFreeMem = MemoryMonitorUtil.memoryMonitorMinFreeMemMB
     MemoryMonitorUtil.memoryMonitorMinFreeMemMB = 100
@@ -81,7 +81,7 @@ class UTestGorPipeSession extends AnyFunSuite {
     val seed = System.nanoTime()
     val random = new Random(seed)
     logger.info("UTestGorPipeSession - HashMap - OutOfMemory - Seed: {}", seed)
-    val input: File = fileGenerator("TestHashMap", ".nor", 10000, _ => random.nextInt(25) + "\t" + random.nextInt(1000000))
+    val input: File = fileGenerator("TestHashMap", ".nor", 10000, _ => s"${random.nextInt(25)}\t${random.nextInt(1000000)}")
 
     val originalMemoryMonitorMinFreeMem = MemoryMonitorUtil.memoryMonitorMinFreeMemMB
     MemoryMonitorUtil.memoryMonitorMinFreeMemMB = 100000000;  // Force out of memory check to fail.

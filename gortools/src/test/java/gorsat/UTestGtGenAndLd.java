@@ -22,16 +22,15 @@
 
 package gorsat;
 
-import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 
 
 public class UTestGtGenAndLd {
@@ -70,7 +69,7 @@ public class UTestGtGenAndLd {
 
     @Test
     public void test_unknownPnInRightSource() throws IOException {
-        final File tmpDir = Files.createTempDir();
+        final File tmpDir = Files.createTempDirectory("gtgen").toFile();
         final File leftSource = new File(tmpDir, "leftFile.gor");
         final BufferedWriter leftSourceWriter = new BufferedWriter(new FileWriter(leftSource));
         leftSourceWriter.write("CHROM\tPOS\tPN\tGT\nchr1\t1\tPN1\t2\n");
@@ -93,7 +92,7 @@ public class UTestGtGenAndLd {
 
     @Test
     public void test_emptyPnInLeftSource() throws IOException {
-        final File tmpDir = Files.createTempDir();
+        final File tmpDir = Files.createTempDirectory("gtgen").toFile();
         final File leftSource = new File(tmpDir, "leftFile.gor");
         final BufferedWriter leftSourceWriter = new BufferedWriter(new FileWriter(leftSource));
         leftSourceWriter.write("CHROM\tPOS\tPN\tGT\nchr1\t1\t\t\nchr1\t2\t\t\nchr1\t2\tPN1\t1\nchr1\t2\tPN2\t2\n");

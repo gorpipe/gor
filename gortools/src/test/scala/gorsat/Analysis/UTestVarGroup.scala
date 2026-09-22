@@ -235,7 +235,7 @@ class UTestVarGroup extends AnyFunSuite with BeforeAndAfter {
       TestUtils.runGorPipe(query)
     } catch {
       case _: GorResourceException => success = true
-      case _=> //Bad :(
+      case _: Throwable => //Bad :(
     }
     Assert.assertTrue(success)
   }

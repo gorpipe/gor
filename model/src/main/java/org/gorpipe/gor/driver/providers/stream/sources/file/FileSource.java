@@ -22,7 +22,6 @@
 
 package org.gorpipe.gor.driver.providers.stream.sources.file;
 
-import com.sun.istack.NotNull;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.DataSource;
@@ -450,7 +449,7 @@ public class FileSource implements StreamSource {
         }
 
         @Override
-        public int read(@NotNull byte[] b) throws IOException {
+        public int read(byte[] b) throws IOException {
             return raf.read(b);
         }
 
