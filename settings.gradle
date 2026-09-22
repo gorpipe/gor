@@ -2,13 +2,6 @@ plugins {
     id 'de.fayard.refreshVersions' version '0.60.6'
 }
 
-refreshVersions {
-    rejectVersionIf {
-        candidate.stabilityLevel.isLessStableThan(current.stabilityLevel) ||
-                (moduleId.group == "io.netty" && !candidate.value.startsWith("4.1."))
-    }
-}
-
 rootProject.name = 'gor'
 rootProject.buildFileName = "build.gradle"
 
