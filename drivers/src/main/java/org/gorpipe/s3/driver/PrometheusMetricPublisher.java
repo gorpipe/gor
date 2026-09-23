@@ -1,104 +1,102 @@
 package org.gorpipe.s3.driver;
 
 import io.prometheus.metrics.core.metrics.Counter;
-import io.prometheus.metrics.core.metrics.Gauge;
 import io.prometheus.metrics.core.metrics.Histogram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.core.metrics.CoreMetric;
+import software.amazon.awssdk.http.HttpMetric;
 import software.amazon.awssdk.metrics.MetricCollection;
 import software.amazon.awssdk.metrics.MetricPublisher;
+import software.amazon.awssdk.metrics.SdkMetric;
 
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+import java.util.Optional;
 
+/**
+ * Maps AWS SDK per-call metrics to Prometheus, keeping each call's operation attached to its
+ * attempts so throttling can be attributed per operation (ENGKNOW-3723).
+ * <p>
+ * Labels are deliberately low-cardinality: no bucket or key.
+ */
 public class PrometheusMetricPublisher implements MetricPublisher {
     private static final Logger logger = LoggerFactory.getLogger(PrometheusMetricPublisher.class);
-    static final String SUBSYSTEM_LABEL_NAME = "subsystem";
-    static final String CATEGORIES_LABEL_NAME = "categories";
-    static final String LEVEL_LABEL_NAME = "level";
-    static final String TYPE_LABEL_NAME = "type";
-    static final String NAMESPACE_LABEL = "s3";
-    static final String METRIC_PREFIX = "gor_driver_s3_";
 
-    static final String[] BLACKLISTED_METRIC_WORDS = new String[]{"RequestId"};
+    static final String ATTEMPT_COLLECTION = "ApiCallAttempt";
+    static final String NO_ERROR = "none";
+    static final String NO_STATUS = "-1";
+    static final String UNKNOWN_OPERATION = "unknown";
 
-    private static final Map<String, Counter> counters = new ConcurrentHashMap<>();
-    private static final Map<String, Gauge> gauges = new ConcurrentHashMap<>();
-    private static final Map<String, Histogram> histograms = new ConcurrentHashMap<>();
+    // prometheus-metrics appends _total to counters on exposition.
+    static final Counter API_CALLS = Counter.builder()
+            .name("gor_driver_s3_api_calls")
+            .help("S3 API calls by operation and outcome")
+            .labelNames("operation", "outcome")
+            .register();
+
+    static final Counter API_ATTEMPTS = Counter.builder()
+            .name("gor_driver_s3_api_attempts")
+            .help("S3 API call attempts, including SDK retries, by operation, HTTP status and SDK error type")
+            .labelNames("operation", "http_status", "error_type")
+            .register();
+
+    static final Histogram API_CALL_DURATION = Histogram.builder()
+            .name("gor_driver_s3_api_call_duration_seconds")
+            .help("S3 API call duration including SDK retries")
+            .labelNames("operation")
+            .register();
+
+    static final Histogram BACKOFF = Histogram.builder()
+            .name("gor_driver_s3_backoff_seconds")
+            .help("SDK backoff delay before an S3 retry attempt")
+            .labelNames("operation")
+            .register();
+
+    static final Counter METRIC_ERRORS = Counter.builder()
+            .name("gor_driver_s3_metric_errors")
+            .help("S3 SDK metric collections that could not be mapped")
+            .register();
 
     @Override
-    public void publish(MetricCollection metricCollection) {
+    public void publish(MetricCollection call) {
         try {
-            mapMetrics(metricCollection);
+            record(call);
         } catch (Exception e) {
-            // We should not fail even if we can not collect metrics.
-            logger.warn("Error publishing metrics", e);
+            // Metrics must never fail an S3 call.
+            METRIC_ERRORS.inc();
+            logger.debug("Error publishing S3 metrics", e);
         }
     }
 
-    private void mapMetrics(MetricCollection metricCollection) {
-        logger.trace("Mapping metrics: {}", metricCollection != null ? metricCollection.name() : "emtpy");
-        metricCollection.stream().forEach(metricRecord -> {
-            try {
-                logger.trace("Mapping metric: {}", metricRecord.metric().name());
-                String metricName = METRIC_PREFIX + metricRecord.metric().name();
-                var value = metricRecord.value();
-                var levelLabel = metricRecord.metric().level().name();
-                var categoriesLabel = new HashSet<>(metricRecord.metric().categories().stream().map(Enum::name).toList()).toString();
+    private void record(MetricCollection call) {
+        String operation = first(call, CoreMetric.OPERATION_NAME).orElse(UNKNOWN_OPERATION);
 
-                if (value instanceof Number || value instanceof Duration) {
-                    var labelNames = new String[]{SUBSYSTEM_LABEL_NAME, CATEGORIES_LABEL_NAME, LEVEL_LABEL_NAME};
-                    var labelsArray = new String[]{NAMESPACE_LABEL, categoriesLabel, levelLabel};
+        first(call, CoreMetric.API_CALL_SUCCESSFUL)
+                .ifPresent(ok -> API_CALLS.labelValues(operation, ok ? "success" : "failure").inc());
+        first(call, CoreMetric.API_CALL_DURATION)
+                .ifPresent(d -> API_CALL_DURATION.labelValues(operation).observe(seconds(d)));
 
-                    if (metricName.contains("Count")) {
-                        double doubleValue = ((Number) value).doubleValue();
-                        Counter counter = counters.computeIfAbsent(metricName, name -> Counter.builder()
-                                .name(name)
-                                .help(name)
-                                .labelNames(labelNames)
-                                .register());
-                        counter.labelValues(labelsArray).inc(doubleValue);
-                    } else if (metricName.contains("Duration") || metricName.contains("Time")) {
-                        double doubleValue = (value instanceof Duration) ? ((Duration) value).toMillis() : ((Number) value).doubleValue();
-                        Histogram histogram = histograms.computeIfAbsent(metricName, name -> Histogram.builder()
-                                .name(name)
-                                .help(name)
-                                .labelNames(labelNames)
-                                .register());
-                        histogram.labelValues(labelsArray).observe(doubleValue);
-                    } else {
-                        double doubleValue = ((Number) value).doubleValue();
-                        Gauge gauge = gauges.computeIfAbsent(metricName, name -> Gauge.builder()
-                                .name(name)
-                                .help(name)
-                                .labelNames(labelNames)
-                                .register());
-                        gauge.labelValues(labelsArray).set(doubleValue);
-                    }
-                } else if (Arrays.stream(BLACKLISTED_METRIC_WORDS).noneMatch(metricName::contains)) {
-                    var typeLabel = value.toString();
-                    var labelsArray = new String[]{NAMESPACE_LABEL, categoriesLabel, levelLabel, typeLabel};
+        for (MetricCollection attempt : call.children()) {
+            if (!ATTEMPT_COLLECTION.equals(attempt.name())) continue;
 
-                    Counter counter = counters.computeIfAbsent(metricName, name -> Counter.builder()
-                            .name(name)
-                            .help(name)
-                            .labelNames(SUBSYSTEM_LABEL_NAME, CATEGORIES_LABEL_NAME, LEVEL_LABEL_NAME, TYPE_LABEL_NAME)
-                            .register());
+            String status = first(attempt, HttpMetric.HTTP_STATUS_CODE).map(String::valueOf).orElse(NO_STATUS);
+            String errorType = first(attempt, CoreMetric.ERROR_TYPE).orElse(NO_ERROR);
+            API_ATTEMPTS.labelValues(operation, status, errorType).inc();
 
-                    counter.labelValues(labelsArray).inc();
-                }
-            } catch (Exception e) {
-                // Ignore errors, map what we can.
-                logger.warn("Error mapping metric", e);
-            }
-        });
-
-        for (MetricCollection childCollection : metricCollection.children()) {
-            mapMetrics(childCollection);
+            first(attempt, CoreMetric.BACKOFF_DELAY_DURATION)
+                    .filter(d -> !d.isZero())
+                    .ifPresent(d -> BACKOFF.labelValues(operation).observe(seconds(d)));
         }
+    }
+
+    private static <T> Optional<T> first(MetricCollection collection, SdkMetric<T> metric) {
+        List<T> values = collection.metricValues(metric);
+        return values.isEmpty() ? Optional.empty() : Optional.ofNullable(values.get(0));
+    }
+
+    private static double seconds(Duration d) {
+        return d.toNanos() / 1e9;
     }
 
     @Override
