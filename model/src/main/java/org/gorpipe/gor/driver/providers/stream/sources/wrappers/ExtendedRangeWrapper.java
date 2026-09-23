@@ -66,8 +66,10 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     public static final int DEFAULT_SEEK_THRESHOLD = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.seek_threshold", "64 kb")).getBytesAsInt();
 
     // Defaults only; production values come from GorDriverConfig via StreamSourceProvider.wrap().
-    public static final int DEFAULT_MIN_RANGE = 128 * 1024;
-    public static final int DEFAULT_MAX_RANGE = 1024 * 1024;
+    // ByteSizeConverter's "kb"/"mb" are SI (1000-based), matching GorDriverConfig's "128 kb"/"1 mb"
+    // defaults, so these are 128_000 and 1_000_000, not the binary 131072/1048576.
+    public static final int DEFAULT_MIN_RANGE = 128_000;
+    public static final int DEFAULT_MAX_RANGE = 1_000_000;
 
     private final int seekThreshold;
     private final int minRange;

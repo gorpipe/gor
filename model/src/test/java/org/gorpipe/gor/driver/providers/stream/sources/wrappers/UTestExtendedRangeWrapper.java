@@ -80,11 +80,11 @@ public class UTestExtendedRangeWrapper extends UTestFileSource {
     @Test
     public void requestSizeDefaults() {
         var config = ConfigFactory.create(GorDriverConfig.class);
-        Assert.assertEquals(128 * 1024, config.extendedRangeStreamingMinRequestSize().getBytesAsInt());
-        Assert.assertEquals(1024 * 1024, config.extendedRangeStreamingMaxRequestSize().getBytesAsInt());
-        Assert.assertEquals(128 * 1024, ExtendedRangeWrapper.DEFAULT_MIN_RANGE);
+        Assert.assertEquals(128000, config.extendedRangeStreamingMinRequestSize().getBytesAsInt());
+        Assert.assertEquals(1000000, config.extendedRangeStreamingMaxRequestSize().getBytesAsInt());
+        Assert.assertEquals(128000, ExtendedRangeWrapper.DEFAULT_MIN_RANGE);
         Assert.assertEquals("single 1 MB default; the old 8 MB sysprop default was never used",
-                1024 * 1024, ExtendedRangeWrapper.DEFAULT_MAX_RANGE);
+                1000000, ExtendedRangeWrapper.DEFAULT_MAX_RANGE);
     }
 
 }
