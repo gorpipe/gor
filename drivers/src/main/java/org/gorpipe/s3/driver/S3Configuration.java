@@ -47,10 +47,15 @@ public interface S3Configuration extends Config {
     @DefaultValue("10000")
     int connectionPoolSize();
 
-    @Documentation("S3 max driver retry")
+    @Documentation("S3 SDK retries after the first attempt (SDK maxAttempts = retries + 1)")
     @Key("gor.s3.conn.retries")
-    @DefaultValue("0")
+    @DefaultValue("3")
     int connectionRetries();
+
+    @Documentation("S3 SDK retry mode: standard, adaptive (adds a client-side rate limiter) or legacy")
+    @Key("gor.s3.retry.mode")
+    @DefaultValue("standard")
+    String retryMode();
 
     @Documentation("S3 validate after inactivity (millis)")
     @Key("gor.s3.validate.after.inactivity")
