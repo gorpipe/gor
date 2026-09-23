@@ -1,11 +1,16 @@
 package org.gorpipe.s3.driver;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.github.benmanes.caffeine.cache.Cache;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.junit.After;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
@@ -83,6 +88,44 @@ public class UTestS3SourceNegativeMetadataCache {
         assertFalse(source(client, url).exists());
 
         verify(client, times(1)).headObject(any(HeadObjectRequest.class));
+    }
+
+    @Test
+    public void unparseableTtlDisablesCacheWithoutException() throws Exception {
+        // Unique per test run so the "warn once per bad value" dedup does not suppress the log
+        // line this test asserts on.
+        String badValue = "30s-" + UUID.randomUUID();
+        System.setProperty(TTL_PROP, badValue);
+        S3Client client = mock(S3Client.class);
+        when(client.headObject(any(HeadObjectRequest.class))).thenThrow(notFound());
+        String url = uniqueUrl();
+
+        Logger logger = (Logger) LoggerFactory.getLogger(S3Source.class);
+        Level previous = logger.getLevel();
+        logger.setLevel(Level.WARN);
+        var appender = new ListAppender<ILoggingEvent>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            assertFalse(source(client, url).exists());
+            assertFalse(source(client, url).exists());
+
+            verify(client, times(2)).headObject(any(HeadObjectRequest.class));
+
+            long warnings = appender.list.stream()
+                    .filter(evt -> evt.getFormattedMessage().contains(TTL_PROP))
+                    .count();
+            assertEquals("must warn exactly once per bad value, not once per S3Source instance",
+                    1, warnings);
+            String msg = appender.list.stream()
+                    .filter(evt -> evt.getFormattedMessage().contains(TTL_PROP))
+                    .findFirst().orElseThrow().getFormattedMessage();
+            assertTrue("warning must name the bad value", msg.contains(badValue));
+            assertFalse("warning must not name the bucket or key", msg.contains(url));
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(previous);
+        }
     }
 
     @Test

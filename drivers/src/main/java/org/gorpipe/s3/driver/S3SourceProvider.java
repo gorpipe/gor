@@ -122,7 +122,7 @@ public class S3SourceProvider extends StreamSourceProvider {
     protected RetryHandlerBase getRetryHandler() {
         if (retryHandler == null) {
             retryHandler = new S3RetryHandler(config.retryInitialSleep().toMillis(), config.retryMaxSleep().toMillis(),
-                    config.retryMaxSingleSleep().toMillis(), s3Config.logKeyPrefixSegments());
+                    config.retryMaxSingleSleep().toMillis(), s3Config.logKeyPrefixSegments(), config.retryMaxAttempts());
         }
         return retryHandler;
     }

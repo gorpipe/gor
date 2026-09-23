@@ -66,6 +66,40 @@ public class UTestRetryHandlerWithFixedWait {
         assertTrue(e.getMessage().contains("Giving up after"));
     }
 
+    static class CappedRecordingHandler extends RecordingHandler {
+        CappedRecordingHandler(long initial, long total) {
+            super(initial, total);
+        }
+
+        @Override
+        protected int maxAttempts() {
+            return 3;
+        }
+    }
+
+    @Test
+    public void attemptCapGivesUpWithoutFinalSleep() {
+        // Budget is effectively unlimited; only the attempt cap should stop this.
+        var handler = new CappedRecordingHandler(1000, Long.MAX_VALUE / 2);
+        var attempts = new AtomicInteger();
+
+        var e = assertThrows(GorSystemException.class, () -> handler.perform(failTimes(100, attempts)));
+
+        assertEquals(3, attempts.get());
+        assertEquals(2, handler.sleeps.size());
+        assertTrue(e.getMessage().contains("Giving up after"));
+    }
+
+    @Test
+    public void giveUpLabelReachesHook() {
+        var handler = new RecordingHandler(1000, 5000);
+
+        assertThrows(GorSystemException.class,
+                () -> handler.perform("metadata", failTimes(100, new AtomicInteger())));
+
+        assertEquals(List.of("metadata"), handler.gaveUpOps);
+    }
+
     @Test
     public void quadraticBackoffStillDefaultForOtherHandlers() {
         var handler = new RecordingHandler(2000, 120_000);

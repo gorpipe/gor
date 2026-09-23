@@ -19,6 +19,7 @@ import java.time.format.DateTimeParseException;
 public class S3RetryHandler extends RetryHandlerWithFixedWait {
     static final String HANDLER = "s3";
     static final long DEFAULT_MAX_SINGLE_SLEEP_MS = 30_000;
+    static final int DEFAULT_MAX_ATTEMPTS = 6;
 
     // prometheus-metrics appends _total to counters on exposition.
     static final Counter RETRIES = Counter.builder()
@@ -35,15 +36,26 @@ public class S3RetryHandler extends RetryHandlerWithFixedWait {
 
     private final long maxSingleSleep;
     private final int keyPrefixSegments;
+    private final int maxAttempts;
 
     public S3RetryHandler(long initialDuration, long totalDuration) {
-        this(initialDuration, totalDuration, DEFAULT_MAX_SINGLE_SLEEP_MS, 1);
+        this(initialDuration, totalDuration, DEFAULT_MAX_SINGLE_SLEEP_MS, 1, DEFAULT_MAX_ATTEMPTS);
     }
 
     public S3RetryHandler(long initialDuration, long totalDuration, long maxSingleSleep, int keyPrefixSegments) {
+        this(initialDuration, totalDuration, maxSingleSleep, keyPrefixSegments, DEFAULT_MAX_ATTEMPTS);
+    }
+
+    public S3RetryHandler(long initialDuration, long totalDuration, long maxSingleSleep, int keyPrefixSegments, int maxAttempts) {
         super(initialDuration, totalDuration);
         this.maxSingleSleep = maxSingleSleep;
         this.keyPrefixSegments = keyPrefixSegments;
+        this.maxAttempts = maxAttempts;
+    }
+
+    @Override
+    protected int maxAttempts() {
+        return maxAttempts;
     }
 
     @Override

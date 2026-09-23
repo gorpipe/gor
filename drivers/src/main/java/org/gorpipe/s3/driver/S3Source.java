@@ -96,8 +96,34 @@ public class S3Source implements StreamSource {
     /** Cache entry marking a key that did not exist, until {@code expiresAtMillis}. */
     record NegativeMetadata(long expiresAtMillis) { }
 
+    static final String NEGATIVE_TTL_PROPERTY = "gor.s3.meta.cache.negative.ttl";
+    // Bad values recur every time an S3Source is constructed; warn about each distinct one only once.
+    private static final Set<String> WARNED_NEGATIVE_TTL_VALUES = ConcurrentHashMap.newKeySet();
+
     // Seconds to remember a 404 for; 0 = off (default). Read per instance so tests and config reloads apply.
-    private final long negativeTtlMillis = Long.getLong("gor.s3.meta.cache.negative.ttl", 0L) * 1000L;
+    private final long negativeTtlMillis = parseNegativeTtlSeconds() * 1000L;
+
+    /**
+     * Parses {@link #NEGATIVE_TTL_PROPERTY} as an integer number of seconds. A value that does not
+     * parse (e.g. a duration string like "30s") is not silently swallowed to 0 - it is logged once
+     * (never with the bucket or key, only the property name and the offending value) and treated as
+     * off (ENGKNOW-3723 follow-up).
+     */
+    private static long parseNegativeTtlSeconds() {
+        String value = System.getProperty(NEGATIVE_TTL_PROPERTY);
+        if (value == null) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(value.trim());
+        } catch (NumberFormatException e) {
+            if (WARNED_NEGATIVE_TTL_VALUES.add(value)) {
+                log.warn("Ignoring unparseable value for system property {}={}; expected an integer number of seconds, negative metadata caching stays off",
+                        NEGATIVE_TTL_PROPERTY, value);
+            }
+            return 0L;
+        }
+    }
 
     /**
      * Create source

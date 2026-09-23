@@ -112,6 +112,21 @@ public class UTestS3RetryHandler {
     }
 
     @Test
+    public void attemptCapStopsAtSix() {
+        // initial 2000, single-sleep cap 30000, budget 120000: worst-case full-jitter sum over
+        // 5 sleeps is 60000ms, well under the budget, so only the attempt cap can stop this at 6.
+        var handler = new RecordingS3RetryHandler(2000, 120_000, 30_000);
+        var attempts = new AtomicInteger();
+
+        assertThrows(Exception.class, () -> handler.perform((RetryHandlerBase.Action<String>) () -> {
+            attempts.incrementAndGet();
+            throw throttled(null);
+        }));
+
+        assertEquals(6, attempts.get());
+    }
+
+    @Test
     public void retryAfterHeaderIsHonoured() {
         var handler = new RecordingS3RetryHandler(100, 60_000, 1000);
         var attempts = new AtomicInteger();

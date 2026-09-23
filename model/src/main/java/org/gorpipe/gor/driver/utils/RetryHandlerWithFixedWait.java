@@ -54,6 +54,16 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 checkIfShouldRetryException(e);
 
                 tries++;
+
+                // Give up once the attempt cap is reached, rather than sleeping for an attempt that
+                // will never be made (ENGKNOW-3723).
+                if (tries >= maxAttempts()) {
+                    onGiveUp(operation, e, tries, accumulatedDuration);
+                    throw new GorSystemException(
+                            String.format("Giving up after %s milliseconds and %d retries", accumulatedDuration, tries - 1),
+                            e);
+                }
+
                 long sleepMs = Math.max(calculateDuration(tries, initialDuration), retryAfterMillis(e));
 
                 // Give up before a sleep that would exceed the budget, rather than sleeping and then
@@ -105,5 +115,13 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
     protected long calculateDuration(int tries, long initialDuration) {
         // we allow randomness of the initial delay of up to 10%
         return (long)((initialDuration * (0.9 + 0.1 * rand.nextDouble())) * Math.pow(tries, 2));
+    }
+
+    /**
+     * Maximum number of attempts (first try + retries) before giving up, regardless of the sleep
+     * budget. Unbounded by default; only handlers that opt in (e.g. {@code S3RetryHandler}) cap this.
+     */
+    protected int maxAttempts() {
+        return Integer.MAX_VALUE;
     }
 }

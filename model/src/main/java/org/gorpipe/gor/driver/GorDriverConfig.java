@@ -96,6 +96,11 @@ public interface GorDriverConfig extends Config {
     @ConverterClass(DurationConverter.class)
     Duration retryMaxSingleSleep();
 
+    @Documentation("Maximum attempts (first try + retries) for S3 driver actions before giving up.")
+    @Key("org.gorpipe.gor.driver.retries.max_attempts")
+    @DefaultValue("6")
+    int retryMaxAttempts();
+
     @Documentation("The time to wait before the first file retry.")
     @Key("org.gorpipe.gor.driver.retries.file.initial_wait")
     @DefaultValue("100 milliseconds")
