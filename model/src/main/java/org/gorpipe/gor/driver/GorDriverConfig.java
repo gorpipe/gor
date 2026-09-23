@@ -137,9 +137,15 @@ public interface GorDriverConfig extends Config {
     @ConverterClass(EnhancedBooleanConverter.class)
     boolean localExtendedRangeStreamingEnabled();
 
+    @Documentation("The initial request size for extended range streaming (doubles up to max_request_size).")
+    @Key("org.gorpipe.gor.driver.extended_range_streaming.min_request_size")
+    @DefaultValue("128 kib")
+    @ConverterClass(ByteSizeConverter.class)
+    ByteSize extendedRangeStreamingMinRequestSize();
+
     @Documentation("The maximum range to which to automatically extend the source reads.")
     @Key("org.gorpipe.gor.driver.extended_range_streaming.max_request_size")
-    @DefaultValue("1 mb")
+    @DefaultValue("1 mib")
     @ConverterClass(ByteSizeConverter.class)
     ByteSize extendedRangeStreamingMaxRequestSize();
 
