@@ -63,37 +63,37 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
 
     @Override
     public InputStream open() {
-        return retry.perform(() -> wrapStream(super.open(), 0, null));
+        return retry.perform("open", () -> wrapStream(super.open(), 0, null));
     }
 
     @Override
     public InputStream open(long start) {
-        return retry.perform(() -> wrapStream(super.open(start), start, null));
+        return retry.perform("open", () -> wrapStream(super.open(start), start, null));
     }
 
     @Override
     public InputStream open(long start, long minLength) {
-        return retry.perform(() -> wrapStream(super.open(start, minLength), start, minLength));
+        return retry.perform("open", () -> wrapStream(super.open(start, minLength), start, minLength));
     }
 
     @Override
     public InputStream openClosable() {
-        return retry.perform(() -> wrapStream(super.openClosable(), 0, null));
+        return retry.perform("open", () -> wrapStream(super.openClosable(), 0, null));
     }
 
     @Override
     public OutputStream getOutputStream(boolean append) {
-        return retry.perform(() -> super.getOutputStream(append));
+        return retry.perform("write", () -> super.getOutputStream(append));
     }
 
     @Override
     public OutputStream getOutputStream(long position) {
-        return retry.perform(() -> super.getOutputStream(position));
+        return retry.perform("write", () -> super.getOutputStream(position));
     }
 
     @Override
     public StreamSourceMetadata getSourceMetadata() {
-        return retry.perform(super::getSourceMetadata);
+        return retry.perform("metadata", super::getSourceMetadata);
     }
 
     @Override
@@ -103,47 +103,47 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
 
     @Override
     public boolean exists() {
-        return retry.perform(super::exists);
+        return retry.perform("exists", super::exists);
     }
 
     @Override
     public void delete() {
-         retry.perform(super::delete);
+         retry.perform("delete", super::delete);
     }
 
     @Override
     public void deleteDirectory() {
-        retry.perform(super::deleteDirectory);
+        retry.perform("delete", super::deleteDirectory);
     }
 
     @Override
     public boolean isDirectory() {
-        return retry.perform(super::isDirectory);
+        return retry.perform("isdir", super::isDirectory);
     }
 
     @Override
     public String createDirectory(FileAttribute<?>... attrs) {
-        return retry.perform(() -> super.createDirectory(attrs));
+        return retry.perform("mkdir", () -> super.createDirectory(attrs));
     }
 
     @Override
     public String createDirectoryIfNotExists(FileAttribute<?>... attrs) {
-        return retry.perform(() -> super.createDirectoryIfNotExists(attrs));
+        return retry.perform("mkdir", () -> super.createDirectoryIfNotExists(attrs));
     }
 
     @Override
     public String createDirectories(FileAttribute<?>... attrs) {
-        return retry.perform(() -> super.createDirectories(attrs));
+        return retry.perform("mkdir", () -> super.createDirectories(attrs));
     }
 
     @Override
     public Stream<String> list() {
-        return retry.perform(super::list);
+        return retry.perform("list", super::list);
     }
 
     @Override
     public Stream<String> walk() {
-        return retry.perform(super::walk);
+        return retry.perform("walk", super::walk);
     }
 
     private InputStream wrapStream(InputStream open, long start, Long length) {
@@ -166,7 +166,7 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
 
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
-            return retry.perform(() -> {
+            return retry.perform("read", () -> {
                             try {
                                 return super.read(b, off, len);
                             } catch (IOException e) {
@@ -177,7 +177,7 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
 
         @Override
         public long skip(long n) throws IOException {
-            return retry.perform(() -> {
+            return retry.perform("skip", () -> {
                 try {
                     return super.skip(n);
                 } catch (IOException e) {
