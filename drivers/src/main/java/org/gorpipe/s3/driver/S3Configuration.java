@@ -66,4 +66,9 @@ public interface S3Configuration extends Config {
     @Key("gor.s3.endpoint")
     @DefaultValue("")
     String s3Endpoint();
+
+    @Documentation("Leading key segments logged on S3 retry lines (the file name is never logged; 0 = none)")
+    @Key("gor.s3.log.key_prefix_segments")
+    @DefaultValue("1")
+    int logKeyPrefixSegments();
 }
