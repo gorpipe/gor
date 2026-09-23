@@ -298,22 +298,38 @@ public class S3Source implements StreamSource {
     }
 
     private S3SourceMetadata loadMetadataFromCache(String bucket, String key) {
-        if (metadataCache.getIfPresent(metaCacheKey()) instanceof NegativeMetadata negative) {
-            if (System.currentTimeMillis() < negative.expiresAtMillis()) {
-                throw new GorResourceException("Not found (cached) " + bucket + "/" + key, getPath().toString(),
-                        NoSuchKeyException.builder().statusCode(404).message("Not Found (cached)").build());
-            }
-            metadataCache.invalidate(metaCacheKey());
-        }
+        rejectIfCachedMiss(metadataCache.getIfPresent(metaCacheKey()), bucket, key);
         try {
             // We can not use the cache if the session is not available, as the cache needs to be cleared when the session ends.
-            return (S3SourceMetadata) metadataCache.get(metaCacheKey(), k -> createMetaData(bucket, key));
+            Object cached = metadataCache.get(metaCacheKey(), k -> createMetaData(bucket, key));
+            if (cached instanceof NegativeMetadata) {
+                // Lost a race: another thread cached a miss between the check above and this get(),
+                // so Caffeine returned that entry directly without calling our loader.
+                rejectIfCachedMiss(cached, bucket, key);
+                // Not thrown above means it had just expired and was invalidated; load once more.
+                cached = metadataCache.get(metaCacheKey(), k -> createMetaData(bucket, key));
+            }
+            return (S3SourceMetadata) cached;
         } catch (Exception e) {
             var cause = e.getCause() != null ? e.getCause() : e;
             if (negativeTtlMillis > 0 && ExceptionUtilities.getUnderlyingCause(e) instanceof NoSuchKeyException) {
                 metadataCache.put(metaCacheKey(), new NegativeMetadata(System.currentTimeMillis() + negativeTtlMillis));
             }
             throw new GorResourceException("Failed to load metadata from cache for " + bucket + "/" + key, getPath().toString(), cause).retry();
+        }
+    }
+
+    /**
+     * Throws the cached "not found" exception if {@code cached} is a still-live {@link NegativeMetadata}
+     * entry; invalidates it (so the caller's next {@code get} reloads) if it has expired; a no-op otherwise.
+     */
+    private void rejectIfCachedMiss(Object cached, String bucket, String key) {
+        if (cached instanceof NegativeMetadata negative) {
+            if (System.currentTimeMillis() < negative.expiresAtMillis()) {
+                throw new GorResourceException("Not found (cached) " + bucket + "/" + key, getPath().toString(),
+                        NoSuchKeyException.builder().statusCode(404).message("Not Found (cached)").build());
+            }
+            metadataCache.invalidate(metaCacheKey());
         }
     }
 
