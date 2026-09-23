@@ -64,10 +64,15 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     private static final Logger log = LoggerFactory.getLogger(ExtendedRangeWrapper.class);
 
     public static final int DEFAULT_SEEK_THRESHOLD = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.seek_threshold", "64 kb")).getBytesAsInt();
-    public static final int DEFAULT_MIN_RANGE = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.min_request_size", "128 kb")).getBytesAsInt();
-    public static final int DEFAULT_MAX_RANGE = ByteSizeConverter.parse(System.getProperty("org.gorpipe.gor.driver.extended_range_streaming.max_request_size", "8 mb")).getBytesAsInt();
+
+    // Defaults only; production values come from GorDriverConfig via StreamSourceProvider.wrap().
+    // ByteSizeConverter's "kb"/"mb" are SI (1000-based), matching GorDriverConfig's "128 kb"/"1 mb"
+    // defaults, so these are 128_000 and 1_000_000, not the binary 131072/1048576.
+    public static final int DEFAULT_MIN_RANGE = 128_000;
+    public static final int DEFAULT_MAX_RANGE = 1_000_000;
 
     private final int seekThreshold;
+    private final int minRange;
     private final int maxRange;
 
     ExtendedRangeStream extendedRangeStream;
@@ -75,23 +80,28 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
     private StreamSourceMetadata sourceMeta;
 
     public ExtendedRangeWrapper(StreamSource source) {
-        this(source, DEFAULT_SEEK_THRESHOLD, DEFAULT_MAX_RANGE);
+        this(source, DEFAULT_SEEK_THRESHOLD, DEFAULT_MIN_RANGE, DEFAULT_MAX_RANGE);
     }
 
     public ExtendedRangeWrapper(StreamSource source, int seekThreshold, int maxRange) {
+        this(source, seekThreshold, DEFAULT_MIN_RANGE, maxRange);
+    }
+
+    public ExtendedRangeWrapper(StreamSource source, int seekThreshold, int minRange, int maxRange) {
         super(source);
         this.seekThreshold = seekThreshold;
+        this.minRange = minRange;
         this.maxRange = maxRange;
     }
 
     @Override
     public InputStream openClosable() {
-        return open(0, DEFAULT_MIN_RANGE);
+        return open(0, minRange);
     }
 
     @Override
     public InputStream open() {
-        return open(0, DEFAULT_MIN_RANGE);
+        return open(0, minRange);
     }
 
     @Override
@@ -181,7 +191,7 @@ public class ExtendedRangeWrapper extends WrappedStreamSource {
 
                     // 2. Calculate request length - double of last request up to the maximum.  But no smaller than the remaining read.
                     //long rlen = Math.max(len - read, Math.min(lastRequest.getLength() * 2, maxRange));
-                    long rlen = Math.max(len - read, Math.min(Math.max(lastRequest.getLength() * 2, DEFAULT_MIN_RANGE), maxRange));
+                    long rlen = Math.max(len - read, Math.min(Math.max(lastRequest.getLength() * 2, minRange), maxRange));
 
 
                     // 3. Open new 'in' stream at last position + new request length
