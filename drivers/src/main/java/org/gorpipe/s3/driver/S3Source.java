@@ -93,6 +93,12 @@ public class S3Source implements StreamSource {
     private final static int MAX_S3_CHUNKS = 10000;
     private int writeChunkSize = Integer.parseInt(System.getProperty("gor.s3.write.chunksize", String.valueOf(1 << 26)));
 
+    /** Cache entry marking a key that did not exist, until {@code expiresAtMillis}. */
+    record NegativeMetadata(long expiresAtMillis) { }
+
+    // Seconds to remember a 404 for; 0 = off (default). Read per instance so tests and config reloads apply.
+    private final long negativeTtlMillis = Long.getLong("gor.s3.meta.cache.negative.ttl", 0L) * 1000L;
+
     /**
      * Create source
      *
@@ -160,7 +166,22 @@ public class S3Source implements StreamSource {
                         new S3MultipartOutputStreamSync(client, bucket, key);
             }
 
-            return new LimitedOutputStream(os, maxFileSize);
+            return new LimitedOutputStream(new java.io.FilterOutputStream(os) {
+                @Override
+                public void write(byte[] b, int off, int len) throws IOException {
+                    out.write(b, off, len);
+                }
+
+                @Override
+                public void close() throws IOException {
+                    try {
+                        super.close();
+                    } finally {
+                        // A reader may have cached a miss while the upload was in flight.
+                        invalidateMeta();
+                    }
+                }
+            }, maxFileSize);
         } catch (IOException e) {
             throw new GorResourceException(getName(), getName(), e).retry();
         }
@@ -277,14 +298,21 @@ public class S3Source implements StreamSource {
     }
 
     private S3SourceMetadata loadMetadataFromCache(String bucket, String key) {
+        if (metadataCache.getIfPresent(metaCacheKey()) instanceof NegativeMetadata negative) {
+            if (System.currentTimeMillis() < negative.expiresAtMillis()) {
+                throw new GorResourceException("Not found (cached) " + bucket + "/" + key, getPath().toString(),
+                        NoSuchKeyException.builder().statusCode(404).message("Not Found (cached)").build());
+            }
+            metadataCache.invalidate(metaCacheKey());
+        }
         try {
             // We can not use the cache if the session is not available, as the cache needs to be cleared when the session ends.
-            return (S3SourceMetadata)metadataCache.get(metaCacheKey(), k -> {
-                // TODO:  If the object does not exists we don't cache.  This method will throw exception and the loader will exit.
-                return createMetaData(bucket, key);
-            });
+            return (S3SourceMetadata) metadataCache.get(metaCacheKey(), k -> createMetaData(bucket, key));
         } catch (Exception e) {
             var cause = e.getCause() != null ? e.getCause() : e;
+            if (negativeTtlMillis > 0 && ExceptionUtilities.getUnderlyingCause(e) instanceof NoSuchKeyException) {
+                metadataCache.put(metaCacheKey(), new NegativeMetadata(System.currentTimeMillis() + negativeTtlMillis));
+            }
             throw new GorResourceException("Failed to load metadata from cache for " + bucket + "/" + key, getPath().toString(), cause).retry();
         }
     }
@@ -351,6 +379,8 @@ public class S3Source implements StreamSource {
                     .contentLength(0L)
                     .build();
             client.putObject(request, RequestBody.fromBytes(new byte[0]));
+            invalidateMeta();
+            if (metadataCache != null) metadataCache.invalidate(bucket + "/" + directoryKey);
             return PathUtils.formatUri(getPath().toUri());
         } catch (Exception e) {
             throw new GorResourceException(e.getMessage(), getPath().toString(), e).retry();
