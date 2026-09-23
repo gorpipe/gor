@@ -28,12 +28,30 @@ record S3FailureInfo(String bucket, String keyPrefix, String status, String erro
         return new S3FailureInfo(bucketKey[0], keyPrefix(bucketKey[1], keyPrefixSegments), status, errorCode);
     }
 
-    /** Accepts {@code s3://bucket/key}, {@code /bucket/key} and {@code bucket/key}. */
+    /**
+     * Accepts {@code s3://bucket/key}, {@code /bucket/key}, {@code bucket/key}, and the
+     * {@code s3x://[user:pass@]host/bucket/key} form {@code S3Source.getS3Path} produces for
+     * non-AWS endpoints. Any URI scheme is stripped, and any userinfo (credentials) before an
+     * {@code @} is dropped along with the host, so credentials can never end up in the bucket or
+     * key -- and so never on a retry log line.
+     */
     static String[] splitBucketKey(String uri) {
         if (uri == null || uri.isBlank()) return new String[]{NONE, ""};
-        String s = uri.replaceFirst("^s3:/*", "").replaceFirst("^/+", "");
+        String s = uri.replaceFirst("^[A-Za-z][A-Za-z0-9+.-]*:/*", "").replaceFirst("^/+", "");
+
+        int firstSlash = s.indexOf('/');
+        int at = s.indexOf('@');
+        if (at >= 0 && (firstSlash < 0 || at < firstSlash)) {
+            // Authority with userinfo (e.g. "user:pass@host"): drop everything up to and
+            // including the path separator right after the host, so no credential fragment
+            // survives into the bucket or key.
+            int afterAuthoritySlash = s.indexOf('/', at);
+            s = afterAuthoritySlash < 0 ? "" : s.substring(afterAuthoritySlash + 1);
+        }
+
         int slash = s.indexOf('/');
-        return slash < 0 ? new String[]{s, ""} : new String[]{s.substring(0, slash), s.substring(slash + 1)};
+        if (slash < 0) return new String[]{s.isEmpty() ? NONE : s, ""};
+        return new String[]{s.substring(0, slash), s.substring(slash + 1)};
     }
 
     /** First {@code segments} directory segments of the key, with trailing slash; never the file name. */
