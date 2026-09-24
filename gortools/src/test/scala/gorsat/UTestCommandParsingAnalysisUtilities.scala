@@ -406,7 +406,7 @@ class UTestCommandParsingAnalysisUtilities extends AnyFunSuite {
       charValueOfOption(args, opt)
     } catch {
       case _: GorParsingException => success = true
-      case _ => //Bad
+      case _: Throwable => //Bad
     }
     assert(success)
   }
@@ -419,7 +419,7 @@ class UTestCommandParsingAnalysisUtilities extends AnyFunSuite {
       charValueOfOption(args, opt)
     } catch {
       case _: GorParsingException => success = true
-      case _ => //Bad
+      case _: Throwable => //Bad
     }
     assert(success)
   }

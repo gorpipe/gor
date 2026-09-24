@@ -239,7 +239,7 @@ class UTestRegression extends AnyFunSuite {
 
     (phenoT zip phenoFilterT).zipWithIndex.map({
       case ((ph, fi), id) =>
-        id + "\t" +
+        s"$id\t" +
           (ph zip fi).map({
             case (p, f) => func(p, f)
           }).mkString("\t")
@@ -253,7 +253,7 @@ class UTestRegression extends AnyFunSuite {
     val covFileWriter = new FileWriter(covFile)
     covFileWriter.write("IID\t" + Range(0, numberOfCovs).map(i => "cov_" + i).mkString("\t") + "\n")
     covs.transpose.zipWithIndex.foreach({ case (cov, id) =>
-      covFileWriter.write(id + "\t" + cov.mkString("\t") + "\n")
+      covFileWriter.write(s"$id\t" + cov.mkString("\t") + "\n")
     })
     covFileWriter.close()
     covFile.getAbsolutePath

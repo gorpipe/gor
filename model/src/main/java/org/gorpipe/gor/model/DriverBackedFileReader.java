@@ -65,7 +65,18 @@ public class DriverBackedFileReader extends FileReader {
 
     private static final Logger log = LoggerFactory.getLogger(DriverBackedFileReader.class);
 
-    private static final String DEFAULT_COMMON_ROOT = "./";
+    // The process's actual absolute CWD, not the literal string "./" --
+    // resolving a relative path against "./" is a no-op in this
+    // codebase's URI-based path resolution (PathUtils.resolve), so
+    // anything needing real anchoring against this default (e.g. PGOR's
+    // dictionary-folder write caching -- see GorSessionFactory.
+    // updateCommonRoot()'s own matching fix and docstring) quietly
+    // stayed relative/un-anchored instead. Not used for access-control
+    // decisions -- this class's own validateAccess() is a no-op, and the
+    // real enforcement path (DriverBackedSecureFileReader) always
+    // sources its root independently -- so this only affects path-
+    // resolution/anchoring correctness, not security scoping.
+    private static final String DEFAULT_COMMON_ROOT = PathUtils.markAsFolder(Paths.get("").toAbsolutePath().toString());
 
     final static int GZIP_BUFFER_SIZE = Integer.parseInt(System.getProperty("gor.gzip.buffer.size", "2046"));
 

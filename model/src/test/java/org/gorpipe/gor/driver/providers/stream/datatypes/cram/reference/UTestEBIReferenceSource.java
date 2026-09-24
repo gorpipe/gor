@@ -100,7 +100,7 @@ public class UTestEBIReferenceSource {
 
         referenceSource = new EBIReferenceSource(testFolder.getAbsolutePath());
 
-        SAMSequenceRecord record = new SAMSequenceRecord("chrM").setMd5(md5);
+        SAMSequenceRecord record = new SAMSequenceRecord("chrM", SAMSequenceRecord.UNKNOWN_SEQUENCE_LENGTH).setMd5(md5);
 
         byte[] bases = referenceSource.getReferenceBases(record, false);
 

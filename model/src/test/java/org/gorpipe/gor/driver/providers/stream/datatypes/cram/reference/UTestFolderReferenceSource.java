@@ -91,7 +91,7 @@ public class UTestFolderReferenceSource {
         Assert.assertNotNull(referenceSource);
         Assert.assertEquals(3, referenceSource.getReferenceFiles().size());
         Assert.assertArrayEquals("TGCA".getBytes(), referenceSource.getReferenceBases(
-                new SAMSequenceRecord("chr2").setMd5("md5_2"), false));
+                new SAMSequenceRecord("chr2", SAMSequenceRecord.UNKNOWN_SEQUENCE_LENGTH).setMd5("md5_2"), false));
 
     }
 

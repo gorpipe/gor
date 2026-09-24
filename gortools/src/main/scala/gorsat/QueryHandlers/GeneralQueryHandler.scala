@@ -33,7 +33,7 @@ import gorsat.Outputs.OutFile
 import gorsat.QueryHandlers.GeneralQueryHandler.{findCacheFile, findOverheadTime, runCommand}
 import gorsat.Utilities.{AnalysisUtilities, MacroUtilities}
 import gorsat.process.{GorJavaUtilities, ParallelExecutor}
-import org.apache.commons.compress.utils.FileNameUtils
+import org.apache.commons.io.FilenameUtils
 import org.gorpipe.client.FileCache
 import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
@@ -62,7 +62,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
 
     Files.writeString(linkCacheFilePath,
       PathUtils.resolve(nested.getSession.getProjectContext.getProjectRoot, writeLocationPath).toString)
-    val extension = DataUtil.toLink(FileNameUtils.getExtension(linkCacheFileNameBaseAdjusted))
+    val extension = DataUtil.toLink(FilenameUtils.getExtension(linkCacheFileNameBaseAdjusted))
 
     (linkCacheFilePath, extension)
   }
@@ -105,7 +105,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
   }
 
   def loadMd5(file : Path): String = {
-    val md5Path = Path.of(file + ".md5")
+    val md5Path = Path.of(file.toString + ".md5")
     if (Files.exists(md5Path)) Files.readAllLines(md5Path).get(0)  else ""
   }
 

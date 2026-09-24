@@ -22,13 +22,13 @@
 
 package gorsat;
 
-import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.table.dictionary.DictionaryTableMeta;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 
 class NorDictTestDataGenerator {
     static final String HEADER_DEFAULT = "#Constant\tCounter\tIndex\n";
@@ -69,7 +69,7 @@ class NorDictTestDataGenerator {
 
     String invoke() throws IOException {
 
-        File tmpDir = Files.createTempDir();
+        File tmpDir = Files.createTempDirectory("nordict").toFile();
         tmpDir.deleteOnExit();
         File subTmpDir = new File(tmpDir, "files");
         subTmpDir.mkdir();

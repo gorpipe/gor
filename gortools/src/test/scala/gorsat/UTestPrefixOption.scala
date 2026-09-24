@@ -58,9 +58,9 @@ class UTestPrefixOption extends AnyFunSuite with BeforeAndAfter {
     val outPutFileName = new File(tmpFolder, "output.gor").getAbsolutePath
 
     val outFile = Outputs.OutFile(outPutFileName, fileReader, inputFileCont.head, false, false, false, false, false, false, GorIndexType.NONE, Option(headerFilePath))
-    outFile.setup
+    outFile.setup()
     outFile.process(RowObj(inputFileCont(1)))
-    outFile.finish
+    outFile.finish()
 
     val lines = Source.fromFile(outPutFileName).getLines()
 
@@ -106,9 +106,9 @@ class UTestPrefixOption extends AnyFunSuite with BeforeAndAfter {
     val outPutFileName = new File(tmpFolder, "output.gor").getAbsolutePath
 
     val outFile = Outputs.OutFile(outPutFileName, fileReader, "", true, false, false, false, false, false, GorIndexType.NONE, Option(""))
-    outFile.setup
+    outFile.setup()
     outFile.process(RowObj(inputFileCont(0)))
-    outFile.finish
+    outFile.finish()
 
     val lines = Source.fromFile(outPutFileName).getLines()
     inputFileCont.foreach(l => {
@@ -125,7 +125,7 @@ class UTestPrefixOption extends AnyFunSuite with BeforeAndAfter {
     val inputFileCont = List("#CHROM\tPOS\tREF\tALT", "chr1\t117\tA\tC")
     val inputFilePath = writeContentToFile("input.gor", inputFileCont)
 
-    val outputFilePath = tmpFolder.getAbsoluteFile + "/output.vcf"
+    val outputFilePath = tmpFolder.getAbsolutePath + "/output.vcf"
 
     val gorQuery = "gor " + inputFilePath + " | write -prefix " + headerFilePath + " " + outputFilePath
     TestUtils.runGorPipe(gorQuery)
@@ -134,7 +134,7 @@ class UTestPrefixOption extends AnyFunSuite with BeforeAndAfter {
 
     headerFileCont.foreach(hl => {
       Assert.assertTrue(outputFileLines.hasNext)
-      Assert.assertEquals(hl, outputFileLines.next)
+      Assert.assertEquals(hl, outputFileLines.next())
     })
 
     inputFileCont.foreach(il => {
@@ -144,7 +144,7 @@ class UTestPrefixOption extends AnyFunSuite with BeforeAndAfter {
     Assert.assertFalse(outputFileLines.hasNext)
   }
 
-  def writeContentToFile(fileName: String, content: Traversable[String]): String = {
+  def writeContentToFile(fileName: String, content: Iterable[String]): String = {
     val file = new File(tmpFolder, fileName)
     val fileWriter = new FileWriter(file)
     content.foreach(line => fileWriter.write(line + "\n"))

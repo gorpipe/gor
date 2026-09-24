@@ -132,8 +132,10 @@ public class UTestCram {
 
         String[] args = new String[] {"gor " + DataUtil.toFile("../tests/data/external/samtools/cram_query_sorted", DataType.CRAM)};
 
+        // Since htsjdk 5.0.0 the CRAM decoder regenerates the NM and MD tags itself, matching htslib,
+        // so they are present whether or not we ask for them to be generated.
         System.setProperty("gor.driver.cram.generatemissingattributes", "false");
-        String[] linesWithoutMissingAttributes = TestUtils.runGorPipe(args, false).split(LINE_SPLIT_PATTERN);
+        String[] linesWithGenerationTurnedOff = TestUtils.runGorPipe(args, false).split(LINE_SPLIT_PATTERN);
 
         System.setProperty("gor.driver.cram.generatemissingattributes", "true");
         String[] linesWithMissingAttributesCramRef = TestUtils.runGorPipe(args, false).split(LINE_SPLIT_PATTERN);
@@ -143,13 +145,14 @@ public class UTestCram {
                 , "-config", "../tests/data/ref_mini/gor_config.txt"};
         String[] linesWithMissingAttributesProjectRef = TestUtils.runGorPipe(args, false).split(LINE_SPLIT_PATTERN);
 
-        Assert.assertEquals(8, linesWithoutMissingAttributes.length);
+        Assert.assertEquals(8, linesWithGenerationTurnedOff.length);
         Assert.assertEquals(8, linesWithMissingAttributesCramRef.length);
         Assert.assertEquals(8, linesWithMissingAttributesProjectRef.length);
-        // See if we have the missing entry in the last column.
-        Assert.assertFalse(linesWithoutMissingAttributes[1].contains("NM="));
+        // See if we have the entry in the last column, for both reference sources.
         Assert.assertTrue(linesWithMissingAttributesCramRef[1].contains("NM="));
         Assert.assertTrue(linesWithMissingAttributesProjectRef[1].contains("NM="));
+        // The decoder supplies the same tags without our generation step, so turning it off changes nothing.
+        Assert.assertEquals(linesWithMissingAttributesCramRef[1], linesWithGenerationTurnedOff[1]);
     }
 
     @Test(expected = GorResourceException.class)

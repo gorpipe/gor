@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -145,14 +146,14 @@ public class GorCliManagerUtils {
     void startProcessStreamEaters(Process p, Writer outWriter, Writer errWriter) {
         new Thread(() -> {
             try {
-                IOUtils.copy(p.getInputStream(), outWriter);
+                IOUtils.copy(p.getInputStream(), outWriter, Charset.defaultCharset());
             } catch (IOException e) {
                 // Ignore
             }
         }).start();
         new Thread(() -> {
             try {
-                IOUtils.copy(p.getErrorStream(), errWriter);
+                IOUtils.copy(p.getErrorStream(), errWriter, Charset.defaultCharset());
             } catch (IOException e) {
                 // Ignore
             }

@@ -65,6 +65,8 @@ import java.util.List;
  * <p>Cram is not fully compatible with BAM as it does not save the MD and NM option. Those are though easily generated
  * from the BAM row. To enable the generation of these option set the <i>gor.driver.cram.generatemissingattributes</i>
  * gor option to <i>true</i>"</p>
+ * <p>Note that since htsjdk 5.0.0 the CRAM decoder regenerates the MD and NM tags itself, matching htslib, so the
+ * records handed to us normally already carry them and the generation below is a no-op.</p>
  */
 public class CramIterator extends BamIterator {
 

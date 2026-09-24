@@ -44,7 +44,13 @@ project(':drivers') {
         implementation "software.amazon.awssdk.crt:aws-crt:_"
         implementation "software.amazon.awssdk:apache-client:_"
         implementation 'org.carlspring.cloud.aws:s3fs-nio:_'
+        // s3fs-nio pulls in tika-core for content type detection, but asks for a version with an
+        // open XXE advisory. Declared here so the version is managed in versions.properties.
+        implementation 'org.apache.tika:tika-core:_'
         implementation "software.amazon.nio.s3:aws-java-nio-spi-for-s3:_"
+        // The Azure and AWS SDKs each drag in their own netty version. Align them all on one
+        // version we control, rather than whatever the oldest transitive requirement happens to be.
+        implementation(platform('io.netty:netty-bom:_'))
         implementation(platform('com.oracle.oci.sdk:oci-java-sdk-bom:_'))
         implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3'
         implementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage'
