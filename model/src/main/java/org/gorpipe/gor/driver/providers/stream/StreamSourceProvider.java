@@ -107,6 +107,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
             if (config.remoteExtendedRangeStreamingEnabled()) {
                 log.debug("Wrapping remote source with ExtendedRangeWrapper");
                 source = new ExtendedRangeWrapper(source, config.extendedRangeStreamingSeekThreshold().getBytesAsInt(),
+                        config.extendedRangeStreamingMinRequestSize().getBytesAsInt(),
                         config.extendedRangeStreamingMaxRequestSize().getBytesAsInt());
             } else if (config.remoteFullRangeStreamingEnabled()) {
                 log.debug("Wrapping remote source with FullRangeWrapper");
@@ -121,6 +122,7 @@ public abstract class StreamSourceProvider implements SourceProvider {
             if (config.localExtendedRangeStreamingEnabled()) {
                 log.debug("Wrapping local source with ExtendedRangeWrapper");
                 source = new ExtendedRangeWrapper(source, config.extendedRangeStreamingSeekThreshold().getBytesAsInt(),
+                        config.extendedRangeStreamingMinRequestSize().getBytesAsInt(),
                         config.extendedRangeStreamingMaxRequestSize().getBytesAsInt());
             } else if (config.localFullRangeStreamingEnabled()) {
                 log.debug("Wrapping local source with FullRangeWrapper");

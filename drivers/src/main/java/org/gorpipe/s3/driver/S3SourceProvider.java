@@ -37,13 +37,16 @@ import org.gorpipe.gor.driver.providers.stream.StreamSourceProvider;
 import org.gorpipe.gor.driver.utils.CredentialClientCache;
 import org.gorpipe.gor.driver.utils.RetryHandlerBase;
 import org.gorpipe.gor.util.StringUtil;
+import org.gorpipe.exceptions.GorSystemException;
 import software.amazon.awssdk.auth.credentials.*;
+import software.amazon.awssdk.awscore.retry.AwsRetryStrategy;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.http.crt.ProxyConfiguration;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.retries.api.RetryStrategy;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3BaseClientBuilder;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -53,6 +56,7 @@ import software.amazon.awssdk.services.s3.crt.S3CrtProxyConfiguration;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -84,6 +88,9 @@ public class S3SourceProvider extends StreamSourceProvider {
 
     private static final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(10);
 
+    // One publisher for all clients: the metrics it feeds are process-wide.
+    static final PrometheusMetricPublisher METRIC_PUBLISHER = new PrometheusMetricPublisher();
+
     private final S3Configuration s3Config;
 
 
@@ -114,7 +121,8 @@ public class S3SourceProvider extends StreamSourceProvider {
     @Override
     protected RetryHandlerBase getRetryHandler() {
         if (retryHandler == null) {
-            retryHandler = new S3RetryHandler(config.retryInitialSleep().toMillis(), config.retryMaxSleep().toMillis());
+            retryHandler = new S3RetryHandler(config.retryInitialSleep().toMillis(), config.retryMaxSleep().toMillis(),
+                    config.retryMaxSingleSleep().toMillis(), s3Config.logKeyPrefixSegments(), config.retryMaxAttempts());
         }
         return retryHandler;
     }
@@ -281,7 +289,7 @@ public class S3SourceProvider extends StreamSourceProvider {
         return builder.build();
     }
 
-    private void applyBaseClientConfig(S3BaseClientBuilder<?, ?> builder, Credentials cred) {
+    void applyBaseClientConfig(S3BaseClientBuilder<?, ?> builder, Credentials cred) {
         //builder.accelerate(true);
 
         var endpoint = getEndpoint(cred);
@@ -293,16 +301,13 @@ public class S3SourceProvider extends StreamSourceProvider {
 
         builder.credentialsProvider(getCredentialsProvider(cred));
 
-        builder.overrideConfiguration(o ->
-                o.retryStrategy(b -> b.maxAttempts(s3Config.connectionRetries()))
-                        .apiCallTimeout(s3Config.connectionTimeout())
-                        .apiCallAttemptTimeout(s3Config.socketTimeout()));
-
-        var metricsPub = new PrometheusMetricPublisher();
-        log.trace("Adding metrics publisher: {}", metricsPub);
-        builder.overrideConfiguration(c -> c.addMetricPublisher(metricsPub));
-
-        builder.overrideConfiguration(c -> c.scheduledExecutorService(scheduledExecutorService));
+        // A single call on purpose: each overrideConfiguration(Consumer) call replaces the previous
+        // configuration, which silently dropped the retry strategy and metric publisher (ENGKNOW-3723).
+        // Timeouts are deliberately not set here; see the ENGKNOW-3723 follow-up.
+        builder.overrideConfiguration(o -> o
+                .retryStrategy(buildRetryStrategy(s3Config))
+                .addMetricPublisher(METRIC_PUBLISHER)
+                .scheduledExecutorService(scheduledExecutorService));
 
         // OCI compat layer needs path style access.
         if (isOciEndpoint(endpoint) || FORCE_PATH_STYLE) {
@@ -310,6 +315,21 @@ public class S3SourceProvider extends StreamSourceProvider {
         }
 
         builder.crossRegionAccessEnabled(true);
+    }
+
+    static RetryStrategy buildRetryStrategy(S3Configuration s3Config) {
+        int retries = s3Config.connectionRetries();
+        if (retries < 0) {
+            throw new GorSystemException("gor.s3.conn.retries must be >= 0, was " + retries, null);
+        }
+        RetryStrategy.Builder<?, ?> builder = switch (s3Config.retryMode().trim().toLowerCase(Locale.ROOT)) {
+            case "standard" -> AwsRetryStrategy.standardRetryStrategy().toBuilder();
+            case "adaptive" -> AwsRetryStrategy.adaptiveRetryStrategy().toBuilder();
+            case "legacy" -> AwsRetryStrategy.legacyRetryStrategy().toBuilder();
+            default -> throw new GorSystemException("Unknown gor.s3.retry.mode '" + s3Config.retryMode()
+                    + "', expected standard, adaptive or legacy", null);
+        };
+        return builder.maxAttempts(retries + 1).build();
     }
 
     AwsCredentialsProvider getCredentialsProvider(Credentials cred) {

@@ -90,6 +90,17 @@ public interface GorDriverConfig extends Config {
     @ConverterClass(DurationConverter.class)
     Duration retryMaxSleep();
 
+    @Documentation("The maximum single wait between retries (caps exponential backoff).")
+    @Key("org.gorpipe.gor.driver.retries.max_single_sleep")
+    @DefaultValue("30 seconds")
+    @ConverterClass(DurationConverter.class)
+    Duration retryMaxSingleSleep();
+
+    @Documentation("Maximum attempts (first try + retries) for S3 driver actions before giving up.")
+    @Key("org.gorpipe.gor.driver.retries.max_attempts")
+    @DefaultValue("6")
+    int retryMaxAttempts();
+
     @Documentation("The time to wait before the first file retry.")
     @Key("org.gorpipe.gor.driver.retries.file.initial_wait")
     @DefaultValue("100 milliseconds")
@@ -130,6 +141,12 @@ public interface GorDriverConfig extends Config {
     @DefaultValue("disabled")
     @ConverterClass(EnhancedBooleanConverter.class)
     boolean localExtendedRangeStreamingEnabled();
+
+    @Documentation("The initial request size for extended range streaming (doubles up to max_request_size).")
+    @Key("org.gorpipe.gor.driver.extended_range_streaming.min_request_size")
+    @DefaultValue("128 kb")
+    @ConverterClass(ByteSizeConverter.class)
+    ByteSize extendedRangeStreamingMinRequestSize();
 
     @Documentation("The maximum range to which to automatically extend the source reads.")
     @Key("org.gorpipe.gor.driver.extended_range_streaming.max_request_size")
