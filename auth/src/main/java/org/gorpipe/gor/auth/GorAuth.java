@@ -11,12 +11,19 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.Function;
 
 public abstract class GorAuth implements AutoCloseable {
 
     public static final String REALM_ACCESS = "realm_access";
     public static final String ROLES = "roles";
     private static final String USER_DATA = "user_data";
+
+    /**
+     * Claims tried, in order, when the configured user key claim is missing or empty. Keycloak service-account
+     * tokens (client_credentials) have no email but carry preferred_username = service-account-&lt;clientId&gt;.
+     */
+    static final List<String> USERNAME_FALLBACK_CLAIMS = List.of("preferred_username", "azp", "client_id", "sub");
 
 
 
@@ -95,6 +102,30 @@ public abstract class GorAuth implements AutoCloseable {
                 return info;
             }
         }
+    }
+
+    /**
+     * Resolve the username from token claims: the configured user key claim if present and non-empty, else the
+     * first non-empty of {@link #USERNAME_FALLBACK_CLAIMS}.
+     *
+     * @param userKey     the configured user key claim (e.g. email), may be null.
+     * @param claimReader reads a claim as a string, returning null if missing or not a string.
+     * @return the username, never null (empty if no candidate claim is present).
+     */
+    static String resolveUsername(String userKey, Function<String, String> claimReader) {
+        if (!Strings.isNullOrEmpty(userKey)) {
+            String username = claimReader.apply(userKey);
+            if (!Strings.isNullOrEmpty(username)) {
+                return username;
+            }
+        }
+        for (String claim : USERNAME_FALLBACK_CLAIMS) {
+            String username = claimReader.apply(claim);
+            if (!Strings.isNullOrEmpty(username)) {
+                return username;
+            }
+        }
+        return "";
     }
 
     public static boolean validateUserProject(String user, String project) {

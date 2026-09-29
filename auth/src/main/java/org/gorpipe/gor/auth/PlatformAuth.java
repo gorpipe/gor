@@ -12,7 +12,9 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static net.logstash.logback.argument.StructuredArguments.value;
 
@@ -92,8 +94,10 @@ public class PlatformAuth extends GorAuth {
     }
 
     private String getUsername(DecodedJWT jwt) {
-        Claim claim = jwt.getClaim(userKey);
-        return claim != null ? claim.asString() : null;
+        return resolveUsername(userKey, name -> {
+            Claim claim = jwt.getClaim(name);
+            return claim != null ? claim.asString() : null;
+        });
     }
 
     private long getExpiration(DecodedJWT jwt) {
@@ -101,7 +105,11 @@ public class PlatformAuth extends GorAuth {
     }
 
     private List<String> getUserRoles(DecodedJWT jwt) {
-        return (List<String>)jwt.getClaim(REALM_ACCESS).asMap().get(ROLES);
+        Map<String, Object> realmAccess = jwt.getClaim(REALM_ACCESS).asMap();
+        if (realmAccess == null || realmAccess.get(ROLES) == null) {
+            return Collections.emptyList();
+        }
+        return (List<String>) realmAccess.get(ROLES);
     }
 
     /**
@@ -122,7 +130,7 @@ public class PlatformAuth extends GorAuth {
             return oAuthHandler.verifyAccessToken(accessToken);
         } catch (SignatureVerificationException e) {
             DecodedJWT jwtDecoded = oAuthHandler.decodeToken(accessToken);
-            String username = jwtDecoded.getClaim(userKey).asString();
+            String username = getUsername(jwtDecoded);
             String message = "ERROR: Unable to verify the signature of the access token";
             log.error(message, e);
             auditLog.info(message,
@@ -133,7 +141,7 @@ public class PlatformAuth extends GorAuth {
             return null;
         } catch (TokenExpiredException e) {
             DecodedJWT jwtDecoded = oAuthHandler.decodeToken(accessToken);
-            String username = jwtDecoded.getClaim(userKey).asString();
+            String username = getUsername(jwtDecoded);
             log.error(e.getMessage(), e);
             auditLog.info(e.getMessage(),
                     value("username", username),
