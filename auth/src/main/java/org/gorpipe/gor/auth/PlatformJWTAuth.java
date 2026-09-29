@@ -66,17 +66,7 @@ public class PlatformJWTAuth extends GorAuth {
     }
 
     private String getUsername(JsonWebToken jwt) {
-        return resolveUsername(userKey, claim -> getStringClaim(jwt, claim));
-    }
-
-    private static String getStringClaim(JsonWebToken jwt, String claim) {
-        Object value = jwt.getClaim(claim);
-        if (value instanceof String) {
-            return (String) value;
-        } else if (value instanceof JsonString) {
-            return ((JsonString) value).getString();
-        }
-        return null;
+        return resolveUsername(userKey, jwt);
     }
 
     private List<String> getUserRoles(JsonWebToken jwt) {

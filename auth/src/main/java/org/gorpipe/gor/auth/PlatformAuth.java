@@ -94,10 +94,7 @@ public class PlatformAuth extends GorAuth {
     }
 
     private String getUsername(DecodedJWT jwt) {
-        return resolveUsername(userKey, name -> {
-            Claim claim = jwt.getClaim(name);
-            return claim != null ? claim.asString() : null;
-        });
+        return resolveUsername(userKey, jwt);
     }
 
     private long getExpiration(DecodedJWT jwt) {

@@ -1,6 +1,8 @@
 package org.gorpipe.gor.auth;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.base.Strings;
+import jakarta.json.JsonString;
 import org.gorpipe.gor.auth.utils.CsaApiUtils;
 import org.gorpipe.security.cred.CsaApiService;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -10,8 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 public abstract class GorAuth implements AutoCloseable {
 
@@ -106,26 +108,41 @@ public abstract class GorAuth implements AutoCloseable {
 
     /**
      * Resolve the username from token claims: the configured user key claim if present and non-empty, else the
-     * first non-empty of {@link #USERNAME_FALLBACK_CLAIMS}.
-     *
-     * @param userKey     the configured user key claim (e.g. email), may be null.
-     * @param claimReader reads a claim as a string, returning null if missing or not a string.
-     * @return the username, never null (empty if no candidate claim is present).
+     * first non-empty of {@link #USERNAME_FALLBACK_CLAIMS}. Never null (empty if no candidate claim is present).
      */
-    static String resolveUsername(String userKey, Function<String, String> claimReader) {
-        if (!Strings.isNullOrEmpty(userKey)) {
-            String username = claimReader.apply(userKey);
-            if (!Strings.isNullOrEmpty(username)) {
-                return username;
-            }
-        }
-        for (String claim : USERNAME_FALLBACK_CLAIMS) {
-            String username = claimReader.apply(claim);
+    static String resolveUsername(String userKey, JsonWebToken jwt) {
+        for (String claim : usernameClaims(userKey)) {
+            Object value = jwt.getClaim(claim);
+            String username = value instanceof JsonString ? ((JsonString) value).getString()
+                    : value instanceof String ? (String) value : null;
             if (!Strings.isNullOrEmpty(username)) {
                 return username;
             }
         }
         return "";
+    }
+
+    /**
+     * @see #resolveUsername(String, JsonWebToken)
+     */
+    static String resolveUsername(String userKey, DecodedJWT jwt) {
+        for (String claim : usernameClaims(userKey)) {
+            String username = jwt.getClaim(claim).asString();
+            if (!Strings.isNullOrEmpty(username)) {
+                return username;
+            }
+        }
+        return "";
+    }
+
+    private static List<String> usernameClaims(String userKey) {
+        if (Strings.isNullOrEmpty(userKey)) {
+            return USERNAME_FALLBACK_CLAIMS;
+        }
+        List<String> claims = new ArrayList<>();
+        claims.add(userKey);
+        claims.addAll(USERNAME_FALLBACK_CLAIMS);
+        return claims;
     }
 
     public static boolean validateUserProject(String user, String project) {
