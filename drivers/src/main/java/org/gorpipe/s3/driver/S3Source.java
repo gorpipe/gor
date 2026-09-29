@@ -325,21 +325,28 @@ public class S3Source implements StreamSource {
 
     private S3SourceMetadata loadMetadataFromCache(String bucket, String key) {
         rejectIfCachedMiss(metadataCache.getIfPresent(metaCacheKey()), bucket, key);
+        Object cached = getThroughCache(bucket, key);
+        if (cached instanceof NegativeMetadata) {
+            // Lost a race: another thread cached a miss between the check above and this get(),
+            // so Caffeine returned that entry directly without calling our loader. Rethrown as is,
+            // outside getThroughCache, so it does not write a fresh miss and extend the TTL.
+            rejectIfCachedMiss(cached, bucket, key);
+            // Not thrown above means it had just expired and was invalidated; load once more.
+            cached = getThroughCache(bucket, key);
+        }
+        return (S3SourceMetadata) cached;
+    }
+
+    private Object getThroughCache(String bucket, String key) {
         try {
             // We can not use the cache if the session is not available, as the cache needs to be cleared when the session ends.
-            Object cached = metadataCache.get(metaCacheKey(), k -> createMetaData(bucket, key));
-            if (cached instanceof NegativeMetadata) {
-                // Lost a race: another thread cached a miss between the check above and this get(),
-                // so Caffeine returned that entry directly without calling our loader.
-                rejectIfCachedMiss(cached, bucket, key);
-                // Not thrown above means it had just expired and was invalidated; load once more.
-                cached = metadataCache.get(metaCacheKey(), k -> createMetaData(bucket, key));
-            }
-            return (S3SourceMetadata) cached;
+            return metadataCache.get(metaCacheKey(), k -> createMetaData(bucket, key));
         } catch (Exception e) {
             var cause = e.getCause() != null ? e.getCause() : e;
             if (negativeTtlMillis > 0 && ExceptionUtilities.getUnderlyingCause(e) instanceof NoSuchKeyException) {
-                metadataCache.put(metaCacheKey(), new NegativeMetadata(System.currentTimeMillis() + negativeTtlMillis));
+                // putIfAbsent: another thread may have cached the real metadata since our HEAD returned 404
+                // (e.g. an upload completed in between); never replace that with a miss.
+                metadataCache.asMap().putIfAbsent(metaCacheKey(), new NegativeMetadata(System.currentTimeMillis() + negativeTtlMillis));
             }
             throw new GorResourceException("Failed to load metadata from cache for " + bucket + "/" + key, getPath().toString(), cause).retry();
         }
