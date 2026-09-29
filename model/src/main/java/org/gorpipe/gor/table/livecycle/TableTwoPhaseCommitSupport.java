@@ -44,26 +44,31 @@ public abstract class TableTwoPhaseCommitSupport extends TableLifeCycleSupport i
 
     @Override
     public void commit() {
+        // Publish the main file (the lines) before the meta file (the header with the serial).  Readers don't lock, so
+        // a reader in between sees the old serial with the new lines, never a new serial with old lines (a reader that
+        // sees serial N always sees content >= N).  Otherwise readers that only reload on serial change can keep
+        // stale lines until the next commit.
         try {
             if (this.table.getLinkPath() != null ||  TableInfoBase.USE_LINKS) {
                 var newVersionPath = PathUtils.resolve(table.getFolderPath(), table.getNewVersionedFileName());
 
+                updateFromTempFile(getTempMainFileName(), newVersionPath);
                 if (!table.isUseEmbeddedHeader()) {
                     updateFromTempFile(getTempMetaFileName(),
                             newVersionPath + DataType.META.suffix);
                 }
-                updateFromTempFile(getTempMainFileName(), newVersionPath);
                 this.table.setPath(newVersionPath);
 
+                // Appending to the link file is what makes the new version visible, so it must stay last.
                 LinkFile.load((StreamSource) table.fileReader.resolveDataSource(new SourceReference(table.getLinkPath())))
                     .appendEntry(table.getPath(), "")
                     .save(table.fileReader);
 
             } else {
+                updateFromTempFile(getTempMainFileName(), table.getPath());
                 if (!table.isUseEmbeddedHeader()) {
                     updateFromTempFile(getTempMetaFileName(), table.getMetaPath());
                 }
-                updateFromTempFile(getTempMainFileName(), table.getPath());
             }
 
         } catch (IOException e) {
