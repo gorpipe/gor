@@ -40,8 +40,14 @@ import java.util.concurrent.atomic.AtomicLong;
  * Because the key contains the full source, an edited template always compiles to a new entry.
  */
 public final class TemplateCache {
-    private static final int MAX_TEMPLATES = Integer.getInteger("gor.dialog.template.cache.size", 2000);
-    private static final Cache<Key, Template> TEMPLATES = Caffeine.newBuilder().maximumSize(MAX_TEMPLATES).build();
+    /**
+     * Budget for the cache, in characters of template source. A compiled template takes a few times its source in memory.
+     */
+    private static final long MAX_TEMPLATE_CHARS = Long.getLong("gor.dialog.template.cache.maxchars", 16L * 1024 * 1024);
+    private static final Cache<Key, Template> TEMPLATES = Caffeine.newBuilder()
+            .maximumWeight(MAX_TEMPLATE_CHARS)
+            .weigher((Key k, Template v) -> Math.max(1, k.source().length()))
+            .build();
     private static final AtomicLong COMPILES = new AtomicLong();
 
     private record Key(Configuration configuration, String name, String source) {

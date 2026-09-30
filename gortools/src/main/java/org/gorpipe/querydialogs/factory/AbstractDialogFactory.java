@@ -30,7 +30,9 @@ import org.gorpipe.gor.model.QueryEvaluator;
 import org.gorpipe.querydialogs.Argument;
 import org.gorpipe.querydialogs.ArgumentType;
 import org.gorpipe.querydialogs.Dialog;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -58,12 +60,18 @@ import java.util.concurrent.atomic.AtomicLong;
  * @version $Id$
  */
 public abstract class AbstractDialogFactory<T extends Dialog> {
-    private static final int MAX_DEFINITIONS = Integer.getInteger("gor.dialog.definition.cache.size", 1000);
+    /**
+     * Budget for the definition cache, in characters of yml source (the parsed map roughly doubles that in memory).
+     */
+    private static final long MAX_DEFINITION_CHARS = Long.getLong("gor.dialog.definition.cache.maxchars", 32L * 1024 * 1024);
     /**
      * Parsed dialog definitions, keyed on (resource, cacheDir). An entry is only used when the resource's current content
      * is identical to the content it was parsed from, so an edited file is always re-parsed.
      */
-    private static final Cache<DefinitionKey, ParsedDefinition> DEFINITIONS = Caffeine.newBuilder().maximumSize(MAX_DEFINITIONS).build();
+    private static final Cache<DefinitionKey, ParsedDefinition> DEFINITIONS = Caffeine.newBuilder()
+            .maximumWeight(MAX_DEFINITION_CHARS)
+            .weigher((DefinitionKey k, ParsedDefinition v) -> Math.max(1, v.content().length()))
+            .build();
     private static final AtomicLong DEFINITION_PARSES = new AtomicLong();
 
     private record DefinitionKey(String resource, String cacheDir) {
@@ -83,6 +91,7 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
     FileReader fileResolver;
     QueryEvaluator queryEval;
     boolean ignoreAllowedMismatch;
+    boolean deferUpdates;
 
     /**
      * Constructs a factory with no registered argument builders
@@ -104,6 +113,17 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
     public ArgumentBuilder registerArgumentBuilder(ArgumentType type, ArgumentBuilder builder) {
         builder.setIgnoreAllowedMismatch(ignoreAllowedMismatch);
         return argumentBuilders.put(type, builder);
+    }
+
+    /**
+     * If set, the dialogs built by this factory are created with deferred updates (see {@link Dialog#setDeferUpdates}):
+     * the query is not rendered when the dialog is created, nor when its arguments are set, but only when it is
+     * requested.
+     *
+     * @param deferUpdates whether dialogs should be created with deferred updates
+     */
+    public void setDeferUpdates(boolean deferUpdates) {
+        this.deferUpdates = deferUpdates;
     }
 
     /**
@@ -168,13 +188,22 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
 
     /**
      * The embedded files are written to the cache directory when the definition is parsed. Re-create any that have
-     * been removed since, as the dialog queries refer to them by path.
+     * been removed or changed since, as the dialog queries refer to them by path.
      */
     private static void restoreEmbeddedFiles(ParsedDefinition definition, String cacheDir) {
         for (Map.Entry<String, String> embedded : definition.embeddedFiles().entrySet()) {
-            if (!Files.exists(Paths.get(embedded.getKey()))) {
+            if (!hasContent(Paths.get(embedded.getKey()), embedded.getValue())) {
                 Utilities.makeTempFile(embedded.getValue(), cacheDir);
             }
+        }
+    }
+
+    private static boolean hasContent(Path file, String content) {
+        try {
+            // Same encoding as Utilities.makeTempFile writes with.
+            return Arrays.equals(Files.readAllBytes(file), content.getBytes());
+        } catch (IOException e) {
+            return false;
         }
     }
 
@@ -243,7 +272,8 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
     @SuppressWarnings("unchecked")
     private static Map<String, Map<String, Object>> parseDialogMap(Reader reader) {
         DEFINITION_PARSES.incrementAndGet();
-        Yaml yaml = new Yaml();
+        // Only standard yml types; never construct arbitrary java classes from tags.
+        Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
         Object o = yaml.load(reader);
         if (o == null) return null;
         if (!(o instanceof Map)) throw new RuntimeException("Invalid dialog configuration file");

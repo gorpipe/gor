@@ -24,6 +24,7 @@ package gorsat;
 
 import org.gorpipe.gor.model.DriverBackedFileReader;
 import org.gorpipe.gor.model.FileReader;
+import org.gorpipe.gor.model.QueryEvaluator;
 import org.gorpipe.querydialogs.factory.AbstractDialogFactory;
 import org.gorpipe.querydialogs.templating.TemplateCache;
 import org.junit.Assert;
@@ -84,7 +85,35 @@ public class UTestTemplateRenderingConcurrency {
     }
 
     private String render(String yml, Map<String, String> params) throws Exception {
-        return FreemarkerQueryUtilities.requestQuery(yml, fileReader, null, null, params, cacheDir).orElseThrow();
+        return render(yml, params, null);
+    }
+
+    private String render(String yml, Map<String, String> params, QueryEvaluator queryEval) throws Exception {
+        return FreemarkerQueryUtilities.requestQuery(yml, fileReader, queryEval, null, params, cacheDir).orElseThrow();
+    }
+
+    /**
+     * Records every query passed to the template gor(...) method.
+     */
+    private static final class RecordingQueryEvaluator extends QueryEvaluator {
+        final List<String> queries = Collections.synchronizedList(new ArrayList<>());
+
+        @Override
+        public List<String> asList(String query) {
+            queries.add(query);
+            return List.of("v");
+        }
+
+        @Override
+        public String asValue(String query) {
+            queries.add(query);
+            return "v";
+        }
+
+        @Override
+        public String[] getHeader() {
+            return new String[0];
+        }
     }
 
     private static Map<String, String> params(int i) {
@@ -181,22 +210,22 @@ public class UTestTemplateRenderingConcurrency {
     @Test
     public void unchangedTemplateIsNotReparsed() throws Exception {
         String yml = writeTemplate("cached.yml", TEMPLATE).toString();
-
         render(yml, params(1));
-        long parses = AbstractDialogFactory.definitionParseCount();
-        long compiles = TemplateCache.compileCount();
 
+        // The counters are JVM wide, so only compare how much they change while this test renders.
+        long parsesBefore = AbstractDialogFactory.definitionParseCount();
+        long compilesBefore = TemplateCache.compileCount();
         for (int i = 2; i < 50; i++) {
             render(yml, params(i));
         }
+        Assert.assertEquals("yml should not be re-parsed while unchanged", 0, AbstractDialogFactory.definitionParseCount() - parsesBefore);
+        Assert.assertEquals("query template should not be re-compiled while unchanged", 0, TemplateCache.compileCount() - compilesBefore);
 
-        Assert.assertEquals("yml should be parsed once while unchanged", parses, AbstractDialogFactory.definitionParseCount());
-        Assert.assertEquals("query template should be compiled once while unchanged", compiles, TemplateCache.compileCount());
-
+        parsesBefore = AbstractDialogFactory.definitionParseCount();
         Files.writeString(Path.of(yml), TEMPLATE.replace("calc w", "calc width"));
         String edited = render(yml, params(1));
         Assert.assertTrue(edited, edited.contains("| calc width 10"));
-        Assert.assertEquals(parses + 1, AbstractDialogFactory.definitionParseCount());
+        Assert.assertEquals("edited yml should be parsed once", 1, AbstractDialogFactory.definitionParseCount() - parsesBefore);
     }
 
     @Test
@@ -218,5 +247,112 @@ public class UTestTemplateRenderingConcurrency {
         String second = render(yml.toString(), Map.of("x", "b"));
         Assert.assertEquals(first.replace("'a'", "'b'"), second);
         Assert.assertEquals("embedded file content\n", Files.readString(embedded));
+    }
+
+    private Path writeEmbeddedTemplate() throws IOException {
+        return writeTemplate("embedded.yml", String.join("\n",
+                "embedded:",
+                "  query: nor ${script} | calc v '${x.val}'",
+                "  script: |",
+                "    embedded file content",
+                "  arguments:",
+                "    - name: x",
+                ""));
+    }
+
+    @Test
+    public void embeddedFileIsRestoredIfOverwritten() throws Exception {
+        Path yml = writeEmbeddedTemplate();
+
+        String first = render(yml.toString(), Map.of("x", "a"));
+        Path embedded = Path.of(first.substring(4, first.indexOf(' ', 4)));
+        Assert.assertEquals("embedded file content\n", Files.readString(embedded));
+
+        Files.writeString(embedded, "something else\n");
+        String second = render(yml.toString(), Map.of("x", "b"));
+        Assert.assertEquals(first.replace("'a'", "'b'"), second);
+        Assert.assertEquals("embedded file content\n", Files.readString(embedded));
+    }
+
+    @Test
+    public void ymlWithGlobalTagIsRejected() throws Exception {
+        Path yml = writeTemplate("tagged.yml", String.join("\n",
+                "tagged:",
+                "  query: nor x",
+                "  file: !!java.io.File [\"/tmp\"]",
+                ""));
+        try {
+            render(yml.toString(), Map.of());
+            Assert.fail("A yml with a global (java class) tag must not be loaded");
+        } catch (Exception e) {
+            Throwable t = e;
+            while (t != null && !(t instanceof org.yaml.snakeyaml.error.YAMLException)) t = t.getCause();
+            Assert.assertNotNull("expected a YAMLException, got " + e, t);
+        }
+    }
+
+    @Test
+    public void ymlWithStandardTypesParses() throws Exception {
+        Path yml = writeTemplate("types.yml", String.join("\n",
+                "types:",
+                "  query: nor x | calc v '${x.val}'",
+                "  Version_info: 1.0",
+                "  when: 2024-01-02",
+                "  flag: true",
+                "  count: 3",
+                "  arguments:",
+                "    - name: x",
+                "      default: 7",
+                ""));
+        Assert.assertEquals("nor x | calc v 'b'", render(yml.toString(), Map.of("x", "b")));
+    }
+
+    @Test
+    public void queryIsRenderedOncePerRequest() throws Exception {
+        Path yml = writeTemplate("gor_call.yml", String.join("\n",
+                "gor_call:",
+                "  query: nor x | calc v '${gor(\"q-\" + (x.val!\"\"))}'",
+                "  arguments:",
+                "    - name: x",
+                ""));
+        for (String x : List.of("a", "b")) {
+            RecordingQueryEvaluator queryEval = new RecordingQueryEvaluator();
+            Assert.assertEquals("nor x | calc v 'v'", render(yml.toString(), Map.of("x", x), queryEval));
+            Assert.assertEquals("gor(...) should run once, with the arguments set", List.of("q-" + x), queryEval.queries);
+        }
+    }
+
+    @Test
+    public void failingRenderThrowsTemplateException() throws Exception {
+        Path yml = writeTemplate("failing.yml", String.join("\n",
+                "failing:",
+                "  query: nor x | calc v ${x.val?number}",
+                "  arguments:",
+                "    - name: x",
+                ""));
+        Assert.assertEquals("nor x | calc v 1", render(yml.toString(), Map.of("x", "1")));
+        try {
+            render(yml.toString(), Map.of("x", "abc"));
+            Assert.fail("Expected the render to fail");
+        } catch (freemarker.template.TemplateException e) {
+            // Thrown as the TemplateException requestQuery declares, not wrapped in a RuntimeException.
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains("abc"));
+        }
+    }
+
+    @Test
+    public void argumentsNamedSkipOrGorTakePrecedenceOverTheBuiltIns() throws Exception {
+        Path yml = writeTemplate("builtin_names.yml", String.join("\n",
+                "builtin_names:",
+                "  query: nor x | calc s '${skip.val}' | calc g '${gor.val}' | calc x '${x.val}'",
+                "  arguments:",
+                "    - name: skip",
+                "    - name: gor",
+                "    - name: x",
+                ""));
+        RecordingQueryEvaluator queryEval = new RecordingQueryEvaluator();
+        Assert.assertEquals("nor x | calc s 's1' | calc g 'g1' | calc x 'x1'",
+                render(yml.toString(), Map.of("skip", "s1", "gor", "g1", "x", "x1"), queryEval));
+        Assert.assertTrue(queryEval.queries.toString(), queryEval.queries.isEmpty());
     }
 }

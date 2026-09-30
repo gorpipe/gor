@@ -21,9 +21,7 @@
  */
 package org.gorpipe.querydialogs.factory;
 
-import freemarker.cache.MultiTemplateLoader;
 import freemarker.cache.StringTemplateLoader;
-import freemarker.cache.TemplateLoader;
 import freemarker.core.Environment;
 import freemarker.core.InvalidReferenceException;
 import freemarker.core.ParseException;
@@ -31,10 +29,8 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
-import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.querydialogs.Argument;
 import org.gorpipe.querydialogs.templating.DialogArgumentWrapper;
-import org.gorpipe.querydialogs.templating.NetworkTemplateLoader;
 import org.gorpipe.querydialogs.templating.SkipFirstMethodModel;
 import org.gorpipe.querydialogs.templating.TemplateCache;
 import org.slf4j.Logger;
@@ -60,8 +56,9 @@ public class Perspective {
      */
     public static final String GLOBAL_GROUP = "[global]";
     /**
-     * Only used to resolve includes (see {@link #initializeTempleConfig}). The perspective's own templates are compiled
-     * from their source through {@link TemplateCache}, so nothing is written to this shared loader per dialog.
+     * Always empty. The perspective's own templates are compiled from their source through {@link TemplateCache}, so
+     * nothing is written to this shared loader, and an include or import in a perspective template fails with
+     * "template not found".
      */
     private static final StringTemplateLoader TEMPLATE_LOADER;
     /**
@@ -78,14 +75,6 @@ public class Perspective {
 
         TEMPLATE_CONFIG.setObjectWrapper(new DialogArgumentWrapper());
         TEMPLATE_CONFIG.setLocale(Locale.ENGLISH);
-    }
-
-    public static void initializeTempleConfig(FileReader fileResolver) {
-        String macroPath = System.getProperty("dialog.macrodir", null);
-        if (macroPath != null) {
-            NetworkTemplateLoader netLoader = new NetworkTemplateLoader(macroPath, fileResolver);
-            TEMPLATE_CONFIG.setTemplateLoader(new MultiTemplateLoader(new TemplateLoader[]{TEMPLATE_LOADER, netLoader}));
-        }
     }
 
     private final String namePrefix;

@@ -166,8 +166,22 @@ public class Dialog extends AbstractListBean {
                   DialogType type, String query, String chartScript, String chartExec, String chartColumns, ChartDataType chartDF,
                   List<Argument> arguments, String errorMsgTemplate, String longRunningQueryTemplate, String version, String packageVersion, String gitSHA)
             throws TemplateException {
+        this(attributes, fileResolver, queryEval, dialogDescription, type, query, chartScript, chartExec, chartColumns, chartDF,
+                arguments, errorMsgTemplate, longRunningQueryTemplate, version, packageVersion, gitSHA, false);
+    }
+
+    /**
+     * @param deferUpdates if set, the query is not rendered here (with default arguments), nor when arguments change,
+     *                     but only when requested, see {@link #setDeferUpdates(boolean)}
+     */
+    public Dialog(Map<String, ? extends Object> attributes, FileReader fileResolver, QueryEvaluator queryEval, DialogDescription dialogDescription,
+                  DialogType type, String query, String chartScript, String chartExec, String chartColumns, ChartDataType chartDF,
+                  List<Argument> arguments, String errorMsgTemplate, String longRunningQueryTemplate, String version, String packageVersion, String gitSHA,
+                  boolean deferUpdates)
+            throws TemplateException {
         this.fileResolver = fileResolver;
         this.queryEval = queryEval;
+        this.deferUpdates = deferUpdates;
         setConfig();
         this.attributes = attributes;
         this.dialogDescription = dialogDescription;
