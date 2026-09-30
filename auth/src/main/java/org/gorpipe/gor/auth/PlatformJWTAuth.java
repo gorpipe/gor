@@ -8,6 +8,7 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -65,11 +66,14 @@ public class PlatformJWTAuth extends GorAuth {
     }
 
     private String getUsername(JsonWebToken jwt) {
-        return jwt.getClaim(userKey);
+        return resolveUsername(userKey, jwt);
     }
 
     private List<String> getUserRoles(JsonWebToken jwt) {
-        List<JsonString> roles = ((Map<String, List<JsonString>>) jwt.getClaim(REALM_ACCESS)).get(ROLES);
-        return roles.stream().map(js -> js.getString()).collect(Collectors.toList());
+        Map<String, List<JsonString>> realmAccess = jwt.getClaim(REALM_ACCESS);
+        if (realmAccess == null || realmAccess.get(ROLES) == null) {
+            return Collections.emptyList();
+        }
+        return realmAccess.get(ROLES).stream().map(js -> js.getString()).collect(Collectors.toList());
     }
 }
