@@ -23,6 +23,7 @@
 package gorsat.gorsatGorIterator
 
 import java.nio.file.Files
+import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader}
 import org.gorpipe.gor.session.GorSession
@@ -112,17 +113,67 @@ object MapAndListUtilities {
     }
   }
 
+  // Locks so that concurrent pipelines of a request, which share the session cache, load a given map only once.
+  private val loadLocks = new ConcurrentHashMap[String, Object]()
+
+  private def cacheKey(kind: String, filename: String, ic: Int, oc: Array[Int], asSet: Boolean,
+                       caseInsensitive: Boolean): String =
+    s"$kind|$filename|$ic|${oc.mkString(",")}|$asSet|$caseInsensitive"
+
+  /**
+   * Returns the cached value if present, otherwise loads it while holding a lock for the request and key, so
+   * concurrent callers wait for the first load instead of each building their own copy.
+   */
+  private def loadOnce[T](extFilename: String, iterator: LineIterator, session: GorSession)
+                         (cached: => Option[T])(load: => T): T = {
+    cached match {
+      case Some(value) =>
+        iterator.close()
+        value
+      case None =>
+        val lockKey = String.valueOf(session.getRequestId) + "|" + extFilename
+        val lock = loadLocks.computeIfAbsent(lockKey, _ => new Object)
+        try {
+          lock.synchronized {
+            cached match {
+              case Some(value) =>
+                iterator.close()
+                value
+              case None => load
+            }
+          }
+        } finally {
+          loadLocks.remove(lockKey, lock)
+        }
+    }
+  }
+
+  /**
+   * Shares equal strings while one map is loaded, map value columns tend to repeat a lot. Bounded so that maps with
+   * mostly unique values do not pay for a large pool.
+   */
+  private class StringPool(maxSize: Int = 100000) {
+    private val pool = new java.util.HashMap[String, String]()
+
+    def apply(s: String): String = {
+      val existing = pool.get(s)
+      if (existing != null) {
+        existing
+      } else {
+        if (pool.size < maxSize) pool.put(s, s)
+        s
+      }
+    }
+  }
+
   def getSingleHashMap(filename: String, iterator: LineIterator, caseInsensitive: Boolean, ic: Int,
                        oc: Array[Int], asSet: Boolean, skipEmpty: Boolean, session: GorSession): singleHashMap =  {
-    val extFilename = "map" + filename + ic + oc.mkString(",") + asSet
+    val extFilename = cacheKey("map", filename, ic, oc, asSet, caseInsensitive)
     val ocl = oc.length
-    syncGetSingleHashMap(extFilename, session) match {
-      case Some(theMap) =>
-        iterator.close()
-        theMap
-      case None =>
+    loadOnce(extFilename, iterator, session)(syncGetSingleHashMap(extFilename, session)) {
         try {
           val colMap = new java.util.HashMap[String, String]()
+          val values = new StringPool()
 
           val mmu: MemoryMonitorUtil =  new MemoryMonitorUtil(MemoryMonitorUtil.basicOutOfMemoryHandler)
 
@@ -142,11 +193,11 @@ object MapAndListUtilities {
                   if (caseInsensitive) cols.slice(0, ic).mkString("\t").toUpperCase
                   else cols.slice(0, ic).mkString("\t")
                 if (colMap.getOrDefault(lookupString,null) == null) {
-                  colMap.put(lookupString, oc.tail.map(c => cols(c)).foldLeft(cols(oc.head))(_ + "\t" + _))
+                  colMap.put(lookupString, values(oc.tail.map(c => cols(c)).foldLeft(cols(oc.head))(_ + "\t" + _)))
                 } else {
                   val existingValues = colMap.get(lookupString).split("\t",-1)
                   val newValues = if( skipEmpty ) existingValues.zip(oc.map(c => cols(c))).map(_.productIterator.filter(_.toString.nonEmpty).mkString(",")) else existingValues.zip(oc.map(c => cols(c))).map(x => x._1 + "," + x._2 )
-                  colMap.put(lookupString, newValues.tail.foldLeft(newValues.head)(_ + "\t" + _))
+                  colMap.put(lookupString, values(newValues.tail.foldLeft(newValues.head)(_ + "\t" + _)))
                 }
               }
             }
@@ -161,22 +212,19 @@ object MapAndListUtilities {
 
   def getMultiHashMap(filename: String, iterator: LineIterator, caseInsensitive: Boolean, ic: Int,
                       oc: Array[Int], session: GorSession): multiHashMap = {
-    val extFilename = "multimap" + filename + ic + oc.mkString(",")
+    val extFilename = cacheKey("multimap", filename, ic, oc, asSet = false, caseInsensitive)
     val ocl = oc.length
-    syncGetMultiHashMap(extFilename, session) match {
-      case Some(theMap) =>
-        iterator.close()
-        theMap
-      case None =>
+    loadOnce(extFilename, iterator, session)(syncGetMultiHashMap(extFilename, session)) {
         val multiMap = new java.util.HashMap[String, ListBuffer[String]]()
         try {
+          val values = new StringPool()
           val mmu: MemoryMonitorUtil = new MemoryMonitorUtil(MemoryMonitorUtil.basicOutOfMemoryHandler)
           while (iterator.hasNext) {
             val x = iterator.nextLine
             val cols = x.split("\t", -1)
             mmu.check("getMultiHashMap", mmu.lineNum, x)
             if (cols.length >= ic + ocl) {
-              val (a, b) = (cols.slice(0, ic).mkString("\t"), oc.tail.map(c => cols(c)).foldLeft(cols(oc.head))(_ + "\t" + _))
+              val (a, b) = (cols.slice(0, ic).mkString("\t"), values(oc.tail.map(c => cols(c)).foldLeft(cols(oc.head))(_ + "\t" + _)))
               val cisa = if (caseInsensitive) a.toUpperCase else a
               if (multiMap.containsKey(cisa)) {
                 multiMap.put(cisa, multiMap.get(cisa) += b)
@@ -186,10 +234,14 @@ object MapAndListUtilities {
               }
             }
           }
-          val multiOutputMap = new java.util.HashMap[String, Array[String]]()
-          multiMap.forEach((k, v) => {
-            multiOutputMap.put(k, v.toArray)
-          })
+          // Move the entries over rather than copying them, so both maps are not fully held at the same time.
+          val multiOutputMap = new java.util.HashMap[String, Array[String]]((multiMap.size / 0.75f).toInt + 1)
+          val entries = multiMap.entrySet().iterator()
+          while (entries.hasNext) {
+            val entry = entries.next()
+            multiOutputMap.put(entry.getKey, entry.getValue.toArray)
+            entries.remove()
+          }
           syncAddMultiHashMap(extFilename, multiOutputMap, session)
           multiOutputMap
         } finally {
