@@ -11,8 +11,18 @@ The :ref:`VARNORM_WITH_BUILD` command is the same as :ref:`VARNORM` except that 
 reference build given as the first argument instead of the default reference build of the project.  This is useful when
 the stream holds variants in a build different from the project default, e.g. after a liftover.
 
-The build is the path to a chromSeq folder (one ``<chrom>.txt`` file per chromosome), quoted or unquoted.  Relative paths
-are resolved against the project root.  The query fails if the build does not exist.
+It takes the same options as :ref:`VARNORM`: if neither ``-left`` nor ``-right`` is specified, then left normalisation is
+default, and ``-trim`` deletes the redundant bases in the representations of insertions or deletions (i.e. deletions are
+represented by empty cells in Call - or in Reference in the case of insertions).
+
+The build is the path to a chromSeq folder (one ``<chrom>.txt`` file per chromosome), quoted or unquoted, either local or
+in an object store (e.g. ``s3://bucket/ref/hg38/chromSeq``).  Relative paths are resolved against the project root.  The
+query fails if the build holds neither ``chr1.txt`` nor ``1.txt``.
+
+.. note::
+   The chromosome files are looked up by the chromosome names in the stream, so the naming of the build must match the
+   stream.  A ``chr1`` stream against a build with ``1.txt`` files (or the other way around) finds no reference, reads it
+   as ``N`` and leaves the variants unnormalised, with only a warning in the log.
 
 Usage
 =====
@@ -40,7 +50,11 @@ Examples
 ========
 .. code-block:: gor
 
-   gor hg19_variants.gorz | VARNORM_WITH_BUILD config/chromSeqhg19 #3 #4 -left
+   gor hg38_variants.gorz | VARNORM_WITH_BUILD ref/hg38/chromSeq #3 #4
+
+.. code-block:: gor
+
+   gor lifted_variants.gorz | VARNORM_WITH_BUILD 's3://bucket/ref/hg38/chromSeq' Reference Call -right -trim
 
 Related commands
 ----------------
