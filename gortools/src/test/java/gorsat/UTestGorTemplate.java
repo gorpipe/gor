@@ -95,4 +95,40 @@ public class UTestGorTemplate {
         // values for outer_ts are different because create xx was re-evaluated
         Assert.assertNotEquals("time stamps should be different", Long.parseLong(try1[4]), Long.parseLong(try2[4]));
     }
+
+    /**
+     * A yml url parameter 'query' selects the template entry to run. When it names no entry in the
+     * template the query should fail with a clear parsing error rather than a NullPointerException.
+     */
+    @Test
+    public void testUrlQueryParameterNamingMissingEntryGivesParsingError() throws IOException {
+        String fn = writeQueryAsTemplate("urlquery", "norows 1", "TestReport");
+        GorParsingException e = Assert.assertThrows(GorParsingException.class,
+                () -> TestUtils.runGorPipe("gor " + fn + "?TestReport&query=nosuchentry", workDirPath.toString(), false));
+        Assert.assertTrue(e.getMessage(), e.getMessage().contains("'nosuchentry'"));
+        Assert.assertTrue(e.getMessage(), e.getMessage().contains("query"));
+    }
+
+    /**
+     * A yml url parameter given without a value also selects a template entry by its name,
+     * and should fail with a clear parsing error when no such entry exists.
+     */
+    @Test
+    public void testUrlParameterWithoutValueNamingMissingEntryGivesParsingError() throws IOException {
+        String fn = writeQueryAsTemplate("urlempty", "norows 1", "TestReport");
+        GorParsingException e = Assert.assertThrows(GorParsingException.class,
+                () -> TestUtils.runGorPipe("gor " + fn + "?TestReport&nosuchentry=", workDirPath.toString(), false));
+        Assert.assertTrue(e.getMessage(), e.getMessage().contains("'nosuchentry'"));
+    }
+
+    /**
+     * The 'query' url parameter still selects an existing template entry.
+     */
+    @Test
+    public void testUrlQueryParameterSelectsExistingEntry() throws IOException {
+        String templateYml = "TestReport:\n  query: norrows 1\n  other: norrows 3\n";
+        Files.writeString(workDirPath.resolve("urlquerysel.yml"), templateYml);
+        String result = TestUtils.runGorPipe("gor urlquerysel.yml?TestReport&query=other", workDirPath.toString(), false);
+        Assert.assertEquals(4, result.split(TestUtils.LINE_SPLIT_PATTERN).length);
+    }
 }
