@@ -296,6 +296,9 @@ Commands
    * - :ref:`VARNORM`
      - Normalises the variation data in a gor stream to the left or the right.
      - GOR
+   * - :ref:`VARNORM_WITH_BUILD`
+     - Normalises the variation data against a given reference build instead of the project default.
+     - GOR
    * - :ref:`VERIFYCOLTYPE`
      - Ensures that the values in each row match their column type.
      - GOR/NOR

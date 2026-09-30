@@ -113,6 +113,7 @@ object GorPipeCommands {
       addInfo(new gorsat.Commands.UpTo)
       addInfo(new gorsat.Commands.VarMerge)
       addInfo(new gorsat.Commands.VarNorm)
+      addInfo(new gorsat.Commands.VarNormWithBuild)
       addInfo(new gorsat.Commands.Write)
       addInfo(new gorsat.Commands.CigarSegs)
       addInfo(new gorsat.Commands.Variants)

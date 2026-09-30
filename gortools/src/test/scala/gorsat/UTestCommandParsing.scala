@@ -1702,6 +1702,28 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     performTests(testsToPerform)
   }
 
+  test("Command: VARNORM_WITH_BUILD") {
+    val testsToPerform = ListBuffer.empty[TestEntry]
+    // Initialize all the tests here
+    val commandName = "VARNORM_WITH_BUILD"
+    val header = defaultHeaderSEG + "\tref\tallele"
+    val build = "../tests/data/ref_mini/chromSeq"
+
+    testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "ref allele", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, s"$build ref", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, s"$build ref allele", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, s"'$build' ref allele", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, s"$build ref allele -seg -left -right -trim", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, s"$build ref allele -seg -left -trim", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, s"$build ref allele -seg -right -trim", header, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, s"$build ref allele -span foo", header, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, s"$build ref allele -span 1000", header, testShouldSucceed = true)
+
+    performTests(testsToPerform)
+  }
+
   test("Command: WAIT") {
     val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
