@@ -21,6 +21,8 @@
  */
 package org.gorpipe.querydialogs.factory;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import freemarker.template.TemplateException;
 import gorsat.Utilities.Utilities;
 import org.gorpipe.gor.model.FileReader;
@@ -32,9 +34,13 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A factory responsible for building {@link Dialog}s from a supplied YAML file.
@@ -52,6 +58,26 @@ import java.util.*;
  * @version $Id$
  */
 public abstract class AbstractDialogFactory<T extends Dialog> {
+    private static final int MAX_DEFINITIONS = Integer.getInteger("gor.dialog.definition.cache.size", 1000);
+    /**
+     * Parsed dialog definitions, keyed on (resource, cacheDir). An entry is only used when the resource's current content
+     * is identical to the content it was parsed from, so an edited file is always re-parsed.
+     */
+    private static final Cache<DefinitionKey, ParsedDefinition> DEFINITIONS = Caffeine.newBuilder().maximumSize(MAX_DEFINITIONS).build();
+    private static final AtomicLong DEFINITION_PARSES = new AtomicLong();
+
+    private record DefinitionKey(String resource, String cacheDir) {
+    }
+
+    /**
+     * @param content      the yml content the definition was parsed from
+     * @param dialogMap    the parsed yml, after embedded values have been replaced with file paths. Never handed out,
+     *                     callers get a deep copy.
+     * @param embeddedFiles map from embedded file path to its content
+     */
+    private record ParsedDefinition(String content, Map<String, Map<String, Object>> dialogMap, Map<String, String> embeddedFiles) {
+    }
+
     private final Map<ArgumentType, ArgumentBuilder> argumentBuilders;
     protected String inputFileFirstReport;
     FileReader fileResolver;
@@ -98,9 +124,81 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
      * @return a {@link List} of {@link Dialog}s
      */
     public List<T> buildDialogs(String resource, String cacheDir) throws IOException, TemplateException {
-        try (Reader br = fileResolver.getReader(resource)) {
-            return buildDialogs(br, cacheDir);
+        if (cacheDir == null) {
+            try (Reader br = fileResolver.getReader(resource)) {
+                return buildDialogs(br, cacheDir);
+            }
         }
+
+        final String content;
+        try (Reader br = fileResolver.getReader(resource)) {
+            StringWriter writer = new StringWriter();
+            br.transferTo(writer);
+            content = writer.toString();
+        }
+
+        final DefinitionKey key = new DefinitionKey(resource, cacheDir);
+        ParsedDefinition definition = DEFINITIONS.getIfPresent(key);
+        if (definition == null || !definition.content().equals(content)) {
+            definition = parseDefinition(content, cacheDir);
+            DEFINITIONS.put(key, definition);
+        } else {
+            restoreEmbeddedFiles(definition, cacheDir);
+        }
+
+        if (definition.dialogMap() == null) return new ArrayList<>();
+        return buildDialogs(deepCopy(definition.dialogMap()));
+    }
+
+    /**
+     * @return number of times a yml dialog definition has been parsed, for tests and diagnostics
+     */
+    public static long definitionParseCount() {
+        return DEFINITION_PARSES.get();
+    }
+
+    private ParsedDefinition parseDefinition(String content, String cacheDir) {
+        Map<String, Map<String, Object>> dialogMap = parseDialogMap(new StringReader(content));
+        Map<String, String> embeddedFiles = new HashMap<>();
+        if (dialogMap != null) {
+            replaceEmbeddedValuesWithFiles(dialogMap, cacheDir, embeddedFiles);
+        }
+        return new ParsedDefinition(content, dialogMap, embeddedFiles);
+    }
+
+    /**
+     * The embedded files are written to the cache directory when the definition is parsed. Re-create any that have
+     * been removed since, as the dialog queries refer to them by path.
+     */
+    private static void restoreEmbeddedFiles(ParsedDefinition definition, String cacheDir) {
+        for (Map.Entry<String, String> embedded : definition.embeddedFiles().entrySet()) {
+            if (!Files.exists(Paths.get(embedded.getKey()))) {
+                Utilities.makeTempFile(embedded.getValue(), cacheDir);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <V> V deepCopy(V value) {
+        if (value instanceof Map<?, ?> map) {
+            Map<Object, Object> copy = new LinkedHashMap<>();
+            map.forEach((k, v) -> copy.put(k, deepCopy(v)));
+            return (V) copy;
+        } else if (value instanceof List<?> list) {
+            List<Object> copy = new ArrayList<>(list.size());
+            list.forEach(v -> copy.add(deepCopy(v)));
+            return (V) copy;
+        } else if (value instanceof Set<?> set) {
+            Set<Object> copy = new LinkedHashSet<>();
+            set.forEach(v -> copy.add(deepCopy(v)));
+            return (V) copy;
+        } else if (value instanceof Date date) {
+            return (V) date.clone();
+        } else if (value instanceof byte[] bytes) {
+            return (V) bytes.clone();
+        }
+        // Strings, numbers, booleans and null are immutable.
+        return value;
     }
 
     /**
@@ -131,18 +229,33 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
      **/
     @SuppressWarnings("unchecked")
     public List<T> buildDialogs(Reader reader, String cacheDir) throws TemplateException, IOException {
-        Yaml yaml = new Yaml();
-        Object o = yaml.load(reader);
-        if (o == null) return new ArrayList<T>();
-        if (!(o instanceof Map)) throw new RuntimeException("Invalid dialog configuration file");
-        Map<String, Map<String, Object>> dialogMap = (Map<String, Map<String, Object>>) o;
-        inputFileFirstReport = dialogMap.keySet().iterator().next();
-        List<T> dialogs = new ArrayList<T>();
+        Map<String, Map<String, Object>> dialogMap = parseDialogMap(reader);
+        if (dialogMap == null) return new ArrayList<T>();
 
         if (cacheDir == null) {
             cacheDir = Files.createTempDirectory("dialogs").toAbsolutePath().toString();
         }
 
+        replaceEmbeddedValuesWithFiles(dialogMap, cacheDir, null);
+        return buildDialogs(dialogMap);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Map<String, Object>> parseDialogMap(Reader reader) {
+        DEFINITION_PARSES.incrementAndGet();
+        Yaml yaml = new Yaml();
+        Object o = yaml.load(reader);
+        if (o == null) return null;
+        if (!(o instanceof Map)) throw new RuntimeException("Invalid dialog configuration file");
+        return (Map<String, Map<String, Object>>) o;
+    }
+
+    /**
+     * Replaces ${key} references to other values of the same dialog with the path of a file holding that value.
+     *
+     * @param embeddedFiles if not null, receives the written files (path to content)
+     */
+    private static void replaceEmbeddedValuesWithFiles(Map<String, Map<String, Object>> dialogMap, String cacheDir, Map<String, String> embeddedFiles) {
         for (String key : dialogMap.keySet()) {
             Map<String, Object> val = dialogMap.get(key);
             for (String skey : val.keySet()) {
@@ -156,7 +269,9 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
                         String entry = sval.substring(i + 2, u);
                         if (val.containsKey(entry)) {
                             String value = val.get(entry).toString();
-                            sval = sval.substring(0, i) + Utilities.makeTempFile(value, cacheDir) + sval.substring(u + 1);
+                            String file = Utilities.makeTempFile(value, cacheDir);
+                            if (embeddedFiles != null) embeddedFiles.put(file, value);
+                            sval = sval.substring(0, i) + file + sval.substring(u + 1);
                         }
                         i = sval.indexOf("${", i + 1);
                     }
@@ -164,7 +279,11 @@ public abstract class AbstractDialogFactory<T extends Dialog> {
                 }
             }
         }
+    }
 
+    private List<T> buildDialogs(Map<String, Map<String, Object>> dialogMap) throws TemplateException {
+        inputFileFirstReport = dialogMap.keySet().iterator().next();
+        List<T> dialogs = new ArrayList<T>();
         TreeSet<String> sortedKeys = new TreeSet<>(dialogMap.keySet());
         for (String key : sortedKeys) {
             dialogs.add(buildDialog(key, dialogMap.get(key)));

@@ -36,6 +36,7 @@ import org.gorpipe.querydialogs.Argument;
 import org.gorpipe.querydialogs.templating.DialogArgumentWrapper;
 import org.gorpipe.querydialogs.templating.NetworkTemplateLoader;
 import org.gorpipe.querydialogs.templating.SkipFirstMethodModel;
+import org.gorpipe.querydialogs.templating.TemplateCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +59,15 @@ public class Perspective {
      * The group name assigned to perspectives that don't define their own group names.
      */
     public static final String GLOBAL_GROUP = "[global]";
+    /**
+     * Only used to resolve includes (see {@link #initializeTempleConfig}). The perspective's own templates are compiled
+     * from their source through {@link TemplateCache}, so nothing is written to this shared loader per dialog.
+     */
     private static final StringTemplateLoader TEMPLATE_LOADER;
+    /**
+     * Shared, read-only after configuration. Per-render state (the skip method, the exception handler) is set on each
+     * render's Environment.
+     */
     private static final Configuration TEMPLATE_CONFIG;
     private static final Logger logger = LoggerFactory.getLogger(Perspective.class);
 
@@ -68,7 +77,6 @@ public class Perspective {
         TEMPLATE_CONFIG.setTemplateLoader(TEMPLATE_LOADER);
 
         TEMPLATE_CONFIG.setObjectWrapper(new DialogArgumentWrapper());
-        TEMPLATE_CONFIG.setSharedVariable("skip", new SkipFirstMethodModel());
         TEMPLATE_CONFIG.setLocale(Locale.ENGLISH);
     }
 
@@ -94,7 +102,14 @@ public class Perspective {
      */
     public Perspective(String namePrefix, String name, String groupName, Boolean isDefault, String filterTemplate, String viewTemplate,
                        List<Object> viewTemplateColumns, List<Object> initialColumns) {
-        this(namePrefix, name, groupName, isDefault, filterTemplate, viewTemplate, viewTemplateColumns, initialColumns, true);
+        this.namePrefix = namePrefix;
+        this.name = name;
+        this.groupName = groupName == null ? GLOBAL_GROUP : groupName;
+        this.isDefault = isDefault != null && isDefault.booleanValue();
+        this.filterTemplate = filterTemplate;
+        this.viewTemplate = viewTemplate;
+        this.viewTemplateColumns = makeColumnSet(viewTemplateColumns);
+        this.initialColumns = makeColumnSet(initialColumns);
     }
 
     /**
@@ -104,30 +119,8 @@ public class Perspective {
      */
     public Perspective(final Perspective persp) {
         this(persp.namePrefix, persp.name, persp.groupName, persp.isDefault, persp.filterTemplate, persp.viewTemplate,
-                persp.getViewTemplateColumnsList(), persp.getInitialColumnsList(), false);
+                persp.getViewTemplateColumnsList(), persp.getInitialColumnsList());
         setArgumentMap(persp.copyArgumentMap());
-    }
-
-    private Perspective(String namePrefix, String name, String groupName, Boolean isDefault, String filterTemplate, String viewTemplate,
-                        List<Object> viewTemplateColumns, List<Object> initialColumns, boolean loadTemplates) {
-        this.namePrefix = namePrefix;
-        this.name = name;
-        this.groupName = groupName == null ? GLOBAL_GROUP : groupName;
-        this.isDefault = isDefault != null && isDefault.booleanValue();
-        this.filterTemplate = filterTemplate;
-        this.viewTemplate = viewTemplate;
-        this.viewTemplateColumns = makeColumnSet(viewTemplateColumns);
-        this.initialColumns = makeColumnSet(initialColumns);
-        if (loadTemplates) {
-            initialize();
-        }
-    }
-
-    private void initialize() {
-        if (viewTemplate != null)
-            TEMPLATE_LOADER.putTemplate(getViewTemplateName(), viewTemplate);
-        if (filterTemplate != null)
-            TEMPLATE_LOADER.putTemplate(getFilterTemplateName(), "<#compress>" + filterTemplate + "</#compress>");
     }
 
     /**
@@ -196,7 +189,7 @@ public class Perspective {
      */
     public String getFilterString() {
         if (argumentMap != null) {
-            String filterString = interpolate(getFilterTemplateName(), argumentMap);
+            String filterString = interpolate(getFilterTemplateName(), getFilterTemplateSource(), argumentMap);
             return filterString == null ? "" : filterString;
         }
         return filterTemplate == null ? "" : filterTemplate;
@@ -214,7 +207,7 @@ public class Perspective {
         if (argumentMap != null) {
             withDialogArguments.put("dialog_args", argumentMap);
         }
-        return interpolate(getViewTemplateName(), withDialogArguments);
+        return interpolate(getViewTemplateName(), viewTemplate, withDialogArguments);
     }
 
     /**
@@ -239,14 +232,21 @@ public class Perspective {
         return initialColumns != null ? new ArrayList<>(initialColumns) : null;
     }
 
-    private String interpolate(String templateName, Map<String, ? extends Object> arguments) {
+    private String interpolate(String templateName, String templateSource, Map<String, ? extends Object> arguments) {
+        if (templateSource == null) {
+            // No template defined, which is just fine
+            return null;
+        }
         try {
-            SkipFirstMethodModel sf = (SkipFirstMethodModel) TEMPLATE_CONFIG.getSharedVariable("skip");
-            sf.reset();
-            Template template = TEMPLATE_CONFIG.getTemplate(templateName);
-            template.setTemplateExceptionHandler(new PerspectiveTemplateExceptionHandler());
+            Template template = TemplateCache.get(TEMPLATE_CONFIG, templateName, templateSource);
             StringWriter writer = new StringWriter();
-            template.process(arguments, writer);
+            Environment env = template.createProcessingEnvironment(arguments, writer);
+            // Arguments in the data model take precedence, as they did when skip was a shared variable.
+            if (!arguments.containsKey("skip")) {
+                env.setGlobalVariable("skip", new SkipFirstMethodModel());
+            }
+            env.setTemplateExceptionHandler(new PerspectiveTemplateExceptionHandler());
+            env.process();
             return writer.toString().trim();
         } catch (FileNotFoundException fnfe) {
             // Indicates there is no template defined, which is just fine
@@ -267,6 +267,10 @@ public class Perspective {
 
     private String getFilterTemplateName() {
         return namePrefix + "." + getName() + ".filter";
+    }
+
+    private String getFilterTemplateSource() {
+        return filterTemplate == null ? null : "<#compress>" + filterTemplate + "</#compress>";
     }
 
     private Set<Object> makeColumnSet(List<Object> columns) {

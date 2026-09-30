@@ -58,8 +58,12 @@ public class FreemarkerQueryUtilities {
      * @return              Fully resolved gor query from the input yml file
      * @throws IOException          Yml file not found
      * @throws TemplateException    Internal freemarker error
+     *
+     * Thread-safe: every call builds its own dialog and argument objects. The parsed yml definition and the compiled
+     * freemarker templates are cached (keyed on content, so edited files are picked up) and are only read after
+     * creation.
      */
-    synchronized public static Optional<String> requestQuery(String resource, FileReader fileResolver, QueryEvaluator queryEval, String reportName, Map<String, String> parameterMap, String cacheDir) throws IOException, TemplateException {
+    public static Optional<String> requestQuery(String resource, FileReader fileResolver, QueryEvaluator queryEval, String reportName, Map<String, String> parameterMap, String cacheDir) throws IOException, TemplateException {
         List<PerspectiveDialog> perspectiveDialogs = PerspectiveDialogFactory.create(fileResolver, queryEval, true).buildDialogs(resource, cacheDir);
         Optional<PerspectiveDialog> optionalPerspective = getOptionalPerspective(reportName, perspectiveDialogs);
 
@@ -68,6 +72,8 @@ public class FreemarkerQueryUtilities {
         }
 
         PerspectiveDialog perspectiveDialog = optionalPerspective.get();
+        // Render once, when the query is requested, instead of once per argument as each value is set.
+        perspectiveDialog.setDeferUpdates(true);
         perspectiveDialog.setArgumentValues(getArgumentValues(parameterMap, fileResolver, perspectiveDialog));
 
         Optional<String> optional = parameterMap.entrySet().stream().filter(p -> p.getValue() == null).map(Map.Entry::getKey).findFirst();
