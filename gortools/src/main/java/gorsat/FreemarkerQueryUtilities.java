@@ -99,7 +99,13 @@ public class FreemarkerQueryUtilities {
         if (!optional.isPresent()) {
             return perspectiveDialog.getQuery();
         }
-        String query = perspectiveDialog.getAttribute(optional.get()).toString();
+        Object attribute = perspectiveDialog.getAttribute(optional.get());
+        if (attribute == null) {
+            throw new GorParsingException("Entry '" + optional.get() + "' not found in yml report '" + perspectiveDialog.getName()
+                    + "'. It was selected by the 'query' parameter or by a parameter given without a value,"
+                    + " which must name an entry defined in the yml file.");
+        }
+        String query = attribute.toString();
         StringBuilder ret = new StringBuilder();
         int start = 0;
         int k = query.indexOf("${");
