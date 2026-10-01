@@ -23,7 +23,7 @@
 package gorsat.gorsatGorIterator
 
 import java.nio.file.Files
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.{CompletableFuture, ConcurrentHashMap, ExecutionException}
 import java.util.stream.Collectors
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader}
 import org.gorpipe.gor.session.GorSession
@@ -113,37 +113,54 @@ object MapAndListUtilities {
     }
   }
 
-  // Locks so that concurrent pipelines of a request, which share the session cache, load a given map only once.
-  private val loadLocks = new ConcurrentHashMap[String, Object]()
+  // Loads in progress, so that concurrent pipelines sharing a session cache load a given map only once. Keyed on the
+  // cache instance (GorSessionCache uses identity equality), not the request id, as unrelated sessions can share one.
+  private case class LoadKey(cache: AnyRef, name: String)
+  private val loadsInProgress = new ConcurrentHashMap[LoadKey, CompletableFuture[AnyRef]]()
 
   private def cacheKey(kind: String, filename: String, ic: Int, oc: Array[Int], asSet: Boolean,
                        caseInsensitive: Boolean, skipEmpty: Boolean): String =
     s"$kind|$filename|$ic|${oc.mkString(",")}|$asSet|$caseInsensitive|$skipEmpty"
 
   /**
-   * Returns the cached value if present, otherwise loads it while holding a lock for the request and key, so
-   * concurrent callers wait for the first load instead of each building their own copy.
+   * Returns the cached value if present, otherwise loads it once for the session cache. Concurrent callers close
+   * their own iterator and wait (interruptibly) for the first load, sharing its result or its failure.
    */
-  private def loadOnce[T](extFilename: String, iterator: LineIterator, session: GorSession)
-                         (cached: => Option[T])(load: => T): T = {
+  private def loadOnce[T <: AnyRef](extFilename: String, iterator: LineIterator, session: GorSession)
+                                   (cached: => Option[T])(load: => T): T = {
     cached match {
       case Some(value) =>
         iterator.close()
         value
       case None =>
-        val lockKey = String.valueOf(session.getRequestId) + "|" + extFilename
-        val lock = loadLocks.computeIfAbsent(lockKey, _ => new Object)
-        try {
-          lock.synchronized {
-            cached match {
+        val key = LoadKey(session.getCache, extFilename)
+        val ours = new CompletableFuture[AnyRef]()
+        val inProgress = loadsInProgress.putIfAbsent(key, ours)
+        if (inProgress != null) {
+          iterator.close()
+          try {
+            inProgress.get().asInstanceOf[T]
+          } catch {
+            case e: ExecutionException => throw e.getCause
+          }
+        } else {
+          try {
+            // A load may have finished between the first check and registering ours.
+            val value = cached match {
               case Some(value) =>
                 iterator.close()
                 value
               case None => load
             }
+            ours.complete(value)
+            value
+          } catch {
+            case e: Throwable =>
+              ours.completeExceptionally(e)
+              throw e
+          } finally {
+            loadsInProgress.remove(key, ours)
           }
-        } finally {
-          loadLocks.remove(lockKey, lock)
         }
     }
   }
@@ -197,7 +214,8 @@ object MapAndListUtilities {
                 } else {
                   val existingValues = colMap.get(lookupString).split("\t",-1)
                   val newValues = if( skipEmpty ) existingValues.zip(oc.map(c => cols(c))).map(_.productIterator.filter(_.toString.nonEmpty).mkString(",")) else existingValues.zip(oc.map(c => cols(c))).map(x => x._1 + "," + x._2 )
-                  colMap.put(lookupString, values(newValues.tail.foldLeft(newValues.head)(_ + "\t" + _)))
+                  // Not pooled, the merged value is replaced again by any further duplicates of the key.
+                  colMap.put(lookupString, newValues.tail.foldLeft(newValues.head)(_ + "\t" + _))
                 }
               }
             }

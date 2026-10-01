@@ -24,14 +24,17 @@ package gorsat.Utilities
 
 import java.io.{File, PrintWriter}
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{Callable, CountDownLatch, Executors, TimeUnit}
+import java.util.concurrent.{Callable, CountDownLatch, ExecutionException, ExecutorService, Executors, Future, TimeUnit}
 import gorsat.gorsatGorIterator.MapAndListUtilities
 import gorsat.process.GenericSessionFactory
 import org.gorpipe.gor.model.Row
+import org.gorpipe.gor.session.{GorSession, GorSessionCache}
 import org.gorpipe.model.gor.iterators.LineIterator
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
+
+import scala.util.Try
 
 /**
  * Tests for the map/multimap loading and caching in MapAndListUtilities (ENGKNOW-3933).
@@ -68,6 +71,15 @@ class UTestMapAndListUtilities extends AnyFunSuite {
 
     override def close(): Unit = {}
   }
+
+  private def async[T](executor: ExecutorService)(body: => T): Future[T] =
+    executor.submit(new Callable[T] {
+      override def call(): T = body
+    })
+
+  private def loadMap(name: String, iterator: LineIterator, session: GorSession): java.util.Map[String, String] =
+    MapAndListUtilities.getSingleHashMap(name, iterator, caseInsensitive = false, 1, Array(1), asSet = false,
+      skipEmpty = false, session)
 
   test("Case insensitive and case sensitive map of the same file are cached separately") {
     val input = file("Abc\tv1")
@@ -132,6 +144,7 @@ class UTestMapAndListUtilities extends AnyFunSuite {
         executor.submit(new Callable[java.util.Map[String, String]] {
           override def call(): java.util.Map[String, String] = {
             allStarted.countDown()
+            allStarted.await()
             val iterator = new CountingLineIterator(lines, linesRead, () => Thread.sleep(200))
             MapAndListUtilities.getSingleHashMap("concurrent.tsv", iterator, caseInsensitive = false, 1, Array(1),
               asSet = false, skipEmpty = false, session)
@@ -142,6 +155,97 @@ class UTestMapAndListUtilities extends AnyFunSuite {
       assert(linesRead.get() == lines.size)
       results.foreach(map => assert(map eq results.head))
     } finally {
+      executor.shutdownNow()
+    }
+  }
+
+  test("A caller waiting for another load of the same map can be interrupted") {
+    val session = new GenericSessionFactory().create()
+    val loading = new CountDownLatch(1)
+    val release = new CountDownLatch(1)
+    val waiterDone = new CountDownLatch(1)
+    val executor = Executors.newFixedThreadPool(2)
+    try {
+      val loader = async(executor) {
+        loadMap("interrupt.tsv", new CountingLineIterator(Seq("k\tv"), new AtomicInteger(), () => {
+          loading.countDown()
+          release.await()
+        }), session)
+      }
+      loading.await()
+      val waiter = async(executor) {
+        try loadMap("interrupt.tsv", new CountingLineIterator(Seq("k\tv"), new AtomicInteger()), session)
+        finally waiterDone.countDown()
+      }
+      Thread.sleep(200)
+      waiter.cancel(true)
+
+      assert(waiterDone.await(5, TimeUnit.SECONDS), "waiter did not stop when interrupted")
+      release.countDown()
+      assert(loader.get(30, TimeUnit.SECONDS).get("k") == "v")
+    } finally {
+      release.countDown()
+      executor.shutdownNow()
+    }
+  }
+
+  test("A failed load fails the callers waiting for it instead of each of them retrying") {
+    val session = new GenericSessionFactory().create()
+    val loads = new AtomicInteger()
+    val threads = 4
+    val allStarted = new CountDownLatch(threads)
+    val executor = Executors.newFixedThreadPool(threads)
+    try {
+      val results = (1 to threads).map { _ =>
+        async(executor) {
+          allStarted.countDown()
+          allStarted.await()
+          loadMap("failing.tsv", new CountingLineIterator(Seq("k\tv"), new AtomicInteger(), () => {
+            loads.incrementAndGet()
+            Thread.sleep(200)
+            throw new IllegalStateException("load failed")
+          }), session)
+        }
+      }.map(future => Try(future.get(30, TimeUnit.SECONDS)))
+
+      assert(loads.get() == 1)
+      results.foreach { result =>
+        val cause = result.failed.get.asInstanceOf[ExecutionException].getCause
+        assert(cause.getMessage == "load failed")
+      }
+
+      // A later call loads again.
+      val map = loadMap("failing.tsv", new CountingLineIterator(Seq("k\tv"), new AtomicInteger()), session)
+      assert(map.get("k") == "v")
+    } finally {
+      executor.shutdownNow()
+    }
+  }
+
+  test("Sessions with the same request id but separate caches do not wait for each other") {
+    val first = new GenericSessionFactory().create()
+    val second = new GorSession(first.getRequestId)
+    second.init(first.getProjectContext, first.getSystemContext, new GorSessionCache())
+    val loading = new CountDownLatch(1)
+    val release = new CountDownLatch(1)
+    val executor = Executors.newFixedThreadPool(2)
+    try {
+      val firstLoad = async(executor) {
+        loadMap("shared-request.tsv", new CountingLineIterator(Seq("k\tv1"), new AtomicInteger(), () => {
+          loading.countDown()
+          release.await()
+        }), first)
+      }
+      loading.await()
+      val secondLoad = async(executor) {
+        loadMap("shared-request.tsv", new CountingLineIterator(Seq("k\tv2"), new AtomicInteger()), second)
+      }
+
+      assert(secondLoad.get(5, TimeUnit.SECONDS).get("k") == "v2")
+      release.countDown()
+      assert(firstLoad.get(30, TimeUnit.SECONDS).get("k") == "v1")
+    } finally {
+      release.countDown()
       executor.shutdownNow()
     }
   }
