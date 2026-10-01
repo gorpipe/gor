@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>VARNORM &mdash; GOR Open Source v.2.0 documentation</title>
+  <title>VARNORM_WITH_BUILD &mdash; GOR Open Source v.2.0 documentation</title>
   
 
   
@@ -141,7 +141,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>VARNORM</li>
+      <li>VARNORM_WITH_BUILD</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -158,33 +158,66 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="varnorm">
-<span id="id1"></span><h1>VARNORM<a class="headerlink" href="#varnorm" title="Permalink to this headline">¶</a></h1>
-<p>The <a class="reference internal" href="#varnorm"><span class="std std-ref">VARNORM</span></a> command normalises the variation data in a gor stream to the left or right. The column containing the reference and alternate allele must be specified. If neither <code class="docutils literal notranslate"><span class="pre">-left</span></code> nor <code class="docutils literal notranslate"><span class="pre">-right</span></code> is specified, then left normalisation is default.</p>
-<p>If the <code class="docutils literal notranslate"><span class="pre">-trim</span></code> command is used, then any redundant bases in the representations of insertions or deletions will be deleted (i.e. deletions will be represented by empty cells in Call - or in Reference in the case of insertions).</p>
-<p>By default, normalisation is run automatically as part of a VARJOIN command, however, if variants need to be grouped (e.g. for counting or generating horizontal data)
-the InDels must be normalized.  For very large InDels a high span may be needed, however, we don’t recommend excessive span.  Consider then
-the use of pre-normalized data and the -norm option in VARJOIN.  The system can be configured to default on -norm behaviour for VARJOIN.</p>
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor only</span><div class="section" id="varnorm-with-build">
+<span id="id1"></span><h1>VARNORM_WITH_BUILD<a class="headerlink" href="#varnorm-with-build" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#varnorm-with-build"><span class="std std-ref">VARNORM_WITH_BUILD</span></a> command is the same as <a class="reference internal" href="VARNORM.html#varnorm"><span class="std std-ref">VARNORM</span></a> except that the variants are normalised against the
+reference build given as the first argument instead of the default reference build of the project.  This is useful when
+the stream holds variants in a build different from the project default, e.g. after a liftover.</p>
+<p>It takes the same options as <a class="reference internal" href="VARNORM.html#varnorm"><span class="std std-ref">VARNORM</span></a>: if neither <code class="docutils literal notranslate"><span class="pre">-left</span></code> nor <code class="docutils literal notranslate"><span class="pre">-right</span></code> is specified, then left normalisation is
+default, and <code class="docutils literal notranslate"><span class="pre">-trim</span></code> deletes the redundant bases in the representations of insertions or deletions (i.e. deletions are
+represented by empty cells in Call - or in Reference in the case of insertions).</p>
+<p>The build is the path to a chromSeq folder (one <code class="docutils literal notranslate"><span class="pre">&lt;chrom&gt;.txt</span></code> file per chromosome), quoted or unquoted, either local or
+in an object store (e.g. <code class="docutils literal notranslate"><span class="pre">s3://bucket/ref/hg38/chromSeq</span></code>).  Relative paths are resolved against the project root.  The
+query fails if the build holds neither <code class="docutils literal notranslate"><span class="pre">chr1.txt</span></code> nor <code class="docutils literal notranslate"><span class="pre">1.txt</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The chromosome files are looked up by the chromosome names in the stream, so the naming of the build must match the
+stream.  A <code class="docutils literal notranslate"><span class="pre">chr1</span></code> stream against a build with <code class="docutils literal notranslate"><span class="pre">1.txt</span></code> files (or the other way around) finds no reference, reads it
+as <code class="docutils literal notranslate"><span class="pre">N</span></code> and leaves the variants unnormalised, with only a warning in the log.</p>
+</div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">VARNORM</span> refcol altcol [ -seg | -left | -right | -trim | -span ]
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">VARNORM_WITH_BUILD</span> build refcol altcol [ -seg | -left | -right | -trim | -span ]
 </pre></div>
 </div>
 </div>
 <div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 86%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-seg</span></code></p></td>
+<td><p>The variant is denoted as segment, e.g. (chr,bpstart,bpstop,ref,call).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-left</span></code></p></td>
+<td><p>Normalise the variation data to the left.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-right</span></code></p></td>
+<td><p>Normalise the variation data to the right.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-trim</span></code></p></td>
+<td><p>Trims the redundant bases away from the defined columns (ref + alt)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-span</span></code></p></td>
+<td><p>Max merge span. The default is 1000bp, max 1Mb (crazy high!)</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> -<span class="no">p</span> chr1:723798-723802 #dbsnp# | <span class="nb">CALC</span> oldpos <span class="na">pos</span> | <span class="nb">VARNORM</span> -right <span class="na">reference</span> <span class="na">allele</span>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> hg38_variants.gorz | <span class="nb">VARNORM_WITH_BUILD</span> ref/hg38/chromSeq #3 #4
 </pre></div>
 </div>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #dbsnp# | <span class="nb">VARNORM</span> -left #3 #4 | <span class="nb">GROUP</span> 1 -<span class="no">gc</span> #3,#4 -<span class="no">count</span> | <span class="nb">WHERE</span> allcount &gt; 1 | <span class="nb">TOP</span> 2
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> lifted_variants.gorz | <span class="nb">VARNORM_WITH_BUILD</span> &#39;s3://bucket/ref/hg38/chromSeq&#39; <span class="na">Reference</span> <span class="na">Call</span> -right -trim
 </pre></div>
 </div>
 <div class="section" id="related-commands">
 <h3>Related commands<a class="headerlink" href="#related-commands" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference internal" href="VARMERGE.html#varmerge"><span class="std std-ref">VARMERGE</span></a> <a class="reference internal" href="VARJOIN.html#varjoin"><span class="std std-ref">VARJOIN</span></a> <a class="reference internal" href="VARNORM_WITH_BUILD.html#varnorm-with-build"><span class="std std-ref">VARNORM_WITH_BUILD</span></a></p>
+<p><a class="reference internal" href="VARNORM.html#varnorm"><span class="std std-ref">VARNORM</span></a> <a class="reference internal" href="VARJOIN.html#varjoin"><span class="std std-ref">VARJOIN</span></a> <a class="reference internal" href="VARMERGE.html#varmerge"><span class="std std-ref">VARMERGE</span></a></p>
 </div>
 </div>
 </div>
