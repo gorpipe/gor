@@ -107,6 +107,19 @@ class UTestMapAndListUtilities extends AnyFunSuite {
     assert(second.get((0 until 12).map(i => s"c$i").mkString("\t")) == "c3")
   }
 
+  test("Maps with and without skipEmpty of the same file are cached separately") {
+    val input = file("k1\ta", "k1\t")
+    val session = new GenericSessionFactory().create()
+
+    val keepEmpty = MapAndListUtilities.getSingleHashMap(input.getAbsolutePath, caseInsensitive = false, 1, Array(1),
+      asSet = false, skipEmpty = false, session)
+    val skipEmpty = MapAndListUtilities.getSingleHashMap(input.getAbsolutePath, caseInsensitive = false, 1, Array(1),
+      asSet = false, skipEmpty = true, session)
+
+    assert(keepEmpty.get("k1") == "a,")
+    assert(skipEmpty.get("k1") == "a")
+  }
+
   test("Concurrent loads of the same map in a session read the file once") {
     val lines = (1 to 1000).map(i => s"k$i\tv${i % 10}")
     val session = new GenericSessionFactory().create()

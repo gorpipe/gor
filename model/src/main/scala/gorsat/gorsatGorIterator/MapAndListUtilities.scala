@@ -117,8 +117,8 @@ object MapAndListUtilities {
   private val loadLocks = new ConcurrentHashMap[String, Object]()
 
   private def cacheKey(kind: String, filename: String, ic: Int, oc: Array[Int], asSet: Boolean,
-                       caseInsensitive: Boolean): String =
-    s"$kind|$filename|$ic|${oc.mkString(",")}|$asSet|$caseInsensitive"
+                       caseInsensitive: Boolean, skipEmpty: Boolean): String =
+    s"$kind|$filename|$ic|${oc.mkString(",")}|$asSet|$caseInsensitive|$skipEmpty"
 
   /**
    * Returns the cached value if present, otherwise loads it while holding a lock for the request and key, so
@@ -168,7 +168,7 @@ object MapAndListUtilities {
 
   def getSingleHashMap(filename: String, iterator: LineIterator, caseInsensitive: Boolean, ic: Int,
                        oc: Array[Int], asSet: Boolean, skipEmpty: Boolean, session: GorSession): singleHashMap =  {
-    val extFilename = cacheKey("map", filename, ic, oc, asSet, caseInsensitive)
+    val extFilename = cacheKey("map", filename, ic, oc, asSet, caseInsensitive, skipEmpty)
     val ocl = oc.length
     loadOnce(extFilename, iterator, session)(syncGetSingleHashMap(extFilename, session)) {
         try {
@@ -212,7 +212,7 @@ object MapAndListUtilities {
 
   def getMultiHashMap(filename: String, iterator: LineIterator, caseInsensitive: Boolean, ic: Int,
                       oc: Array[Int], session: GorSession): multiHashMap = {
-    val extFilename = cacheKey("multimap", filename, ic, oc, asSet = false, caseInsensitive)
+    val extFilename = cacheKey("multimap", filename, ic, oc, asSet = false, caseInsensitive, skipEmpty = false)
     val ocl = oc.length
     loadOnce(extFilename, iterator, session)(syncGetMultiHashMap(extFilename, session)) {
         val multiMap = new java.util.HashMap[String, ListBuffer[String]]()
