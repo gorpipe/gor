@@ -31,7 +31,8 @@ import org.gorpipe.model.gor.iterators.RefSeq
 
 import scala.collection.mutable.{ArrayBuffer, Map}
 
-case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: Boolean, header: String, leftnormalize: Boolean, mergeSpan: Int, session: GorSession) extends Analysis {
+case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: Boolean, header: String, leftnormalize: Boolean, mergeSpan: Int, session: GorSession,
+                           refSeqPath: Option[String] = None) extends Analysis {
   private val rangeChrStart = GorConstants.FIRST_POSSIBLE_CHROMOSOME_VALUE
   var rangeChr: String = rangeChrStart
   var rangeStopPos: Int = -1
@@ -42,7 +43,8 @@ case class VarNormAnalysis(refCol: Int, alleleCol: Int, vcfForm: Boolean, seg: B
   val maxCols: Int = refCol.max(alleleCol) + 1
   val colArray: Array[Int] = Range(maxCols, hCols).toArray
 
-  var refSeq: RefSeq = session.getProjectContext.createRefSeq()
+  // Normalize against the given reference build (chromSeq path) if set, else the project default build.
+  var refSeq: RefSeq = refSeqPath.map(session.getProjectContext.createRefSeq).getOrElse(session.getProjectContext.createRefSeq())
 
   override def isTypeInformationMaintained: Boolean = true
 

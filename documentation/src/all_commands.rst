@@ -107,6 +107,7 @@
    command/VARJOIN
    command/VARMERGE
    command/VARNORM
+   command/VARNORM_WITH_BUILD
    command/VERIFYCOLTYPE
    command/VERIFYORDER
    command/VERIFYVARIANT

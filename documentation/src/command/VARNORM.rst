@@ -51,4 +51,4 @@ Examples
 Related commands
 ----------------
 
-:ref:`VARMERGE` :ref:`VARJOIN`
+:ref:`VARMERGE` :ref:`VARJOIN` :ref:`VARNORM_WITH_BUILD`
