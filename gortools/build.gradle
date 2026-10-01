@@ -47,6 +47,7 @@ project(':gortools') {
         api "org.scala-lang.modules:scala-parser-combinators_${scalaVersion}:_"
 
         implementation "org.freemarker:freemarker:_"
+        implementation "com.github.ben-manes.caffeine:caffeine:_"
         implementation "org.yaml:snakeyaml:_"
         implementation "commons-io:commons-io:_"
         implementation "org.apache.commons:commons-lang3:_"

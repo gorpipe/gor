@@ -182,7 +182,7 @@ public class PerspectiveDialogFactory extends AbstractDialogFactory<PerspectiveD
         final List<ReportCommand> reportCommands = getReportCommands(attributes);
         return new PerspectiveDialog(attributes, fileResolver, queryEval, dialogDescription, displayParams, type, query, chartScript,
                 chartExec, chartColumns, chartDF, arguments, htmlTemplate, initialColumns, perspectives, columnGroups,
-                reportCommands, errorMsgTemplate, writePath, longRunningQueryTemplate, version, packageVersion, gitSHA);
+                reportCommands, errorMsgTemplate, writePath, longRunningQueryTemplate, version, packageVersion, gitSHA, deferUpdates);
     }
 
     @Override

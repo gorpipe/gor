@@ -49,7 +49,8 @@ public class RangedNumberFormatter extends NumberFormatter {
      * @param max the maximum allowed value (null permitted)
      */
     public RangedNumberFormatter(Double min, Double max) {
-        super(DEFAULT_FORMAT);
+        // NumberFormat is not thread-safe, so every formatter gets its own copy of the default format.
+        super((NumberFormat) DEFAULT_FORMAT.clone());
         setAllowsInvalid(true);
         setCommitsOnValidEdit(true);
         if (min != null) setMinimum(min);

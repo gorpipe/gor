@@ -35,12 +35,14 @@ import org.gorpipe.querydialogs.templating.DialogArgumentWrapper;
 import org.gorpipe.querydialogs.templating.NetworkTemplateLoader;
 import org.gorpipe.querydialogs.templating.QueryEvalMethodModel;
 import org.gorpipe.querydialogs.templating.SkipFirstMethodModel;
+import org.gorpipe.querydialogs.templating.TemplateCache;
 import org.gorpipe.util.collection.extract.Extract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -116,8 +118,19 @@ public class Dialog extends AbstractListBean {
     private static final String ERROR_MSG_TEMPLATE_NAME_SUFFIX = "_error_message_";
     private static final String LONG_RUNNING_QUERY_TEMPLATE_NAME_SUFFIX = "_long_running_query_";
     private static final Logger logger = LoggerFactory.getLogger(Dialog.class);
+    /**
+     * Configuration shared by all dialogs when no macro directory is configured. It holds no per-session or per-render
+     * state and is not modified after class initialisation, so it (and the templates compiled with it) can be used from
+     * many threads at once. Per-render state (the skip method, the gor method and the exception handler that counts
+     * missing required arguments) is set on each render's {@link Environment}.
+     */
+    private static final Configuration SHARED_TEMPLATE_CONFIG = createBaseTemplateConfig();
+    /**
+     * Per-dialog template loader, only used when a macro directory is configured (see {@link #setConfig()}).
+     */
     private StringTemplateLoader DIALOG_TEMPLATE_LOADER;
     private Configuration TEMPLATE_CONFIG;
+    private final Map<String, String> templateSources = new HashMap<>();
     private String projectName;
 
     public final DialogDescription dialogDescription;
@@ -153,8 +166,22 @@ public class Dialog extends AbstractListBean {
                   DialogType type, String query, String chartScript, String chartExec, String chartColumns, ChartDataType chartDF,
                   List<Argument> arguments, String errorMsgTemplate, String longRunningQueryTemplate, String version, String packageVersion, String gitSHA)
             throws TemplateException {
+        this(attributes, fileResolver, queryEval, dialogDescription, type, query, chartScript, chartExec, chartColumns, chartDF,
+                arguments, errorMsgTemplate, longRunningQueryTemplate, version, packageVersion, gitSHA, false);
+    }
+
+    /**
+     * @param deferUpdates if set, the query is not rendered here (with default arguments), nor when arguments change,
+     *                     but only when requested, see {@link #setDeferUpdates(boolean)}
+     */
+    public Dialog(Map<String, ? extends Object> attributes, FileReader fileResolver, QueryEvaluator queryEval, DialogDescription dialogDescription,
+                  DialogType type, String query, String chartScript, String chartExec, String chartColumns, ChartDataType chartDF,
+                  List<Argument> arguments, String errorMsgTemplate, String longRunningQueryTemplate, String version, String packageVersion, String gitSHA,
+                  boolean deferUpdates)
+            throws TemplateException {
         this.fileResolver = fileResolver;
         this.queryEval = queryEval;
+        this.deferUpdates = deferUpdates;
         setConfig();
         this.attributes = attributes;
         this.dialogDescription = dialogDescription;
@@ -187,25 +214,22 @@ public class Dialog extends AbstractListBean {
         loadLongRunningQueryTemplate();
     }
 
-    private void initializeTemplateConfig(FileReader fileResolver, QueryEvaluator queryEval) {
-        TEMPLATE_CONFIG = new Configuration(Configuration.VERSION_2_3_34);
-        TEMPLATE_CONFIG.setLocalizedLookup(false);
+    private static Configuration createBaseTemplateConfig() {
+        Configuration config = new Configuration(Configuration.VERSION_2_3_34);
+        config.setLocalizedLookup(false);
+        config.setObjectWrapper(new DialogArgumentWrapper());
+        // Every render sets its own DialogTemplateExceptionHandler on the Environment.
+        config.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        config.setSharedVariable("br", new SimpleScalar("\\n"));
+        config.setLocale(java.util.Locale.ENGLISH);
+        return config;
+    }
+
+    private void initializeTemplateConfig(FileReader fileResolver, String macroPath) {
+        TEMPLATE_CONFIG = createBaseTemplateConfig();
         DIALOG_TEMPLATE_LOADER = new StringTemplateLoader();
-
-        String macroPath = System.getProperty("dialog.macrodir", null);
-        if (macroPath != null) {
-            NetworkTemplateLoader netLoader = new NetworkTemplateLoader(macroPath, fileResolver);
-            TEMPLATE_CONFIG.setTemplateLoader(new MultiTemplateLoader(new TemplateLoader[]{DIALOG_TEMPLATE_LOADER, netLoader}));
-        } else {
-            TEMPLATE_CONFIG.setTemplateLoader(DIALOG_TEMPLATE_LOADER);
-        }
-
-        TEMPLATE_CONFIG.setObjectWrapper(new DialogArgumentWrapper());
-        TEMPLATE_CONFIG.setTemplateExceptionHandler(new DialogTemplateExceptionHandler());
-        TEMPLATE_CONFIG.setSharedVariable("skip", new SkipFirstMethodModel());
-        TEMPLATE_CONFIG.setSharedVariable("br", new SimpleScalar("\\n"));
-        TEMPLATE_CONFIG.setLocale(java.util.Locale.ENGLISH);
-        TEMPLATE_CONFIG.setSharedVariable("gor", new QueryEvalMethodModel(queryEval, TEMPLATE_CONFIG.getObjectWrapper()));
+        NetworkTemplateLoader netLoader = new NetworkTemplateLoader(macroPath, fileResolver);
+        TEMPLATE_CONFIG.setTemplateLoader(new MultiTemplateLoader(new TemplateLoader[]{DIALOG_TEMPLATE_LOADER, netLoader}));
     }
 
     public FileReader getFileResolver() {
@@ -284,7 +308,7 @@ public class Dialog extends AbstractListBean {
         baseQueryMd5Digest = Extract.md5(baseQuery);
         firePropertyChange(PROPERTY_BASE_QUERY, oldQuery, query);
         if (query == null || !query.equals(oldQuery)) {
-            DIALOG_TEMPLATE_LOADER.putTemplate(getBaseQueryNameAndDigest(), query);
+            loadQuery(getBaseQueryNameAndDigest(), query);
             updateInterpolatedQuery();
         }
     }
@@ -300,7 +324,7 @@ public class Dialog extends AbstractListBean {
             baseChartMd5Digest = Extract.md5(baseChartExec);
             firePropertyChange(PROPERTY_BASE_CHARTEXEC, oldChartExec, chartExec);
             if (chartExec == null || !chartExec.equals(oldChartExec)) {
-                DIALOG_TEMPLATE_LOADER.putTemplate(getBaseChartNameAndDigest(), chartExec);
+                loadQuery(getBaseChartNameAndDigest(), chartExec);
                 updateInterpolatedChart();
             }
         }
@@ -363,25 +387,49 @@ public class Dialog extends AbstractListBean {
     }
 
     protected void loadQuery(final String queryName, final String query) {
-        DIALOG_TEMPLATE_LOADER.putTemplate(queryName, query);
+        templateSources.put(queryName, query);
+        if (DIALOG_TEMPLATE_LOADER != null) {
+            DIALOG_TEMPLATE_LOADER.putTemplate(queryName, query);
+        }
+    }
+
+    private Template getTemplate(final String templateName) throws IOException {
+        if (DIALOG_TEMPLATE_LOADER != null) {
+            return TEMPLATE_CONFIG.getTemplate(templateName);
+        }
+        final String source = templateSources.get(templateName);
+        if (source == null) {
+            throw new FileNotFoundException("Template not found for name \"" + templateName + "\"");
+        }
+        return TemplateCache.get(TEMPLATE_CONFIG, templateName, source);
+    }
+
+    /**
+     * Render the named template with this dialog's arguments. All state that changes during a render is created here,
+     * per render, so concurrent renders (of this or other dialogs sharing the compiled template) do not interfere.
+     */
+    private String render(final String templateName, final DialogTemplateExceptionHandler exceptionHandler) throws TemplateException, IOException {
+        Template template = getTemplate(templateName);
+        StringWriter writer = new StringWriter();
+        Environment env = template.createProcessingEnvironment(argumentMap, writer);
+        // Arguments in the data model take precedence over these, as they did when these were shared variables.
+        if (!argumentMap.containsKey("skip")) {
+            env.setGlobalVariable("skip", new SkipFirstMethodModel());
+        }
+        if (!argumentMap.containsKey("gor")) {
+            env.setGlobalVariable("gor", new QueryEvalMethodModel(queryEval, env.getObjectWrapper()));
+        }
+        env.setTemplateExceptionHandler(exceptionHandler);
+        env.process();
+        return writer.toString().trim().replaceAll("\\\\n", "\n");
     }
 
     protected String interpolateQuery(final String templateName) throws TemplateException, IOException {
-        SkipFirstMethodModel sf = (SkipFirstMethodModel) TEMPLATE_CONFIG.getSharedVariable("skip");
-        sf.reset();
-        Template template = TEMPLATE_CONFIG.getTemplate(templateName);
-        StringWriter writer = new StringWriter();
-        template.process(argumentMap, writer);
-        return writer.toString().trim().replaceAll("\\\\n", "\n");
+        return render(templateName, new DialogTemplateExceptionHandler(this));
     }
 
     protected String interpolateChart(final String templateName) throws TemplateException, IOException {
-        SkipFirstMethodModel sf = (SkipFirstMethodModel) TEMPLATE_CONFIG.getSharedVariable("skip");
-        sf.reset();
-        Template template = TEMPLATE_CONFIG.getTemplate(templateName);
-        StringWriter writer = new StringWriter();
-        template.process(argumentMap, writer);
-        return writer.toString().trim().replaceAll("\\\\n", "\n");
+        return render(templateName, new DialogTemplateExceptionHandler(this));
     }
 
     private void updateInterpolatedQuery() throws TemplateException {
@@ -400,9 +448,8 @@ public class Dialog extends AbstractListBean {
             updateExecutable(false);
         } else {
             try {
-                DialogTemplateExceptionHandler validator = (DialogTemplateExceptionHandler) TEMPLATE_CONFIG.getTemplateExceptionHandler();
-                validator.reset(this);
-                interpolatedQuery = interpolateQuery(getBaseQueryNameAndDigest());
+                DialogTemplateExceptionHandler validator = new DialogTemplateExceptionHandler(this);
+                interpolatedQuery = render(getBaseQueryNameAndDigest(), validator);
                 firePropertyChange(PROPERTY_QUERY, oldQuery, interpolatedQuery);
                 boolean someMandatoryUnset = false;
                 for (String key : this.argumentMap.keySet()) {
@@ -429,9 +476,8 @@ public class Dialog extends AbstractListBean {
             updateExecutable(false);
         } else {
             try {
-                DialogTemplateExceptionHandler validator = (DialogTemplateExceptionHandler) TEMPLATE_CONFIG.getTemplateExceptionHandler();
-                validator.reset(this);
-                interpolatedChart = interpolateChart(getBaseChartNameAndDigest());
+                DialogTemplateExceptionHandler validator = new DialogTemplateExceptionHandler(this);
+                interpolatedChart = render(getBaseChartNameAndDigest(), validator);
                 firePropertyChange(PROPERTY_CHART, oldChart, interpolatedChart);
                 updateExecutable(validator.isValid() && !interpolatedChart.isEmpty());
             } catch (ParseException e) {
@@ -574,17 +620,25 @@ public class Dialog extends AbstractListBean {
 
     private void setConfig() {
         if (TEMPLATE_CONFIG == null) {
-            initializeTemplateConfig(fileResolver, queryEval);
+            String macroPath = System.getProperty("dialog.macrodir", null);
+            if (macroPath != null) {
+                // Macros are loaded through this dialog's file resolver, so the configuration can not be shared.
+                initializeTemplateConfig(fileResolver, macroPath);
+            } else {
+                TEMPLATE_CONFIG = SHARED_TEMPLATE_CONFIG;
+            }
         }
     }
 
+    /**
+     * Per-render exception handler. Writes REQUIRED(arg) for missing required arguments and counts them.
+     */
     private static final class DialogTemplateExceptionHandler implements TemplateExceptionHandler {
-        int count = 0;
-        Dialog dialog;
+        private int count = 0;
+        private final Dialog dialog;
 
-        void reset(Dialog d) {
-            count = 0;
-            dialog = d;
+        DialogTemplateExceptionHandler(Dialog dialog) {
+            this.dialog = dialog;
         }
 
         boolean isValid() {

@@ -64,8 +64,22 @@ public class PerspectiveDialog extends Dialog {
                              List<Perspective> perspectives, List<ColumnGroup> columnGroups, List<ReportCommand> reportCommands,
                              String errorMsgTemplate, String writePath, String longRunningQueryTemplate,
                              String version, String packageVersion, String gitSHA) throws TemplateException {
+        this(attributes, fileResolver, queryEval, dialogDescription, displayParams, type, query, chartScript, chartExec, chartColumns, chartDF,
+                arguments, htmlTemplate, initialColumns, perspectives, columnGroups, reportCommands, errorMsgTemplate, writePath,
+                longRunningQueryTemplate, version, packageVersion, gitSHA, false);
+    }
+
+    /**
+     * @param deferUpdates see {@link Dialog#setDeferUpdates(boolean)}, set before the query would first be rendered
+     */
+    public PerspectiveDialog(Map<String, ? extends Object> attributes, FileReader fileResolver, QueryEvaluator queryEval, DialogDescription dialogDescription,
+                             PerspectiveDialogDisplayParams displayParams, DialogType type, String query, String chartScript, String chartExec,
+                             String chartColumns, ChartDataType chartDF, List<Argument> arguments, String htmlTemplate, List<? extends Object> initialColumns,
+                             List<Perspective> perspectives, List<ColumnGroup> columnGroups, List<ReportCommand> reportCommands,
+                             String errorMsgTemplate, String writePath, String longRunningQueryTemplate,
+                             String version, String packageVersion, String gitSHA, boolean deferUpdates) throws TemplateException {
         super(attributes, fileResolver, queryEval, dialogDescription, type, query, chartScript, chartExec, chartColumns, chartDF,
-                arguments, errorMsgTemplate, longRunningQueryTemplate, version, packageVersion, gitSHA);
+                arguments, errorMsgTemplate, longRunningQueryTemplate, version, packageVersion, gitSHA, deferUpdates);
         this.displayParams = displayParams;
         this.htmlTemplate = htmlTemplate;
         if (initialColumns != null && !initialColumns.isEmpty()) {

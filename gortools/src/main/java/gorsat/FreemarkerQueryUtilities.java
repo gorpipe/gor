@@ -57,10 +57,19 @@ public class FreemarkerQueryUtilities {
      * @param cacheDir      Current cache directory
      * @return              Fully resolved gor query from the input yml file
      * @throws IOException          Yml file not found
-     * @throws TemplateException    Internal freemarker error
+     * @throws TemplateException    Internal freemarker error, or the query template can not be rendered with the given
+     *                              parameters
+     *
+     * Thread-safe: every call builds its own dialog and argument objects. The parsed yml definition and the compiled
+     * freemarker templates are cached (keyed on content, so edited files are picked up) and are only read after
+     * creation.
      */
-    synchronized public static Optional<String> requestQuery(String resource, FileReader fileResolver, QueryEvaluator queryEval, String reportName, Map<String, String> parameterMap, String cacheDir) throws IOException, TemplateException {
-        List<PerspectiveDialog> perspectiveDialogs = PerspectiveDialogFactory.create(fileResolver, queryEval, true).buildDialogs(resource, cacheDir);
+    public static Optional<String> requestQuery(String resource, FileReader fileResolver, QueryEvaluator queryEval, String reportName, Map<String, String> parameterMap, String cacheDir) throws IOException, TemplateException {
+        PerspectiveDialogFactory factory = PerspectiveDialogFactory.create(fileResolver, queryEval, true);
+        // Render once, when the query is requested, instead of when the dialog is created (with default arguments) and
+        // again as each argument value is set.
+        factory.setDeferUpdates(true);
+        List<PerspectiveDialog> perspectiveDialogs = factory.buildDialogs(resource, cacheDir);
         Optional<PerspectiveDialog> optionalPerspective = getOptionalPerspective(reportName, perspectiveDialogs);
 
         if (!optionalPerspective.isPresent()) {
@@ -72,6 +81,11 @@ public class FreemarkerQueryUtilities {
 
         Optional<String> optional = parameterMap.entrySet().stream().filter(p -> p.getValue() == null).map(Map.Entry::getKey).findFirst();
         Optional<String> perspective = parameterMap.entrySet().stream().filter(p -> p.getKey().equalsIgnoreCase("perspective")).map(Map.Entry::getValue).findFirst();
+        if (!optional.isPresent()) {
+            // Render the (deferred) query here so that a template error reaches the caller as the declared
+            // TemplateException. getQuery() below then returns this render.
+            perspectiveDialog.calcInterpolatedQuery();
+        }
         String query = perspective.map(s -> getPerspectiveQuery(perspectiveDialog, optional, s)).orElseGet(() -> getQuery(perspectiveDialog, optional));
         String newQuery = getNewQuery(query);
 

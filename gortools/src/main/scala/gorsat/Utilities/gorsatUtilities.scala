@@ -25,7 +25,9 @@ package gorsat.Utilities
 import gorsat.Commands.CommandParseUtilities.{hasOption, stringValueOfOption}
 
 import java.nio.file.attribute.PosixFilePermission
-import java.nio.file.{Files, Paths}
+import java.nio.file.{AtomicMoveNotSupportedException, Files, Paths, StandardCopyOption}
+import java.security.MessageDigest
+import java.util.HexFormat
 import gorsat.Commands.InputSourceParsingResult
 import gorsat.Iterators.RowListIterator
 import org.gorpipe.exceptions.GorParsingException
@@ -36,16 +38,38 @@ import gorsat.process.NorStreamIterator.HEADER_PREFIX
 
 object Utilities {
 
+  /**
+    * Write value to a file named by its SHA-256 digest in cacheDir (or a new temp file if cacheDir is null) and return
+    * the file's absolute path. Equal values map to the same file. The file is written to a temp file first and then
+    * moved into place, so concurrent writers and readers never see a partly written file.
+    */
   def makeTempFile(value: String, cacheDir: String): String = {
-    val hash = Math.abs(value.hashCode).toString
+    val bytes = value.getBytes
+    val hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes))
+    val perms = Set(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_READ).asJava
     val cacheFile = if (cacheDir != null) {
-      Paths.get(cacheDir).resolve(hash)
+      val dir = Paths.get(cacheDir)
+      val target = dir.resolve(hash)
+      val tmp = Files.createTempFile(dir, hash, ".tmp")
+      try {
+        Files.write(tmp, bytes)
+        Files.setPosixFilePermissions(tmp, perms)
+        try {
+          Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        } catch {
+          case _: AtomicMoveNotSupportedException =>
+            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING)
+        }
+      } finally {
+        Files.deleteIfExists(tmp)
+      }
+      target
     } else {
-      Files.createTempFile(hash, ".sh")
+      val tmp = Files.createTempFile(hash, ".sh")
+      Files.write(tmp, bytes)
+      Files.setPosixFilePermissions(tmp, perms)
+      tmp
     }
-    Files.write(cacheFile, value.getBytes)
-    val perms = Set(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_READ)
-    Files.setPosixFilePermissions(cacheFile, perms.asJava)
     cacheFile.toAbsolutePath.toString
   }
 
