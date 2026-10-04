@@ -147,6 +147,8 @@ class RefSeqFromChromSeq(ipath : String, fileReader : FileReader) extends RefSeq
             f.get().seek(offset)
             val l = f.get().read(buff, 0, buffLength)
             lufo.addObject(buffKey, buff)
+            lastKey = buffKey
+            lastBuff = buff
             if( l == -1 ) {
               log.warn("Trying to read "+chr+":"+pos+" from reference file " + chrFilePath + " of length "+f.get.length()+" from offset " + offset)
               return 'N'
@@ -169,17 +171,19 @@ class RefSeqFromChromSeq(ipath : String, fileReader : FileReader) extends RefSeq
     if ((pos1 - 1) / buffLength == (pos2 - 1) / buffLength) {
       val (buffKey, offset) = getKeyAndOffset(chr, pos1)
 
-      if (buffKey != lastKey) {
-        val temp = getBase(chr, pos1)
-        val temp2 = getBase(chr, pos1)
+      if (buffKey != lastKey) getBase(chr, pos1)
+
+      // lastBuff is only valid for lastKey. If the buffer could not be loaded (e.g. the contig has no
+      // sequence in the build) fall through to getBase per position, which returns 'N'.
+      if (buffKey == lastKey) {
+        val strbuff = new StringBuilder(pos2 - pos1 + 1)
+        var i = pos1
+        while (i <= pos2) {
+          strbuff.append(refByteToChar(lastBuff(i - offset - 1)))
+          i += 1
+        }
+        return strbuff.toString
       }
-      val strbuff = new StringBuilder(pos2 - pos1 + 1)
-      var i = pos1
-      while (i <= pos2) {
-        strbuff.append(refByteToChar(lastBuff(i - offset - 1)))
-        i += 1
-      }
-      return strbuff.toString
     }
     val strbuff = new StringBuilder(pos2 - pos1 + 1)
     var i = pos1

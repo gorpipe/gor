@@ -79,6 +79,30 @@ public class UTestRefSeqFromChromSeq {
 
     }
 
+    @Test
+    public void testGetRefbasesMissingContigAfterOtherContig() {
+        RefSeqFromChromSeq refseq = new RefSeqFromChromSeq("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+
+        // Warm the buffer with a contig that has a sequence.
+        Assert.assertEquals("CAG", refseq.getBases("chr1", 101000, 101002));
+
+        // Contig without a sequence file must not return bases from the previous contig's buffer.
+        Assert.assertEquals("NNN", refseq.getBases("chrXY", 101000, 101002));
+        Assert.assertEquals('N', refseq.getBase("chrXY", 101000));
+
+        // Switching back still works.
+        Assert.assertEquals("CAG", refseq.getBases("chr1", 101000, 101002));
+    }
+
+    @Test
+    public void testGetRefbasesMissingContigFirst() {
+        RefSeqFromChromSeq refseq = new RefSeqFromChromSeq("../tests/data/ref_mini/chromSeq", new DriverBackedFileReader(""));
+
+        // First read on a contig without a sequence file must not fail.
+        Assert.assertEquals("NN", refseq.getBases("chrXY", 10, 11));
+        Assert.assertEquals("CAG", refseq.getBases("chr1", 101000, 101002));
+    }
+
     @Ignore("Run manually to test from same buffer optimization")
     @Test
     public void testGetRefbasesPerformance() {
