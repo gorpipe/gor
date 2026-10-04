@@ -294,6 +294,12 @@ object GeneralQueryHandler {
         }
       }
 
+      // An interrupted run (e.g. a sibling parallel part failed) may have ended its source early without an
+      // exception. Never commit that partial output to the cache; the catch below removes the temp file (ENGKNOW-3979).
+      if (Thread.currentThread().isInterrupted) {
+        throw new GorSystemException(s"Query interrupted, result not stored: $commandToExecute")
+      }
+
       if(oldName!=null && fileReader.exists(oldName) && !oldName.equals(newName)) {
         fileReader.move(oldName, newName)
         val oldMetaName = DataUtil.toFile(oldName, DataType.META)
