@@ -43,5 +43,10 @@ public class UTestStrings {
         Assert.assertFalse(Strings.isEmail("service-account-sequenceminer"));
         Assert.assertFalse(Strings.isEmail("@email.com"));
         Assert.assertFalse(Strings.isEmail("user@"));
+        Assert.assertFalse(Strings.isEmail(" user@email.com "));
+        Assert.assertFalse(Strings.isEmail("user name@email.com"));
+        Assert.assertFalse(Strings.isEmail("a@b@c"));
+        Assert.assertFalse(Strings.isEmail("../../x@y"));
+        Assert.assertFalse(Strings.isEmail("user@email.com/x"));
     }
 }

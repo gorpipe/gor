@@ -42,7 +42,7 @@ public class CsaApiUtils {
             Map<String, Object> userMap = getUserMapByEmail(csaApiService, userName);
             userId = updateUserId(userId, userMap);
 
-            if (userRoles.isEmpty() && !Strings.isNullOrEmpty(project) && !Strings.isNullOrEmpty(userName)) {
+            if (userRoles.isEmpty() && !Strings.isNullOrEmpty(project)) {
                 List csaUserRoles = getUserRoleList(csaApiService, project, userName);
                 updateUserRoles(userRoles, csaUserRoles);
             }

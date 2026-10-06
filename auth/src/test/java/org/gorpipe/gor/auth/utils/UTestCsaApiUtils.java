@@ -37,9 +37,6 @@ public class UTestCsaApiUtils {
 
     @Test
     public void nonEmailUserIsNotLookedUpInCsa() throws IOException {
-        doThrow(new IOException("Not Found")).when(csaApiService).getUserByEmail(anyString());
-        doThrow(new IOException("Not Found")).when(csaApiService).getUserRoleList(anyString(), anyString());
-
         GorAuthInfo info = CsaApiUtils.updateWithCsaApi(csaApiService, authInfo("sequenceminer"));
 
         verify(csaApiService, never()).getUserByEmail(anyString());

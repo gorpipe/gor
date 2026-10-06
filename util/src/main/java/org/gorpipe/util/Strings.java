@@ -1,6 +1,11 @@
 package org.gorpipe.util;
 
+import java.util.regex.Pattern;
+
 public class Strings {
+
+    // One '@' with a non-empty local part and domain, no whitespace or '/' (the value may end up in a URL path).
+    private static final Pattern EMAIL = Pattern.compile("[^\\s@/]+@[^\\s@/]+");
 
     /**
      * @param s string to check
@@ -30,17 +35,13 @@ public class Strings {
     }
 
     /**
-     * Loose check, only looks for an '@' between a non-empty local part and domain.
+     * Loose check: a single '@' between a non-empty local part and domain, without whitespace or '/'.
      *
      * @param s string to check
      * @return returns true if the String looks like an email address, otherwise returns false.
      */
     public static boolean isEmail(String s) {
-        if (s == null) {
-            return false;
-        }
-        int at = s.indexOf('@');
-        return at > 0 && at < s.length() - 1;
+        return s != null && EMAIL.matcher(s).matches();
     }
 
 }
