@@ -33,4 +33,15 @@ public class UTestStrings {
         Assert.assertEquals("abc", Strings.blankNull("abc"));
         Assert.assertNotSame("abc", Strings.blankNull("abc "));
     }
+
+    @Test
+    public void testIsEmail() {
+        Assert.assertTrue(Strings.isEmail("user@email.com"));
+        Assert.assertFalse(Strings.isEmail(null));
+        Assert.assertFalse(Strings.isEmail(""));
+        Assert.assertFalse(Strings.isEmail("sequenceminer"));
+        Assert.assertFalse(Strings.isEmail("service-account-sequenceminer"));
+        Assert.assertFalse(Strings.isEmail("@email.com"));
+        Assert.assertFalse(Strings.isEmail("user@"));
+    }
 }

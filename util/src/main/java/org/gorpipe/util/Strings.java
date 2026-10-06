@@ -29,4 +29,18 @@ public class Strings {
         return s;
     }
 
+    /**
+     * Loose check, only looks for an '@' between a non-empty local part and domain.
+     *
+     * @param s string to check
+     * @return returns true if the String looks like an email address, otherwise returns false.
+     */
+    public static boolean isEmail(String s) {
+        if (s == null) {
+            return false;
+        }
+        int at = s.indexOf('@');
+        return at > 0 && at < s.length() - 1;
+    }
+
 }

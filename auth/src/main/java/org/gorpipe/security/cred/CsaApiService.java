@@ -53,10 +53,6 @@ public class CsaApiService extends CsaBaseService {
         try {
             result = jsonGet(path);
         } catch (IOException ioe) {
-            if (ioe instanceof HttpStatusException hse && hse.isNotFound()) {
-                // New auth will not make a missing resource appear.
-                throw hse;
-            }
             // Retry once with new Auth.
             result = initializeAndRetry(path);
         }

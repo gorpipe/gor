@@ -29,6 +29,9 @@ import java.util.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * Username resolution for platform JWTs. Service-account tokens (Keycloak client_credentials) carry no email claim,
@@ -139,8 +142,6 @@ public class UTestPlatformAuthUsername {
     @Test
     public void jwtAuthCachesServiceAccountsSeparately() throws Exception {
         CsaApiService csaApiService = mock(CsaApiService.class);
-        doReturn(Collections.singletonMap("id", 11)).when(csaApiService).getUserByEmail("service-account-a");
-        doReturn(Collections.singletonMap("id", 22)).when(csaApiService).getUserByEmail("service-account-b");
         doReturn(null).when(csaApiService).getProject(anyString());
         doReturn("CSA").when(config).updateAuthInfoPolicy();
 
@@ -149,9 +150,10 @@ public class UTestPlatformAuthUsername {
         GorAuthInfo b = auth.getGorAuthInfo(PROJECT, parse(token().withClaim("preferred_username", "service-account-b")));
 
         Assert.assertEquals("service-account-a", a.getUsername());
-        Assert.assertEquals("11", a.getUserId());
         Assert.assertEquals("service-account-b", b.getUsername());
-        Assert.assertEquals("22", b.getUserId());
+        // One cache miss (and CSA project lookup) per service account; no CSA user lookup for non-email usernames.
+        verify(csaApiService, times(2)).getProject(PROJECT);
+        verify(csaApiService, never()).getUserByEmail(anyString());
     }
 
     // --- PlatformAuth ---
