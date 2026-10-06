@@ -110,7 +110,12 @@ public class HttpJsonServiceClient {
             InputStream ie = conn.getErrorStream();
             String headerinfo = conn.getHeaderFields().entrySet().stream().map(entry -> entry.getKey() + ": " + entry.getValue()).collect(Collectors.joining("\n"));
             String str = ie == null ? headerinfo : headerinfo + "\n" + new BufferedReader(new InputStreamReader(ie)).lines().collect(Collectors.joining());
-            throw new IOException(conn.getResponseMessage() + ": " + str, e);
+            int status = conn.getResponseCode();
+            String message = conn.getResponseMessage() + ": " + str;
+            if (status >= 400) {
+                throw new HttpStatusException(status, message, e);
+            }
+            throw new IOException(message, e);
         }
     }
 

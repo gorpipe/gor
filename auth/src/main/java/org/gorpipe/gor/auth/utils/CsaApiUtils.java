@@ -1,13 +1,17 @@
 package org.gorpipe.gor.auth.utils;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Strings;
 import org.gorpipe.gor.auth.GeneralAuthInfo;
 import org.gorpipe.gor.auth.GorAuthInfo;
 import org.gorpipe.security.cred.CsaApiService;
+import org.gorpipe.security.cred.HttpStatusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,6 +20,17 @@ import java.util.Map;
 public class CsaApiUtils {
 
     private static final Logger log = LoggerFactory.getLogger(CsaApiUtils.class);
+
+    static final Duration NOT_IN_CSA_TTL = Duration.ofMinutes(10);
+
+    /**
+     * Users (and project/user pairs) CSA answered 404 for, e.g. service accounts without a CSA user record. Skip
+     * looking them up again until the entry expires so each request doesn't hit CSA and log a warning.
+     */
+    private static final Cache<String, Boolean> notInCsa = Caffeine.newBuilder()
+            .expireAfterWrite(NOT_IN_CSA_TTL)
+            .maximumSize(10_000)
+            .build();
 
     /**
      * Add ids from CSA API to the given gor auth, but only if missing and if found.
@@ -37,11 +52,12 @@ public class CsaApiUtils {
             organizationId = updateOrganizationId(projectId, projectMap);
         }
 
-        if (Strings.isNullOrEmpty(userId) && !Strings.isNullOrEmpty(userName)) {
+        if (Strings.isNullOrEmpty(userId) && !Strings.isNullOrEmpty(userName) && !isNotInCsa(userName)) {
             Map<String, Object> userMap = getUserMapByEmail(csaApiService, userName);
             userId = updateUserId(userId, userMap);
 
-            if (userRoles.isEmpty() && !Strings.isNullOrEmpty(project) && !Strings.isNullOrEmpty(userName)) {
+            if (userRoles.isEmpty() && !Strings.isNullOrEmpty(project) && !isNotInCsa(userName)
+                    && !isNotInCsa(projectUserKey(project, userName))) {
                 List csaUserRoles = getUserRoleList(csaApiService, project, userName);
                 updateUserRoles(userRoles, csaUserRoles);
             }
@@ -49,6 +65,22 @@ public class CsaApiUtils {
 
         return new GeneralAuthInfo(projectId, project, userName, userId, userRoles,
                 organizationId, info.getExpiration());
+    }
+
+    static void clearUsersNotInCsa() {
+        notInCsa.invalidateAll();
+    }
+
+    private static boolean isNotInCsa(String key) {
+        return notInCsa.getIfPresent(key) != null;
+    }
+
+    private static String projectUserKey(String project, String userName) {
+        return project + "/" + userName;
+    }
+
+    private static boolean isNotFound(IOException e) {
+        return e instanceof HttpStatusException hse && hse.isNotFound();
     }
 
     public static int getProjectId(Map projectMap) {
@@ -82,7 +114,13 @@ public class CsaApiUtils {
         try {
             userMap = csaApiService != null ? csaApiService.getUserByEmail(userEmail) : null;
         } catch (IOException e) {
-            log.warn("Unable to get user id from CSA API", e);
+            if (isNotFound(e)) {
+                notInCsa.put(userEmail, Boolean.TRUE);
+                log.info("User {} not found in CSA, skipping CSA user id/role lookups for it for {} minutes",
+                        userEmail, NOT_IN_CSA_TTL.toMinutes());
+            } else {
+                log.warn("Unable to get user id from CSA API", e);
+            }
         }
         return userMap;
     }
@@ -92,7 +130,13 @@ public class CsaApiUtils {
         try {
             userRoleList = csaApiService != null ? csaApiService.getUserRoleList(project, userEmail) : null;
         } catch (IOException e) {
-            log.warn("Unable to get user roles from CSA API", e);
+            if (isNotFound(e)) {
+                notInCsa.put(projectUserKey(project, userEmail), Boolean.TRUE);
+                log.info("User {} not found in CSA project {}, skipping CSA role lookups for it for {} minutes",
+                        userEmail, project, NOT_IN_CSA_TTL.toMinutes());
+            } else {
+                log.warn("Unable to get user roles from CSA API", e);
+            }
         }
         return userRoleList;
     }
