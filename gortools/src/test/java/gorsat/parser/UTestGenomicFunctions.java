@@ -90,6 +90,19 @@ public class UTestGenomicFunctions {
     }
 
     @Test
+    public void testRefBasesBelowPositionOne() {
+        String[] args = new String[]{"gorrow chr17,0 | calc r refbases(chrom,pos,pos+3)", "-config", "../tests/data/ref_mini/gor_config.txt"};
+        String lines = TestUtils.runGorPipe(args);
+        Assert.assertEquals("chrom\tpos\tr\nchr17\t0\tNAAG\n", lines);
+    }
+
+    @Test
+    public void testRefBasesWithBuildBelowPositionOne() {
+        String lines = TestUtils.runGorPipe("gorrow chr17,0 | calc r refbases_with_build(chrom,pos,pos+3,'../tests/data/ref_mini/chromSeq')");
+        Assert.assertEquals("chrom\tpos\tr\nchr17\t0\tNAAG\n", lines);
+    }
+
+    @Test
     public void testRefBasesWithBuildUnQuoted() {
         TestUtils.assertCalculated("refbases_with_build('chr1', 10101, 10103, ../tests/data/ref_mini/chromSeq)", "cct");
     }

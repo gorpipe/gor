@@ -114,6 +114,8 @@ class RefSeqFromChromSeq(ipath : String, fileReader : FileReader) extends RefSeq
 
   def getBase(chr: String, pos: Int): Char = {
     if (noReferenceBuildFound) return 'N'
+    // Positions below 1 are outside the chromosome, same as positions past its end.
+    if (pos < 1) return 'N'
     try {
       val (buffKey, offset) = getKeyAndOffset(chr, pos)
 
@@ -167,6 +169,12 @@ class RefSeqFromChromSeq(ipath : String, fileReader : FileReader) extends RefSeq
   }
 
   def getBases(chr: String, pos1: Int, pos2: Int): String = {
+    // Positions below 1 are outside the chromosome and read as 'N', same as positions past its end.
+    // Handle them before the buffer lookup: (pos - 1) / buffLength truncates toward zero, so pos 0 maps to buffer 0.
+    if (pos1 < 1) {
+      val leading = "N" * (math.min(pos2, 0) - pos1 + 1)
+      return if (pos2 < 1) leading else leading + getBases(chr, 1, pos2)
+    }
     if (pos1 == pos2) return getBase(chr, pos1).toString
     if ((pos1 - 1) / buffLength == (pos2 - 1) / buffLength) {
       val (buffKey, offset) = getKeyAndOffset(chr, pos1)
