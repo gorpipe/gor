@@ -85,28 +85,15 @@ class UTestThrowIfAnalysis extends AnyFlatSpec {
     assert(thrown.getRow == "")
   }
 
-  it should "include header and offending row when detail is set" in {
-    val sink = AnalysisSink()
-    val header = "chrom\tpos\tA"
-    val pipe = ThrowIfAnalysis(context, executeNor = false, "A=='ABC'", header, includeRow = true) | sink
-    pipe.setRowHeader(RowHeader(header, List("S", "I", "S").toArray))
-
-    pipe.process(RowObj("chr1\t1\tXYZ"))
-    val thrown = intercept[GorDataException](pipe.process(RowObj("chr1\t2\tABC")))
-    assert(thrown.getMessage == "Gor throw on: A=='ABC'\nHeader: chrom\tpos\tA\nRow: chr1\t2\tABC")
-    assert(thrown.getRow == "chr1\t2\tABC")
-    assert(sink.rows.size == 1)
-  }
-
-  it should "combine custom message, detail and retriable" in {
+  it should "combine custom message and retriable" in {
     val sink = AnalysisSink()
     val header = "chrom\tpos\tA"
     val pipe = ThrowIfAnalysis(context, executeNor = false, "A=='ABC'", header, isRetriable = true,
-      message = "custom failure", includeRow = true) | sink
+      message = "custom failure") | sink
     pipe.setRowHeader(RowHeader(header, List("S", "I", "S").toArray))
 
     val thrown = intercept[GorDataException](pipe.process(RowObj("chr1\t1\tABC")))
-    assert(thrown.getMessage == "custom failure\nHeader: chrom\tpos\tA\nRow: chr1\t1\tABC")
+    assert(thrown.getMessage == "custom failure")
     assert(thrown.isFullRetry())
   }
 }

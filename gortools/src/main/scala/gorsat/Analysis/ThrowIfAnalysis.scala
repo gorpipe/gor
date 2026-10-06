@@ -30,11 +30,10 @@ import org.gorpipe.gor.session.GorContext
 /**
   * Throws a GorDataException on the first row where filterSrc evaluates to true.
   *
-  * @param message    error message to use instead of the default "Gor throw on: <condition>", null for the default
-  * @param includeRow if true the header and the offending row are added to the error
+  * @param message error message to use instead of the default "Gor throw on: <condition>", null for the default
   */
 case class ThrowIfAnalysis(context: GorContext, executeNor: Boolean, filterSrc: String, header: String,
-                           isRetriable: Boolean = false, message: String = null, includeRow: Boolean = false)
+                           isRetriable: Boolean = false, message: String = null)
   extends Analysis with Filtering
 {
   filter.setContext(context, executeNor)
@@ -61,15 +60,7 @@ case class ThrowIfAnalysis(context: GorContext, executeNor: Boolean, filterSrc: 
 
   override def process(r: Row): Unit = {
     if (filter.evalBooleanFunction(r)) {
-      val ex = if (includeRow) {
-        // Nor rows carry the internal ChromNOR/PosNOR columns, show only the user columns
-        val (errorHeader, errorRow) =
-          if (executeNor) (header.split('\t').drop(2).mkString("\t"), r.otherCols())
-          else (header, r.toString)
-        new GorDataException(errorMessage, -1, errorHeader, errorRow)
-      } else {
-        new GorDataException(errorMessage, -1)
-      }
+      val ex = new GorDataException(errorMessage, -1)
       if (isRetriable) {
         ex.fullRetry()
       }

@@ -60,29 +60,15 @@ public class UTestThrowIf {
     }
 
     @Test
-    public void detailIncludesOnlyOffendingRow() {
-        GorDataException e = runExpectingThrow("gorrows -p chr1:1-4 | calc status if(pos=2,'unmapped','mapped') | throwif -d status != 'mapped'");
-        Assert.assertEquals("Gor throw on: status != 'mapped'\nHeader: chrom\tpos\tstatus\nRow: chr1\t2\tunmapped", e.getMessage());
-        Assert.assertEquals("chr1\t2\tunmapped", e.getRow());
-    }
-
-    @Test
-    public void customMessageAndDetail() {
-        GorDataException e = runExpectingThrow("gorrow chr1,1 | calc status 'unmapped' | throwif -m 'liftover failed' -d status != 'mapped'");
-        Assert.assertEquals("liftover failed\nHeader: chrom\tpos\tstatus\nRow: chr1\t1\tunmapped", e.getMessage());
-    }
-
-    @Test
-    public void customMessageAndDetailWithRetriable() {
-        GorDataException e = runExpectingThrow("gorrow chr1,1 | calc status 'unmapped' | throwif -retriable -d -m 'liftover failed' status != 'mapped'");
-        Assert.assertEquals("liftover failed\nHeader: chrom\tpos\tstatus\nRow: chr1\t1\tunmapped", e.getMessage());
+    public void customMessageWithRetriable() {
+        GorDataException e = runExpectingThrow("gorrow chr1,1 | calc status 'unmapped' | throwif -retriable -m 'liftover failed' status != 'mapped'");
+        Assert.assertEquals("liftover failed", e.getMessage());
         Assert.assertTrue(e.isFullRetry());
     }
 
     @Test
     public void norContext() {
-        GorDataException e = runExpectingThrow("norrows 3 | calc status if(rownum=1,'unmapped','mapped') | throwif -m 'liftover failed' -d status != 'mapped'");
-        Assert.assertEquals("liftover failed\nHeader: RowNum\tstatus\nRow: 1\tunmapped", e.getMessage());
-        Assert.assertEquals("1\tunmapped", e.getRow());
+        GorDataException e = runExpectingThrow("norrows 3 | calc status if(rownum=1,'unmapped','mapped') | throwif -m 'liftover failed' status != 'mapped'");
+        Assert.assertEquals("liftover failed", e.getMessage());
     }
 }
