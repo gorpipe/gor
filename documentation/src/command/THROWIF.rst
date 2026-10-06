@@ -9,7 +9,8 @@ THROWIF
 =======
 The **THROWIF** command is a very simple tool which throws an exception if the contained statement is true.
 
-By default the error message is ``Gor throw on: <condition>``. Use ``-m`` to give a custom message.
+By default the error message is ``Gor throw on: <condition>``. Use ``-m`` to give a custom message. The error also
+includes the header and the row that triggered the exception.
 
 Usage
 =====
@@ -35,4 +36,9 @@ Fail with a custom message:
 
    gorrow chr1,1 | calc status 'unmapped' | THROWIF -m 'liftover failed' status != 'mapped'
 
-The error message is ``liftover failed``.
+The error is::
+
+   liftover failed
+
+   Header: chrom	pos	status
+   Row: chr1	1	unmapped

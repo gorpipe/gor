@@ -28,7 +28,8 @@ import org.gorpipe.gor.model.Row
 import org.gorpipe.gor.session.GorContext
 
 /**
-  * Throws a GorDataException on the first row where filterSrc evaluates to true.
+  * Throws a GorDataException on the first row where filterSrc evaluates to true. The exception carries the
+  * header and the offending row.
   *
   * @param message error message to use instead of the default "Gor throw on: <condition>", null for the default
   */
@@ -60,7 +61,12 @@ case class ThrowIfAnalysis(context: GorContext, executeNor: Boolean, filterSrc: 
 
   override def process(r: Row): Unit = {
     if (filter.evalBooleanFunction(r)) {
-      val ex = new GorDataException(errorMessage, -1)
+      // Nor rows carry the internal ChromNOR/PosNOR columns, show only the user columns
+      val (errorHeader, errorRow) =
+        if (executeNor) (header.split('\t').drop(2).mkString("\t"), r.otherCols())
+        else (header, r.toString)
+      // doFormat=false: header and row are rendered from the exception fields, keep them out of the message
+      val ex = new GorDataException(errorMessage, -1, errorHeader, errorRow, null, false)
       if (isRetriable) {
         ex.fullRetry()
       }

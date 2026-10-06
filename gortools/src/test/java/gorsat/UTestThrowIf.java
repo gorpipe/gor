@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import org.gorpipe.exceptions.ExceptionUtilities;
 import org.gorpipe.exceptions.GorDataException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -38,11 +39,14 @@ public class UTestThrowIf {
         return null;
     }
 
+    private static int occurrences(String text, String sub) {
+        return text.split(sub, -1).length - 1;
+    }
+
     @Test
     public void defaultMessageUnchanged() {
         GorDataException e = runExpectingThrow("gorrow chr1,1 | calc status 'unmapped' | throwif status != 'mapped'");
         Assert.assertEquals("Gor throw on: status != 'mapped'", e.getMessage());
-        Assert.assertEquals("", e.getRow());
         Assert.assertFalse(e.isFullRetry());
     }
 
@@ -50,7 +54,22 @@ public class UTestThrowIf {
     public void customMessage() {
         GorDataException e = runExpectingThrow("gorrow chr1,1 | calc status 'unmapped' | throwif -m 'liftover failed' status != 'mapped'");
         Assert.assertEquals("liftover failed", e.getMessage());
-        Assert.assertEquals("", e.getRow());
+    }
+
+    @Test
+    public void exceptionCarriesOnlyOffendingRow() {
+        GorDataException e = runExpectingThrow("gorrows -p chr1:1-4 | calc status if(pos=2,'unmapped','mapped') | throwif status != 'mapped'");
+        Assert.assertEquals("chrom\tpos\tstatus", e.getHeader());
+        Assert.assertEquals("chr1\t2\tunmapped", e.getRow());
+    }
+
+    @Test
+    public void renderedErrorShowsHeaderAndRowOnce() {
+        GorDataException e = runExpectingThrow("gorrow chr1,1 | calc status 'unmapped' | throwif -m 'liftover failed' status != 'mapped'");
+        String rendered = ExceptionUtilities.gorExceptionToString(e);
+        Assert.assertTrue(rendered, rendered.contains("liftover failed\n\nHeader: chrom\tpos\tstatus\nRow: chr1\t1\tunmapped"));
+        Assert.assertEquals(rendered, 1, occurrences(rendered, "Header: "));
+        Assert.assertEquals(rendered, 1, occurrences(rendered, "Row: "));
     }
 
     @Test
@@ -70,5 +89,7 @@ public class UTestThrowIf {
     public void norContext() {
         GorDataException e = runExpectingThrow("norrows 3 | calc status if(rownum=1,'unmapped','mapped') | throwif -m 'liftover failed' status != 'mapped'");
         Assert.assertEquals("liftover failed", e.getMessage());
+        Assert.assertEquals("RowNum\tstatus", e.getHeader());
+        Assert.assertEquals("1\tunmapped", e.getRow());
     }
 }

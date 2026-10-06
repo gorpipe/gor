@@ -82,7 +82,8 @@ class UTestThrowIfAnalysis extends AnyFlatSpec {
 
     val thrown = intercept[GorDataException](pipe.process(RowObj("chr1\t1\tABC")))
     assert(thrown.getMessage == "custom failure")
-    assert(thrown.getRow == "")
+    assert(thrown.getHeader == header)
+    assert(thrown.getRow == "chr1\t1\tABC")
   }
 
   it should "combine custom message and retriable" in {
