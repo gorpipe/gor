@@ -79,6 +79,46 @@ public class UTestRefSeqFromChromSeq {
 
     }
 
+    // Positions below 1 (e.g. pos 0 from an unmapped liftover row) read as 'N', like positions past the chromosome end.
+    @Test
+    public void testGetRefbasesBelowPositionOne() {
+        String path = "../tests/data/ref_mini/chromSeq";
+
+        // chr17 in ref_mini starts with real bases (AAGC...).
+        RefSeqFromChromSeq refseq = new RefSeqFromChromSeq(path, new DriverBackedFileReader(""));
+        Assert.assertEquals("NAAGC", refseq.getBases("chr17", 0, 4));
+
+        // Same, with the buffer already loaded.
+        Assert.assertEquals("NAAGC", refseq.getBases("chr17", 0, 4));
+
+        // Fresh refseq, no buffer loaded yet.
+        refseq = new RefSeqFromChromSeq(path, new DriverBackedFileReader(""));
+        Assert.assertEquals("NNNNN", refseq.getBases("chr17", -5, -1));
+
+        Assert.assertEquals("N", refseq.getBases("chr17", 0, 0));
+        Assert.assertEquals('N', refseq.getBase("chr17", 0));
+        Assert.assertEquals('N', refseq.getBase("chr17", -1));
+        Assert.assertEquals('N', refseq.getBase("chr17", -10001));
+
+        // Starting below 1 and crossing the buffer boundary (10000).
+        String expectedTail = new RefSeqFromChromSeq(path, new DriverBackedFileReader("")).getBases("chr17", 1, 10002);
+        refseq = new RefSeqFromChromSeq(path, new DriverBackedFileReader(""));
+        String bases = refseq.getBases("chr17", -2, 10002);
+        Assert.assertEquals(10005, bases.length());
+        Assert.assertEquals("NNN" + expectedTail, bases);
+        Assert.assertTrue(bases.startsWith("NNNAAGC"));
+        Assert.assertTrue(bases.endsWith("aactctt"));
+
+        // Starting more than a buffer below 1.
+        refseq = new RefSeqFromChromSeq(path, new DriverBackedFileReader(""));
+        Assert.assertEquals("N".repeat(10006) + "AA", refseq.getBases("chr17", -10005, 2));
+
+        // Positive positions are unchanged.
+        Assert.assertEquals("AAGC", refseq.getBases("chr17", 1, 4));
+        Assert.assertEquals('A', refseq.getBase("chr17", 1));
+        Assert.assertEquals("aactcttgac", refseq.getBases("chr17", 9996, 10005));
+    }
+
     @Ignore("Run manually to test from same buffer optimization")
     @Test
     public void testGetRefbasesPerformance() {
