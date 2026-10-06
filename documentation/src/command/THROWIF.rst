@@ -27,6 +27,7 @@ Options
 +--------------------+---------------------------------------------------------------------------------------+
 | ``-m <message>``   | Use ``<message>`` as the error message instead of ``Gor throw on: <condition>``.      |
 |                    | Quote the message if it contains spaces.                                              |
++--------------------+---------------------------------------------------------------------------------------+
 
 Examples
 ========
@@ -36,8 +37,9 @@ Fail with a custom message:
 
    gorrow chr1,1 | calc status 'unmapped' | THROWIF -m 'liftover failed' status != 'mapped'
 
-The error is::
+The error report contains (command source and stack trace omitted)::
 
+   ==== Data Error ====
    liftover failed
 
    Header: chrom	pos	status
