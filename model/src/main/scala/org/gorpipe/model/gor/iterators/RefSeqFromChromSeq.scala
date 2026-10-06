@@ -113,59 +113,11 @@ class RefSeqFromChromSeq(ipath : String, fileReader : FileReader) extends RefSeq
   }
 
   def getBase(chr: String, pos: Int): Char = {
-    if (noReferenceBuildFound) return 'N'
     // Positions below 1 are outside the chromosome, same as positions past its end.
     if (pos < 1) return 'N'
-    try {
-      val (buffKey, offset) = getKeyAndOffset(chr, pos)
-
-      if (buffKey == lastKey) return refByteToChar(lastBuff(pos - offset - 1))
-      lufo.getObject(buffKey) match {
-        case Some(buffer) =>
-          lastKey = buffKey
-          lastBuff = buffer
-          refByteToChar(buffer(pos - offset - 1))
-        case None =>
-          val chrFilePath = DataUtil.toFile(path + "/" + chr, DataType.TXT)
-          val f = if( filemap.containsKey(chrFilePath) ) filemap.get(chrFilePath) else {
-            val cf = Optional.ofNullable(fileReader match {
-              case dbfr: DriverBackedFileReader =>
-                val ds = dbfr.unsecure().resolveUrl(chrFilePath)
-                if (ds.exists()) new StreamSourceRacFile(ds.asInstanceOf[StreamSource]) else null
-              case _ =>
-                fileReader.openFile(chrFilePath)
-            })
-            filemap.put(chrFilePath, cf)
-            cf
-          }
-          if( !f.isPresent ) {
-            if (!notfoundmap.contains(chrFilePath)) {
-              notfoundmap.add(chrFilePath)
-              log.warn("Reference build " + path + "\n\nReference file "+chrFilePath+" does not exist", chrFilePath)
-            }
-            'N'
-          } else {
-            val buff = new Array[Byte](buffLength)
-            f.get().seek(offset)
-            val l = f.get().read(buff, 0, buffLength)
-            lufo.addObject(buffKey, buff)
-            lastKey = buffKey
-            lastBuff = buff
-            if( l == -1 ) {
-              log.warn("Trying to read "+chr+":"+pos+" from reference file " + chrFilePath + " of length "+f.get.length()+" from offset " + offset)
-              return 'N'
-            }
-            refByteToChar(buff(pos - offset - 1))
-          }
-      }
-    } catch {
-      case ioex: IOException =>
-        throw new GorResourceException("Reference build " + path + " inaccessible", path, ioex)
-      case ex: Exception => {
-        log.warn(String.format("Returning 'N' for reference build %s (%s:%d)", path, chr, pos), ex)
-      }
-      'N'
-    }
+    val (buffKey, offset) = getKeyAndOffset(chr, pos)
+    val buff = getBuffer(chr, pos, buffKey, offset)
+    if (buff == null) 'N' else refByteToChar(buff(pos - offset - 1))
   }
 
   def getBases(chr: String, pos1: Int, pos2: Int): String = {
@@ -176,30 +128,83 @@ class RefSeqFromChromSeq(ipath : String, fileReader : FileReader) extends RefSeq
       return if (pos2 < 1) leading else leading + getBases(chr, 1, pos2)
     }
     if (pos1 == pos2) return getBase(chr, pos1).toString
-    if ((pos1 - 1) / buffLength == (pos2 - 1) / buffLength) {
-      val (buffKey, offset) = getKeyAndOffset(chr, pos1)
-
-      if (buffKey != lastKey) getBase(chr, pos1)
-
-      // lastBuff is only valid for lastKey. If the buffer could not be loaded (e.g. the contig has no
-      // sequence in the build) fall through to getBase per position, which returns 'N'.
-      if (buffKey == lastKey) {
-        val strbuff = new StringBuilder(pos2 - pos1 + 1)
-        var i = pos1
-        while (i <= pos2) {
-          strbuff.append(refByteToChar(lastBuff(i - offset - 1)))
+    val strbuff = new StringBuilder(pos2 - pos1 + 1)
+    var start = pos1
+    // Load each buffer the range touches once. A buffer that can not be loaded reads as 'N' for its whole part.
+    while (start <= pos2) {
+      val (buffKey, offset) = getKeyAndOffset(chr, start)
+      val end = math.min(pos2, offset + buffLength)
+      val buff = getBuffer(chr, start, buffKey, offset)
+      if (buff == null) {
+        strbuff.append("N" * (end - start + 1))
+      } else {
+        var i = start
+        while (i <= end) {
+          strbuff.append(refByteToChar(buff(i - offset - 1)))
           i += 1
         }
-        return strbuff.toString
       }
-    }
-    val strbuff = new StringBuilder(pos2 - pos1 + 1)
-    var i = pos1
-    while (i <= pos2) {
-      strbuff.append(getBase(chr, i))
-      i += 1
+      start = end + 1
     }
     strbuff.toString
+  }
+
+  /**
+    * Get the buffer for buffKey, from lastBuff, the LUFO cache or the reference file.
+    * lastKey/lastBuff are only set when a buffer is returned, so lastBuff always belongs to lastKey.
+    * @return the buffer, or null if the contig has no sequence in the build or the read failed.
+    */
+  private def getBuffer(chr: String, pos: Int, buffKey: String, offset: Int): Array[Byte] = {
+    if (noReferenceBuildFound) return null
+    if (buffKey == lastKey) return lastBuff
+    try {
+      val buff = lufo.getObject(buffKey) match {
+        case Some(buffer) => buffer
+        case None => readBuffer(chr, pos, buffKey, offset)
+      }
+      if (buff != null) {
+        lastKey = buffKey
+        lastBuff = buff
+      }
+      buff
+    } catch {
+      case ioex: IOException =>
+        throw new GorResourceException("Reference build " + path + " inaccessible", path, ioex)
+      case ex: Exception =>
+        log.warn(String.format("Returning 'N' for reference build %s (%s:%d)", path, chr, pos), ex)
+        null
+    }
+  }
+
+  private def readBuffer(chr: String, pos: Int, buffKey: String, offset: Int): Array[Byte] = {
+    val chrFilePath = DataUtil.toFile(path + "/" + chr, DataType.TXT)
+    val f = if( filemap.containsKey(chrFilePath) ) filemap.get(chrFilePath) else {
+      val cf = Optional.ofNullable(fileReader match {
+        case dbfr: DriverBackedFileReader =>
+          val ds = dbfr.unsecure().resolveUrl(chrFilePath)
+          if (ds.exists()) new StreamSourceRacFile(ds.asInstanceOf[StreamSource]) else null
+        case _ =>
+          fileReader.openFile(chrFilePath)
+      })
+      filemap.put(chrFilePath, cf)
+      cf
+    }
+    if( !f.isPresent ) {
+      if (!notfoundmap.contains(chrFilePath)) {
+        notfoundmap.add(chrFilePath)
+        log.warn("Reference build " + path + "\n\nReference file "+chrFilePath+" does not exist", chrFilePath)
+      }
+      return null
+    }
+    val buff = new Array[Byte](buffLength)
+    f.get().seek(offset)
+    val l = f.get().read(buff, 0, buffLength)
+    lufo.addObject(buffKey, buff)
+    if( l == -1 ) {
+      // Past the end of the chromosome, the buffer stays zero and reads as 'N'.
+      log.warn("Trying to read "+chr+":"+pos+" from reference file " + chrFilePath + " of length "+f.get.length()+" from offset " + offset)
+    }
+    buff
   }
 
   /**
