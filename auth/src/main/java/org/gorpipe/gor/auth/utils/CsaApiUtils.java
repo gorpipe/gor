@@ -1,6 +1,6 @@
 package org.gorpipe.gor.auth.utils;
 
-import com.google.common.base.Strings;
+import org.gorpipe.util.Strings;
 import org.gorpipe.gor.auth.GeneralAuthInfo;
 import org.gorpipe.gor.auth.GorAuthInfo;
 import org.gorpipe.security.cred.CsaApiService;
@@ -37,11 +37,12 @@ public class CsaApiUtils {
             organizationId = updateOrganizationId(projectId, projectMap);
         }
 
-        if (Strings.isNullOrEmpty(userId) && !Strings.isNullOrEmpty(userName)) {
+        // CSA looks users up by email, so skip non-email usernames (e.g. service accounts) that it can't know.
+        if (Strings.isNullOrEmpty(userId) && Strings.isEmail(userName)) {
             Map<String, Object> userMap = getUserMapByEmail(csaApiService, userName);
             userId = updateUserId(userId, userMap);
 
-            if (userRoles.isEmpty() && !Strings.isNullOrEmpty(project) && !Strings.isNullOrEmpty(userName)) {
+            if (userRoles.isEmpty() && !Strings.isNullOrEmpty(project)) {
                 List csaUserRoles = getUserRoleList(csaApiService, project, userName);
                 updateUserRoles(userRoles, csaUserRoles);
             }
