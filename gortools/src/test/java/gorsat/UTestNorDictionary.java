@@ -678,4 +678,73 @@ public class UTestNorDictionary {
         Assert.assertEquals(8, result.length);
 
     }
+
+    // ENGKNOW-4019: a dictionary with no entries is valid and must read as an empty dictionary.
+
+    private static final String DEFAULT_GORD_HEADER = "ChromNOR\tPosNOR\tFile\tSource\tChrStart\tPosStart\tChrStop\tPosStop\tTags\n";
+
+    @Test
+    public void testNorAsDictOnEmptyGordReturnsDefaultHeader() throws IOException {
+        File dict = FileTestUtils.createTempFile(workDir.getRoot(), "empty.gord", "");
+
+        String[] lines = TestUtils.runGorPipeLines("nor -asdict " + dict.getAbsolutePath());
+
+        Assert.assertArrayEquals(new String[] {DEFAULT_GORD_HEADER}, lines);
+    }
+
+    @Test
+    public void testNorAsDictOnBlankLineGordReturnsDefaultHeader() throws IOException {
+        File dict = FileTestUtils.createTempFile(workDir.getRoot(), "blank.gord", "\n\n");
+
+        String[] lines = TestUtils.runGorPipeLines("nor -asdict " + dict.getAbsolutePath());
+
+        Assert.assertArrayEquals(new String[] {DEFAULT_GORD_HEADER}, lines);
+    }
+
+    @Test
+    public void testNorAsDictOnEmptyGordUsesHeaderFromMeta() throws IOException {
+        File dict = FileTestUtils.createTempFile(workDir.getRoot(), "withmeta.gord", "");
+        FileTestUtils.createTempFile(workDir.getRoot(), "withmeta.gord.meta",
+                "## SERIAL = 0\n## COLUMNS = CHROM,POS,REF,ALT\n#File\tPN\n");
+
+        String[] lines = TestUtils.runGorPipeLines("nor -asdict " + dict.getAbsolutePath());
+
+        Assert.assertArrayEquals(new String[] {"ChromNOR\tPosNOR\tFile\tPN\n"}, lines);
+    }
+
+    @Test
+    public void testNorAsDictOnEmptyNordReturnsDefaultHeader() throws IOException {
+        File dict = FileTestUtils.createTempFile(workDir.getRoot(), "empty.nord", "");
+
+        String[] lines = TestUtils.runGorPipeLines("nor -asdict " + dict.getAbsolutePath());
+
+        Assert.assertArrayEquals(new String[] {"ChromNOR\tPosNOR\tFile\tSource\tTags\n"}, lines);
+    }
+
+    @Test
+    public void testNorAsDictOnEmptyGordCanBeAddressedByPosition() throws IOException {
+        File dict = FileTestUtils.createTempFile(workDir.getRoot(), "empty2.gord", "");
+
+        String[] lines = TestUtils.runGorPipeLines("nor -asdict " + dict.getAbsolutePath()
+                + " | inset -c #2 <(nor " + pnFile.getAbsolutePath() + ") | rename #2 PN | select #1,PN");
+
+        Assert.assertArrayEquals(new String[] {"ChromNOR\tPosNOR\tFile\tPN\n"}, lines);
+    }
+
+    @Test
+    public void testNorAsDictOnNonEmptyGordWithoutHeaderIsUnchanged() throws IOException {
+        File dict = FileTestUtils.createTempFile(workDir.getRoot(), "data.gord", "a.gor\tPN1\n");
+
+        String[] lines = TestUtils.runGorPipeLines("nor -asdict " + dict.getAbsolutePath());
+
+        Assert.assertArrayEquals(new String[] {"ChromNOR\tPosNOR\tcol1\tcol2\n", "chrN\t0\ta.gor\tPN1\n"}, lines);
+    }
+
+    @Test
+    public void testNorOnEmptyNonDictionaryFileStillFails() throws IOException {
+        File file = FileTestUtils.createTempFile(workDir.getRoot(), "empty.tsv", "");
+
+        Assert.assertThrows(GorResourceException.class,
+                () -> TestUtils.runGorPipeLines("nor " + file.getAbsolutePath()));
+    }
 }

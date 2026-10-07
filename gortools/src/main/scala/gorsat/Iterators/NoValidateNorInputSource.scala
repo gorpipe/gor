@@ -24,7 +24,11 @@ package gorsat.Iterators
 
 import org.gorpipe.gor.model.{FileReader, NoValidateRowBase, QuoteSafeRowBase, Row}
 
-class NoValidateNorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolean, forceReadHeader: Boolean, maxWalkDepth: Int, followLinks: Boolean, showModificationDate: Boolean, ignoreEmptyLines: Boolean) extends NorInputSource(fileName, fileReader, readStdin, forceReadHeader, maxWalkDepth, followLinks, showModificationDate, ignoreEmptyLines) {
+class NoValidateNorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolean, forceReadHeader: Boolean, maxWalkDepth: Int, followLinks: Boolean, showModificationDate: Boolean, ignoreEmptyLines: Boolean, defaultHeader: String = null) extends NorInputSource(fileName, fileReader, readStdin, forceReadHeader, maxWalkDepth, followLinks, showModificationDate, ignoreEmptyLines, defaultHeader) {
+  // For Java callers, which cannot use the default argument.
+  def this(fileName: String, fileReader: FileReader, readStdin: Boolean, forceReadHeader: Boolean, maxWalkDepth: Int, followLinks: Boolean, showModificationDate: Boolean, ignoreEmptyLines: Boolean) =
+    this(fileName, fileReader, readStdin, forceReadHeader, maxWalkDepth, followLinks, showModificationDate, ignoreEmptyLines, null)
+
   override def next(): Row = {
     new NoValidateRowBase("chrN\t0\t" + nextLine(), myHeaderLength)
   }

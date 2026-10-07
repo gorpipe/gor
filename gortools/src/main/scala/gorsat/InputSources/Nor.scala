@@ -29,9 +29,13 @@ import gorsat.DynIterator.{DynamicNorGorSource, DynamicNorSource}
 import gorsat.Iterators.{NoValidateNorInputSource, NorInputSource, ServerGorSource, ServerNorGorSource}
 import gorsat.Utilities.{AnalysisUtilities, Utilities}
 import gorsat.process.{NordIterator, PipeOptions}
-import org.gorpipe.gor.model.{GenomicIterator, GorOptions}
+import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.gor.model.{FileReader, GenomicIterator, GorOptions}
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.table.NorDictionaryTable
+import org.gorpipe.gor.table.dictionary.DictionaryTableMeta
+import org.gorpipe.gor.table.dictionary.gor.GorDictionaryTableMeta
+import org.gorpipe.gor.table.dictionary.nor.NorDictionaryTableMeta
 import org.gorpipe.gor.util.DataUtil
 
 import java.nio.file.{Files, Path}
@@ -161,11 +165,14 @@ object Nor
               inputFile = inputParams + "/" + GorOptions.DEFAULT_FOLDER_DICTIONARY_NAME
             }
           }
+          val fileReader = context.getSession.getProjectContext.getFileReader
           inputSource = if (noValidation) {
-            new NoValidateNorInputSource(inputFile, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, followLinks, !hideModificationDate, ignoreEmptyLines)
+            val dictHeader = if (hasOption(args, "-asdict")) dictionaryHeader(inputFile, fileReader) else null
+            new NoValidateNorInputSource(inputFile, fileReader, false, forceReadHeader, maxWalkDepth, followLinks, !hideModificationDate, ignoreEmptyLines, dictHeader)
           } else {
             inputFile = CommandParseUtilities.replaceSingleQuotes(inputFile)
-            new NorInputSource(inputFile, context.getSession.getProjectContext.getFileReader, false, forceReadHeader, maxWalkDepth, followLinks, !hideModificationDate, ignoreEmptyLines)
+            val dictHeader = if (hasOption(args, "-asdict")) dictionaryHeader(inputFile, fileReader) else null
+            new NorInputSource(inputFile, fileReader, false, forceReadHeader, maxWalkDepth, followLinks, !hideModificationDate, ignoreEmptyLines, dictHeader)
           }
         }
       }
@@ -217,6 +224,20 @@ object Nor
                                   args: Array[String]): InputSourceParsingResult = {
       processNorArguments(context, argString, iargs, args)
     }
+  }
+
+  /**
+   * Header to report when a dictionary read with -asdict has no entries: the file header from the dictionary's
+   * .meta if it has one, otherwise the default header for the dictionary type. Null if not a dictionary.
+   */
+  private def dictionaryHeader(dictFile: String, fileReader: FileReader): String = {
+    val upper = dictFile.toUpperCase
+    val meta: DictionaryTableMeta =
+      if (DataUtil.isGord(upper)) new GorDictionaryTableMeta()
+      else if (DataUtil.isNord(upper)) new NorDictionaryTableMeta()
+      else return null
+    meta.loadAndMergeMeta(fileReader, DataUtil.toFile(dictFile, DataType.META))
+    meta.getFileHeader.mkString("\t")
   }
 
   def createNordIterator(fileName: String, args: Array[String], context: GorContext): GenomicIterator = {
