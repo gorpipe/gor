@@ -161,6 +161,8 @@
   <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="throwif">
 <span id="id1"></span><h1>THROWIF<a class="headerlink" href="#throwif" title="Permalink to this headline">¶</a></h1>
 <p>The <strong>THROWIF</strong> command is a very simple tool which throws an exception if the contained statement is true.</p>
+<p>By default the error message is <code class="docutils literal notranslate"><span class="pre">Gor</span> <span class="pre">throw</span> <span class="pre">on:</span> <span class="pre">&lt;condition&gt;</span></code>. Use <code class="docutils literal notranslate"><span class="pre">-m</span></code> to give a custom message. The error also
+includes the header and the row that triggered the exception.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">THROWIF</span> [&lt;options&gt;] &lt;condition&gt;
@@ -178,8 +180,27 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-retriable</span></code></p></td>
 <td><p>If set an retriable exception is thrown.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">&lt;message&gt;</span></code></p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">&lt;message&gt;</span></code> as the error message instead of <code class="docutils literal notranslate"><span class="pre">Gor</span> <span class="pre">throw</span> <span class="pre">on:</span> <span class="pre">&lt;condition&gt;</span></code>.
+Quote the message if it contains spaces.</p></td>
+</tr>
 </tbody>
 </table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Fail with a custom message:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>gorrow chr1,1 | calc status &#39;unmapped&#39; | <span class="nb">THROWIF</span> -m &#39;liftover failed&#39; status != &#39;mapped&#39;
+</pre></div>
+</div>
+<p>The error report contains (command source and stack trace omitted):</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span>==== Data Error ====
+liftover failed
+
+Header: chrom        <span class="na">pos</span>     status
+Row: chr1    1       unmapped
+</pre></div>
+</div>
 </div>
 </div>
 
