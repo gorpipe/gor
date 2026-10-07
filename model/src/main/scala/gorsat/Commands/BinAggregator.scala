@@ -120,5 +120,21 @@ case class BinAggregator(binFactory: BinFactory, numBins: Int, window: Int, useK
     }
     currentKey = null
   }
+
+  /**
+    * Releases the bins without sending their content to the next processor, used when the pipeline has failed.
+    */
+  def discard(): Unit = {
+    for (mID <- bins.indices) {
+      binInfo(mID).used = false
+      try {
+        bins(mID).close()
+      } catch {
+        case _: Exception =>
+        // ignore close error
+      }
+    }
+    currentKey = null
+  }
 }
 

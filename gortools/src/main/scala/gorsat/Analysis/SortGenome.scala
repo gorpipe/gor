@@ -67,6 +67,26 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
     alreadySorted = true
   }
 
+  /**
+    * Drops buffered rows and deletes spilled files without emitting anything.
+    */
+  def discard(): Unit = {
+    deleteSpillFiles()
+    reinit()
+  }
+
+  private def deleteSpillFiles(): Unit = {
+    ordFileList.foreach(x => {
+      try {
+        val f = new java.io.File(x)
+        f.delete
+      } catch {
+        case _: Exception =>
+          // Do nothing
+      }
+    })
+  }
+
   private def flushToDisk(): Unit = {
     ensureSorted()
     val outputArray = inputArray.take(lines)
@@ -125,15 +145,7 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
               // Do nothing
           }
         }
-        ordFileList.foreach(x => {
-          try {
-            val f = new java.io.File(x)
-            f.delete
-          } catch {
-            case _: Exception =>
-              // Do nothing
-          }
-        })
+        deleteSpillFiles()
       }
     } else {
       ensureSorted()
