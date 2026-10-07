@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -30,11 +31,15 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
     private static final Logger log = LoggerFactory.getLogger(EBIReferenceSource.class);
 
     public static final String KEY_USE_CRAM_REF_DOWNLOAD = "gor.driver.cram.ref.download";
+    public static final String KEY_CRAM_REF_DOWNLOAD_URL_MASK = "gor.driver.cram.ref.download.urlmask";
+    public static final String KEY_CRAM_REF_DOWNLOAD_TIMEOUT = "gor.driver.cram.ref.download.timeout"; // Milliseconds
 
     private static final String REFBASES_PREFIX = "md5_";
     private static final String REFBASES_EXT = ".txt";
 
-    protected static Map<String, Path> md5ToRefbases = new ConcurrentHashMap<>();
+    // Instance scoped, as each instance rescans its own folder (shared static state was cleared by new instances
+    // while others were reading it, see ENGKNOW-3778).
+    private final Map<String, Path> md5ToRefbases = new ConcurrentHashMap<>();
 
     private static final int DOWNLOAD_TRIES_BEFORE_FAILING = 2;
 
@@ -125,10 +130,16 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
      * @throws IOException    if the sequence is not found or the download fails.
      */
     private byte[] downloadFromEBI(final String md5) throws IOException {
-        final String url = String.format(Locale.US, Defaults.EBI_REFERENCE_SERVICE_URL_MASK, md5);
+        final String urlMask = System.getProperty(KEY_CRAM_REF_DOWNLOAD_URL_MASK, Defaults.EBI_REFERENCE_SERVICE_URL_MASK);
+        final String url = String.format(Locale.US, urlMask, md5);
+        // Without timeouts an unresponsive server blocks forever (while holding the reference source lock).
+        final int timeout = Integer.parseInt(System.getProperty(KEY_CRAM_REF_DOWNLOAD_TIMEOUT, "30000"));
 
         for (int i = 0; i < DOWNLOAD_TRIES_BEFORE_FAILING; i++) {
-            try (final InputStream is = new URL(url).openStream()) {
+            final URLConnection connection = new URL(url).openConnection();
+            connection.setConnectTimeout(timeout);
+            connection.setReadTimeout(timeout);
+            try (final InputStream is = connection.getInputStream()) {
                 if (is == null)
                     return null;
 

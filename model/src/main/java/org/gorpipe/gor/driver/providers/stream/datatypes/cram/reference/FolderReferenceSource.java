@@ -49,7 +49,9 @@ public class FolderReferenceSource extends MD5CachedReferenceSource {
     private static final Set<String> FASTA_EXT = Set.of("fa", "fasta");
 
     private record Md5ReferencePath(String md5, Path path, String contig) {}
-    protected static Map<String, Md5ReferencePath> md5ToReferencePath = new ConcurrentHashMap<>();
+    // Instance scoped, as each instance rescans its own folder (shared static state was cleared by new instances
+    // while others were reading it, see ENGKNOW-3778).
+    private final Map<String, Md5ReferencePath> md5ToReferencePath = new ConcurrentHashMap<>();
 
     private Path referenceFolder;
 

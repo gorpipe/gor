@@ -15,6 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 /**
  * Tests for FolderReferenceSource class.
@@ -274,6 +275,22 @@ public class UTestFolderReferenceSource {
         }
     }
 
+    @Test
+    public void testCreatingAnotherSourceDoesNotBreakExistingSource() throws IOException {
+        // ENGKNOW-3778: Opening a new reference source (e.g. by another CRAM iterator) must not affect
+        // lookups in already open reference sources.
+        String md5 = "engknow3778_" + UUID.randomUUID();
+        createFastaFileWithIndexes("test.fasta", "chr3", "ACGTACGT", md5);
+        referenceSource = new FolderReferenceSource(testFolder.getAbsolutePath());
+
+        File otherFolder = workDir.newFolder("other_ref_folder");
+        createFastaFileWithIndexes(otherFolder, "other.fasta", "chr1", "TTTT", "engknow3778_" + UUID.randomUUID());
+        try (FolderReferenceSource otherSource = new FolderReferenceSource(otherFolder.getAbsolutePath())) {
+            SAMSequenceRecord record = new SAMSequenceRecord("chr3", 8).setMd5(md5);
+            Assert.assertArrayEquals("GTAC".getBytes(), referenceSource.getReferenceBasesByRegion(record, 2, 4));
+        }
+    }
+
     /**
      * Helper method to create a FASTA file with corresponding .dict and .fai files.
      * Note: This is a simplified version. In a real implementation, you would need
@@ -281,8 +298,13 @@ public class UTestFolderReferenceSource {
      */
     private File createFastaFileWithIndexes(String fileName, String sequenceName,
                                             String sequence, String md5) throws IOException {
+        return createFastaFileWithIndexes(testFolder, fileName, sequenceName, sequence, md5);
+    }
+
+    private File createFastaFileWithIndexes(File folder, String fileName, String sequenceName,
+                                            String sequence, String md5) throws IOException {
         // Create FASTA file
-        File fastaFile = new File(testFolder, fileName);
+        File fastaFile = new File(folder, fileName);
         var header = "";
         try (FileWriter writer = new FileWriter(fastaFile)) {
             header = ">" + sequenceName;
@@ -303,7 +325,7 @@ public class UTestFolderReferenceSource {
 
         // Create .dict file (simplified - real dict files have specific format)
         String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
-        File dictFile = new File(testFolder, baseName + ".dict");
+        File dictFile = new File(folder, baseName + ".dict");
         try (FileWriter writer = new FileWriter(dictFile)) {
             writer.write("@HD\tVN:1.0\n");
             writer.write("@SQ\tSN:" + sequenceName + "\tLN:" + sequence.length());
@@ -314,7 +336,7 @@ public class UTestFolderReferenceSource {
         }
 
         // Create .fai file (FASTA index - simplified)
-        File faiFile = new File(testFolder, fileName + ".fai");
+        File faiFile = new File(folder, fileName + ".fai");
         try (FileWriter writer = new FileWriter(faiFile)) {
             // Format: sequence_name, length, offset, linebases, linewidth
             // This is simplified - real .fai files need proper calculation
