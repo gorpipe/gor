@@ -90,7 +90,12 @@ public class FolderReferenceSource extends MD5CachedReferenceSource {
             for (var p : files.filter(Files::isRegularFile).toList()) {
                 var f = p.getFileName().toString().toLowerCase();
                 if (FASTA_EXT.stream().anyMatch(ext -> f.endsWith("." + ext))) {
-                    processFasta(p, md5Map);
+                    // One bad fasta file should not prevent using the others.
+                    try {
+                        processFasta(p, md5Map);
+                    } catch (Exception e) {
+                        log.error("Skipping invalid cram reference file {}", p, e);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -122,6 +127,14 @@ public class FolderReferenceSource extends MD5CachedReferenceSource {
             }
         });
         refFileByPath.clear();
+    }
+
+    /**
+     * @return true if the given fasta file is a valid (md5 indexed) reference file in this folder.
+     */
+    public boolean containsReferenceFile(Path fastaFile) {
+        Path normalized = fastaFile.toAbsolutePath().normalize();
+        return getReferenceFiles().stream().anyMatch(p -> p.toAbsolutePath().normalize().equals(normalized));
     }
 
     Set<Path> getReferenceFiles() {

@@ -15,6 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -69,15 +70,24 @@ public class UTestFolderReferenceSource {
         Assert.assertEquals(1, referenceSource.getReferenceFiles().size());
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void testScanFolderIgnoresFastaWithoutIndexFiles() throws IOException {
         // Create FASTA file without index files
         File fastaFile = new File(testFolder, "no_index.fasta");
         try (FileWriter writer = new FileWriter(fastaFile)) {
             writer.write(">chr1\nACGTACGT\n");
         }
+        String md5 = "engknow3778_" + UUID.randomUUID();
+        createFastaFileWithIndexes("good.fasta", "chr2", "TGCA", md5);
 
+        // Bad file is skipped (and logged), other files are still loaded.
         referenceSource = new FolderReferenceSource(testFolder.getAbsolutePath());
+
+        Assert.assertEquals(Set.of(new File(testFolder, "good.fasta").toPath()), referenceSource.getReferenceFiles());
+        Assert.assertArrayEquals("TGCA".getBytes(), referenceSource.getReferenceBases(
+                new SAMSequenceRecord("chr2", 4).setMd5(md5), false));
+        Assert.assertTrue(referenceSource.containsReferenceFile(new File(testFolder, "good.fasta").toPath()));
+        Assert.assertFalse(referenceSource.containsReferenceFile(fastaFile.toPath()));
     }
 
     @Test
@@ -188,7 +198,7 @@ public class UTestFolderReferenceSource {
         referenceSource.close();
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void testScanFolderWithCorruptedFastaFile() throws IOException {
         // Create a FASTA file that exists but is corrupted
         File fastaFile = new File(testFolder, "corrupted.fasta");
@@ -201,9 +211,15 @@ public class UTestFolderReferenceSource {
         dictFile.createNewFile();
         File faiFile = new File(testFolder, "corrupted.fai");
         faiFile.createNewFile();
+        String md5 = "engknow3778_" + UUID.randomUUID();
+        createFastaFileWithIndexes("good.fasta", "chr2", "TGCA", md5);
 
-        // Should handle corrupted files gracefully
+        // Bad file is skipped (and logged), other files are still loaded.
         referenceSource = new FolderReferenceSource(testFolder.getAbsolutePath());
+
+        Assert.assertEquals(Set.of(new File(testFolder, "good.fasta").toPath()), referenceSource.getReferenceFiles());
+        Assert.assertArrayEquals("TGCA".getBytes(), referenceSource.getReferenceBases(
+                new SAMSequenceRecord("chr2", 4).setMd5(md5), false));
     }
 
     @Test
