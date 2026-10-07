@@ -17,6 +17,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -37,13 +38,13 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
     private static final String REFBASES_PREFIX = "md5_";
     private static final String REFBASES_EXT = ".txt";
 
-    // Instance scoped, as each instance rescans its own folder (shared static state was cleared by new instances
-    // while others were reading it, see ENGKNOW-3778).
-    private final Map<String, Path> md5ToRefbases = new ConcurrentHashMap<>();
+    // Shared between instances, as scanning the folder is expensive.
+    private static final Map<Path, Md5FolderIndex<Path>> indexByFolder = new ConcurrentHashMap<>();
 
     private static final int DOWNLOAD_TRIES_BEFORE_FAILING = 2;
 
     private Path referenceFolder;  // If null we do not download.
+    private Md5FolderIndex<Path> md5ToRefbases;  // Null if no reference folder.
 
     public EBIReferenceSource() {
     }
@@ -55,37 +56,29 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
             if (!Files.isDirectory(this.referenceFolder)) {
                 throw new GorResourceException("Can not create FolderReferenceSource %s as the target is not a folder or does not exists".formatted(referenceFolder), referenceFolder);
             }
-            scanReferenceFolder();
+            md5ToRefbases = Md5FolderIndex.get(indexByFolder, this.referenceFolder, EBIReferenceSource::scanReferenceFolder);
+            md5ToRefbases.refreshIfStale();
         }
     }
 
     Set<Path> getRefbasesFiles() {
-        return new HashSet<>(md5ToRefbases.values());
+        return md5ToRefbases != null ? new HashSet<>(md5ToRefbases.values()) : new HashSet<>();
     }
 
-    private void scanReferenceFolder() {
-        md5ToRefbases.clear();
-
-        if (referenceFolder == null) return;
-
-        try {
-            for (var p : Files.list(referenceFolder).filter(Files::isRegularFile).toList()) {
+    private static Map<String, Path> scanReferenceFolder(Path referenceFolder) {
+        Map<String, Path> md5Map = new HashMap<>();
+        try (var files = Files.list(referenceFolder)) {
+            for (var p : files.filter(Files::isRegularFile).toList()) {
                 var f = p.getFileName().toString().toLowerCase();
                 if (f.startsWith(REFBASES_PREFIX) && f.endsWith(REFBASES_EXT)) {
-                    processRefbasesFile(referenceFolder.resolve(f));
+                    String md5 = f.substring(REFBASES_PREFIX.length(), f.length() - REFBASES_EXT.length());
+                    md5Map.put(md5, p);
                 }
             }
         } catch (IOException e) {
             log.warn("Failed scanning reference folder {}", referenceFolder, e);
         }
-    }
-
-    private void processRefbasesFile(Path refbases) {
-        String fileName = refbases.getFileName().toString();
-        if (!fileName.startsWith(REFBASES_PREFIX) || !fileName.endsWith(REFBASES_EXT)) return;
-
-        String md5 = fileName.substring(REFBASES_PREFIX.length(), fileName.length() - REFBASES_EXT.length());
-        md5ToRefbases.put(md5, refbases);
+        return md5Map;
     }
 
     @Override
@@ -93,7 +86,7 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
         var md5 = record.getMd5();
 
         // Load from refbases file.
-        Path refbasesPath = md5ToRefbases.get(md5);
+        Path refbasesPath = md5ToRefbases != null ? md5ToRefbases.get(md5) : null;
         if (refbasesPath != null) {
             try {
                 byte[] bases = Files.readAllBytes(refbasesPath);

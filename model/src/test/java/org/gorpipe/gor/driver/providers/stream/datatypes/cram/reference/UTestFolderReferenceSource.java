@@ -291,6 +291,32 @@ public class UTestFolderReferenceSource {
         }
     }
 
+    @Test
+    public void testFolderIndexIsSharedAndRescannedWhenStale() throws IOException {
+        createFastaFileWithIndexes("ref1.fasta", "chr1", "ACGT", "engknow3778_" + UUID.randomUUID());
+        referenceSource = new FolderReferenceSource(testFolder.getAbsolutePath());
+        Assert.assertEquals(1, referenceSource.getReferenceFiles().size());
+
+        // New file is not seen by new sources until the shared index is stale.
+        String md5 = "engknow3778_" + UUID.randomUUID();
+        createFastaFileWithIndexes("ref2.fasta", "chr2", "TGCA", md5);
+        SAMSequenceRecord record = new SAMSequenceRecord("chr2", 4).setMd5(md5);
+        try (FolderReferenceSource source = new FolderReferenceSource(testFolder.getAbsolutePath())) {
+            Assert.assertEquals(1, source.getReferenceFiles().size());
+            Assert.assertNull(source.getReferenceBases(record, false));
+        }
+
+        System.setProperty(Md5FolderIndex.KEY_RESCAN_INTERVAL, "0");
+        try (FolderReferenceSource source = new FolderReferenceSource(testFolder.getAbsolutePath())) {
+            Assert.assertEquals(2, source.getReferenceFiles().size());
+            Assert.assertArrayEquals("TGCA".getBytes(), source.getReferenceBases(record, false));
+            // Existing sources share the index.
+            Assert.assertEquals(2, referenceSource.getReferenceFiles().size());
+        } finally {
+            System.clearProperty(Md5FolderIndex.KEY_RESCAN_INTERVAL);
+        }
+    }
+
     /**
      * Helper method to create a FASTA file with corresponding .dict and .fai files.
      * Note: This is a simplified version. In a real implementation, you would need

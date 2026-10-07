@@ -49,11 +49,12 @@ public class FolderReferenceSource extends MD5CachedReferenceSource {
     private static final Set<String> FASTA_EXT = Set.of("fa", "fasta");
 
     private record Md5ReferencePath(String md5, Path path, String contig) {}
-    // Instance scoped, as each instance rescans its own folder (shared static state was cleared by new instances
-    // while others were reading it, see ENGKNOW-3778).
-    private final Map<String, Md5ReferencePath> md5ToReferencePath = new ConcurrentHashMap<>();
 
-    private Path referenceFolder;
+    // Shared between instances, as scanning the folder is expensive.
+    private static final Map<Path, Md5FolderIndex<Md5ReferencePath>> indexByFolder = new ConcurrentHashMap<>();
+
+    private final Path referenceFolder;
+    private final Md5FolderIndex<Md5ReferencePath> md5ToReferencePath;
 
     private final Map<Path, ReferenceSequenceFile> refFileByPath = new ConcurrentHashMap<>();
 
@@ -62,7 +63,8 @@ public class FolderReferenceSource extends MD5CachedReferenceSource {
         if (!Files.isDirectory(this.referenceFolder)) {
             throw new GorResourceException("Can not create FolderReferenceSource %s as the target is not a folder or does not exists".formatted(referenceFolder), referenceFolder);
         }
-        scanReferenceFolder();
+        md5ToReferencePath = Md5FolderIndex.get(indexByFolder, this.referenceFolder, FolderReferenceSource::scanReferenceFolder);
+        md5ToReferencePath.refreshIfStale();
     }
 
     @Override
@@ -82,31 +84,32 @@ public class FolderReferenceSource extends MD5CachedReferenceSource {
         return null;
     }
 
-    private void scanReferenceFolder() {
-        md5ToReferencePath.clear();
-
-        try {
-            for (var p : Files.list(referenceFolder).filter(Files::isRegularFile).toList()) {
+    private static Map<String, Md5ReferencePath> scanReferenceFolder(Path referenceFolder) {
+        Map<String, Md5ReferencePath> md5Map = new HashMap<>();
+        try (var files = Files.list(referenceFolder)) {
+            for (var p : files.filter(Files::isRegularFile).toList()) {
                 var f = p.getFileName().toString().toLowerCase();
                 if (FASTA_EXT.stream().anyMatch(ext -> f.endsWith("." + ext))) {
-                    processFasta(referenceFolder.resolve(f));
+                    processFasta(p, md5Map);
                 }
             }
         } catch (IOException e) {
             log.warn("Failed scanning reference folder {}", referenceFolder, e);
         }
+        return md5Map;
     }
 
-    private void processFasta(Path fastaFile) {
-        ReferenceSequenceFile refFile = refFileByPath.computeIfAbsent(fastaFile, ReferenceSequenceFileFactory::getReferenceSequenceFile);
-        SAMSequenceDictionary dictionary = refFile.getSequenceDictionary();
-        if (dictionary == null) {
-            throw new GorResourceException("Fasta file %s is invalid cram reference as it is missing dict file".formatted(fastaFile), fastaFile.toString());
-        }
-        for (SAMSequenceRecord rec : dictionary.getSequences()) {
-            String md5 = rec.getMd5();
-            if (md5 == null || md5.isEmpty()) continue;
-            md5ToReferencePath.put(md5, new FolderReferenceSource.Md5ReferencePath(md5, fastaFile, rec.getContig()));
+    private static void processFasta(Path fastaFile, Map<String, Md5ReferencePath> md5Map) throws IOException {
+        try (ReferenceSequenceFile refFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(fastaFile)) {
+            SAMSequenceDictionary dictionary = refFile.getSequenceDictionary();
+            if (dictionary == null) {
+                throw new GorResourceException("Fasta file %s is invalid cram reference as it is missing dict file".formatted(fastaFile), fastaFile.toString());
+            }
+            for (SAMSequenceRecord rec : dictionary.getSequences()) {
+                String md5 = rec.getMd5();
+                if (md5 == null || md5.isEmpty()) continue;
+                md5Map.put(md5, new FolderReferenceSource.Md5ReferencePath(md5, fastaFile, rec.getContig()));
+            }
         }
     }
 
@@ -122,6 +125,8 @@ public class FolderReferenceSource extends MD5CachedReferenceSource {
     }
 
     Set<Path> getReferenceFiles() {
-        return new HashSet<>(refFileByPath.keySet());
+        Set<Path> files = new HashSet<>();
+        md5ToReferencePath.values().forEach(r -> files.add(r.path()));
+        return files;
     }
 }
