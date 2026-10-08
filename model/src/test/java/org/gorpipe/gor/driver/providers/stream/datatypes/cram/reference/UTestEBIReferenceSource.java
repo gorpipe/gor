@@ -6,11 +6,17 @@ import org.gorpipe.exceptions.GorResourceException;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
+import com.sun.net.httpserver.HttpServer;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Tests for FolderReferenceSource class.
@@ -95,6 +101,24 @@ public class UTestEBIReferenceSource {
     }
 
     @Test
+    public void testCreatingAnotherSourceDoesNotBreakExistingSource() throws Exception {
+        // ENGKNOW-3778: Opening a new reference source (e.g. by another CRAM iterator) must not affect
+        // lookups in already open reference sources.
+        System.setProperty(EBIReferenceSource.KEY_USE_CRAM_REF_DOWNLOAD, "false");
+        String md5 = "engknow3778_" + UUID.randomUUID();
+        createRefbasesFile(md5, "ACGTACGT".getBytes());
+        referenceSource = new EBIReferenceSource(testFolder.getAbsolutePath());
+
+        File otherFolder = workDir.newFolder("other_ref_folder");
+        Files.write(otherFolder.toPath().resolve("md5_engknow3778_" + UUID.randomUUID() + ".txt"), "TTTT".getBytes());
+        new EBIReferenceSource(otherFolder.getAbsolutePath()).close();
+
+        SAMSequenceRecord record = new SAMSequenceRecord("chr3", 8).setMd5(md5);
+        Assert.assertArrayEquals("GTAC".getBytes(), referenceSource.getReferenceBasesByRegion(record, 2, 4));
+        Assert.assertEquals(1, referenceSource.getRefbasesFiles().size());
+    }
+
+    @Test
     public void testDownloadFromEBIReal() throws Exception {
         String md5 = "d2ed829b8a1628d16cbeee88e88e39eb"; // hg19 chrM
 
@@ -113,6 +137,54 @@ public class UTestEBIReferenceSource {
         Assert.assertEquals("md5_" + md5 + ".txt", stored.getFileName().toString());
         Assert.assertTrue(Files.exists(stored));
         Assert.assertArrayEquals(bases, Files.readAllBytes(stored));
+    }
+
+    @Test(timeout = 30000)
+    public void testDownloadFromUnresponsiveServerTimesOut() throws Exception {
+        // ENGKNOW-3778: A download from a server that never responds must not hang forever.
+        try (ServerSocket server = new ServerSocket(0)) {
+            System.setProperty(EBIReferenceSource.KEY_CRAM_REF_DOWNLOAD_URL_MASK,
+                    "http://localhost:" + server.getLocalPort() + "/%s");
+            System.setProperty(EBIReferenceSource.KEY_CRAM_REF_DOWNLOAD_TIMEOUT, "500");
+
+            referenceSource = new EBIReferenceSource(testFolder.getAbsolutePath());
+            SAMSequenceRecord record = new SAMSequenceRecord("chr3", 8).setMd5("engknow3778_" + UUID.randomUUID());
+
+            Assert.assertNull(referenceSource.getReferenceBases(record, false));
+        } finally {
+            System.clearProperty(EBIReferenceSource.KEY_CRAM_REF_DOWNLOAD_URL_MASK);
+            System.clearProperty(EBIReferenceSource.KEY_CRAM_REF_DOWNLOAD_TIMEOUT);
+        }
+    }
+
+    @Test
+    public void testDownloadedReferenceIsAddedToSharedIndex() throws Exception {
+        String md5 = "engknow3778_" + UUID.randomUUID();
+        HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+        server.createContext("/", exchange -> {
+            byte[] resp = "ACGTACGT".getBytes();
+            exchange.sendResponseHeaders(200, resp.length);
+            try (var os = exchange.getResponseBody()) {
+                os.write(resp);
+            }
+        });
+        server.start();
+        try {
+            System.setProperty(EBIReferenceSource.KEY_CRAM_REF_DOWNLOAD_URL_MASK,
+                    "http://localhost:" + server.getAddress().getPort() + "/%s");
+            referenceSource = new EBIReferenceSource(testFolder.getAbsolutePath());
+            try (EBIReferenceSource otherSource = new EBIReferenceSource(testFolder.getAbsolutePath())) {
+                Assert.assertEquals(0, otherSource.getRefbasesFiles().size());
+
+                SAMSequenceRecord record = new SAMSequenceRecord("chr3", 8).setMd5(md5);
+                Assert.assertArrayEquals("ACGTACGT".getBytes(), referenceSource.getReferenceBases(record, false));
+
+                Assert.assertEquals(Set.of(testFolder.toPath().resolve("md5_" + md5 + ".txt")), otherSource.getRefbasesFiles());
+            }
+        } finally {
+            System.clearProperty(EBIReferenceSource.KEY_CRAM_REF_DOWNLOAD_URL_MASK);
+            server.stop(0);
+        }
     }
 
     /*

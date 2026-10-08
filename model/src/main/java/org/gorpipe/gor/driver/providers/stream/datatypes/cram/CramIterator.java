@@ -278,12 +278,14 @@ public class CramIterator extends BamIterator {
         if (refFile.isDirectory()) {
             return createCompositeReferenceSource(refFile);
         } else if (preferFolder) {
-            try {
-                return createCompositeReferenceSource(refFile.getParentFile());
-            } catch (Exception e) {
-                // Fallback to single file, in case none of the files contains proper meta.
-                return createSharedFastaReferenceSource(refFile);
+            var folderSource = new FolderReferenceSource(refFile.getParentFile().getPath());
+            if (folderSource.containsReferenceFile(refFile.toPath())) {
+                return createCompositeReferenceSource(folderSource, refFile.getParentFile());
             }
+            // Fallback to single file, in case the reference file does not contain proper meta.
+            log.debug("Reference file {} is not md5 indexed, using it as single fasta reference", refFile.getPath());
+            folderSource.close();
+            return createSharedFastaReferenceSource(refFile);
         } else {
             return createSharedFastaReferenceSource(refFile);
         }
@@ -298,9 +300,13 @@ public class CramIterator extends BamIterator {
         return new SharedFastaReferenceSource(referenceFile, referenceKey);
     }
     private CRAMReferenceSource createCompositeReferenceSource(File refFolder) {
+        return createCompositeReferenceSource(new FolderReferenceSource(refFolder.getPath()), refFolder);
+    }
+
+    private CRAMReferenceSource createCompositeReferenceSource(FolderReferenceSource folderSource, File refFolder) {
         log.debug("Using folder reference for CRAM: {}", refFolder.getPath());
         return new CompositeReferenceSource(List.of(
-                new FolderReferenceSource(refFolder.getPath()),
+                folderSource,
                 new EBIReferenceSource(refFolder.getPath())));
     }
 }

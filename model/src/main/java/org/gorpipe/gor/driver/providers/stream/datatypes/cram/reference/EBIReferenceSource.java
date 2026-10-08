@@ -14,8 +14,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -30,15 +32,19 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
     private static final Logger log = LoggerFactory.getLogger(EBIReferenceSource.class);
 
     public static final String KEY_USE_CRAM_REF_DOWNLOAD = "gor.driver.cram.ref.download";
+    public static final String KEY_CRAM_REF_DOWNLOAD_URL_MASK = "gor.driver.cram.ref.download.urlmask";
+    public static final String KEY_CRAM_REF_DOWNLOAD_TIMEOUT = "gor.driver.cram.ref.download.timeout"; // Milliseconds
 
     private static final String REFBASES_PREFIX = "md5_";
     private static final String REFBASES_EXT = ".txt";
 
-    protected static Map<String, Path> md5ToRefbases = new ConcurrentHashMap<>();
+    // Shared between instances, as scanning the folder is expensive.
+    private static final Map<Path, Md5FolderIndex<Path>> indexByFolder = new ConcurrentHashMap<>();
 
     private static final int DOWNLOAD_TRIES_BEFORE_FAILING = 2;
 
     private Path referenceFolder;  // If null we do not download.
+    private Md5FolderIndex<Path> md5ToRefbases;  // Null if no reference folder.
 
     public EBIReferenceSource() {
     }
@@ -50,37 +56,29 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
             if (!Files.isDirectory(this.referenceFolder)) {
                 throw new GorResourceException("Can not create FolderReferenceSource %s as the target is not a folder or does not exists".formatted(referenceFolder), referenceFolder);
             }
-            scanReferenceFolder();
+            md5ToRefbases = Md5FolderIndex.get(indexByFolder, this.referenceFolder, EBIReferenceSource::scanReferenceFolder);
+            md5ToRefbases.refreshIfStale();
         }
     }
 
     Set<Path> getRefbasesFiles() {
-        return new HashSet<>(md5ToRefbases.values());
+        return md5ToRefbases != null ? new HashSet<>(md5ToRefbases.values()) : new HashSet<>();
     }
 
-    private void scanReferenceFolder() {
-        md5ToRefbases.clear();
-
-        if (referenceFolder == null) return;
-
-        try {
-            for (var p : Files.list(referenceFolder).filter(Files::isRegularFile).toList()) {
+    private static Map<String, Path> scanReferenceFolder(Path referenceFolder) {
+        Map<String, Path> md5Map = new HashMap<>();
+        try (var files = Files.list(referenceFolder)) {
+            for (var p : files.filter(Files::isRegularFile).toList()) {
                 var f = p.getFileName().toString().toLowerCase();
                 if (f.startsWith(REFBASES_PREFIX) && f.endsWith(REFBASES_EXT)) {
-                    processRefbasesFile(referenceFolder.resolve(f));
+                    String md5 = f.substring(REFBASES_PREFIX.length(), f.length() - REFBASES_EXT.length());
+                    md5Map.put(md5, p);
                 }
             }
         } catch (IOException e) {
             log.warn("Failed scanning reference folder {}", referenceFolder, e);
         }
-    }
-
-    private void processRefbasesFile(Path refbases) {
-        String fileName = refbases.getFileName().toString();
-        if (!fileName.startsWith(REFBASES_PREFIX) || !fileName.endsWith(REFBASES_EXT)) return;
-
-        String md5 = fileName.substring(REFBASES_PREFIX.length(), fileName.length() - REFBASES_EXT.length());
-        md5ToRefbases.put(md5, refbases);
+        return md5Map;
     }
 
     @Override
@@ -88,7 +86,7 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
         var md5 = record.getMd5();
 
         // Load from refbases file.
-        Path refbasesPath = md5ToRefbases.get(md5);
+        Path refbasesPath = md5ToRefbases != null ? md5ToRefbases.get(md5) : null;
         if (refbasesPath != null) {
             try {
                 byte[] bases = Files.readAllBytes(refbasesPath);
@@ -125,10 +123,16 @@ public class EBIReferenceSource extends MD5CachedReferenceSource {
      * @throws IOException    if the sequence is not found or the download fails.
      */
     private byte[] downloadFromEBI(final String md5) throws IOException {
-        final String url = String.format(Locale.US, Defaults.EBI_REFERENCE_SERVICE_URL_MASK, md5);
+        final String urlMask = System.getProperty(KEY_CRAM_REF_DOWNLOAD_URL_MASK, Defaults.EBI_REFERENCE_SERVICE_URL_MASK);
+        final String url = String.format(Locale.US, urlMask, md5);
+        // Without timeouts an unresponsive server blocks forever (while holding the reference source lock).
+        final int timeout = Integer.parseInt(System.getProperty(KEY_CRAM_REF_DOWNLOAD_TIMEOUT, "30000"));
 
         for (int i = 0; i < DOWNLOAD_TRIES_BEFORE_FAILING; i++) {
-            try (final InputStream is = new URL(url).openStream()) {
+            final URLConnection connection = new URL(url).openConnection();
+            connection.setConnectTimeout(timeout);
+            connection.setReadTimeout(timeout);
+            try (final InputStream is = connection.getInputStream()) {
                 if (is == null)
                     return null;
 

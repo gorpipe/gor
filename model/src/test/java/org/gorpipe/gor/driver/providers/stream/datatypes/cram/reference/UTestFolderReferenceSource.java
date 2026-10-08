@@ -15,6 +15,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Tests for FolderReferenceSource class.
@@ -68,15 +70,24 @@ public class UTestFolderReferenceSource {
         Assert.assertEquals(1, referenceSource.getReferenceFiles().size());
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void testScanFolderIgnoresFastaWithoutIndexFiles() throws IOException {
         // Create FASTA file without index files
         File fastaFile = new File(testFolder, "no_index.fasta");
         try (FileWriter writer = new FileWriter(fastaFile)) {
             writer.write(">chr1\nACGTACGT\n");
         }
+        String md5 = "engknow3778_" + UUID.randomUUID();
+        createFastaFileWithIndexes("good.fasta", "chr2", "TGCA", md5);
 
+        // Bad file is skipped (and logged), other files are still loaded.
         referenceSource = new FolderReferenceSource(testFolder.getAbsolutePath());
+
+        Assert.assertEquals(Set.of(new File(testFolder, "good.fasta").toPath()), referenceSource.getReferenceFiles());
+        Assert.assertArrayEquals("TGCA".getBytes(), referenceSource.getReferenceBases(
+                new SAMSequenceRecord("chr2", 4).setMd5(md5), false));
+        Assert.assertTrue(referenceSource.containsReferenceFile(new File(testFolder, "good.fasta").toPath()));
+        Assert.assertFalse(referenceSource.containsReferenceFile(fastaFile.toPath()));
     }
 
     @Test
@@ -187,7 +198,7 @@ public class UTestFolderReferenceSource {
         referenceSource.close();
     }
 
-    @Test(expected = GorResourceException.class)
+    @Test
     public void testScanFolderWithCorruptedFastaFile() throws IOException {
         // Create a FASTA file that exists but is corrupted
         File fastaFile = new File(testFolder, "corrupted.fasta");
@@ -200,9 +211,15 @@ public class UTestFolderReferenceSource {
         dictFile.createNewFile();
         File faiFile = new File(testFolder, "corrupted.fai");
         faiFile.createNewFile();
+        String md5 = "engknow3778_" + UUID.randomUUID();
+        createFastaFileWithIndexes("good.fasta", "chr2", "TGCA", md5);
 
-        // Should handle corrupted files gracefully
+        // Bad file is skipped (and logged), other files are still loaded.
         referenceSource = new FolderReferenceSource(testFolder.getAbsolutePath());
+
+        Assert.assertEquals(Set.of(new File(testFolder, "good.fasta").toPath()), referenceSource.getReferenceFiles());
+        Assert.assertArrayEquals("TGCA".getBytes(), referenceSource.getReferenceBases(
+                new SAMSequenceRecord("chr2", 4).setMd5(md5), false));
     }
 
     @Test
@@ -274,6 +291,48 @@ public class UTestFolderReferenceSource {
         }
     }
 
+    @Test
+    public void testCreatingAnotherSourceDoesNotBreakExistingSource() throws IOException {
+        // ENGKNOW-3778: Opening a new reference source (e.g. by another CRAM iterator) must not affect
+        // lookups in already open reference sources.
+        String md5 = "engknow3778_" + UUID.randomUUID();
+        createFastaFileWithIndexes("test.fasta", "chr3", "ACGTACGT", md5);
+        referenceSource = new FolderReferenceSource(testFolder.getAbsolutePath());
+
+        File otherFolder = workDir.newFolder("other_ref_folder");
+        createFastaFileWithIndexes(otherFolder, "other.fasta", "chr1", "TTTT", "engknow3778_" + UUID.randomUUID());
+        try (FolderReferenceSource otherSource = new FolderReferenceSource(otherFolder.getAbsolutePath())) {
+            SAMSequenceRecord record = new SAMSequenceRecord("chr3", 8).setMd5(md5);
+            Assert.assertArrayEquals("GTAC".getBytes(), referenceSource.getReferenceBasesByRegion(record, 2, 4));
+        }
+    }
+
+    @Test
+    public void testFolderIndexIsSharedAndRescannedWhenStale() throws IOException {
+        createFastaFileWithIndexes("ref1.fasta", "chr1", "ACGT", "engknow3778_" + UUID.randomUUID());
+        referenceSource = new FolderReferenceSource(testFolder.getAbsolutePath());
+        Assert.assertEquals(1, referenceSource.getReferenceFiles().size());
+
+        // New file is not seen by new sources until the shared index is stale.
+        String md5 = "engknow3778_" + UUID.randomUUID();
+        createFastaFileWithIndexes("ref2.fasta", "chr2", "TGCA", md5);
+        SAMSequenceRecord record = new SAMSequenceRecord("chr2", 4).setMd5(md5);
+        try (FolderReferenceSource source = new FolderReferenceSource(testFolder.getAbsolutePath())) {
+            Assert.assertEquals(1, source.getReferenceFiles().size());
+            Assert.assertNull(source.getReferenceBases(record, false));
+        }
+
+        System.setProperty(Md5FolderIndex.KEY_RESCAN_INTERVAL, "0");
+        try (FolderReferenceSource source = new FolderReferenceSource(testFolder.getAbsolutePath())) {
+            Assert.assertEquals(2, source.getReferenceFiles().size());
+            Assert.assertArrayEquals("TGCA".getBytes(), source.getReferenceBases(record, false));
+            // Existing sources share the index.
+            Assert.assertEquals(2, referenceSource.getReferenceFiles().size());
+        } finally {
+            System.clearProperty(Md5FolderIndex.KEY_RESCAN_INTERVAL);
+        }
+    }
+
     /**
      * Helper method to create a FASTA file with corresponding .dict and .fai files.
      * Note: This is a simplified version. In a real implementation, you would need
@@ -281,8 +340,13 @@ public class UTestFolderReferenceSource {
      */
     private File createFastaFileWithIndexes(String fileName, String sequenceName,
                                             String sequence, String md5) throws IOException {
+        return createFastaFileWithIndexes(testFolder, fileName, sequenceName, sequence, md5);
+    }
+
+    private File createFastaFileWithIndexes(File folder, String fileName, String sequenceName,
+                                            String sequence, String md5) throws IOException {
         // Create FASTA file
-        File fastaFile = new File(testFolder, fileName);
+        File fastaFile = new File(folder, fileName);
         var header = "";
         try (FileWriter writer = new FileWriter(fastaFile)) {
             header = ">" + sequenceName;
@@ -303,7 +367,7 @@ public class UTestFolderReferenceSource {
 
         // Create .dict file (simplified - real dict files have specific format)
         String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
-        File dictFile = new File(testFolder, baseName + ".dict");
+        File dictFile = new File(folder, baseName + ".dict");
         try (FileWriter writer = new FileWriter(dictFile)) {
             writer.write("@HD\tVN:1.0\n");
             writer.write("@SQ\tSN:" + sequenceName + "\tLN:" + sequence.length());
@@ -314,7 +378,7 @@ public class UTestFolderReferenceSource {
         }
 
         // Create .fai file (FASTA index - simplified)
-        File faiFile = new File(testFolder, fileName + ".fai");
+        File faiFile = new File(folder, fileName + ".fai");
         try (FileWriter writer = new FileWriter(faiFile)) {
             // Format: sequence_name, length, offset, linebases, linewidth
             // This is simplified - real .fai files need proper calculation
