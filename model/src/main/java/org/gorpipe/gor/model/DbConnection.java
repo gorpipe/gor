@@ -51,11 +51,11 @@ import java.util.List;
  *                         controls (db://, //db:), and the user connections behind the user available
  *                         commands/sources (SQL, GORSQL, NORSQL, sql://).
  * <p><br>
- * In a server, the two caches are fed from separate sources.  {@link #userConnections} comes from the
- * gor.db.credentials file, while {@link #systemConnections} comes from credentials the host passes in
- * as {@link DbCredentials} — see {@link #initInServer(java.util.List)}.  System credentials typically
- * rotate, and so cannot be baked into a file without going stale; gor does not care where the host got
- * them and never reads them from the environment itself.
+ * In a server, the host passes credentials in as {@link DbCredentials} — see
+ * {@link #initInServer(java.util.List)}.  {@link #systemConnections} comes from those alone, and
+ * {@link #userConnections} from the gor.db.credentials file together with them.  Supplied credentials
+ * typically rotate, and so cannot be baked into a file without going stale; gor does not care where the
+ * host got them and never reads them from the environment itself.
  * <p><br>
  * In a console app there is no host to supply credentials, so both caches load from the file.
  * <p><br>
@@ -274,30 +274,36 @@ public class DbConnection {
      * Initialize DbSource to be used in a server, with the system credentials supplied by the host
      * application.
      *
-     * The two caches are fed from separate sources:
-     *
      * <li> {@link #systemConnections}, used internally and by the access-controlled operations
      *      (db://, //db:), comes from the supplied credentials. These typically rotate, so a host
      *      holding them — in its own configuration, a secret manager, or environment variables it
      *      owns the naming of — passes them here rather than gor reading them itself.
      * <li> {@link #userConnections}, behind the user-available commands and sources (SQL, GORSQL,
-     *      NORSQL, sql://), comes from the gor.db.credentials file.
+     *      NORSQL, sql://), comes from the gor.db.credentials file together with the supplied
+     *      credentials, which replace a file row of the same name. The supplied credentials are needed
+     *      there because a query that names no database uses the default source (rda).
      *
-     * The sources are kept apart deliberately: the file cannot hold credentials that rotate without
-     * going stale, and the rotating system credentials are not the ones user queries should reach.
+     * Failures are logged and do not stop the server. If the file cannot be read, the user connections
+     * get the supplied credentials only.
      *
-     * @param systemCredentials Credentials for {@link #systemConnections}. May be empty, which leaves
-     *                          that cache empty.
-     * @throws ClassNotFoundException
-     * @throws IOException
+     * @param systemCredentials Credentials supplied by the host. May be empty.
+     * @throws ClassNotFoundException never; kept for compatibility
+     * @throws IOException never; kept for compatibility
      */
-    @SuppressWarnings("unused") // Called from GorQueryTask in gor-services
+    @SuppressWarnings({"unused", "RedundantThrows"}) // Called from gor-services
     public static void initInServer(List<DbCredentials> systemCredentials) throws ClassNotFoundException, IOException {
-        systemConnections.initializeDbSources(systemCredentials);
+        try {
+            systemConnections.initializeDbSources(systemCredentials);
+        } catch (Exception e) {
+            log.error("Could not initialize system gor db sources from the supplied credentials", e);
+        }
 
         final String userCredpath = System.getProperty("gor.db.credentials");
-        if (userCredpath != null) {
-            userConnections.initializeDbSources(userCredpath);
+        try {
+            userConnections.initializeDbSources(userCredpath, systemCredentials);
+        } catch (Exception e) {
+            log.error("Could not initialize user gor db sources from {}", userCredpath, e);
+            userConnections.initializeDbSources(systemCredentials);
         }
     }
 

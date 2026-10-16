@@ -83,16 +83,16 @@ TBD
 
 ### Configuration
 
-There are two connection caches, and in a server they are fed from **separate** sources:
+There are two connection caches. In a server they are fed from:
 
 | Cache | Used by | Fed from |
 |---|---|---|
 | system connections | internal use (e.g. session management) and the access-controlled operations `db://`, `//db:` | credentials the host passes in |
-| user connections | the user-available commands and sources `SQL`, `GORSQL`, `NORSQL`, `sql://` | the `gor.db.credentials` file |
+| user connections | the user-available commands and sources `SQL`, `GORSQL`, `NORSQL`, `sql://` | the `gor.db.credentials` file, together with the credentials the host passes in |
 
-They are kept apart deliberately. System credentials typically rotate, and a file cannot hold rotating
-credentials without going stale; equally, the rotating system credentials are not the ones user queries
-should reach.
+Credentials the host passes in typically rotate, and a file cannot hold rotating credentials without
+going stale. The user connections need them too: a query that names no database uses the default source,
+`rda`. A supplied credential replaces the file row with the same name.
 
 In a console app there is no host to supply credentials, so both caches load from the file.
 
@@ -122,7 +122,7 @@ var systemCredentials = List.of(new DbCredentials("rda", url, user, password));
 DbConnection.initInServer(systemCredentials);
 // which is, per cache:
 DbConnection.systemConnections.initializeDbSources(systemCredentials);
-DbConnection.userConnections.initializeDbSources(credpath);
+DbConnection.userConnections.initializeDbSources(credpath, systemCredentials);
 ```
 
 Gor never reads credentials from the environment itself, and does not care where the host got them —
@@ -135,6 +135,9 @@ including the password, so a secret manager rendering an empty string does not b
 password. Incomplete credentials are logged — naming the missing field, never a value — and skipped,
 rather than failing startup.
 
-The two `initializeDbSources` overloads are alternatives, not additive: each clears the cache first.
-That is what keeps a cache fed from exactly one source. Passing no credentials therefore leaves the
-system cache empty, and `db://` sources will not resolve.
+Each `initializeDbSources` overload clears the cache first; `initializeDbSources(credpath, credentials)`
+is the one that combines the file with supplied credentials. Passing no credentials leaves the system
+cache empty, and `db://` sources will not resolve.
+
+`initInServer` logs failures rather than throwing, so a bad credentials file does not stop the server.
+If the file cannot be read, the user connections get the supplied credentials only.

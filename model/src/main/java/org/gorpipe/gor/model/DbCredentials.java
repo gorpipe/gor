@@ -31,8 +31,8 @@ package org.gorpipe.gor.model;
  * {@link DbConnectionCache#initializeDbSources(String, java.util.List)} without gor needing to know
  * where they came from.
  *
- * Credentials passed this way are installed before the credentials file is read, so a file row with
- * the same name takes precedence.
+ * When combined with the credentials file, a complete credential passed this way replaces the file row
+ * with the same name.
  *
  * @param name   the source name, e.g. "rda". Required.
  * @param url    the jdbc url. Required.

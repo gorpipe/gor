@@ -13,8 +13,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -70,6 +72,37 @@ public class DbConnectionCache {
     public void initializeDbSources(List<DbCredentials> credentials) {
         clearDbSources();
         installAllFromParts(toPartsForInstallation(credentials));
+    }
+
+    /**
+     * Install database sources from the configuration file together with credentials supplied by the host
+     * application, replacing any sources already installed.
+     *
+     * A supplied credential replaces a file row of the same name. Incomplete supplied credentials are
+     * skipped with a warning, as in {@link #initializeDbSources(List)}, so they never displace a file row.
+     *
+     * @param credpath    The path to the configuration file, may be null or blank for no file
+     * @param credentials The supplied credentials, may be empty
+     * @throws IOException if the credentials file is configured but missing; the cache is then left as it was
+     */
+    public void initializeDbSources(String credpath, List<DbCredentials> credentials) throws IOException {
+        final List<String[]> fileParts = readFileForDbSourceInstallation(credpath);
+        final List<String[]> suppliedParts = toPartsForInstallation(credentials);
+        final Set<String> suppliedNames = new HashSet<>();
+        for (String[] parts : suppliedParts) {
+            suppliedNames.add(parts[0].toLowerCase());
+        }
+
+        final List<String[]> partsList = new ArrayList<>();
+        for (String[] parts : fileParts) {
+            if (!suppliedNames.contains(parts[0].trim().toLowerCase())) {
+                partsList.add(parts);
+            }
+        }
+        partsList.addAll(suppliedParts);
+
+        clearDbSources();
+        installAllFromParts(partsList);
     }
 
     private List<String[]> readFileForDbSourceInstallation(String credpath) throws IOException {

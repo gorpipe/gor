@@ -211,8 +211,7 @@ public class UTestDbSource {
         cache.initializeDbSources(credpath);
         Assert.assertNotNull(cache.lookup("aux"));
 
-        // The two initializers are alternatives, not additive - each clears the cache first, which is
-        // what keeps the system and user caches fed from exactly one source each.
+        // Each initializer clears the cache first; combining file and credentials is its own overload.
         cache.initializeDbSources(rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
         Assert.assertNotNull(cache.lookup("rda"));
         Assert.assertNull("file sources should not survive a credentials load", cache.lookup("aux"));
@@ -244,5 +243,121 @@ public class UTestDbSource {
         cache.initializeDbSources((String) null);
 
         Assert.assertNull(cache.lookup("rda"));
+    }
+
+    @Test
+    public void fileAndSuppliedCredentialsCombine() throws Exception {
+        String credpath = writeCredentialsFile(
+                "name\tdriver\turl\tuser\tpwd",
+                "aux\torg.postgresql.Driver\tjdbc:postgresql://auxhost:5432/aux\tauxuser\tauxpwd");
+
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources(credpath, rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
+
+        Assert.assertEquals("auxuser", cache.lookup("aux").user);
+        Assert.assertEquals("gregor_reader", cache.lookup("rda").user);
+    }
+
+    @Test
+    public void suppliedCredentialsReplaceSameNamedFileRow() throws Exception {
+        String credpath = writeCredentialsFile(
+                "name\tdriver\turl\tuser\tpwd",
+                "RDA\torg.postgresql.Driver\tjdbc:postgresql://filehost:5432/csa\tfileuser\tstale");
+
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources(credpath, rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
+
+        DbConnection rda = cache.lookup("rda");
+        Assert.assertEquals("gregor_reader", rda.user);
+        Assert.assertEquals("secret", rda.pwd);
+    }
+
+    @Test
+    public void incompleteSuppliedCredentialsKeepTheFileRow() throws Exception {
+        String credpath = writeCredentialsFile(
+                "name\tdriver\turl\tuser\tpwd",
+                "rda\torg.postgresql.Driver\tjdbc:postgresql://filehost:5432/csa\tfileuser\tfilepwd");
+
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources(credpath, rdaCreds("jdbc:postgresql://db:5432/csa", null, "secret"));
+
+        Assert.assertEquals("fileuser", cache.lookup("rda").user);
+    }
+
+    @Test
+    public void combinedLoadWithMissingFileThrowsAndKeepsTheCache() throws Exception {
+        DbConnectionCache cache = new DbConnectionCache();
+        cache.initializeDbSources(rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
+        String missing = new File(tempFolder.getRoot(), "does-not-exist.credentials").getAbsolutePath();
+
+        Assert.assertThrows(FileNotFoundException.class, () -> cache.initializeDbSources(missing, List.of()));
+        Assert.assertNotNull("a failed load should not clear what was installed", cache.lookup("rda"));
+    }
+
+    private void withServerCaches(String credpath, Runnable test) {
+        String previous = System.getProperty("gor.db.credentials");
+        try {
+            if (credpath == null) {
+                System.clearProperty("gor.db.credentials");
+            } else {
+                System.setProperty("gor.db.credentials", credpath);
+            }
+            test.run();
+        } finally {
+            if (previous == null) {
+                System.clearProperty("gor.db.credentials");
+            } else {
+                System.setProperty("gor.db.credentials", previous);
+            }
+            DbConnection.systemConnections.clearDbSources();
+            DbConnection.userConnections.clearDbSources();
+        }
+    }
+
+    private static void initInServer(List<DbCredentials> systemCredentials) {
+        try {
+            DbConnection.initInServer(systemCredentials);
+        } catch (Exception e) {
+            throw new AssertionError("initInServer should log and continue, not throw", e);
+        }
+    }
+
+    @Test
+    public void initInServerGivesUserConnectionsTheFileAndTheSuppliedCredentials() throws Exception {
+        // SQL/NORSQL/GORSQL and sql:// default to the rda source in the user connections, so a host that
+        // supplies rda instead of keeping it in the file must have it installed there too.
+        String credpath = writeCredentialsFile(
+                "name\tdriver\turl\tuser\tpwd",
+                "aux\torg.postgresql.Driver\tjdbc:postgresql://auxhost:5432/aux\tauxuser\tauxpwd");
+
+        withServerCaches(credpath, () -> {
+            initInServer(rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
+
+            Assert.assertEquals("gregor_reader", DbConnection.systemConnections.lookup("rda").user);
+            Assert.assertNull("the file does not feed the system connections", DbConnection.systemConnections.lookup("aux"));
+            Assert.assertEquals("gregor_reader", DbConnection.userConnections.lookup("rda").user);
+            Assert.assertEquals("auxuser", DbConnection.userConnections.lookup("aux").user);
+        });
+    }
+
+    @Test
+    public void initInServerWithMissingFileStillInstallsTheSuppliedCredentials() {
+        String missing = new File(tempFolder.getRoot(), "does-not-exist.credentials").getAbsolutePath();
+
+        withServerCaches(missing, () -> {
+            initInServer(rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
+
+            Assert.assertNotNull(DbConnection.systemConnections.lookup("rda"));
+            Assert.assertNotNull(DbConnection.userConnections.lookup("rda"));
+        });
+    }
+
+    @Test
+    public void initInServerWithoutCredentialPathUsesTheSuppliedCredentials() {
+        withServerCaches(null, () -> {
+            initInServer(rdaCreds("jdbc:postgresql://db:5432/csa", "gregor_reader", "secret"));
+
+            Assert.assertNotNull(DbConnection.userConnections.lookup("rda"));
+        });
     }
 }
