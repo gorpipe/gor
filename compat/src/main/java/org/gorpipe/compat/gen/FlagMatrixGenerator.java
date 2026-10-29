@@ -61,9 +61,19 @@ public final class FlagMatrixGenerator {
             }
 
             for (String flag : command.valuelessFlags) {
+                // A single flag can be excluded where its command is fine: one
+                // whose output depends on the clock, or on an order the engine
+                // leaves free. The entry is read here so no case is generated,
+                // and by the coverage report so the flag counts as excluded.
+                if (exclusions.excludesFlag(command.name, flag)) {
+                    continue;
+                }
                 cases.add(caseFor(command, flag, null, commandArgs));
             }
             for (String flag : command.valueFlags) {
+                if (exclusions.excludesFlag(command.name, flag)) {
+                    continue;
+                }
                 String value = values.valueFor(command.name, flag);
                 if (value == null) {
                     unmapped.add(command.name + " " + flag);

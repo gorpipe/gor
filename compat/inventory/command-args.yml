@@ -40,6 +40,18 @@ MULTIMAP:
   requiredFlags: "-c Chrom"
   positional: "${ROOT}/right.gor"
 
+# INSET and DAGMAP take the same lookup-key flag as MULTIMAP: all three go through
+# MapCommand, which rejects a query with no -c before it looks at anything else.
+# Without it every generated case failed on the missing -c rather than on the flag
+# under test — 16 baselines that recorded one parse error and nothing about GOR.
+INSET:
+  requiredFlags: "-c Chrom"
+  positional: "${ROOT}/right.gor"
+
+DAGMAP:
+  requiredFlags: "-c Chrom"
+  positional: "${ROOT}/right.gor"
+
 # Documented as 'GROUP binsize [ attributes ]' in gor and 'GROUP [ attributes ]'
 # in nor, so the bin size must not be passed in a NOR query.
 GROUP:

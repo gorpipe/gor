@@ -66,6 +66,11 @@ CSVCC:
   "-vs": "1000"
 
 CSVSEL:
+  # Documented as a blacklist of VALUES, not of tags: a row is hidden when its
+  # cell from the horizontal data is listed. "0" is a genotype value in buckets.gor.
+  # -hide is rejected without -tag, and the generator has no way to pair two flags,
+  # so its generated case records that rule; cmd.csvsel.hide_* assert what it does.
+  "-hide": "0"
   "-threshold": "0.5"
   "-u": "NA"
   "-vs": "1000"
@@ -73,6 +78,7 @@ CSVSEL:
 
 DAGMAP:
   "-m": "NA"
+  "-ps": ":"   # the separator between the levels of the emitted DAG path
   "-dl": "1"   # intValueOfOption; a DAG level
 
 DEFLATECOLUMN:
@@ -120,6 +126,14 @@ LIFTOVER:
 MAP:
   "-m": "NA"
 
+# INSET and MULTIMAP both hand their arguments to MapCommand, so -m means the
+# same thing in all three: the value substituted for a key that does not match.
+INSET:
+  "-m": "NA"
+
+MULTIMAP:
+  "-m": "NA"
+
 PILEUP:
   "-bq": "1"
   "-i": "1"
@@ -133,20 +147,15 @@ PLINKREGRESSION:
 
 PRGTGEN:
   "-anc": "Pos"
+  "-pn": "PN"   # a single column naming the sample; prgenotypes.gor carries PN
   "-crc": "Pos"
   "-fpab": "0.5"
   "-fpbb": "0.5"
-  "-gl": "Pos"
-  "-gp": "Pos"
   "-ld": "Pos"
   "-maxseg": "1000"
-  "-osep": ","
   "-pabc": "Pos"
   "-pbbc": "Pos"
-  "-pl": "Pos"
   "-prgc": "Pos"
-  "-psep": ","
-  "-rd": "Pos"
   "-th": "0.5"
   "-maxit": "10"   # intValueOfOption; an iteration cap
   "-tol": "0.001"   # doubleValueOfOption; a convergence tolerance
@@ -156,11 +165,15 @@ PRGTGEN:
   "-psep": ";"
   "-osep": ","
   "-rd": "1"
+
 QUEEN:
   "-vs": "1000"
   "-minSharing": "0.5"   # doubleValueOfOption; a sharing fraction
 
 RANK:
+  # Documented as asc/desc. Only a value beginning "ASC" selects ascending; every
+  # other string, including a misspelling, silently means descending.
+  "-o": "asc"
   "-rmax": "1"
 
 RELREMOVE:
@@ -273,6 +286,9 @@ PIVOT:
   "-v": "A,C"   # documented as "val, val2, .." — values present in the Ref column
   "-vf": "${ROOT}/tagsel.tsv"   # documented as values read from a file
   "-vp": "${ROOT}/tagsel.tsv"   # documented as column prefixes read from a file
+
+SELFJOIN:
+  "-x": "Ref"   # a column list the two sides must agree on to be joined
 
 SIGNATURE:
   "-file": "${ROOT}/left.gor"   # documented as "filepath"

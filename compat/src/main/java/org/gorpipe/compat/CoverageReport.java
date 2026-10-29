@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -149,16 +150,50 @@ public final class CoverageReport {
         return gaps;
     }
 
-    /** Uncovered flags belonging to a command that is excluded. */
-    private int excludedFlagGaps() {
-        Set<String> excluded = excludedElements("cmd.");
-        int gaps = 0;
+    /**
+     * The uncovered flags that are nobody's deliberate decision — the worklist.
+     *
+     * The flag counts alone say how many are left but not which, and the gaps file
+     * names only the flags with no curated value. A flag that has a value and still
+     * goes unreached leaves no trace anywhere, so it is named here.
+     */
+    public List<String> reachableFlagGaps() {
+        Set<String> excludedCommands = excludedElements("cmd.");
+        Set<String> excludedFlags = excludedElements("flag.");
+        List<String> open = new ArrayList<>();
         for (SurfaceInventory.CommandSurface c : inventory.commands().values()) {
-            if (!excluded.contains(c.name)) {
+            if (excludedCommands.contains(c.name)) {
                 continue;
             }
             for (String flag : c.allFlags()) {
-                if (!coveredFlags.contains(c.name + " " + flag)) {
+                String id = c.name + " " + flag;
+                if (!coveredFlags.contains(id) && !excludedFlags.contains(id)) {
+                    open.add(id);
+                }
+            }
+        }
+        Collections.sort(open);
+        return open;
+    }
+
+    /**
+     * Uncovered flags excluded on purpose: either the whole command is excluded,
+     * or the flag itself is named as "flag.<COMMAND> <flag>". The second form is
+     * for a flag that cannot be covered though its command can — one whose output
+     * depends on the clock or the machine, so no stable baseline exists for it.
+     */
+    private int excludedFlagGaps() {
+        Set<String> excludedCommands = excludedElements("cmd.");
+        Set<String> excludedFlags = excludedElements("flag.");
+        int gaps = 0;
+        for (SurfaceInventory.CommandSurface c : inventory.commands().values()) {
+            boolean wholeCommand = excludedCommands.contains(c.name);
+            for (String flag : c.allFlags()) {
+                String id = c.name + " " + flag;
+                if (coveredFlags.contains(id)) {
+                    continue;
+                }
+                if (wholeCommand || excludedFlags.contains(id)) {
                     gaps++;
                 }
             }
@@ -246,6 +281,10 @@ public final class CoverageReport {
                 "    flags      %4d/%-4d  %d gaps (%d excluded, %d reachable)%n",
                 flagsCovered(), totalFlags, flagGaps,
                 excludedFlagGaps(), flagGaps - excludedFlagGaps()));
+        List<String> openFlags = reachableFlagGaps();
+        if (!openFlags.isEmpty() && openFlags.size() <= 12) {
+            sb.append("      open: ").append(String.join(", ", openFlags)).append('\n');
+        }
         sb.append(String.format(Locale.ROOT, "    functions  %4d/%-4d  %d gaps%n",
                 functionsCovered(), totalFunctions, totalFunctions - functionsCovered()));
         int totalInputSources = inventory.inputSources().size();

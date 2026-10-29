@@ -46,12 +46,31 @@ public class UTestFlagMatrixGenerator {
 
     @Test
     public void unmappedValueFlagsAreReportedNotSkippedSilently() {
-        // 242 value-taking flags exist and the seed mapping covers only common
-        // ones, so this list must be non-empty and every entry must name a flag.
-        Assert.assertFalse("expected unmapped value flags to be reported",
-                result.unmappedValueFlags.isEmpty());
+        // This list used to be asserted non-empty, back when the seed mapping
+        // covered only the common flags. Curation has since caught up and the real
+        // inventory leaves none, so the assertion worth keeping is that nothing
+        // falls through silently: every value-taking flag of a command the matrix
+        // generates for is curated, excluded by name, or reported here.
+        Exclusions exclusions = Exclusions.load();
+        FlagValues values = FlagValues.load();
         for (String entry : result.unmappedValueFlags) {
             Assert.assertTrue(entry, entry.contains("-"));
+        }
+        for (SurfaceInventory.CommandSurface command
+                : SurfaceInventory.read().commands().values()) {
+            if (exclusions.excludesCommand(command.name)) {
+                continue;
+            }
+            for (String flag : command.valueFlags) {
+                if (exclusions.excludesFlag(command.name, flag)
+                        || values.has(command.name, flag)) {
+                    continue;
+                }
+                Assert.assertTrue(
+                        command.name + " " + flag + " has no value, is not excluded,"
+                                + " and is not reported as a gap",
+                        result.unmappedValueFlags.contains(command.name + " " + flag));
+            }
         }
     }
 

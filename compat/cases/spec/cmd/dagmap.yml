@@ -1,0 +1,87 @@
+# DAGMAP walks a parent-child relation and emits one row per reachable node, with
+# the distance from the matched key. Its flags are easy to get wrong in isolation:
+# -ps names the separator for a column that only -dp turns on, so -ps on its own
+# changes nothing at all. The generated flag matrix cannot pair two flags, so the
+# pairings that carry the meaning are asserted here.
+
+# The right.gor fixture is read as the parent-child relation: Chrom is the key
+# column and the remaining columns are its children, so chr1 reaches 100 and 250.
+- id: cmd.dagmap.emits_the_node_and_its_distance_from_the_key
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "DAGMAP adds DAG_node and DAG_dist, with the key itself at distance 0 and each child at distance 1"
+  cites: ["documentation/src/command/DAGMAP.rst"]
+  query: "gor ${ROOT}/left.gor | DAGMAP -c Chrom ${ROOT}/right.gor | top 3"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	DAG_node	DAG_dist
+    chr1	100	A	G	chr1	0
+    chr1	100	A	G	250	1
+    chr1	100	A	G	100	1
+
+# -ps names the separator used in DAG_path, and DAG_path exists only under -dp.
+# Without -dp the output is byte-for-byte what it is with no -ps at all, which is
+# what the generated cmd.dagmap.flag_ps baseline records.
+- id: cmd.dagmap.ps_sets_the_separator_in_the_path_dp_turns_on
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "DAGMAP -ps replaces the default -> separator in the DAG_path column that -dp adds"
+  cites: ["documentation/src/command/DAGMAP.rst"]
+  query: "gor ${ROOT}/left.gor | DAGMAP -c Chrom -dp -ps : ${ROOT}/right.gor | top 3"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	DAG_node	DAG_dist	DAG_path
+    chr1	100	A	G	chr1	0	chr1
+    chr1	100	A	G	250	1	chr1:250
+    chr1	100	A	G	100	1	chr1:100
+
+# -dl caps how far the walk goes. At 0 only the key itself is within range, so the
+# children at distance 1 drop out and one row per input row is left.
+- id: cmd.dagmap.dl_caps_the_distance_walked
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "DAGMAP -dl 0 keeps only the node at distance 0, dropping every child"
+  cites: ["documentation/src/command/DAGMAP.rst"]
+  query: "gor ${ROOT}/left.gor | DAGMAP -c Chrom -dl 0 ${ROOT}/right.gor"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	DAG_node	DAG_dist
+    chr1	100	A	G	chr1	0
+    chr1	200	C	T	chr1	0
+    chr2	150	G	A	chr2	0
+
+# -cis makes the lookup case-insensitive. The node it reports back is the key in
+# the case the walk normalised it to, not the case the input row carried — so the
+# row still says chr1 in Chrom while DAG_node says CHR1.
+- id: cmd.dagmap.cis_reports_the_node_in_its_normalised_case
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "DAGMAP -cis matches the key ignoring case and reports DAG_node upper-cased, leaving the input column as it was"
+  cites: ["documentation/src/command/DAGMAP.rst"]
+  query: "gor ${ROOT}/left.gor | DAGMAP -c Chrom -cis -dl 0 ${ROOT}/right.gor"
+  inputs:
+    - path: "left.gor"
+      content: "Chrom\tPos\tRef\tAlt\nchr1\t100\tA\tG\nchr1\t200\tC\tT\nchr2\t150\tG\tA\n"
+    - path: "right.gor"
+      content: "Chrom\tPos\tGene\nchr1\t100\tBRCA1\nchr1\t250\tTP53\nchr2\t150\tEGFR\n"
+  expected: |
+    Chrom	Pos	Ref	Alt	DAG_node	DAG_dist
+    chr1	100	A	G	CHR1	0
+    chr1	200	C	T	CHR1	0
+    chr2	150	G	A	CHR2	0

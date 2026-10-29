@@ -42,16 +42,19 @@ public final class Exclusions {
     private final Set<String> excludedInputSources;
     private final Set<String> excludedMacros;
     private final Set<String> excludedCases;
+    private final Set<String> excludedFlags;
 
     private Exclusions(List<Entry> entries, Set<String> excludedCommands,
                        Set<String> excludedFunctions, Set<String> excludedInputSources,
-                       Set<String> excludedMacros, Set<String> excludedCases) {
+                       Set<String> excludedMacros, Set<String> excludedCases,
+                       Set<String> excludedFlags) {
         this.entries = Collections.unmodifiableList(entries);
         this.excludedCommands = Collections.unmodifiableSet(excludedCommands);
         this.excludedFunctions = Collections.unmodifiableSet(excludedFunctions);
         this.excludedInputSources = Collections.unmodifiableSet(excludedInputSources);
         this.excludedMacros = Collections.unmodifiableSet(excludedMacros);
         this.excludedCases = Collections.unmodifiableSet(excludedCases);
+        this.excludedFlags = Collections.unmodifiableSet(excludedFlags);
     }
 
     public static Exclusions load() {
@@ -66,8 +69,10 @@ public final class Exclusions {
         Set<String> inputSources = new TreeSet<>();
         Set<String> macros = new TreeSet<>();
         Set<String> cases = new TreeSet<>();
+        Set<String> flags = new TreeSet<>();
         if (!Files.exists(file)) {
-            return new Exclusions(entries, commands, functions, inputSources, macros, cases);
+            return new Exclusions(entries, commands, functions, inputSources, macros,
+                    cases, flags);
         }
         try (InputStream in = Files.newInputStream(file)) {
             Object raw = new Yaml().load(in);
@@ -93,13 +98,16 @@ public final class Exclusions {
                         macros.add(element.substring("macro.".length()));
                     } else if (element.startsWith("case.")) {
                         cases.add(element.substring("case.".length()));
+                    } else if (element.startsWith("flag.")) {
+                        flags.add(element.substring("flag.".length()));
                     }
                 }
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Cannot read " + file, e);
         }
-        return new Exclusions(entries, commands, functions, inputSources, macros, cases);
+        return new Exclusions(entries, commands, functions, inputSources, macros,
+                cases, flags);
     }
 
     private static String asString(Object value) {
@@ -134,6 +142,21 @@ public final class Exclusions {
      */
     public boolean excludesCase(String caseId) {
         return excludedCases.contains(caseId);
+    }
+
+    /**
+     * Whether one flag of an otherwise covered command is excluded, named as
+     * "flag.&lt;COMMAND&gt; &lt;flag&gt;".
+     *
+     * For a flag that cannot have a stable baseline though its command can: one
+     * whose output depends on the clock or on an order the engine does not fix.
+     * Written against the flag rather than the generated case id so that the
+     * coverage report counts it as excluded rather than as outstanding work —
+     * a case-level exclusion stops the case being generated but leaves the flag
+     * looking merely unreached.
+     */
+    public boolean excludesFlag(String command, String flag) {
+        return excludedFlags.contains(command + " " + flag);
     }
 
     public int size() {

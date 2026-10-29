@@ -103,7 +103,7 @@ A comma-separated `PL` value where the separator is `;` by default runs the pars
 off the end of the string: `StringIndexOutOfBoundsException`. Same class as 1.5 —
 bad data producing an internal exception rather than a message.
 
-### 2.9 `MAP -not` emits rows narrower than its own header
+### 2.8 `MAP -not` emits rows narrower than its own header
 
 Documented as "Negate condition, i.e. NOTINSET", but it does not negate anything:
 
@@ -137,7 +137,7 @@ Correct behaviour around it is pinned by `cmd.map.drops_a_row_whose_lookup_misse
 `cmd.map.m_supplies_the_value_for_a_failed_lookup` and
 `cmd.inset.not_keeps_only_the_rows_absent_from_the_set`.
 
-### 2.10 Undocumented conventions now pinned
+### 2.9 Undocumented conventions now pinned
 
 Each of these is a real contract that nothing stated. A change to any would look
 like an improvement and break callers silently.
@@ -154,7 +154,16 @@ like an improvement and break callers silently.
 | Without a reference build, every chromosome is assumed **250,000,000** long | `cmd.group.chromosome_length_falls_back_to_a_default` |
 | Aggregate columns appear in a fixed order — `min, max, avg, sum` — regardless of the order the flags were written | `cmd.group.aggregate_columns_are_named_and_ordered_by_the_engine` |
 
-### 2.9 397 registered flags are absent from their documentation page
+### 2.10 `CSVSEL -hide` blacklists values, not tags
+
+Not a defect — the documentation says so plainly — but the flag name reads as if
+it took tag ids, and a blacklist of tag ids silently hides nothing at all, since
+no tag id ever equals a genotype value. Pinned from both sides so the rule cannot
+drift: `cmd.csvsel.hide_blacklists_values_rather_than_tags` asserts what it does,
+and `cmd.csvsel.hide_without_tag_is_rejected` asserts that `-hide` without `-tag`
+is refused at parse time rather than ignored.
+
+### 2.11 397 registered flags are absent from their documentation page
 
 Reported every run by the documentation cross-check, listed in
 `inventory/gaps.txt`. Documentation work rather than code, but it is the largest
@@ -175,7 +184,8 @@ Not defects. Recorded so nobody re-derives the reason.
 | `CMD`, `SQL`, `GORSQL`, `NORSQL`, `EXEC` and the input sources of the same names | Shell out or need a live database |
 | `WRITE`, `BINARYWRITE`, `TEE`, `TSVAPPEND` | Write outside the result stream; the output is not the row set |
 | `PARTGOR`, `PARALLEL` | Need a dictionary table with `#{tags}`, or a nested gorpipe command |
-| 9 command flags and 12 input-source flags | Read as strings with no documented argument name — a value would be a guess. Listed in `inventory/gaps.txt` |
+| 12 input-source flags | Read as strings with no documented argument name — a value would be a guess. Listed in `inventory/gaps.txt` |
+| `SIGNATURE -timeres`, `KING -sym` | Clock-derived and order-unstable respectively; excluded by name, their commands otherwise covered |
 | 24 functions | Report the clock, machine, JVM or build identity; screened by `CaseLint` |
 
 ---
@@ -196,15 +206,36 @@ Limitations of the harness, worth knowing before trusting a number from it.
   baselines moving for no reason — the last, `MAJORVERSION`/`MINORVERSION`, from
   rebasing onto an upstream VERSION bump, which is exactly the event they track and
   exactly what makes them useless as behaviour.
-- **Coverage is a poor measure of this suite.** It reaches 21.4% of `:gortools`
-  instructions alone, but only **+2.2pp of branch coverage on top of the unit
-  tests** — 85% of what it executes, they already cover. Its value is the 902
+- **Coverage is a poor measure of this suite.** It reaches 25.7% of `:gortools`
+  instructions alone, but only **+3.3pp of branch coverage on top of the unit
+  tests** — most of what it executes, they already cover. Its value is the 905
   committed outputs that fail when behaviour moves, which no ratio can see. Use
   `:compat:marginalCoverageReport`, not `:compat:coverageReport`, when quoting a
-  number.
+  number. Note also that 28% of `:gortools` is one generated class,
+  `gorsat/parser/FunctionSignature`, whose 3,907 `getSignature` overloads are
+  reachable only by direct invocation and never by running a query — excluding it,
+  the figures are 35.4% for this suite against 51.0% for the unit tests.
 - **Gaps are split into excluded and reachable** in the report because most of what
   remains is deliberate; one combined number read as dozens of open leads when
-  there were nine.
+  there were nine. Both are now zero for commands and for flags, so every pipe
+  command and every flag on one is either covered or excluded with a reason. The
+  report names the reachable flag gaps outright while there are few of them, since
+  a count alone gave no way to find out which they were.
 - **A repeated top-level key in a curated YAML file silently discards the earlier
   one.** This cost 13 cases before `CuratedYaml.requireUniqueTopLevelKeys` was
   added, and it had already happened twice.
+- **The flag matrix tests one flag at a time**, so a flag that only means something
+  beside another flag generates a case that records nothing: `CSVSEL -hide` is
+  rejected without `-tag`, and `DAGMAP -ps` names the separator of a column only
+  `-dp` turns on, so its generated output is byte-identical to the bare case. Those
+  pairings are asserted as spec cases instead. The generated cases are kept, since
+  what they record — the rejection, and the absence of an effect — is also real.
+- **A command's required flags are curation, not discovery.** `INSET` and `DAGMAP`
+  both reject a query with no `-c` before looking at anything else, so until
+  `command-args.yml` named it, 16 of their generated baselines recorded one parse
+  error and nothing about GOR. A baseline whose content is `ERROR: Value option -c
+  is not found` is worth reading as a gap, not as coverage.
+- **The duplicate-key rule applies one level down too.** Merging the two `PRGTGEN`
+  sections left six flags listed twice inside the one block, where YAML again keeps
+  the last and drops the first silently — SnakeYAML only warns. `CuratedYaml` now
+  checks nested keys as well as top-level ones.

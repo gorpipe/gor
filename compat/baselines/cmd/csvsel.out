@@ -8,6 +8,9 @@ chr1	100	chr1	0,2
 chr1	200	chr1	1,0
 chr2	150	chr2	2,1
 <<<
+>>> cmd.csvsel.flag_hide
+ERROR: The -hide option is only allowed together with -tag option.
+<<<
 >>> cmd.csvsel.flag_nopar
 Chrom	Pos	values
 chr1	100	0,2

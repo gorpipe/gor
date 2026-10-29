@@ -84,6 +84,11 @@ Chrom	Pos	AF	AN	pAB	pBB	Bucket	Values
 chr1	100	0.27872	2	0.55005	0.0036906	b1	t~"~  
 chr1	200	0.49954	1	0.98913	0.0049763	b1	!~    
 <<<
+>>> cmd.prgtgen.flag_pn
+Chrom	Pos	AF	AN	pAB	pBB	Bucket	Values
+chr1	100	0.27872	2	0.55005	0.0036906	b1	t~"~  
+chr1	200	0.49954	1	0.98913	0.0049763	b1	!~    
+<<<
 >>> cmd.prgtgen.flag_prgc
 Chrom	Pos	AF	AN	pAB	pBB	Bucket	Values
 chr1	100	0.27872	2	0.55005	0.0036906	b1	t~"~  

@@ -23,6 +23,12 @@ chr1	100	A	G	2
 chr1	200	C	T	1
 chr2	150	G	A	1
 <<<
+>>> cmd.rank.flag_o
+Chrom	Pos	Ref	Alt	rank_Pos
+chr1	100	A	G	1
+chr1	200	C	T	2
+chr2	150	G	A	1
+<<<
 >>> cmd.rank.flag_q
 Chrom	Pos	Ref	Alt	rank_Pos	lowOReqRank	eqRank
 chr1	100	A	G	2	1.0000	0.5000

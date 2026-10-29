@@ -10,10 +10,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * A repeated top-level key in a curated file silently discards the earlier one:
- * YAML takes the last. Appending a second PRGTGEN section to flag-values.yml did
- * exactly that and dropped two entries, which showed up only as a case count that
- * had fallen rather than risen.
+ * A repeated key in a curated file silently discards the earlier one: YAML takes
+ * the last. Appending a second PRGTGEN section to flag-values.yml did exactly that
+ * and dropped two entries, which showed up only as a case count that had fallen
+ * rather than risen. Merging the two sections then left six flags listed twice
+ * inside the one block, where the same rule applies and the first value is the one
+ * that goes — so both levels are guarded.
  */
 public class UTestDuplicateKeys {
 
@@ -49,6 +51,34 @@ public class UTestDuplicateKeys {
         } catch (IllegalStateException expected) {
             Assert.assertTrue(expected.getMessage(), expected.getMessage().contains("JOIN"));
         }
+    }
+
+    @Test
+    public void flagValuesRejectsAFlagRepeatedWithinOneCommand() throws IOException {
+        // What the merge of the two PRGTGEN sections left behind: one block, the
+        // same flag twice. SnakeYAML only warns, and the first value is discarded.
+        Path file = write("flag-values.yml",
+                "PRGTGEN:\n  \"-psep\": \",\"\n  \"-rd\": \"Pos\"\n"
+                        + "  \"-psep\": \";\"\n  \"-rd\": \"1\"\n");
+        try {
+            FlagValues.loadFrom(file);
+            Assert.fail("expected a repeated nested key to be rejected");
+        } catch (IllegalStateException expected) {
+            Assert.assertTrue(expected.getMessage(), expected.getMessage().contains("PRGTGEN -psep"));
+            Assert.assertTrue(expected.getMessage(), expected.getMessage().contains("PRGTGEN -rd"));
+        }
+    }
+
+    @Test
+    public void aQuotedKeyWhoseValueIsAColonIsNotMistakenForARepeat() throws IOException {
+        // DAGMAP's -ps carries ":" as its value. A naive split on the first colon
+        // would read the key as -ps and the value as ": \"" for one entry and as
+        // something else for the next, so distinct flags must stay distinct.
+        Path file = write("flag-values.yml",
+                "DAGMAP:\n  \"-ps\": \":\"\n  \"-m\": \"NA\"\n");
+        FlagValues values = FlagValues.loadFrom(file);
+        Assert.assertEquals(":", values.valueFor("DAGMAP", "-ps"));
+        Assert.assertEquals("NA", values.valueFor("DAGMAP", "-m"));
     }
 
     @Test

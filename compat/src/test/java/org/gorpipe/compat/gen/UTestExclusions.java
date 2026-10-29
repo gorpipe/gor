@@ -29,12 +29,26 @@ public class UTestExclusions {
     }
 
     @Test
-    public void excludesOneCaseWithoutExcludingItsCommand() {
+    public void excludesOneFlagWithoutExcludingItsCommand() {
+        // KING -sym orders its pair rows freely, so no baseline can hold; the rest
+        // of KING is fine. Named against the flag rather than the generated case id
+        // so that the coverage report counts it as excluded too — a case-level
+        // exclusion suppresses the case but leaves the flag looking merely unreached.
         Exclusions exclusions = Exclusions.load();
-        Assert.assertTrue(exclusions.excludesCase("cmd.king.flag_sym"));
-        Assert.assertFalse("excluding one case must not exclude the whole command",
+        Assert.assertTrue(exclusions.excludesFlag("KING", "-sym"));
+        Assert.assertFalse("excluding one flag must not exclude the whole command",
                 exclusions.excludesCommand("KING"));
-        Assert.assertFalse(exclusions.excludesCase("cmd.king.bare"));
+        Assert.assertFalse(exclusions.excludesFlag("KING", "-bare"));
+    }
+
+    @Test
+    public void excludesAFlagOfACommandThatIsOtherwiseGenerated() {
+        // SIGNATURE -timeres rounds System.currentTimeMillis, so its output moves
+        // between runs; -file and -filecontent hash a file and are covered.
+        Exclusions exclusions = Exclusions.load();
+        Assert.assertTrue(exclusions.excludesFlag("SIGNATURE", "-timeres"));
+        Assert.assertFalse(exclusions.excludesFlag("SIGNATURE", "-file"));
+        Assert.assertFalse(exclusions.excludesCommand("SIGNATURE"));
     }
 
     @Test
