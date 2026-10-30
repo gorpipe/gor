@@ -37,6 +37,7 @@ import gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
 import process.GorJavaUtilities.CmdParams
 import process.GorPipe.brsConfig
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException, GorUserException}
+import org.gorpipe.gor.function.FunctionSources
 import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.{GorContext, GorSession, ProjectContext}

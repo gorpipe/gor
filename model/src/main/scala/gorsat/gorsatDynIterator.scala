@@ -26,9 +26,10 @@
 
 package gorsat
 
-import gorsat.Commands.{CommandArguments, CommandParseUtilities, FunctionSources}
+import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import org.gorpipe.exceptions.{GorDataException, GorSystemException}
 import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.gor.function.FunctionSources
 import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.{GorContext, GorSession}
 import org.gorpipe.gor.util.Util

@@ -25,6 +25,7 @@ package gorsat.Commands
 import gorsat.Commands.GenomicRange.Range
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.gor.function.FunctionSources
 import org.gorpipe.gor.model.GorCommand
 import org.gorpipe.gor.session.GorSession
 import org.gorpipe.gor.util.{DataUtil, StringUtil}
