@@ -130,6 +130,13 @@ public class UTestTableFunction {
     }
 
     @Test
+    public void testTableFunctionWithUrlScheme() {
+        // The ':' in the url scheme must not be taken as the report name separator (file.yml::Report)
+        String url = "file://" + Paths.get("../tests/data/reports/test2.yml").toAbsolutePath().normalize();
+        Assert.assertEquals(3, TestUtils.runGorPipeCount("gor " + url + "(top=3)"));
+    }
+
+    @Test
     public void testTableFunctionWithColon() {
         // This test relies on Unix-style commands
         Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);

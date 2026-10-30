@@ -26,7 +26,7 @@
 
 package gorsat
 
-import gorsat.Commands.{CommandArguments, CommandParseUtilities}
+import gorsat.Commands.{CommandArguments, CommandParseUtilities, FunctionSources}
 import org.gorpipe.exceptions.{GorDataException, GorSystemException}
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.{GenomicIterator, Row}
@@ -157,6 +157,11 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
 
   override def isBuffered: Boolean = true
 
+  // Index of the first function source, e.g. report(file.yml), in the step, or its length if there is none
+  private def nestedSourceIndex(step : String) : Int = {
+    CommandParseUtilities.quoteSafeSplit(step, ' ').find(FunctionSources.isFunctionSource).map(step.indexOf).getOrElse(step.length)
+  }
+
   def modifiedCommand(cmd : String, seekChr: String, seekPos : Int, endPos : Int, seekOnly : Boolean, getHeader : Boolean = false) : String = {
     var header = getHeader
     val creates = CommandParseUtilities.quoteSafeSplit(cmd,';').map( _.trim )
@@ -168,7 +173,7 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     while (i < pipeSteps.length) {
       if (i == 0) {
         var inest = pipeSteps(0).indexOf("<(")
-        if( inest == -1 ) inest = pipeSteps(0).length
+        if( inest == -1 ) inest = nestedSourceIndex(pipeSteps(0))
         var iyml = pipeSteps(0).toLowerCase.indexOf(DataType.YML.suffix)
         if( iyml == -1 ) iyml = pipeSteps(0).length
         if( (iyml < inest) && drsGorPipeSession.getSystemContext.getReportBuilder != null ) {
@@ -179,7 +184,10 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
         val args = CommandParseUtilities.quoteSafeSplitAndTrim(pipeSteps(i),' ')
         val (inputArguments, _) = CommandParseUtilities.validateCommandArguments(args, CommandArguments("-u -s -i","-e",numNonArgs))
         val rightFile = inputArguments(1).trim
-        if (CommandParseUtilities.isNestedCommand(rightFile)) {
+        if (FunctionSources.isFunctionSource(rightFile)) {
+          val mergeCommand = CommandParseUtilities.parseNestedCommand(rightFile, context.getSession)
+          pipeSteps(i) = pipeSteps(i).replace(rightFile,"<("+modifiedCommand(mergeCommand,seekChr,seekPos,endPos,seekOnly)+")")
+        } else if (CommandParseUtilities.isNestedCommand(rightFile)) {
           val mergeCommand = CommandParseUtilities.parseNestedCommandUntrimmed(rightFile)
           pipeSteps(i) = pipeSteps(i).replace("<("+mergeCommand+")","<("+modifiedCommand(mergeCommand,seekChr,seekPos,endPos,seekOnly)+")")
         } else {

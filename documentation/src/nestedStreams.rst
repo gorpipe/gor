@@ -14,6 +14,9 @@ There is a special notation used for nested streams. It begins with a left angle
 
    gor left_stream | ... <(gor right_stream)
 
+A report builder .yml file can be read as a nested stream with the :ref:`report function source<reportFunctionSource>`,
+e.g. ``gor left_stream | ... report(right_stream.yml, top=10)``.
+
 
 .. _mergeTables:
 

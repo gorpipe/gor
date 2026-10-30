@@ -119,7 +119,7 @@ object GorPrePipe {
 
               if (CommandParseUtilities.isNestedCommand(rightFile)) {
                 // Nested pipe command
-                val iteratorCommand = CommandParseUtilities.parseNestedCommand(rightFile)
+                val iteratorCommand = CommandParseUtilities.parseNestedCommand(rightFile, session)
                 val subFiles = getUsedFiles(iteratorCommand, session)
                 usedFiles :::= subFiles
               } else {

@@ -26,6 +26,7 @@ import gorsat.Commands.GenomicRange.Range
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.GorCommand
+import org.gorpipe.gor.session.GorSession
 import org.gorpipe.gor.util.{DataUtil, StringUtil}
 import org.gorpipe.util.DateUtils
 
@@ -622,7 +623,7 @@ object CommandParseUtilities {
 
   def isNestedCommand(query: String): Boolean = {
     val trimmedQuery = query.trim()
-    trimmedQuery.startsWith("<(")
+    trimmedQuery.startsWith("<(") || FunctionSources.isFunctionSource(trimmedQuery)
   }
 
   def isNestedProcessCommand(query: String): Boolean = {
@@ -692,8 +693,20 @@ object CommandParseUtilities {
     parseNestedCommandUntrimmed(command).trim
   }
 
+  /**
+    * Returns the query of a nested command, either <(query) or a function source such as report(file.yml, top=10),
+    * which is resolved with the session.
+    */
+  def parseNestedCommand(command: String, session: GorSession): String = {
+    if (FunctionSources.isFunctionSource(command)) FunctionSources.parse(command, session).trim
+    else parseNestedCommand(command)
+  }
+
   def parseNestedCommandUntrimmed(command: String): String = {
     val trimmedCommand = command.trim()
+    if (FunctionSources.isFunctionSource(trimmedCommand)) {
+      throw new GorParsingException("Function source can not be used in this context: " + trimmedCommand)
+    }
     val ip = quoteSafeIndexOf(trimmedCommand, "<(")
     if (ip < 0) {
       throw new GorParsingException("Bad nested gorpipe command: " + trimmedCommand)

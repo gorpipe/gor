@@ -22,6 +22,20 @@
 
 package org.gorpipe.gor.session;
 
+import java.util.Map;
+
 public abstract class GorReportBuilder {
     public abstract String parse(String query);
+
+    /**
+     * Renders a report into a query, including its leading input source (e.g. gor or nor).
+     *
+     * @param resource   yml report builder file or url
+     * @param reportName name of the report within the yml, or null for the first report
+     * @param parameters report arguments, a parameter without a value selects the query entry to render
+     * @return the rendered query
+     */
+    public String renderQuery(String resource, String reportName, Map<String, String> parameters) {
+        throw new UnsupportedOperationException(getClass().getName() + " does not support rendering report queries");
+    }
 }

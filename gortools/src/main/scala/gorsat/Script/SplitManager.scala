@@ -186,7 +186,7 @@ object SplitManager {
   def parseNestedSplit(context: GorContext, query: String, base: Int = 1): Map[String, SplitEntry] = {
     var chromosomeSplits = Map.empty[String, SplitEntry]
 
-    val iteratorCommand = CommandParseUtilities.parseNestedCommand(query).trim
+    val iteratorCommand = CommandParseUtilities.parseNestedCommand(query, context.getSession).trim
     var dynamicSource: DynamicRowSource = null
 
     try {

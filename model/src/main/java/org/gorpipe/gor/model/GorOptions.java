@@ -532,7 +532,7 @@ public class GorOptions {
                 String key = String.join("", iargs);
 
                 if (CommandParseUtilities.isNestedCommand(tagfile)) {
-                    String iteratorCommand = CommandParseUtilities.parseNestedCommand(tagfile);
+                    String iteratorCommand = CommandParseUtilities.parseNestedCommand(tagfile, session);
                     key += iteratorCommand.hashCode();
                     Option<Set<String>> opt = MapAndListUtilities.syncGetSet(key, session);
                     if (opt.isDefined()) {
