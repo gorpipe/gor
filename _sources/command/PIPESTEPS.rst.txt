@@ -15,8 +15,10 @@ Usage
 .. code-block:: gor
 
 	gor ... | PIPESTEPS filename.yml(stepentry,key=value)
+	gor ... | PIPESTEPS report(filename.yml, stepentry, key=value)
 
-The PIPESTEPS command reads one or more gor analysis steps from a .yml file
+The PIPESTEPS command reads one or more gor analysis steps from a .yml file. The .yml file can also be given with the
+:ref:`report function source<reportFunctionSource>`, which also accepts urls such as ``template://``.
 
 Examples
 ========

@@ -110,7 +110,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#defining-macros">Defining Macros</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#reusing-virtual-relations">Reusing Virtual Relations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#using-virtual-relations-within-functions">Using Virtual Relations Within Functions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#table-functions">Table Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#table-functions">Table Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#the-report-function-source">The report function source</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="parallelGOR.html">Parallelization in GOR</a></li>
@@ -284,6 +287,23 @@ are not guaranteed, and might include cryptic failures.</p>
 (format=line_per_gene,pathways=REACTOME||Interleukin-1_processing,running_time=1,long_running_query=No,
 ref_path=/mnt/csa/volumes/ref01/ref/versions/hg19/HG19-85-5-4) &quot;
 </pre></div>
+</div>
+<div class="section" id="the-report-function-source">
+<span id="reportfunctionsource"></span><h3>The report function source<a class="headerlink" href="#the-report-function-source" title="Permalink to this headline">¶</a></h3>
+<p>Report builders can also be read with the <code class="docutils literal notranslate"><span class="pre">report</span></code> function source, which takes the .yml file, or a url to it, as its
+first argument followed by the report arguments:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> report(/&lt;path&gt;/&lt;to&gt;/&lt;report_builder.yml&gt;, arg1=val1, arg2=&#39;val 2&#39;)
+<span class="nd">nor</span> report(template://&lt;organization&gt;/&lt;category&gt;/&lt;name&gt;/latest.yml, arg1=val1)
+</pre></div>
+</div>
+<p>An argument without a value selects the query entry to render from the .yml file and <code class="docutils literal notranslate"><span class="pre">&lt;report_builder.yml&gt;::&lt;ReportName&gt;</span></code>
+selects a report by name, e.g. <code class="docutils literal notranslate"><span class="pre">report(lib.yml::MyReport,</span> <span class="pre">mystep,</span> <span class="pre">top=10)</span></code>.</p>
+<p>The rendered query is read as a <a class="reference internal" href="nestedStreams.html#nestedstreams"><span class="std std-ref">nested stream</span></a>, so <code class="docutils literal notranslate"><span class="pre">report(...)</span></code> can be used wherever a nested
+query, <code class="docutils literal notranslate"><span class="pre">&lt;(...)</span></code>, can be used, e.g. as the input of <a class="reference internal" href="command/GOR.html#gor"><span class="std std-ref">GOR</span></a>, NOR and PGOR or as the right source of <a class="reference internal" href="command/JOIN.html#join"><span class="std std-ref">JOIN</span></a> and
+<a class="reference internal" href="command/MERGE.html#merge"><span class="std std-ref">MERGE</span></a>:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> left_source.gor | <span class="nb">JOIN</span> -<span class="no">snpsnp</span> report(right_source.yml, top=10)
+</pre></div>
+</div>
 </div>
 </div>
 </div>
