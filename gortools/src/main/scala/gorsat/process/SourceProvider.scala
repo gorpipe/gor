@@ -44,7 +44,7 @@ case class SourceProvider(inputSource: String, context: GorContext, executeNor: 
   var source: GenomicIterator = _
   var dynSource: DynIterator.DynamicRowSource = _
 
-  if (inputSource.slice(0, 2) == "<(") {
+  if (CommandParseUtilities.isNestedCommand(inputSource)) {
     handleNestedCommand()
   } else {
     handleFile()
@@ -72,7 +72,7 @@ case class SourceProvider(inputSource: String, context: GorContext, executeNor: 
   }
 
   private def handleNestedCommand(): Unit = {
-    iteratorCommand = CommandParseUtilities.parseNestedCommand(inputSource).trim
+    iteratorCommand = CommandParseUtilities.parseNestedCommand(inputSource, context.getSession).trim
     dynSource = inferSource()
     usedFiles ++= dynSource.usedFiles
     source = dynSource

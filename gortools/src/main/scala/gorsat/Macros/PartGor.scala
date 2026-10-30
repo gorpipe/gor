@@ -65,7 +65,7 @@ class PartGor extends MacroInfo("PARTGOR", CommandArguments("-gordfolder", "-s -
     val partitions = PartGor.groupTagsByBuckets(partitionSplitMethod, bucketMap, context.getSession.getSystemContext.getServer)
 
     val cmdToModify = if (CommandParseUtilities.isNestedCommand(inputArguments(0))) {
-      CommandParseUtilities.parseNestedCommand(inputArguments(0))
+      CommandParseUtilities.parseNestedCommand(inputArguments(0), context.getSession)
     } else {
       throw new GorParsingException(s"PartGor requires a nested query as input. Current input is: ${inputArguments(0)}")
     }

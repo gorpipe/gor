@@ -246,7 +246,7 @@ object AnalysisUtilities {
       }
 
       if (CommandParseUtilities.isNestedCommand(rightFile)) {
-        iteratorCommand = CommandParseUtilities.parseNestedCommand(rightFile)
+        iteratorCommand = CommandParseUtilities.parseNestedCommand(rightFile, context.getSession)
         if (!iteratorCommand.toUpperCase.startsWith("NOR")) {
           throw new GorParsingException("Error in nested query - nested queries in this context must be NOR queries: ")
         }

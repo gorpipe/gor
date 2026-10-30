@@ -72,7 +72,7 @@ object Nor
       val inputUpper = inputParams.toUpperCase
       if (CommandParseUtilities.isNestedCommand(inputParams)) {
         try {
-          val iteratorCommand = CommandParseUtilities.parseNestedCommand(inputParams)
+          val iteratorCommand = CommandParseUtilities.parseNestedCommand(inputParams, context.getSession)
           val iteratorCommandUpper = iteratorCommand.toUpperCase
 
           val iscmd: Boolean = if (iteratorCommandUpper.startsWith("CMD ")) {

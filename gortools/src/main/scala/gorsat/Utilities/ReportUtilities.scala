@@ -25,6 +25,10 @@ package gorsat.Utilities
 import java.nio.file.{Files, Paths}
 import gorsat.Commands.CommandParseUtilities
 import gorsat.FreemarkerQueryUtilities
+import gorsat.Script.ScriptParsers
+import gorsat.process.{GorInputSources, GorPipeMacros}
+import org.gorpipe.exceptions.GorParsingException
+import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.session.GorSession
 import org.gorpipe.gor.util.DataUtil
 
@@ -53,6 +57,29 @@ object ReportUtilities {
     val queryList = getQueryList(splitCommands, parameterMap, session, cacheDir)
     val returnQuery = getReturnQuery(queryList)
     returnQuery
+  }
+
+  /**
+    * Renders a report into a query, including its leading input source (e.g. gor or nor). A rendered query that does
+    * not start with an input source is read as a gor query.
+    *
+    * @param resource   yml report builder file or url
+    * @param reportName name of the report within the yml, or null for the first report
+    * @param parameters report arguments, a parameter without a value selects the query entry to render
+    * @param session    session used to read the yml file
+    * @return the rendered query
+    */
+  def renderQuery(resource: String, reportName: String, parameters: java.util.Map[String, String], session: GorSession): String = {
+    val projectContext = session.getProjectContext
+    val query = FreemarkerQueryUtilities.requestQuery(resource, projectContext.getFileReader,
+      projectContext.getQueryEvaluator, reportName, parameters, projectContext.getCacheDir)
+      .orElseThrow(() => new GorParsingException(s"No report found in yml report builder $resource"))
+      .trim
+
+    val firstCommand = query.split("\\s+", 2)(0)
+    val isQuery = ScriptParsers.isScript(CommandParseUtilities.quoteSafeSplitAndTrim(query, ';')) ||
+      GorInputSources.getInfo(firstCommand) != null || GorPipeMacros.getInfo(firstCommand).isDefined
+    if (isQuery) query else "gor " + query
   }
 
   private def parseParameter(cmd: String): String = {
@@ -94,7 +121,9 @@ object ReportUtilities {
 
   private def getQuery(parameterMap: Map[String, String], commandSplitItem: String, session: GorSession, cacheDir: String): String = {
     if (DataUtil.isYml(commandSplitItem)) {
-      var index = commandSplitItem.indexOf(':')
+      // Look for the report name separator (file.yml::Report) after the yml suffix, as urls contain ':' in the scheme
+      var index = commandSplitItem.toLowerCase.indexOf(DataType.YML.suffix + ":")
+      if (index != -1) index += DataType.YML.suffix.length
       val indexOfParentheses = commandSplitItem.indexOf('(')
       var report: String = null
       var parameterMapJava = parameterMap.asJava

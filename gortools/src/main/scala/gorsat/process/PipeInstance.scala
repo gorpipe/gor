@@ -37,6 +37,7 @@ import gorsatGorIterator.{MemoryMonitorUtil, gorsatGorIterator}
 import process.GorJavaUtilities.CmdParams
 import process.GorPipe.brsConfig
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException, GorSystemException, GorUserException}
+import org.gorpipe.gor.function.FunctionSources
 import org.gorpipe.gor.model.GenomicIterator
 import org.gorpipe.gor.monitor.GorMonitor
 import org.gorpipe.gor.session.{GorContext, GorSession, ProjectContext}
@@ -761,7 +762,8 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
 
     // Special handling of PIPESTEPS?
     if (command.toUpperCase == "PIPESTEPS") {
-      val qr = context.getSession.getSystemContext.getReportBuilder.parse(paramString)
+      val qr = if (FunctionSources.isFunctionSource(paramString)) FunctionSources.parsePipeSteps(paramString, context.getSession)
+        else context.getSession.getSystemContext.getReportBuilder.parse(paramString)
       val nPipeSteps = CommandParseUtilities.quoteSafeSplitAndTrim(qr, '|')
       var fCmd = 0
       for (i <- nPipeSteps.indices) {

@@ -26,6 +26,8 @@ import gorsat.Utilities.ReportUtilities;
 import org.gorpipe.gor.session.GorReportBuilder;
 import org.gorpipe.gor.session.GorSession;
 
+import java.util.Map;
+
 /**
  * Report builder class for building freemarker based reports via yml files.
  */
@@ -40,5 +42,10 @@ public class FreemarkerReportBuilder extends GorReportBuilder {
     @Override
     public String parse(String query) {
         return ReportUtilities.parseYaml(query, this.session);
+    }
+
+    @Override
+    public String renderQuery(String resource, String reportName, Map<String, String> parameters) {
+        return ReportUtilities.renderQuery(resource, reportName, parameters, this.session);
     }
 }
