@@ -72,6 +72,13 @@ import java.util.stream.Stream;
  * that block. Without {@code -all} the new row must equal the naive model's row; with {@code -all} the other old
  * rows pair with the new rows as same/D4/D6, or new is the single {@code unmapped} row.</li>
  * <li>{@code D6-bam-mpos}: bam; rows equal except MPOS, and new MPOS follows N15.</li>
+ * <li>{@code D7-endpoint-tie}: seg/bam, not {@code -all}; old one {@code unmapped} row, new one {@code ambiguous}
+ * row at the same placement, every other column equal (bam MPOS: old shifted, new 0); the naive model has no block
+ * containing the interval and its first or last base in an exact score tie.</li>
+ * <li>{@code D8-bam-last-base}: bam; a 1-base read ({@code Pos == End}) on a block's last base
+ * ({@code Pos == tEnd}); old one {@code unmapped} row, new mapped rows equal to the naive model's 1-based interval
+ * lift through the containing blocks (all with {@code tEnd == Pos}), with the - strand read transforms and N15
+ * MPOS.</li>
  * </ul>
  * Anything else is unexplained and fails. Before P4 (Task 11) LIFTOVER is still the expansion, so every Id is
  * {@code same}; that proves the harness and the oracle.
@@ -85,6 +92,8 @@ public class UTestGorLiftoverDifferential {
     static final String D4 = "D4-bam-minus";
     static final String D5 = "D5-bam-block-start";
     static final String D6 = "D6-bam-mpos";
+    static final String D7 = "D7-endpoint-tie";
+    static final String D8 = "D8-bam-last-base";
 
     private static final int ROWS = 2_000;
     private static final int SLOW_ROWS = 50_000;
@@ -353,12 +362,14 @@ public class UTestGorLiftoverDifferential {
         }
         System.out.println("categoriesExpectedAfterP4 unique chain: " + unique);
         System.out.println("categoriesExpectedAfterP4 overlapping chain: " + overlapping);
-        for (String c : List.of(D1, D3, D4, D5, D6)) {
+        for (String c : List.of(D1, D3, D4, D5, D6, D8)) {
             Assert.assertTrue(c + " never occurs on the non-overlapping chain: " + unique,
                     unique.getOrDefault(c, 0) > 0);
         }
-        Assert.assertTrue(D2 + " never occurs on the overlapping chain: " + overlapping,
-                overlapping.getOrDefault(D2, 0) > 0);
+        for (String c : List.of(D2, D7)) {
+            Assert.assertTrue(c + " never occurs on the overlapping chain: " + overlapping,
+                    overlapping.getOrDefault(c, 0) > 0);
+        }
     }
 
     private static void check(String mode, boolean all, int seed, boolean overlapping) {
@@ -479,7 +490,7 @@ public class UTestGorLiftoverDifferential {
 
     /**
      * The category of one Id's difference without the chain: {@code same}, or a category whose rule needs no
-     * chain (D1, D2 from the row shape alone, D3). D4, D5 and D6 need the chain, so this returns {@code null}
+     * chain (D1, D2 from the row shape alone, D3). D4-D8 need the chain, so this returns {@code null}
      * (unexplained) for them.
      */
     static String classify(List<String> oldRows, List<String> newRows, String inputRow, String mode) {
@@ -517,6 +528,12 @@ public class UTestGorLiftoverDifferential {
         }
         if (mode.equals("var")) {
             return varRevcomp(o, n, in, l);
+        }
+        if (!all && blocks != null && l.span() && isEndpointTie(o, n, in, l, blocks)) {
+            return D7;
+        }
+        if (mode.equals("bam") && blocks != null && isLastBase(o, n, in, l, all, blocks)) {
+            return D8;
         }
         if (mode.equals("bam") && blocks != null) {
             String c = bam(o, n, in, l, all, blocks);
@@ -873,19 +890,107 @@ public class UTestGorLiftoverDifferential {
         if (!NaiveLift.MAPPED.equals(r.status())) {
             return placeholder(in, l, UNMAPPED, false);
         }
-        NaiveLift.Hit h = r.hit();
+        return bamRowFromHit(in, l, r.hit(), false, blocks);
+    }
+
+    /** The new bam row for a NaiveLift hit: target, - strand read transforms, N15 MPOS, score under -all. */
+    private static String[] bamRowFromHit(String[] in, Layout l, NaiveLift.Hit h, boolean all,
+                                          List<ChainBlock> blocks) {
         boolean minus = "-".equals(h.strand());
-        String[] row = new String[]{h.chrom(), String.valueOf(h.start0() + 1), String.valueOf(h.end0()), in[3],
+        List<String> row = new ArrayList<>(List.of(h.chrom(), String.valueOf(h.start0() + 1),
+                String.valueOf(h.end0()), in[3],
                 minus ? ParseUtilities.reverseComplement(in[SEQ]) : in[SEQ],
                 minus ? new StringBuilder(in[QUAL]).reverse().toString() : in[QUAL],
                 minus ? ParseUtilities.revCigar(in[CIGAR]) : in[CIGAR],
-                "", in[0], in[1], in[2], h.strand(), MAPPED};
-        String mpos = expectedMpos(in, row, l, false, blocks);
+                "", in[0], in[1], in[2], h.strand(), MAPPED));
+        if (all) {
+            row.add(String.valueOf(h.score()));
+        }
+        String[] r = row.toArray(new String[0]);
+        String mpos = expectedMpos(in, r, l, all, blocks);
         if (mpos == null) {
             return null;
         }
-        row[MPOS] = mpos;
-        return row;
+        r[MPOS] = mpos;
+        return r;
+    }
+
+    /** The old (pre-P4) unmapped row: the placeholder, with bam MPOS shifted as {@code MPOS-#2+0}. */
+    private static String[] oldUnmapped(String[] in, Layout l, boolean all) {
+        String[] r = placeholder(in, l, UNMAPPED, all);
+        if (l.mode().equals("bam")) {
+            try {
+                r[MPOS] = String.valueOf(Integer.parseInt(in[MPOS]) - Integer.parseInt(in[1]));
+            } catch (NumberFormatException e) {
+                r[MPOS] = in[MPOS];
+            }
+        }
+        return r;
+    }
+
+    /**
+     * D7: seg/bam without -all. Old is the one unmapped row, new the one ambiguous placeholder; the naive model has
+     * no block containing the interval (s1 &lt; e1) and an exact score tie at its first or last base.
+     */
+    private static boolean isEndpointTie(List<String[]> o, List<String[]> n, String[] in, Layout l,
+                                         List<ChainBlock> blocks) {
+        if (o.size() != 1 || n.size() != 1 || !Arrays.equals(o.get(0), oldUnmapped(in, l, false))
+                || !Arrays.equals(n.get(0), placeholder(in, l, AMBIGUOUS, false))) {
+            return false;
+        }
+        int a = Integer.parseInt(in[1]);
+        int s1 = l.mode().equals("seg") ? a + 1 : a;
+        int e1 = Integer.parseInt(in[2]);
+        if (s1 >= e1) {
+            return false;
+        }
+        NaiveLift nl = new NaiveLift(blocks);
+        return nl.intervalHits(s1, e1).isEmpty()
+                && (NaiveLift.AMBIGUOUS.equals(nl.point(s1).status())
+                || NaiveLift.AMBIGUOUS.equals(nl.point(e1).status()));
+    }
+
+    /**
+     * D8: a 1-base bam read on a block's last base. Old is the one unmapped row; new rows are mapped and equal the
+     * naive model's 1-based interval lift (one row without -all, one per containing block with -all), and every
+     * containing block ends at Pos.
+     */
+    private static boolean isLastBase(List<String[]> o, List<String[]> n, String[] in, Layout l, boolean all,
+                                      List<ChainBlock> blocks) {
+        int pos = Integer.parseInt(in[1]);
+        int end = Integer.parseInt(in[2]);
+        if (pos != end || o.size() != 1 || !Arrays.equals(o.get(0), oldUnmapped(in, l, all))) {
+            return false;
+        }
+        List<NaiveLift.Hit> hits = new NaiveLift(blocks).intervalHits(pos, end);
+        if (hits.isEmpty()) {
+            return false;
+        }
+        for (ChainBlock b : blocks) {
+            if (b.tStart() + 1 <= pos && end <= b.tEnd() && b.tEnd() != pos) {
+                return false;
+            }
+        }
+        List<String[]> expected = new ArrayList<>();
+        if (all) {
+            for (NaiveLift.Hit h : hits) {
+                expected.add(bamRowFromHit(in, l, h, true, blocks));
+            }
+        } else {
+            expected.add(expectedNewBamRow(in, l, blocks));
+        }
+        for (String[] r : expected) {
+            if (r == null || !MAPPED.equals(r[l.status()])) {
+                return false;
+            }
+        }
+        List<String> a = new ArrayList<>();
+        List<String> b = new ArrayList<>();
+        expected.forEach(r -> a.add(String.join("\t", r)));
+        n.forEach(r -> b.add(String.join("\t", r)));
+        a.sort(null);
+        b.sort(null);
+        return a.equals(b);
     }
 
     // ------------------------------------------------------------------------------------------------
@@ -901,85 +1006,125 @@ public class UTestGorLiftoverDifferential {
             new ChainBlock(100, 200, "chr1", 1000, 1100, "+", 1000),
             new ChainBlock(100, 200, "chr3", 3000, 3100, "+", 1000)));
 
+    // chr1 [100,200) -> chr1 1000 + and chr3 3000 + (an exact tie), [200,300) -> chr3 5000 -
+    private static final Map<String, List<ChainBlock>> TIE_OVL_CHAIN = Map.of("chr1", List.of(
+            new ChainBlock(100, 200, "chr1", 1000, 1100, "+", 1000),
+            new ChainBlock(100, 200, "chr3", 3000, 3100, "+", 1000),
+            new ChainBlock(200, 300, "chr3", 5000, 5100, "-", 1000)));
+
+    /** Drives classify directly: per category one positive example and at least one near miss that is null. */
     @Test
-    public void classifierCategories() {
+    public void classifyUnitTests() {
+        // same
+        String snp = "chr1\t150\tA\tG\tr1";
+        String snpRow = "chr1\t1050\tA\tG\tr1\tchr1\t150\t+\tmapped";
+        Assert.assertEquals(SAME, classify(List.of(snpRow), List.of(snpRow), snp, "snp"));
+        Assert.assertNull("moved snp", classify(List.of(snpRow),
+                List.of("chr1\t1051\tA\tG\tr1\tchr1\t150\t+\tmapped"), snp, "snp", HAND_CHAIN));
+
+        // D1
         String dup = "chr2\t5000\tA\tG\tdup1";
         String dupRow = "chr2\t0\tA\tG\tdup1\tchr2\t5000\t\tunmapped";
         Assert.assertEquals(D1, classify(List.of(dupRow), List.of(dupRow, dupRow, dupRow), dup, "snp", HAND_CHAIN));
+        Assert.assertNull("dup run twice", classify(List.of(dupRow), List.of(dupRow, dupRow), dup, "snp",
+                HAND_CHAIN));
 
-        String snp = "chr1\t150\tA\tG\tr1";
-        Assert.assertEquals(D2, classify(
-                List.of("chr1\t1050\tA\tG\tr1\tchr1\t150\t+\tmapped", "chr3\t3050\tA\tG\tr1\tchr1\t150\t+\tmapped"),
-                List.of("chr1\t0\tA\tG\tr1\tchr1\t150\t\tambiguous"), snp, "snp", TIE_CHAIN));
+        // D2
+        List<String> tieOld = List.of("chr1\t1050\tA\tG\tr1\tchr1\t150\t+\tmapped",
+                "chr3\t3050\tA\tG\tr1\tchr1\t150\t+\tmapped");
+        Assert.assertEquals(D2, classify(tieOld, List.of("chr1\t0\tA\tG\tr1\tchr1\t150\t\tambiguous"), snp,
+                "snp", TIE_CHAIN));
+        Assert.assertNull("no tie in the chain", classify(tieOld,
+                List.of("chr1\t0\tA\tG\tr1\tchr1\t150\t\tambiguous"), snp, "snp", HAND_CHAIN));
+        Assert.assertNull("tie becomes unmapped", classify(tieOld,
+                List.of("chr1\t0\tA\tG\tr1\tchr1\t150\t\tunmapped"), snp, "snp", TIE_CHAIN));
 
+        // D3
         String var = "chr1\t250\tA\tA,TC\tr1";
-        Assert.assertEquals(D3, classify(List.of("chr3\t5051\tT\tGA,T\tr1\tchr1\t250\t-\tmapped"),
-                List.of("chr3\t5051\tT\tT,GA\tr1\tchr1\t250\t-\tmapped"), var, "var", HAND_CHAIN));
+        String varOld = "chr3\t5051\tT\tGA,T\tr1\tchr1\t250\t-\tmapped";
+        Assert.assertEquals(D3, classify(List.of(varOld), List.of("chr3\t5051\tT\tT,GA\tr1\tchr1\t250\t-\tmapped"),
+                var, "var", HAND_CHAIN));
+        Assert.assertNull("ALT not per allele", classify(List.of(varOld),
+                List.of("chr3\t5051\tT\tTC,A\tr1\tchr1\t250\t-\tmapped"), var, "var", HAND_CHAIN));
 
-        // - strand read 250..259, MPOS 255 inside the block: old 5041..5050 MPOS 5046, new 5042..5051 MPOS 5046
+        // D4: - strand read 250..259, MPOS 255 inside the block: old 5041..5050, new 5042..5051, MPOS 5046
         String minus = "chr1\t250\t259\tq1\tAACCGGTTAC\tABCDEFGHIJ\t3S7M\t255";
-        Assert.assertEquals(D4, classify(
-                List.of("chr3\t5041\t5050\tq1\tGTAACCGGTT\tJIHGFEDCBA\t7M3S\t5046\tchr1\t250\t259\t-\tmapped"),
+        List<String> minusOld = List.of(
+                "chr3\t5041\t5050\tq1\tGTAACCGGTT\tJIHGFEDCBA\t7M3S\t5046\tchr1\t250\t259\t-\tmapped");
+        Assert.assertEquals(D4, classify(minusOld,
                 List.of("chr3\t5042\t5051\tq1\tGTAACCGGTT\tJIHGFEDCBA\t7M3S\t5046\tchr1\t250\t259\t-\tmapped"),
                 minus, "bam", HAND_CHAIN));
-
-        // read 200..209 starts on the - block's tStart: old maps through it, new spans both blocks (unmapped)
-        String start = "chr1\t200\t209\tq2\tAACCGGTTAC\tABCDEFGHIJ\t10M\t205";
-        Assert.assertEquals(D5, classify(
-                List.of("chr3\t5091\t5100\tq2\tGTAACCGGTT\tJIHGFEDCBA\t10M\t5096\tchr1\t200\t209\t-\tmapped"),
-                List.of("chr1\t0\t1\tq2\tAACCGGTTAC\tABCDEFGHIJ\t10M\t0\tchr1\t200\t209\t\tunmapped"),
-                start, "bam", HAND_CHAIN));
-
-        // + strand read, mate at 250 lifts to chr3, not the read's chr1: new MPOS 0, old shifted 1150
-        String mate = "chr1\t150\t159\tq3\tAACCGGTTAC\tABCDEFGHIJ\t10M\t250";
-        Assert.assertEquals(D6, classify(
-                List.of("chr1\t1050\t1059\tq3\tAACCGGTTAC\tABCDEFGHIJ\t10M\t1150\tchr1\t150\t159\t+\tmapped"),
-                List.of("chr1\t1050\t1059\tq3\tAACCGGTTAC\tABCDEFGHIJ\t10M\t0\tchr1\t150\t159\t+\tmapped"),
-                mate, "bam", HAND_CHAIN));
-
-        String row = "chr1\t1050\tA\tG\tr1\tchr1\t150\t+\tmapped";
-        Assert.assertEquals(SAME, classify(List.of(row), List.of(row), snp, "snp"));
-    }
-
-    @Test
-    public void classifierRejectsOtherDifferences() {
-        String snp = "chr1\t150\tA\tG\tr1";
-        // a moved snp
-        Assert.assertNull(classify(List.of("chr1\t1050\tA\tG\tr1\tchr1\t150\t+\tmapped"),
-                List.of("chr1\t1051\tA\tG\tr1\tchr1\t150\t+\tmapped"), snp, "snp", HAND_CHAIN));
-        // dup run counted twice, not three times
-        String dupRow = "chr2\t0\tA\tG\tdup1\tchr2\t5000\t\tunmapped";
-        Assert.assertNull(classify(List.of(dupRow), List.of(dupRow, dupRow), "chr2\t5000\tA\tG\tdup1", "snp",
-                HAND_CHAIN));
-        // two mapped rows that are not a tie in the chain
-        Assert.assertNull(classify(
-                List.of("chr1\t1050\tA\tG\tr1\tchr1\t150\t+\tmapped", "chr3\t3050\tA\tG\tr1\tchr1\t150\t+\tmapped"),
-                List.of("chr1\t0\tA\tG\tr1\tchr1\t150\t\tambiguous"), snp, "snp", HAND_CHAIN));
-        // a tie that becomes unmapped instead of ambiguous
-        Assert.assertNull(classify(
-                List.of("chr1\t1050\tA\tG\tr1\tchr1\t150\t+\tmapped", "chr3\t3050\tA\tG\tr1\tchr1\t150\t+\tmapped"),
-                List.of("chr1\t0\tA\tG\tr1\tchr1\t150\t\tunmapped"), snp, "snp", TIE_CHAIN));
-        // ALT not per allele
-        Assert.assertNull(classify(List.of("chr3\t5051\tT\tGA,T\tr1\tchr1\t250\t-\tmapped"),
-                List.of("chr3\t5051\tT\tTC,A\tr1\tchr1\t250\t-\tmapped"), "chr1\t250\tA\tA,TC\tr1", "var",
-                HAND_CHAIN));
-        // - strand read moved by 2
-        String minus = "chr1\t250\t259\tq1\tAACCGGTTAC\tABCDEFGHIJ\t3S7M\t255";
-        Assert.assertNull(classify(
-                List.of("chr3\t5041\t5050\tq1\tGTAACCGGTT\tJIHGFEDCBA\t7M3S\t5046\tchr1\t250\t259\t-\tmapped"),
+        Assert.assertNull("shift by 2", classify(minusOld,
                 List.of("chr3\t5043\t5052\tq1\tGTAACCGGTT\tJIHGFEDCBA\t7M3S\t5046\tchr1\t250\t259\t-\tmapped"),
                 minus, "bam", HAND_CHAIN));
-        // MPOS that does not follow N15
+
+        // D5: read 200..209 starts on the - block's tStart; new spans both blocks and is unmapped
+        String start = "chr1\t200\t209\tq2\tAACCGGTTAC\tABCDEFGHIJ\t10M\t205";
+        List<String> startOld = List.of(
+                "chr3\t5091\t5100\tq2\tGTAACCGGTT\tJIHGFEDCBA\t10M\t5096\tchr1\t200\t209\t-\tmapped");
+        Assert.assertEquals(D5, classify(startOld,
+                List.of("chr1\t0\t1\tq2\tAACCGGTTAC\tABCDEFGHIJ\t10M\t0\tchr1\t200\t209\t\tunmapped"),
+                start, "bam", HAND_CHAIN));
+        Assert.assertNull("ambiguous where the model says unmapped", classify(startOld,
+                List.of("chr1\t0\t1\tq2\tAACCGGTTAC\tABCDEFGHIJ\t10M\t0\tchr1\t200\t209\t\tambiguous"),
+                start, "bam", HAND_CHAIN));
+
+        // D6: + strand read, mate at 250 lifts to chr3, not the read's chr1: new MPOS 0, old shifted 1150
         String mate = "chr1\t150\t159\tq3\tAACCGGTTAC\tABCDEFGHIJ\t10M\t250";
-        Assert.assertNull(classify(
-                List.of("chr1\t1050\t1059\tq3\tAACCGGTTAC\tABCDEFGHIJ\t10M\t1150\tchr1\t150\t159\t+\tmapped"),
+        List<String> mateOld = List.of(
+                "chr1\t1050\t1059\tq3\tAACCGGTTAC\tABCDEFGHIJ\t10M\t1150\tchr1\t150\t159\t+\tmapped");
+        List<String> mateNew = List.of(
+                "chr1\t1050\t1059\tq3\tAACCGGTTAC\tABCDEFGHIJ\t10M\t0\tchr1\t150\t159\t+\tmapped");
+        Assert.assertEquals(D6, classify(mateOld, mateNew, mate, "bam", HAND_CHAIN));
+        Assert.assertNull("MPOS not per N15", classify(mateOld,
                 List.of("chr1\t1050\t1059\tq3\tAACCGGTTAC\tABCDEFGHIJ\t10M\t7\tchr1\t150\t159\t+\tmapped"),
                 mate, "bam", HAND_CHAIN));
-        // the chain-dependent bam categories are unexplained without the chain
-        Assert.assertNull(classify(
-                List.of("chr1\t1050\t1059\tq3\tAACCGGTTAC\tABCDEFGHIJ\t10M\t1150\tchr1\t150\t159\t+\tmapped"),
-                List.of("chr1\t1050\t1059\tq3\tAACCGGTTAC\tABCDEFGHIJ\t10M\t0\tchr1\t150\t159\t+\tmapped"),
-                mate, "bam"));
+        Assert.assertNull("D6 needs the chain", classify(mateOld, mateNew, mate, "bam"));
+
+        // D7: seg [150,250) is in no block and its first base 151 is in the exact tie
+        String seg = "chr1\t150\t250\tg1";
+        Assert.assertEquals(D7, classify(List.of("chr1\t0\t1\tg1\tchr1\t150\t250\t\tunmapped"),
+                List.of("chr1\t0\t1\tg1\tchr1\t150\t250\t\tambiguous"), seg, "seg", TIE_OVL_CHAIN));
+        String bamTie = "chr1\t151\t250\tq7\tAC\tII\t2M\t160";
+        Assert.assertEquals(D7, classify(List.of("chr1\t0\t1\tq7\tAC\tII\t2M\t9\tchr1\t151\t250\t\tunmapped"),
+                List.of("chr1\t0\t1\tq7\tAC\tII\t2M\t0\tchr1\t151\t250\t\tambiguous"), bamTie, "bam",
+                TIE_OVL_CHAIN));
+        Assert.assertNull("a block contains the interval", classify(
+                List.of("chr1\t0\t1\tg2\tchr1\t210\t280\t\tunmapped"),
+                List.of("chr1\t0\t1\tg2\tchr1\t210\t280\t\tambiguous"), "chr1\t210\t280\tg2", "seg",
+                TIE_OVL_CHAIN));
+        Assert.assertNull("no tie at either end", classify(
+                List.of("chr1\t0\t1\tg3\tchr1\t250\t350\t\tunmapped"),
+                List.of("chr1\t0\t1\tg3\tchr1\t250\t350\t\tambiguous"), "chr1\t250\t350\tg3", "seg",
+                TIE_OVL_CHAIN));
+        Assert.assertNull("ambiguous bam row keeps MPOS", classify(
+                List.of("chr1\t0\t1\tq7\tAC\tII\t2M\t9\tchr1\t151\t250\t\tunmapped"),
+                List.of("chr1\t0\t1\tq7\tAC\tII\t2M\t9\tchr1\t151\t250\t\tambiguous"), bamTie, "bam",
+                TIE_OVL_CHAIN));
+
+        // D8: 1-base read on the + block's last base 200; old unmapped (MPOS 150-200), new 1100..1100, MPOS 1050
+        String last = "chr1\t200\t200\tq4\tA\tI\t1M\t150";
+        Assert.assertEquals(D8, classify(List.of("chr1\t0\t1\tq4\tA\tI\t1M\t-50\tchr1\t200\t200\t\tunmapped"),
+                List.of("chr1\t1100\t1100\tq4\tA\tI\t1M\t1050\tchr1\t200\t200\t+\tmapped"), last, "bam",
+                HAND_CHAIN));
+        // the same on the - block's last base 300 under -all: 5001..5001, SEQ revcomp, MPOS 250 -> 5051
+        String lastMinus = "chr1\t300\t300\tq5\tA\tI\t1M\t250";
+        Assert.assertEquals(D8, classify(
+                List.of("chr1\t0\t1\tq5\tA\tI\t1M\t-50\tchr1\t300\t300\t\tunmapped\t0.0"),
+                List.of("chr3\t5001\t5001\tq5\tT\tI\t1M\t5051\tchr1\t300\t300\t-\tmapped\t1000.0"), lastMinus,
+                "bam", HAND_CHAIN));
+        Assert.assertNull("read on tEnd - 1", classify(
+                List.of("chr1\t0\t1\tq6\tA\tI\t1M\t-49\tchr1\t199\t199\t\tunmapped"),
+                List.of("chr1\t1099\t1099\tq6\tA\tI\t1M\t1050\tchr1\t199\t199\t+\tmapped"),
+                "chr1\t199\t199\tq6\tA\tI\t1M\t150", "bam", HAND_CHAIN));
+        Assert.assertNull("wrong target", classify(
+                List.of("chr1\t0\t1\tq4\tA\tI\t1M\t-50\tchr1\t200\t200\t\tunmapped"),
+                List.of("chr1\t1101\t1101\tq4\tA\tI\t1M\t1050\tchr1\t200\t200\t+\tmapped"), last, "bam",
+                HAND_CHAIN));
+        Assert.assertNull("- strand read not transformed", classify(
+                List.of("chr1\t0\t1\tq5\tA\tI\t1M\t-50\tchr1\t300\t300\t\tunmapped\t0.0"),
+                List.of("chr3\t5001\t5001\tq5\tA\tI\t1M\t5051\tchr1\t300\t300\t-\tmapped\t1000.0"), lastMinus,
+                "bam", HAND_CHAIN));
     }
 
     // ------------------------------------------------------------------------------------------------
