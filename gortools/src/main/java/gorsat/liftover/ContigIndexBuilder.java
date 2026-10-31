@@ -51,10 +51,17 @@ public final class ContigIndexBuilder {
         }
     }
 
-    /** RowObj.colInt reads an empty cell as 0, which would silently turn a missing coordinate into a valid one. */
+    /**
+     * RowObj.colInt reads an empty cell or a lone '-' as 0, which would silently turn a missing coordinate into a valid
+     * one.
+     */
     private void requireCell(Row r, int col, String name) {
-        if (r.colAsString(col).toString().isBlank()) {
+        String cell = r.colAsString(col).toString();
+        if (cell.isBlank()) {
             throw new GorDataException(prefix() + "empty " + name + " in row " + r.chr + ":" + r.pos);
+        }
+        if (cell.strip().equals("-")) {
+            throw new GorDataException(prefix() + "invalid " + name + " '" + cell + "' in row " + r.chr + ":" + r.pos);
         }
     }
 

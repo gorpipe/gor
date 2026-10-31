@@ -686,6 +686,14 @@ public class UTestLiftChain {
     }
 
     @Test
+    public void fileChainRejectsSignOnlyCoordinateFields() throws IOException {
+        // RowObj.colInt reads a lone '-' as 0, which would turn qStart '-' into a valid block at 0
+        assertFileChainError("signtend.gor", "chr1\t100\t-\tchr1\t0\t100\t+\t10", "invalid tEnd '-'");
+        assertFileChainError("signqstart.gor", "chr1\t100\t200\tchr1\t-\t100\t+\t10", "invalid qStart '-'");
+        assertFileChainError("signqend.gor", "chr1\t100\t200\tchr1\t0\t - \t+\t10", "invalid qEnd ' - '");
+    }
+
+    @Test
     public void fileChainRejectsNegativeStarts() throws IOException {
         assertFileChainError("negqstart.gor", "chr1\t100\t200\tchr1\t-10\t90\t+\t10", "qStart < 0");
     }

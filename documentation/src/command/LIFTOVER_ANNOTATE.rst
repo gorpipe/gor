@@ -255,16 +255,19 @@ must be sorted as a GOR file. Column names are matched case-insensitively.
   ``-overlap best``.
 * The chain must be sorted genomically, that is by contig and then by ``tStart``, with every contig in one run. A file
   chain is validated one contig at a time, when a row on that contig is first lifted, and it is not scanned as a whole:
-  a contig that reappears later in the file is not noticed, and only its first run is used. A nested chain is read as a
-  whole, and a contig that reappears after another contig is rejected with ``Liftover chain <query>: contig <c> is not
-  contiguous``.
+  a contig that reappears later in the file is not noticed, and which of its blocks are found is undefined. A nested
+  chain is read as a whole, and a contig that reappears after another contig is rejected with ``Liftover chain
+  <query>: contig <c> is not contiguous``.
 * A chain with no blocks (a header-only file or an empty nested query) is an error, ``Liftover chain <path> has no
   blocks``, reported on the first row that needs the chain.
 * The chain is checked when it is loaded. A file chain is loaded one source contig at a time, the first time a row on
   that contig needs it, so an error in a block on a contig that no row uses is never reported (a nested chain is read
   and checked as a whole). A chain that is not sorted by ``tStart``, has a block with ``tEnd <= tStart``,
-  a gapped block, a negative ``tStart`` or ``qStart``, a missing ``tEnd``, ``qChrom``, ``qStart`` or ``qEnd``, a ``qStrand`` other than ``+`` or ``-``, an invalid score, or (with the default ``-overlap error``)
-  overlapping blocks is rejected with an error that starts with ``Liftover chain <path>``.
+  a gapped block, a negative ``qStart``, a missing ``tEnd``, ``qChrom``, ``qStart`` or ``qEnd``, a lone ``-`` as
+  ``tEnd``, ``qStart`` or ``qEnd``, a ``qStrand`` other than ``+`` or ``-``, an invalid score, or (with the default
+  ``-overlap error``) overlapping blocks is rejected with an error that starts with ``Liftover chain <path>``. A
+  negative ``tStart`` is the row position, so the GOR reader rejects it with its own error before the chain is
+  checked.
 
 Examples
 ========

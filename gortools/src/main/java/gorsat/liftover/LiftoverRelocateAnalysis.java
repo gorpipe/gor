@@ -197,8 +197,8 @@ public class LiftoverRelocateAnalysis extends Analysis {
     }
 
     /**
-     * The position cell (column #2) as an int. An empty or blank cell is an error: RowObj.colInt reads it as 0, which
-     * would lift a missing coordinate as if it were a real one.
+     * The position cell (column #2) as an int. An empty or blank cell, or a lone '-', is an error: RowObj.colInt reads
+     * it as 0, which would lift a missing coordinate as if it were a real one.
      */
     private int startColumn(Row r) {
         return coordinate(r, 1, "start");
@@ -215,6 +215,9 @@ public class LiftoverRelocateAnalysis extends Analysis {
                     getHeader(), r.toString());
         }
         try {
+            if (cell.strip().equals("-")) {
+                throw new NumberFormatException(cell);
+            }
             return r.colAsInt(col);
         } catch (NumberFormatException e) {
             throw new GorDataException(PREFIX + "Illegal " + what + " position in column #" + (col + 1) + ": '"

@@ -330,6 +330,27 @@ public class UTestLiftoverCoverageGaps {
         assertRelocateEmptyCell(RelocateMode.BAM, "chr1\t100\t\tx", "column #3", "chr1:100");
     }
 
+    private static void assertRelocateSignOnlyCell(RelocateMode mode, String row, String what, String at) {
+        LiftoverRelocateAnalysis step = relocate(mode);
+        step.setRowHeader(IN_HEADER);
+        try {
+            lift(step, row);
+            Assert.fail("expected GorDataException for " + row.replace('\t', '|'));
+        } catch (GorDataException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("LIFTOVER: "));
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains("Illegal " + what + ": '"));
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains(" at " + at));
+        }
+    }
+
+    @Test
+    public void relocateSignOnlyCoordinateCellsAreInvalid() {
+        // RowObj.colInt reads a lone '-' as 0: a -seg start of '-' must not lift [0,end)
+        assertRelocateSignOnlyCell(RelocateMode.SNP, "chr1\t-\tx", "start position in column #2", "chr1:-");
+        assertRelocateSignOnlyCell(RelocateMode.SEG, "chr1\t-\t200\tx", "start position in column #2", "chr1:-");
+        assertRelocateSignOnlyCell(RelocateMode.BAM, "chr1\t100\t-\tx", "stop position in column #3", "chr1:100");
+    }
+
     @Test
     public void relocateNonIntegerEndNamesChromAndPos() {
         LiftoverRelocateAnalysis step = relocate(RelocateMode.SEG);

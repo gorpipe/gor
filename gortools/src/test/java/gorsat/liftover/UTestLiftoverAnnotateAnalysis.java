@@ -351,6 +351,22 @@ public class UTestLiftoverAnnotateAnalysis {
         assertEmptyCell(snp, "chrN\t0\tchr1\t", "p", "chr1:");
     }
 
+    private static void assertSignOnlyCell(Run run, String row, String column, String at) {
+        GorDataException e = Assert.assertThrows(GorDataException.class, () -> run.feed(row));
+        Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("LIFTOVER_ANNOTATE: "));
+        Assert.assertTrue(e.getMessage(), e.getMessage().contains("(" + column + ") is not an integer"));
+        Assert.assertTrue(e.getMessage(), e.getMessage().contains(" at " + at));
+    }
+
+    @Test
+    public void signOnlyCoordinateCellsAreInvalid() {
+        // RowObj.colInt reads a lone '-' as 0: a -seg start of '-' must not lift [0,end)
+        assertSignOnlyCell(new Run(snp(NO_POLICY, Set.of()), engine()), "chr1\t-\tx", "pos", "chr1:-");
+        assertSignOnlyCell(new Run(seg(LiftMode.SEG, NO_POLICY, false), engine()), "chr1\t-\t200", "start", "chr1:-");
+        assertSignOnlyCell(new Run(seg(LiftMode.SEG, NO_POLICY, false), engine()), "chr1\t100\t - ", "end",
+                "chr1:100");
+    }
+
     @Test
     public void nonIntegerCoordinateErrorNamesChromAndPos() {
         Run seg = new Run(seg(LiftMode.SEG, NO_POLICY, false), engine());

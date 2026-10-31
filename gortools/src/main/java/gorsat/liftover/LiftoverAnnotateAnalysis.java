@@ -170,8 +170,8 @@ public class LiftoverAnnotateAnalysis extends Analysis {
     }
 
     /**
-     * A coordinate cell as an int. An empty or blank cell is an error: RowObj.colInt reads it as 0, which would lift a
-     * missing coordinate as if it were a real one (for -seg that gives a mapped [0,end)).
+     * A coordinate cell as an int. An empty or blank cell, or a lone '-', is an error: RowObj.colInt reads it as 0,
+     * which would lift a missing coordinate as if it were a real one (for -seg that gives a mapped [0,end)).
      */
     private int intCol(Row r, int col) {
         String cell = r.colAsString(col).toString();
@@ -180,6 +180,9 @@ public class LiftoverAnnotateAnalysis extends Analysis {
                     + location(r), col + 1, getHeader(), r.toString());
         }
         try {
+            if (cell.strip().equals("-")) {
+                throw new NumberFormatException(cell);
+            }
             return r.colAsInt(col);
         } catch (NumberFormatException e) {
             throw new GorDataException(PREFIX + "column #" + (col + 1) + " (" + columnName(col)
