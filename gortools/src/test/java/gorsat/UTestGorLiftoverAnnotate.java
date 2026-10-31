@@ -22,6 +22,10 @@
 
 package gorsat;
 
+import gorsat.Script.ScriptEngineFactory;
+import gorsat.process.GorInputSources;
+import gorsat.process.GorPipeCommands;
+import gorsat.process.GorPrePipe;
 import gorsat.process.PipeOptions;
 import gorsat.process.TestSessionFactory;
 import org.apache.commons.io.FileUtils;
@@ -38,6 +42,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * End-to-end tests of the LIFTOVER_ANNOTATE command (ENGKNOW-4117): the output columns of every mode, the contig
@@ -101,6 +106,8 @@ public class UTestGorLiftoverAnnotate {
 
     @BeforeClass
     public static void setUp() throws IOException {
+        GorPipeCommands.register();
+        GorInputSources.register();
         tmpdir = Files.createTempDirectory("liftover-annotate");
         tmpdir.toFile().deleteOnExit();
 
@@ -606,5 +613,85 @@ public class UTestGorLiftoverAnnotate {
         // a new session sees chain B
         Assert.assertEquals(lines(SNP_HEADER + "\t" + SNP_COLS, snpRow("chr1", 150, "r1") + "\tmapped\tchr1\t7150\t+"),
                 TestUtils.runGorPipe(annotate));
+    }
+
+    // Chain file in usedFiles and cache signatures (task 7)
+
+    private static List<String> usedFiles(String query) throws Exception {
+        PipeOptions options = new PipeOptions();
+        options.gorRoot_$eq(tmpdir.toString());
+        options.requestId_$eq("test");
+        try (GorSession session = new TestSessionFactory(options, null, false, null, null).create()) {
+            return scala.jdk.javaapi.CollectionConverters.asJava(GorPrePipe.getUsedFiles(query, session));
+        }
+    }
+
+    private static void assertUsesChainOnly(List<String> used, String chain, String... notUsed) {
+        Assert.assertTrue("chain missing from " + used, used.contains(chain));
+        for (String n : notUsed) {
+            Assert.assertFalse(n + " wrongly in " + used, used.contains(n));
+        }
+    }
+
+    @Test
+    public void usedFilesContainChainForLiftoverAnnotate() throws Exception {
+        assertUsesChainOnly(usedFiles("gor " + SNP + " | liftover_annotate " + CHAIN
+                + " -snp -passthrough chrM -mapped chr1"), CHAIN, "chrM", "chr1");
+    }
+
+    @Test
+    public void usedFilesContainChainForLiftover() throws Exception {
+        assertUsesChainOnly(usedFiles("gor " + SNP + " | liftover " + CHAIN + " -snp -build hg19"), CHAIN, "hg19");
+    }
+
+    @Test
+    public void usedFilesContainNestedChainForLiftoverAnnotate() throws Exception {
+        assertUsesChainOnly(usedFiles("gor " + SNP + " | liftover_annotate <(gor " + CHAIN + ") -snp"), CHAIN);
+    }
+
+    private static String signatureInNewRequest(String query, String requestId) throws Exception {
+        PipeOptions options = new PipeOptions();
+        options.gorRoot_$eq(tmpdir.toString());
+        options.requestId_$eq(requestId);
+        // Files under the cache directory are fingerprinted as "0", so keep it away from the chain and input files.
+        options.cacheDir_$eq(Files.createDirectories(tmpdir.resolve("cache")).toString());
+        try (GorSession session = new TestSessionFactory(options, null, false, null, null).create()) {
+            var engine = ScriptEngineFactory.create(session.getGorContext());
+            return engine.getFileSignatureAndUpdateSignatureMap(session, query, engine.getUsedFiles(query, session));
+        }
+    }
+
+    private String signatureOfRetargetedLink(String cmd, String opts) throws Exception {
+        String tag = cmd + "_sig";
+        String chainA = write(tag + "_a.gor", lines(CHAIN_HEADER, "chr1\t100\t200\tchr1\t1100\t1200\t+\t1000"));
+        String chainB = write(tag + "_b.gor", lines(CHAIN_HEADER, "chr1\t100\t200\tchr1\t1101\t1201\t+\t1000"));
+        String input = write(tag + "_in.gor", lines(SNP_HEADER, snpRow("chr1", 150, "r1")));
+        File link = new File(tmpdir.toFile(), tag + "_chain.gor.link");
+        String query = "gor " + input + " | " + cmd + " " + link.getAbsolutePath() + " " + opts;
+
+        FileUtils.write(link, chainA + "\n", StandardCharsets.UTF_8);
+        String before = signatureInNewRequest(query, tag + "_before");
+
+        FileUtils.write(link, chainB + "\n", StandardCharsets.UTF_8);
+        long later = System.currentTimeMillis() + 10_000;
+        Assert.assertTrue(link.setLastModified(later));
+        Assert.assertTrue(new File(chainB).setLastModified(later));
+        // A new request: sessions with the same request id share one cache, which pins the link target.
+        String after = signatureInNewRequest(query, tag + "_after");
+        Assert.assertNotNull(before);
+        Assert.assertNotNull(after);
+        return before + "|" + after;
+    }
+
+    @Test
+    public void signatureChangesWhenLinkRepointedForLiftoverAnnotate() throws Exception {
+        String[] sigs = signatureOfRetargetedLink("liftover_annotate", "-snp -overlap best").split("\\|");
+        Assert.assertNotEquals(sigs[0], sigs[1]);
+    }
+
+    @Test
+    public void signatureChangesWhenLinkRepointedForLiftover() throws Exception {
+        String[] sigs = signatureOfRetargetedLink("liftover", "-snp").split("\\|");
+        Assert.assertNotEquals(sigs[0], sigs[1]);
     }
 }

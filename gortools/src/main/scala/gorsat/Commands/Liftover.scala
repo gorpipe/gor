@@ -248,7 +248,7 @@ class Liftover extends CommandInfo("LIFTOVER",
     val pipestep = itDyn.createPipestep(command, combinedHeader)
     combinedHeader = itDyn.getHeader
 
-    CommandParsingResult(pipestep, combinedHeader)
+    CommandParsingResult(pipestep, combinedHeader, Array(replaceSingleQuotes(liftoverFile)))
   }
 }
 
