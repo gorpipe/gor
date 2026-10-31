@@ -30,7 +30,9 @@ Usage
 
    gor ... | LIFTOVER_ANNOTATE <chain> ( -snp | -var | -seg | -seg1 ) [<options>]
 
-   nor ... | LIFTOVER_ANNOTATE <chain> ( -snp | -var | -seg | -seg1 ) -chrom <col> -pos <col> [-end <col>] [<options>]
+   nor ... | LIFTOVER_ANNOTATE <chain> ( -snp | -var ) -chrom <col> -pos <col> [<options>]
+
+   nor ... | LIFTOVER_ANNOTATE <chain> ( -seg | -seg1 ) -chrom <col> -pos <col> -end <col> [<options>]
 
 ``<chain>`` is a chain file or a nested query ``<(gor ...)``.
 
@@ -111,16 +113,20 @@ Output columns
 ==============
 
 The columns below are appended to the input columns, in this order. The names are shown with the default prefix
-``liftover_``. A row with a status that has no target location (for example ``unmapped``) gets the empty string in the
-string columns and ``0`` in the integer columns.
+``liftover_``. A row with a status that has no target location (for example ``unmapped``) gets an empty location: the
+empty string in the target contig and strand columns (and in ``liftover_ref`` and ``liftover_alt`` for ``-var``) and
+``0`` in the position columns (``liftover_pos``, or ``liftover_start`` and ``liftover_stop``). The other columns
+(``liftover_status``, and ``liftover_chain_blocks`` and the ``-diag`` columns of ``-seg`` and ``-seg1``) always have
+values.
 
 ``-snp``: ``liftover_status``, ``liftover_chrom``, ``liftover_pos`` (I, the 1-based target position),
 ``liftover_strand`` (S).
 
 ``-var``: ``liftover_status``, ``liftover_chrom``, ``liftover_pos`` (I, the 1-based target position of the start of
 the variant), ``liftover_ref`` (S), ``liftover_alt`` (S), ``liftover_strand`` (S). When the target strand is ``-``
-each allele is reverse complemented separately (the order of a comma separated list of alleles is kept, and symbolic
-alleles such as ``<DEL>`` are left as they are). The alleles are empty for rows without a target.
+each allele is reverse complemented separately (the order of a comma separated list of alleles is kept). Symbolic
+alleles (starting with ``<``, such as ``<DEL>``), ``*``, ``.`` and breakend alleles (containing ``[`` or ``]``) are left
+as they are. The alleles are empty for rows without a target.
 
 ``-seg`` and ``-seg1``: ``liftover_status``, ``liftover_chrom``, ``liftover_start`` (I), ``liftover_stop`` (I),
 ``liftover_strand`` (S), ``liftover_chain_blocks`` (I, the number of chain blocks that overlap the segment, including
@@ -159,6 +165,12 @@ With ``-diag`` the following columns are added after ``liftover_chain_blocks``:
 | ``liftover_stop_strand``   | S    | The same as ``liftover_start_strand``, for the last base.                     |
 +----------------------------+------+-------------------------------------------------------------------------------+
 
+A segment that one block contains reports its diagnostics through that block: the target size equals the source size,
+the size ratio is 1.0 and the endpoints are lifted through the block, whether the status is ``mapped`` or
+``unsupported_contig`` (the block lifts to a contig that is not in ``-mapped``). A ``passthrough`` row has the target size
+equal to the source size, a ratio of 1.0 and empty endpoints (``''``, ``0``, ``''``). A junction (see `Notes`_) has
+empty endpoints. Endpoints that do not lift are also ``''``, ``0``, ``''``.
+
 The diagnostic columns are useful to see why a segment did not map, for example the size ratio of a
 ``size_changed`` row, or which end of an ``inverted`` row went where.
 
@@ -192,8 +204,9 @@ used.
    This is the case for almost every segment, and the endpoint statuses below are then not considered.
 4. Otherwise no block contains the segment as a whole, and the first and last base are lifted on their own:
 
-   * ``unmapped``: a segment that is a single base or a junction, or both the first and the last base do not lift.
-   * ``ambiguous``: the first or the last base is ambiguous.
+   * ``unmapped``: a segment that is a single base or a junction.
+   * ``ambiguous``: the first or the last base is ambiguous, even when the other base does not lift.
+   * ``unmapped``: neither the first nor the last base lifts.
    * ``start_unmapped``: only the first base does not lift.
    * ``stop_unmapped``: only the last base does not lift.
    * ``split_contig``: the two bases lift to different contigs.
@@ -217,8 +230,9 @@ start and end columns of gor rows, the second a 1-based inclusive range as used 
 report ``start+1`` and so on. The output uses the same convention as the input in each case, so with ``-seg1`` the
 lifted-over start is also 1-based and inclusive.
 
-A segment is ``mapped`` only when a single chain block contains all of it. Two adjacent blocks that together cover the
-segment give ``mapped_across_gap`` or ``size_changed`` (see the example below).
+A segment is ``mapped`` only when a single chain block contains all of it. Adjacent blocks that together cover the
+segment can give ``mapped_across_gap`` or ``size_changed`` (see the example below), and also ``inverted`` or
+``split_contig`` when the blocks lead to opposite strands or to different contigs.
 
 Chain format
 ------------
@@ -232,7 +246,9 @@ must be sorted as a GOR file. Column names are matched case-insensitively.
   ``-`` means that the source is reverse complemented relative to the target.
 * ``qScore`` is a number (it can be larger than an int). It is used to choose between overlapping blocks with
   ``-overlap best``.
-* The chain is checked when it is loaded. A chain that is not sorted by ``tStart``, has a block with ``tEnd <= tStart``,
+* The chain is checked when it is loaded. A file chain is loaded one source contig at a time, the first time a row on
+  that contig needs it, so an error in a block on a contig that no row uses is never reported (a nested chain is read
+  and checked as a whole). A chain that is not sorted by ``tStart``, has a block with ``tEnd <= tStart``,
   a gapped block, a ``qStrand`` other than ``+`` or ``-``, an invalid score, or (with the default ``-overlap error``)
   overlapping blocks is rejected with an error that starts with ``Liftover chain <path>``.
 
@@ -312,11 +328,12 @@ the names are ``lifted_status``, ``lifted_chrom``, ``lifted_start``, ``lifted_st
 ``lifted_start_chrom``, ``lifted_start_pos``, ``lifted_start_strand``, ``lifted_stop_chrom``, ``lifted_stop_pos`` and
 ``lifted_stop_strand``.
 
-Keep only the rows that mapped, and fail on rows that cannot be lifted:
+Keep the rows that mapped (and the chrM rows that were passed through), and, in the second query, fail on rows that
+cannot be lifted:
 
 .. code-block:: gor
 
-   gor variants.gor | LIFTOVER_ANNOTATE hg19tohg38.gor -var -passthrough chrM | WHERE liftover_status = 'mapped'
+   gor variants.gor | LIFTOVER_ANNOTATE hg19tohg38.gor -var -passthrough chrM | WHERE liftover_status = 'mapped' or liftover_status = 'passthrough'
 
    gor variants.gor | LIFTOVER_ANNOTATE hg19tohg38.gor -var -failon unmapped,ambiguous
 
