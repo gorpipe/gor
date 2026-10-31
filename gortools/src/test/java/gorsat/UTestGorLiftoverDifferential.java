@@ -463,6 +463,7 @@ public class UTestGorLiftoverDifferential {
         int oldUnmapped;
         int oldMinus;
         int absentContig;
+        int modelMismatches;
 
         Outcome(String name) {
             this.name = name;
@@ -500,11 +501,11 @@ public class UTestGorLiftoverDifferential {
         String oldOut = TestUtils.runGorPipe("gor " + input + " | "
                 + LegacyLiftoverQuery.expand(chainArg, opts, header(input)));
         String newOut = TestUtils.runGorPipe("gor " + input + " | liftover " + chainArg + " " + opts);
-        return compare(name, mode, input, oldOut, newOut, RandomChains.blocks(chain));
+        return compare(name, mode, all, input, oldOut, newOut, RandomChains.blocks(chain));
     }
 
-    private static Outcome compare(String name, String mode, Path input, String oldOut, String newOut,
-                                   Map<String, List<ChainBlock>> chain) {
+    private static Outcome compare(String name, String mode, boolean all, Path input, String oldOut,
+                                   String newOut, Map<String, List<ChainBlock>> chain) {
         Outcome o = new Outcome(name);
         String idName = mode.equals("bam") ? "QName" : "Id";
         List<String> inLines = readLines(input);
@@ -541,6 +542,19 @@ public class UTestGorLiftoverDifferential {
             String id = e.getKey();
             List<String> oldRows = oldById.get(id);
             List<String> newRows = newById.get(id);
+            // self-check: the classifier's old model reproduces the oracle's rows for every Id
+            if (oldRows != null) {
+                String[] in = e.getValue().split("\t", -1);
+                List<String[]> model = oldModelRows(in, new Layout(mode, in.length), all,
+                        chain.getOrDefault(in[0], List.of()));
+                if (!sameRows(model, split(oldRows))) {
+                    List<String> m = new ArrayList<>();
+                    model.forEach(r -> m.add(String.join("\t", r)));
+                    o.failures.add(id + ": old model mismatch, input " + e.getValue() + ", model " + m
+                            + ", oracle " + oldRows);
+                    o.modelMismatches++;
+                }
+            }
             String category = oldRows == null || newRows == null ? null
                     : classify(oldRows, newRows, e.getValue(), mode, chain);
             if (category == null) {
@@ -953,9 +967,7 @@ public class UTestGorLiftoverDifferential {
             boolean inNew = b.tStart() < pos && pos <= b.tEnd();
             boolean inOld = b.tStart() < pos && pos < b.tEnd();
             if (inNew && !inOld) {
-                if (b.tEnd() != pos) {
-                    return false;
-                }
+                // inNew && !inOld means pos == tEnd: every block only the new rule adds ends at Pos
                 added++;
             }
         }
@@ -965,9 +977,21 @@ public class UTestGorLiftoverDifferential {
 
     // ---- bam pairing: D5, D4, D6, D9 ----
 
-    /** D5, else D4/D6/D9 by pairing old and new rows. Returns SAME when every pair is equal. */
+    /**
+     * D5, else D4/D6/D9 by pairing old and new rows, and the new rows must equal the naive new model. Returns SAME
+     * when every pair is equal, null when unexplained.
+     */
     private static String bam(List<String[]> o, List<String[]> n, String[] in, Layout l, boolean all,
                               List<ChainBlock> blocks) {
+        String c = bamPairs(o, n, in, l, all, blocks);
+        if (c == null || SAME.equals(c)) {
+            return c;
+        }
+        return sameRows(newModelBamRows(in, l, all, blocks), n) ? c : null;
+    }
+
+    private static String bamPairs(List<String[]> o, List<String[]> n, String[] in, Layout l, boolean all,
+                                   List<ChainBlock> blocks) {
         int pos = Integer.parseInt(in[1]);
         int end = Integer.parseInt(in[2]);
         List<String[]> kept = new ArrayList<>();
@@ -1345,6 +1369,10 @@ public class UTestGorLiftoverDifferential {
         Assert.assertEquals(D9, classify(
                 List.of("chr1\t0\t1\tq0\tAACCGGTTAC\tABCDEFGHIJ\t10M\t20\tchr1\t500\t509\t\tunmapped"),
                 List.of(offNew), off, "bam", HAND_CHAIN));
+        Assert.assertNull("a last-base read left unmapped is not D9", classify(
+                List.of("chr1\t0\t1\tq4\tA\tI\t1M\t-50\tchr1\t200\t200\t\tunmapped"),
+                List.of("chr1\t0\t1\tq4\tA\tI\t1M\t0\tchr1\t200\t200\t\tunmapped"),
+                "chr1\t200\t200\tq4\tA\tI\t1M\t150", "bam", HAND_CHAIN));
         Assert.assertNull("old MPOS is not the shift", classify(
                 List.of("chr1\t0\t1\tq0\tAACCGGTTAC\tABCDEFGHIJ\t10M\t21\tchr1\t500\t509\t\tunmapped"),
                 List.of(offNew), off, "bam", HAND_CHAIN));
