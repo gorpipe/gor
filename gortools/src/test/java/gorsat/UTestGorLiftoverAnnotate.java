@@ -285,6 +285,31 @@ public class UTestGorLiftoverAnnotate {
         Assert.assertEquals(expected, TestUtils.runGorPipe(q(CHAIN, SEG, "-seg -overlap best")));
     }
 
+    /** Pins the -seg1 example of LIFTOVER_ANNOTATE.rst (the same chain and segments as segBest, 1-based inclusive). */
+    @Test
+    public void seg1DocExample() throws IOException {
+        String input = write("seg1_doc_input.gor", lines(SEG_HEADER,
+                "chr1\t121\t180\tg01",
+                "chr1\t151\t250\tg02",
+                "chr1\t251\t450\tg03"));
+        Assert.assertEquals(lines(SEG_HEADER + "\t" + SEG_COLS,
+                "chr1\t121\t180\tg01\tmapped\tchr1\t1121\t1180\t+\t1",
+                "chr1\t151\t250\tg02\tmapped_across_gap\tchr1\t1151\t1250\t+\t2",
+                "chr1\t251\t450\tg03\tinverted\t\t0\t0\t\t2"),
+                TestUtils.runGorPipe(q(CHAIN, input, "-seg1 -overlap best")));
+    }
+
+    /** Pins the -prefix lifted_ -diag column names listed in LIFTOVER_ANNOTATE.rst. */
+    @Test
+    public void docDiagColumnNames() {
+        String expected = SEG_HEADER + "\tlifted_status\tlifted_chrom\tlifted_start\tlifted_stop\tlifted_strand"
+                + "\tlifted_chain_blocks\tlifted_source_size\tlifted_target_size\tlifted_size_ratio"
+                + "\tlifted_start_chrom\tlifted_start_pos\tlifted_start_strand\tlifted_stop_chrom"
+                + "\tlifted_stop_pos\tlifted_stop_strand";
+        String out = TestUtils.runGorPipe(q(CHAIN, SEG, "-seg -overlap best -prefix lifted_ -diag"));
+        Assert.assertEquals(expected, out.split("\n")[0]);
+    }
+
     // Parity with LIFTOVER
 
     @Test
