@@ -100,6 +100,47 @@ public class UTestLiftoverAnnotateAnalysis {
     }
 
     @Test
+    public void cloneIsAWorkingCopy() {
+        LiftoverAnnotateConfig cfg = snp(NO_POLICY, Set.of());
+        String inHeader = headerFor(cfg);
+        RowHeader out = LiftoverAnnotateAnalysis.outgoingHeader(inHeader, cfg.mode(), "liftover_", false);
+        LiftoverAnnotateAnalysis original = new LiftoverAnnotateAnalysis(cfg, out, engine(), null);
+        original.setRowHeader(RowHeader.apply(inHeader, headerTypes(inHeader)));
+
+        Analysis copy = original.clone();
+        Assert.assertTrue("clone must stay a LiftoverAnnotateAnalysis", copy instanceof LiftoverAnnotateAnalysis);
+        Assert.assertNotSame(original, copy);
+        Assert.assertEquals(original.getHeader(), copy.getHeader());
+
+        String[] in = {"chr1\t101\tx", "chr1\t401\tx", "chr1\t600\tx", "chr5\t150\tx"};
+        String[] exp = {"mapped\tchr1\t1001\t+", "unmapped\t\t0\t", "mapped\tchr1\t5001\t-", "ambiguous\t\t0\t"};
+        for (Analysis step : new Analysis[]{original, copy}) {
+            AnalysisSink sink = new AnalysisSink();
+            step.$bar(sink);
+            for (String r : in) {
+                step.process(RowObj.apply(r));
+            }
+            step.securedFinish(null);
+            scala.collection.Iterator<Row> it = sink.rows().iterator();
+            for (int i = 0; i < in.length; i++) {
+                Assert.assertEquals(in[i] + "\t" + exp[i], it.next().toString());
+            }
+            Assert.assertFalse(it.hasNext());
+        }
+    }
+
+    @Test
+    public void cloneOfAConnectedStepFailsLoudly() {
+        Run run = new Run(snp(NO_POLICY, Set.of()), engine());
+        try {
+            run.pipe.clone();
+            Assert.fail("expected UnsupportedOperationException");
+        } catch (UnsupportedOperationException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("LIFTOVER_ANNOTATE cannot be cloned"));
+        }
+    }
+
+    @Test
     public void oneToOnePrefix() {
         String[] in = {"chr1\t101", "chr1\t401", "chr1\t600", "chr4\t175", "chr5\t150", "chrM\t100"};
         String[] exp = {"mapped\tchr1\t1001\t+", "unmapped\t\t0\t", "mapped\tchr1\t5001\t-",

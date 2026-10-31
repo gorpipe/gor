@@ -1369,6 +1369,21 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     // Not a chain
     testsToPerform += TestEntry(commandName, patientsPathSNP.toString + " -snp", defaultHeaderSNP, testShouldSucceed = false)
 
+    // Options that do nothing in the chosen mode are rejected
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -end e", defaultHeaderSNP + "\te", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -var -end e", headerVAR + "\te", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -ref r", defaultHeaderSNP + "\tr", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg -alt a", defaultHeaderSEG + "\ta", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg -end e", defaultHeaderSEG + "\te", testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -var -ref r -alt a", defaultHeaderSNP + "\tr\ta", testShouldSucceed = true)
+
+    // The end column must exist, REF and ALT are both needed for -var
+    testsToPerform += TestEntry(commandName, chainPath + " -seg", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg1", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -var", defaultHeaderSNP + "\tRef", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -var", defaultHeaderSNP + "\tAlt", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -var -ref nosuch -alt Alt", headerVAR, testShouldSucceed = false)
+
     performTests(testsToPerform)
   }
 

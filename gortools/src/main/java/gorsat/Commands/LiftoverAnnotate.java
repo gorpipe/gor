@@ -50,6 +50,17 @@ public class LiftoverAnnotate extends CommandInfo {
             throw new GorParsingException("-tolerance is only valid with -seg and -seg1", "-tolerance", "");
         }
 
+        if (!span && CommandParseUtilities.hasOption(args, "-end")) {
+            throw new GorParsingException("-end is only valid with -seg or -seg1", "-end", "");
+        }
+        if (mode != LiftMode.VAR) {
+            for (String option : new String[]{"-ref", "-alt"}) {
+                if (CommandParseUtilities.hasOption(args, option)) {
+                    throw new GorParsingException(option + " is only valid with -var", option, "");
+                }
+            }
+        }
+
         String prefix = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-prefix", DEFAULT_PREFIX);
         for (int i = 0; i < prefix.length(); i++) {
             if (BAD_PREFIX_CHARS.indexOf(prefix.charAt(i)) >= 0) {

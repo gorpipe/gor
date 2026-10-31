@@ -30,6 +30,7 @@ public class LiftoverAnnotateAnalysis extends Analysis {
     private final LiftoverAnnotateConfig config;
     private final RowHeader outgoingHeader;
     private final Supplier<ChainSource> chainFactory;
+    private final GorContext context;
     private ChainSource chain;
     private final Supplier<ChainSource> lazyChain = this::resolveChain;
 
@@ -38,6 +39,7 @@ public class LiftoverAnnotateAnalysis extends Analysis {
         this.config = config;
         this.outgoingHeader = outgoingHeader;
         this.chainFactory = chainFactory;
+        this.context = context;
         statsSenderName_$eq(STATS_SENDER);
         if (context != null) {
             setContext(context);
@@ -108,6 +110,26 @@ public class LiftoverAnnotateAnalysis extends Analysis {
             types[in.length + k] = out.get(k).type();
         }
         return new RowHeader(names, types);
+    }
+
+    /**
+     * A working copy of a step that stands alone, with the same configuration, outgoing header, chain factory and
+     * context, and its own lazily resolved chain and stats sender; the input row header is carried over by
+     * {@code init}. The inherited clone would return a plain pass-through step that silently drops the liftover.
+     * <p>
+     * A step connected to other steps is refused: {@code Analysis.init} clones the neighbours, and a neighbour's
+     * clone clones this step again, so cloning a connected pipe never terminates (StackOverflowError) for any
+     * command. Failing loudly is the only safe answer there.
+     */
+    @Override
+    public Analysis clone() {
+        if (pipeTo() != null || pipeFrom() != null) {
+            throw new UnsupportedOperationException("LIFTOVER_ANNOTATE cannot be cloned inside a connected pipe");
+        }
+        LiftoverAnnotateAnalysis copy = new LiftoverAnnotateAnalysis(config, outgoingHeader, chainFactory, context);
+        cloned_$eq(copy);
+        init(copy);
+        return copy;
     }
 
     @Override
