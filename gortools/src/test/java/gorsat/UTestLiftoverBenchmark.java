@@ -37,6 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -49,6 +50,7 @@ public class UTestLiftoverBenchmark {
 
     private static final int VAR_ROWS = 1_000_000;
     private static final int SEG_ROWS = 100_000;
+    private static final int REPEATS = 3;
 
     private static final String VAR_INPUT = "gorrows -p chr1:1-1000001 | calc Ref 'A' | calc Alt 'G'";
     private static final String SEG_INPUT = "gorrows -p chr1:1-1000001 -segment 50 -step 10";
@@ -82,33 +84,66 @@ public class UTestLiftoverBenchmark {
     @Category(SlowTests.class)
     @Test
     public void benchmarkVar() {
-        run("VAR", VAR_INPUT, "-var", VAR_ROWS);
+        run("VAR", VAR_ROWS, List.of(
+                new Variant("old", VAR_INPUT + " | liftover " + chain + " -var"),
+                new Variant("new", VAR_INPUT + " | liftover_annotate " + chain + " -var"),
+                new Variant("new+sort", VAR_INPUT + " | liftover_annotate " + chain + " -var | sort genome")));
     }
 
     @Category(SlowTests.class)
     @Test
     public void benchmarkSeg() {
-        run("SEG", SEG_INPUT, "-seg", SEG_ROWS);
+        run("SEG", SEG_ROWS, List.of(
+                new Variant("old", SEG_INPUT + " | liftover " + chain + " -seg"),
+                new Variant("new", SEG_INPUT + " | liftover_annotate " + chain + " -seg"),
+                new Variant("new+sort", SEG_INPUT + " | liftover_annotate " + chain + " -seg | sort genome")));
     }
 
-    private static void run(String mode, String input, String flag, int expectedRows) {
-        List<String> table = new ArrayList<>();
-        table.add("name\trows\tms\tpeakHeapMB");
-        String[][] variants = {
-                {"old", input + " | liftover " + chain + " " + flag},
-                {"new", input + " | liftover_annotate " + chain + " " + flag},
-                {"new+sort", input + " | liftover_annotate " + chain + " " + flag + " | sort genome"}};
-        for (String[] v : variants) {
-            System.gc();
-            resetPeakHeap();
-            long start = System.nanoTime();
-            int rows = TestUtils.runGorPipeCount(v[1]);
-            long ms = (System.nanoTime() - start) / 1_000_000;
-            long peakMb = peakHeapBytes() / (1024 * 1024);
-            table.add(mode + " " + v[0] + "\t" + rows + "\t" + ms + "\t" + peakMb);
-            Assert.assertEquals(mode + " " + v[0], expectedRows, rows);
+    /** A labelled query to benchmark. */
+    private record Variant(String label, String query) { }
+
+    /**
+     * Runs every variant once untimed (warm-up), then times each variant {@link #REPEATS} times, rotating the
+     * start variant per round. Prints each timed run as it is measured, then the median ms and max peak heap
+     * per variant. Every run asserts the row count.
+     */
+    private static void run(String mode, int expectedRows, List<Variant> variants) {
+        int n = variants.size();
+        for (Variant v : variants) {
+            Assert.assertEquals(mode + " " + v.label() + " warm-up", expectedRows, TestUtils.runGorPipeCount(v.query()));
         }
-        System.out.println("LIFTOVER benchmark " + mode + "\n" + String.join("\n", table));
+        List<List<Long>> msRuns = new ArrayList<>();
+        long[] maxPeakMb = new long[n];
+        for (int i = 0; i < n; i++) {
+            msRuns.add(new ArrayList<>());
+        }
+        System.out.println("LIFTOVER benchmark " + mode + " (peakHeapMB = sum of heap-pool peaks)");
+        System.out.println("name\trun\trows\tms\tpeakHeapMB");
+        for (int round = 0; round < REPEATS; round++) {
+            for (int k = 0; k < n; k++) {
+                int idx = (round + k) % n;
+                Variant v = variants.get(idx);
+                System.gc();
+                resetPeakHeap();
+                long start = System.nanoTime();
+                int rows = TestUtils.runGorPipeCount(v.query());
+                long ms = (System.nanoTime() - start) / 1_000_000;
+                long peakMb = peakHeapBytes() / (1024 * 1024);
+                msRuns.get(idx).add(ms);
+                maxPeakMb[idx] = Math.max(maxPeakMb[idx], peakMb);
+                System.out.println(mode + " " + v.label() + "\t" + (round + 1) + "\t" + rows + "\t" + ms + "\t" + peakMb);
+                Assert.assertEquals(mode + " " + v.label(), expectedRows, rows);
+            }
+        }
+        System.out.println("LIFTOVER benchmark " + mode + " summary (median of " + REPEATS
+                + " runs, peakHeapMB = max of sum of heap-pool peaks)");
+        System.out.println("name\trows\tmedianMs\tmaxPeakHeapMB");
+        for (int i = 0; i < n; i++) {
+            List<Long> sorted = new ArrayList<>(msRuns.get(i));
+            Collections.sort(sorted);
+            System.out.println(mode + " " + variants.get(i).label() + "\t" + expectedRows + "\t"
+                    + sorted.get(sorted.size() / 2) + "\t" + maxPeakMb[i]);
+        }
     }
 
     private static void resetPeakHeap() {
