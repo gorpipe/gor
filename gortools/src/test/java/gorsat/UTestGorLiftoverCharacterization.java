@@ -950,6 +950,26 @@ public class UTestGorLiftoverCharacterization {
         Assert.assertTrue(parseError("pe_allcoll", "Chrom\tPos\thgold_score", "-snp -all").contains("hgold_score"));
         Assert.assertTrue(parseError("pe_noref", two, "-var").contains("-var requires a REF column"));
         Assert.assertTrue(parseError("pe_noalt", "Chrom\tPos\tRef", "-var").contains("-var requires an ALT column"));
+        Assert.assertTrue(parseError("pe_noseq", "Chrom\tPos\tEnd\tQName\tQUAL\tCIGAR\tMPOS", "-bam")
+                .contains("-bam requires a SEQ column"));
+        // the collision check ignores case
+        Assert.assertTrue(parseError("pe_casecoll", "Chrom\tPos\tHGOLD_POS", "-snp").contains("hgold_Pos"));
+        // -ref and -alt are resolved in every mode, so a bad one fails even where it is not used
+        String snpRef = parseError("pe_snpref", "Chrom\tPos\tRef\tAlt", "-snp -ref nosuch");
+        Assert.assertTrue(snpRef, snpRef.contains("Column NOSUCH is not in header"));
+        String segAlt = parseError("pe_segalt", "Chrom\tStart\tEnd", "-seg -alt nosuch");
+        Assert.assertTrue(segAlt, segAlt.contains("Column NOSUCH is not in header"));
+    }
+
+    // -alt by name picks a column other than #4: on the - strand that column, not #4, is reverse complemented.
+    @Test
+    public void altOptionByName() throws IOException {
+        String in = write("altopt", lines("Chrom\tPos\tRef\tId\tAlt", "chr1\t410\tA\tAC\tAC"));
+        String[] out = lift(in, "-var -alt Alt").split("\n");
+        Assert.assertEquals(2, out.length);
+        Assert.assertEquals("Chrom\tPos\tRef\tId\tAlt\thgold_Chrom\thgold_Pos\thgold_qStrand\thgold_liftoverStatus",
+                out[0]);
+        Assert.assertEquals("chr1\t5091\tT\tAC\tGT\tchr1\t410\t-\tmapped", out[1]);
     }
 
     // N9: an unsorted chain fails the load. Before P4 the same query silently gave unmapped rows.

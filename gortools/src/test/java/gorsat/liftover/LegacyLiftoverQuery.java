@@ -11,9 +11,11 @@ import org.gorpipe.exceptions.GorParsingException;
  * <p>
  * A Java port of the option handling and the four query branches of {@code Liftover.processArguments}
  * (Liftover.scala:36-247 at c86f39a7), with every query fragment kept byte-identical. Only the
- * {@code PipeInstance} compile step is dropped, so {@code "gor IN | " + expand(chain, opts, header)} runs today's
- * LIFTOVER as a plain query. After P4 this is the only copy of the expansion. Do not edit the fragments: the
- * differential test (UTestGorLiftoverDifferential) uses this class as the "old" side.
+ * {@code PipeInstance} compile step is dropped, so {@code "gor IN | " + expand(chain, opts, header)} runs the pre-P4
+ * LIFTOVER as a plain query. The same expansion is also live, for now, as the LIFTOVER_LEGACY command
+ * (LiftoverLegacy.scala), and UTestGorLiftoverDifferential checks that the two give the same output; when
+ * LIFTOVER_LEGACY is removed, this class is the only copy again. Do not edit the fragments: the differential test
+ * uses this class as the "old" side.
  */
 public final class LegacyLiftoverQuery {
 
