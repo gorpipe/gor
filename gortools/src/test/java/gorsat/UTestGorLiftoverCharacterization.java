@@ -87,8 +87,8 @@ public class UTestGorLiftoverCharacterization {
     static String ZSEG;
     static String MA;
     static String BAM;
-    private static String MAPSTR_CHAIN;
-    private static String BIGSCORE_IN;
+    static String MAPSTR_CHAIN;
+    static String BIGSCORE_IN;
 
     private static Path tmpdir;
 

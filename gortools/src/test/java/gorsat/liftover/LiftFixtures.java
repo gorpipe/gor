@@ -1,8 +1,16 @@
 package gorsat.liftover;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 /**
@@ -287,5 +295,242 @@ public final class LiftFixtures {
         List<ChainBlock> r = new ArrayList<>(a);
         r.addAll(b);
         return r;
+    }
+
+    /**
+     * Seeded random chains and inputs for the old-vs-new LIFTOVER differential (Task 10).
+     * <p>
+     * Chains: source contigs chr1, chr2 and chrM with {@value #BLOCKS} blocks each, lengths 1-400, gaps 0-50
+     * (0 = adjacent), random strand {@code +}/{@code -} (never {@code 0}), targets on chr1, chr3 or chrUn_x and
+     * {@code qEnd = qStart + len}. Without overlaps every score is 1000. With overlaps the scores come from
+     * {500, 900, 1000}, and 20% of the blocks get an extra copy: half an overlapping block (other t-range, length,
+     * score and target), half an exact-tie copy (same t-range and score, other target). Blocks stay sorted by tStart.
+     * <p>
+     * Inputs: rows sorted by contig and position, each with a unique Id ({@code r<n>}), 60% of positions within 2
+     * bases of a block edge, and one run of 3 identical consecutive rows with Id {@code dup1}, placed past the
+     * last block of chr2 so it is unmapped in every mode. Layouts by mode:
+     * <ul>
+     * <li>snp: {@code Chrom Pos Ref Alt Id};</li>
+     * <li>var: the same, Ref from {"", A, AC, ACGT, 10 random bases}, Alt from {G, "A,TC", {@code <DEL>}, *, "G,TTA"};</li>
+     * <li>seg: {@code Chrom Start End Id}, lengths 0-300 (0 is a junction);</li>
+     * <li>bam: {@code Chrom Pos End QName SEQ QUAL CIGAR MPOS}, {@code End - Pos + 1} in 1-150, SEQ and QUAL of
+     * that length, CIGAR {@code <n>M} or {@code <a>S<b>M}, MPOS in Pos +-300 (at least 1), QName the Id. The dup
+     * run has MPOS = Pos, so its old shifted MPOS (MPOS - Pos + 0) equals the new unmapped MPOS 0 and the run
+     * differs only by the collapse.</li>
+     * </ul>
+     */
+    public static final class RandomChains {
+
+        public static final String CHAIN_HEADER = "Chrom\ttStart\ttEnd\tqChrom\tqStart\tqEnd\tqStrand\tqScore";
+        public static final List<String> SOURCE_CONTIGS = List.of("chr1", "chr2", "chrM");
+        public static final List<String> TARGET_CONTIGS = List.of("chr1", "chr3", "chrUn_x");
+        public static final int BLOCKS = 150;
+        /** Id of the 3 identical consecutive unmapped rows. */
+        public static final String DUP_ID = "dup1";
+
+        private static final double[] SCORES = {500, 900, 1000};
+        private static final String[] VAR_REFS = {"", "A", "AC", "ACGT", null}; // null: 10 random bases
+        private static final String[] VAR_ALTS = {"G", "A,TC", "<DEL>", "*", "G,TTA"};
+        private static final String BASES = "ACGT";
+        private static final String QUALS = "#+05:?AFIJ";
+
+        private RandomChains() {
+        }
+
+        /** Writes the chain for seed and returns its path. */
+        public static Path chain(Path dir, int seed, boolean overlapping) {
+            Random rnd = new Random(seed);
+            StringBuilder sb = new StringBuilder(CHAIN_HEADER).append('\n');
+            for (String contig : SOURCE_CONTIGS) {
+                List<ChainBlock> blocks = new ArrayList<>();
+                int cursor = 50 + rnd.nextInt(51);
+                for (int i = 0; i < BLOCKS; i++) {
+                    int tStart = cursor + (i == 0 ? 0 : rnd.nextInt(51));
+                    int len = 1 + rnd.nextInt(400);
+                    double score = overlapping ? SCORES[rnd.nextInt(SCORES.length)] : 1000;
+                    ChainBlock b = randomTarget(rnd, tStart, tStart + len, score);
+                    blocks.add(b);
+                    cursor = b.tEnd();
+                    if (overlapping && rnd.nextInt(5) == 0) {
+                        if (rnd.nextBoolean()) {
+                            ChainBlock tie;
+                            do {
+                                tie = randomTarget(rnd, b.tStart(), b.tEnd(), b.score());
+                            } while (tie.qChrom().equals(b.qChrom()) && tie.qStart() == b.qStart());
+                            blocks.add(tie);
+                        } else {
+                            int len2 = 1 + rnd.nextInt(400);
+                            int s2 = Math.max(0, b.tStart() + rnd.nextInt(len) - rnd.nextInt(len2));
+                            blocks.add(randomTarget(rnd, s2, s2 + len2, SCORES[rnd.nextInt(SCORES.length)]));
+                        }
+                    }
+                }
+                blocks.sort(Comparator.comparingInt(ChainBlock::tStart)); // stable
+                for (ChainBlock b : blocks) {
+                    sb.append(contig).append('\t').append(b.tStart()).append('\t').append(b.tEnd()).append('\t')
+                            .append(b.qChrom()).append('\t').append(b.qStart()).append('\t').append(b.qEnd())
+                            .append('\t').append(b.strand()).append('\t').append((long) b.score()).append('\n');
+                }
+            }
+            return write(dir.resolve("random_chain_" + seed + (overlapping ? "_ovl" : "") + ".gor"), sb.toString());
+        }
+
+        private static ChainBlock randomTarget(Random rnd, int tStart, int tEnd, double score) {
+            String qChrom = TARGET_CONTIGS.get(rnd.nextInt(TARGET_CONTIGS.size()));
+            int qStart = rnd.nextInt(2_000_000);
+            String strand = rnd.nextBoolean() ? "+" : "-";
+            return new ChainBlock(tStart, tEnd, qChrom, qStart, qStart + (tEnd - tStart), strand, score);
+        }
+
+        /** Reads a chain file into its blocks per source contig, in file order. */
+        public static Map<String, List<ChainBlock>> blocks(Path chain) {
+            Map<String, List<ChainBlock>> m = new LinkedHashMap<>();
+            List<String> lines = readLines(chain);
+            for (String line : lines.subList(1, lines.size())) {
+                String[] c = line.split("\t", -1);
+                m.computeIfAbsent(c[0], k -> new ArrayList<>()).add(new ChainBlock(Integer.parseInt(c[1]),
+                        Integer.parseInt(c[2]), c[3], Integer.parseInt(c[4]), Integer.parseInt(c[5]), c[6],
+                        Double.parseDouble(c[7])));
+            }
+            return m;
+        }
+
+        /** Writes rows input rows (including the dup run) for mode (snp, var, seg or bam) and returns its path. */
+        public static Path input(Path dir, Path chain, int seed, String mode, int rows) {
+            Map<String, List<ChainBlock>> chainBlocks = blocks(chain);
+            Random rnd = new Random(seed * 31L + mode.hashCode());
+            boolean seg = mode.equals("seg");
+            boolean bam = mode.equals("bam");
+            if (!seg && !bam && !mode.equals("snp") && !mode.equals("var")) {
+                throw new IllegalArgumentException("unknown mode " + mode);
+            }
+
+            // start, end and the rest of the row after the position columns, per row
+            List<Object[]> out = new ArrayList<>();
+            for (int i = 0; i < rows - 3; i++) {
+                int ci = rnd.nextInt(SOURCE_CONTIGS.size());
+                List<ChainBlock> bl = chainBlocks.get(SOURCE_CONTIGS.get(ci));
+                int maxEnd = maxEnd(bl);
+                int len = seg ? rnd.nextInt(301) : bam ? 1 + rnd.nextInt(150) : 0;
+                boolean anchorEnd = (seg || bam) && rnd.nextBoolean();
+                int p;
+                if (rnd.nextInt(10) < 6) {
+                    ChainBlock b = bl.get(rnd.nextInt(bl.size()));
+                    p = (rnd.nextBoolean() ? b.tStart() : b.tEnd()) + rnd.nextInt(5) - 2;
+                } else {
+                    p = 1 + rnd.nextInt(maxEnd + 100);
+                }
+                int start;
+                int end;
+                if (seg) {
+                    // 0-based start, the anchored coordinate is start or end
+                    start = anchorEnd ? p - len : p;
+                    start = Math.max(0, start);
+                    end = start + len;
+                } else if (bam) {
+                    // 1-based inclusive Pos..End
+                    start = anchorEnd ? p - len + 1 : p;
+                    start = Math.max(1, start);
+                    end = start + len - 1;
+                } else {
+                    start = Math.max(1, p);
+                    end = start;
+                }
+                out.add(new Object[]{ci, start, end, randomTail(rnd, mode, start, end)});
+            }
+            int dupPos = maxEnd(chainBlocks.get("chr2")) + 500;
+            int dupEnd = seg ? dupPos + 10 : bam ? dupPos + 9 : dupPos;
+            String dupTail = mode.equals("snp") || mode.equals("var") ? "A\tG" : bam ? "ACGTACGTAC\tIIIIIIIIII\t10M\t" + dupPos : "";
+            for (int k = 0; k < 3; k++) {
+                out.add(new Object[]{SOURCE_CONTIGS.indexOf("chr2"), dupPos, dupEnd, dupTail, DUP_ID});
+            }
+            out.sort(Comparator.<Object[]>comparingInt(r -> (Integer) r[0]).thenComparingInt(r -> (Integer) r[1])
+                    .thenComparingInt(r -> (Integer) r[2])); // stable, so the dup run stays together
+
+            StringBuilder sb = new StringBuilder(switch (mode) {
+                case "seg" -> "Chrom\tStart\tEnd\tId";
+                case "bam" -> "Chrom\tPos\tEnd\tQName\tSEQ\tQUAL\tCIGAR\tMPOS";
+                default -> "Chrom\tPos\tRef\tAlt\tId";
+            }).append('\n');
+            int n = 0;
+            for (Object[] r : out) {
+                String id = r.length > 4 ? (String) r[4] : "r" + (n++);
+                sb.append(SOURCE_CONTIGS.get((Integer) r[0])).append('\t').append(r[1]);
+                String tail = (String) r[3];
+                if (seg) {
+                    sb.append('\t').append(r[2]).append('\t').append(id);
+                } else if (bam) {
+                    sb.append('\t').append(r[2]).append('\t').append(id).append('\t').append(tail);
+                } else {
+                    sb.append('\t').append(tail).append('\t').append(id);
+                }
+                sb.append('\n');
+            }
+            return write(dir.resolve("random_" + mode + "_" + seed + "_" + rows + "_"
+                    + chain.getFileName().toString().replace(".gor", "") + ".gor"), sb.toString());
+        }
+
+        /** The columns of a row after its position columns, without the Id (snp/var) or QName (bam). */
+        private static String randomTail(Random rnd, String mode, int start, int end) {
+            switch (mode) {
+                case "snp":
+                    return BASES.charAt(rnd.nextInt(4)) + "\t" + BASES.charAt(rnd.nextInt(4));
+                case "var": {
+                    String ref = VAR_REFS[rnd.nextInt(VAR_REFS.length)];
+                    if (ref == null) {
+                        ref = randomString(rnd, BASES, 10);
+                    }
+                    return ref + "\t" + VAR_ALTS[rnd.nextInt(VAR_ALTS.length)];
+                }
+                case "bam": {
+                    int len = end - start + 1;
+                    String cigar;
+                    if (len == 1 || rnd.nextBoolean()) {
+                        cigar = len + "M";
+                    } else {
+                        int a = 1 + rnd.nextInt(len - 1);
+                        cigar = a + "S" + (len - a) + "M";
+                    }
+                    int mpos = Math.max(1, start + rnd.nextInt(601) - 300);
+                    return randomString(rnd, BASES, len) + "\t" + randomString(rnd, QUALS, len) + "\t" + cigar + "\t"
+                            + mpos;
+                }
+                default:
+                    return "";
+            }
+        }
+
+        private static String randomString(Random rnd, String alphabet, int len) {
+            StringBuilder sb = new StringBuilder(len);
+            for (int i = 0; i < len; i++) {
+                sb.append(alphabet.charAt(rnd.nextInt(alphabet.length())));
+            }
+            return sb.toString();
+        }
+
+        private static int maxEnd(List<ChainBlock> blocks) {
+            int m = 0;
+            for (ChainBlock b : blocks) {
+                m = Math.max(m, b.tEnd());
+            }
+            return m;
+        }
+
+        private static Path write(Path file, String content) {
+            try {
+                Files.writeString(file, content, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            return file;
+        }
+
+        private static List<String> readLines(Path file) {
+            try {
+                return Files.readAllLines(file, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
     }
 }
