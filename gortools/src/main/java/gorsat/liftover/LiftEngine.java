@@ -164,6 +164,11 @@ public final class LiftEngine {
     /**
      * Classifies the 1-based inclusive span s1..e1 on chrom; e1 == s1 - 1 is a junction (N12), e1 &lt; s1 - 1
      * throws. A span that one best block contains is mapped (N8); otherwise the endpoint taxonomy decides.
+     *
+     * A span contained in best block i reports its diagnostics through block i: start and stop are s1 and e1
+     * lifted through i (no endpoints for a junction), targetSize = sourceSize and sizeRatio 1.0. That holds both
+     * when it is mapped and when i's target is outside -mapped (unsupported_contig, with no target location).
+     * Only a span that no block contains uses the independent endpoint lookups and their N4 size and ratio.
      */
     public static SpanResult classifySpan(Supplier<ChainSource> chain, String chrom, int s1, int e1,
                                           ContigPolicy policy, double tolerance) {
@@ -202,12 +207,13 @@ public final class LiftEngine {
             return noTarget(AMBIGUOUS, n, src, tgt, ratio, s, e);
         }
         if (i >= 0) {
+            // a contained span reports its diagnostics through block i, mapped or not
             Target t = liftAt(ci, i, s0, e0);
-            if (!policy.allowsTarget(t.chrom())) {
-                return noTarget(UNSUPPORTED_CONTIG, n, src, tgt, ratio, s, e);
-            }
             Endpoint a = junction ? NO_ENDPOINT : pointThrough(ci, i, s1);
             Endpoint b = junction ? NO_ENDPOINT : pointThrough(ci, i, e1);
+            if (!policy.allowsTarget(t.chrom())) {
+                return noTarget(UNSUPPORTED_CONTIG, n, src, src, 1.0, a, b);
+            }
             return new SpanResult(MAPPED, t.chrom(), t.start0() + 1, t.end0(), t.strand(), n, src, src, 1.0, a, b);
         }
         if (junction || s1 == e1) {

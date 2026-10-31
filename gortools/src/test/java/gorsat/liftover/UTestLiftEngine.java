@@ -133,7 +133,8 @@ public class UTestLiftEngine {
         EXPECTED.put(19, hit(MAPPED, "chr1", 5051, 5051, "-", 1, 0, 0, 1.0,
                 ep("chr1", 5051, "-"), ep("chr1", 5051, "-")));
         EXPECTED.put(20, none(UNMAPPED, 0, 0, 0, 0.0, no, no));
-        EXPECTED.put(21, none(UNSUPPORTED_CONTIG, 1, 0, 0, 0.0, ep("chrUn_x", 50, "+"), ep("chrUn_x", 50, "+")));
+        // contained in B6: diagnostics through B6, targetSize = sourceSize = 0, sizeRatio 1.0 (fix round 1 ruling)
+        EXPECTED.put(21, none(UNSUPPORTED_CONTIG, 1, 0, 0, 1.0, ep("chrUn_x", 50, "+"), ep("chrUn_x", 50, "+")));
         EXPECTED.put(22, hit(PASSTHROUGH, "chrM", 100, 200, "", 0, 100, 100, 1.0, no, no));
         EXPECTED.put(23, none(UNSUPPORTED_CONTIG, 0, 100, 0, 0.0, no, no));
         EXPECTED.put(24, none(AMBIGUOUS, 2, 9, 0, 0.0, no, no));
@@ -349,9 +350,45 @@ public class UTestLiftEngine {
                 LiftEngine.classifySpan(NEVER, "chrM", 101, 100, PASSTHROUGH_CHRM, TOL));
         Assert.assertEquals(none(UNSUPPORTED_CONTIG, 0, 0, 0, 0.0, NO_ENDPOINT, NO_ENDPOINT),
                 LiftEngine.classifySpan(NEVER, "chr9", 100, 100, MAPPED_CHR1_CHR2, TOL));
-        // a junction contained in a block on a target outside -mapped
-        Assert.assertEquals(none(UNSUPPORTED_CONTIG, 1, 0, 0, 0.0, NO_ENDPOINT, NO_ENDPOINT),
+        // a junction contained in a block on a target outside -mapped: diagnostics through that block
+        Assert.assertEquals(none(UNSUPPORTED_CONTIG, 1, 0, 0, 1.0, NO_ENDPOINT, NO_ENDPOINT),
                 classify("chr1", 851, 850, MAPPED_CHR1_CHR2));
+    }
+
+    @Test
+    public void containedSpanEndpointsComeFromContainingBlock() {
+        // only O1 contains chr4 120..170; the point 170 is also in O2, which scores higher
+        Assert.assertEquals(new EndpointLift(1, ep("chr4", 5020, "+")),
+                LiftEngine.liftEndpoint(ENGINE_CHAIN, "chr4", 170));
+        Assert.assertEquals(hit(MAPPED, "chr4", 1020, 1070, "+", 2, 50, 50, 1.0,
+                ep("chr4", 1020, "+"), ep("chr4", 1070, "+")), classify("chr4", 120, 170, NO_POLICY));
+    }
+
+    @Test
+    public void containedUnsupportedSpanReportsThroughContainingBlock() {
+        // The O1/O2 geometry of the fixture, but O1 targets chrUn_a, so chr4 itself passes -mapped chr4 as a source
+        // contig while O1's target does not. Only O1 contains 120..170; the point 170 is also in O2 (higher score),
+        // so a raw endpoint lookup would give stop (chr4,5020,+).
+        ChainSource chain = LiftFixtures.mapChain(Map.of("chr4", ContigIndex.of("chr4", OverlapPolicy.BEST, List.of(
+                LiftFixtures.blk(100, 200, "chrUn_a", 1000, "+", 10),
+                LiftFixtures.blk(150, 250, "chr4", 5000, "+", 20)))));
+        ContigPolicy chr4Only = new ContigPolicy(Set.of(), Set.of("chr4"));
+        Assert.assertEquals(new EndpointLift(1, ep("chr4", 5020, "+")), LiftEngine.liftEndpoint(chain, "chr4", 170));
+        Assert.assertEquals(none(UNSUPPORTED_CONTIG, 2, 50, 50, 1.0,
+                ep("chrUn_a", 1020, "+"), ep("chrUn_a", 1070, "+")),
+                LiftEngine.classifySpan(() -> chain, "chr4", 120, 170, chr4Only, TOL));
+        // without -mapped the same span is mapped through O1 with the same diagnostics
+        Assert.assertEquals(hit(MAPPED, "chrUn_a", 1020, 1070, "+", 2, 50, 50, 1.0,
+                ep("chrUn_a", 1020, "+"), ep("chrUn_a", 1070, "+")),
+                LiftEngine.classifySpan(() -> chain, "chr4", 120, 170, NO_POLICY, TOL));
+        // a contained junction (only O1): no endpoints, targetSize = sourceSize = 0, sizeRatio 1.0
+        Assert.assertEquals(none(UNSUPPORTED_CONTIG, 1, 0, 0, 1.0, NO_ENDPOINT, NO_ENDPOINT),
+                LiftEngine.classifySpan(() -> chain, "chr4", 121, 120, chr4Only, TOL));
+        // a source contig outside -mapped is rejected before any lookup
+        Assert.assertEquals(none(UNSUPPORTED_CONTIG, 0, 50, 0, 0.0, NO_ENDPOINT, NO_ENDPOINT),
+                LiftEngine.classifySpan(ENGINE, "chr4", 120, 170, new ContigPolicy(Set.of(), Set.of("chr1")), TOL));
+        // case 15 unchanged
+        Assert.assertEquals(EXPECTED.get(15), classify("chr1", 811, 850, MAPPED_CHR1_CHR2));
     }
 
     @Test
