@@ -387,6 +387,12 @@ public class UTestGorLiftoverConsumers {
 
     /** The expected -bam -all rows: one per containing block, or one unmapped row. */
     private static List<String> expectedBamAll(Bam bam, List<Block> chain, boolean mateIsChecked) {
+        return expectedBamAll(bam, chain, mateIsChecked, null);
+    }
+
+    /** As above; with a list, the (input MPOS, expected MPOS) of every mapped row is added to it. */
+    private static List<String> expectedBamAll(Bam bam, List<Block> chain, boolean mateIsChecked,
+                                               List<String[]> matePairs) {
         List<String> expected = new ArrayList<>();
         for (String[] r : bam.table.rows) {
             int s0 = Integer.parseInt(r[bam.pos]) - 1;
@@ -415,6 +421,9 @@ public class UTestGorLiftoverConsumers {
                 }
                 if (mateIsChecked) {
                     row[bam.mpos] = mate(chain, b, r[bam.chrom], r[bam.mrnm], r[bam.mpos], bam.mrnm >= 0);
+                    if (matePairs != null) {
+                        matePairs.add(new String[]{r[bam.mpos], row[bam.mpos]});
+                    }
                 }
                 expected.add(String.join("\t", row) + "\t" + r[bam.chrom] + "\t" + r[bam.pos] + "\t" + r[bam.end]
                         + "\t" + b.strand() + "\tmapped\t" + Double.toString(b.score()));
@@ -522,6 +531,12 @@ public class UTestGorLiftoverConsumers {
         List<Block> chain = bamChain(bam, "chr1", null);
         bamAll("bam_chain.gor", chain, bam, true);
 
+        // the mate lift is not trivial on the real reads: some mates are lifted to a position other than the input
+        List<String[]> matePairs = new ArrayList<>();
+        expectedBamAll(bam, chain, true, matePairs);
+        long lifted = matePairs.stream().filter(p -> mateValue(p[1]) > 0 && !p[1].equals(p[0])).count();
+        Assert.assertTrue("lifted mates: " + lifted, lifted > 0);
+
         // the chain is a real test: both statuses, and both strands, occur
         String out = TestUtils.runGorPipe("gor " + BAM + " | liftover " + chainFile("bam_chain.gor", chain)
                 + " -bam -all -build hg19");
@@ -542,6 +557,91 @@ public class UTestGorLiftoverConsumers {
         Assert.assertTrue(out.rows.size() > bam.table.rows.size());
         Assert.assertTrue(out.rows.stream().anyMatch(r -> r[0].equals("chr1")));
         Assert.assertTrue(out.rows.stream().anyMatch(r -> r[0].equals("chr2")));
+    }
+
+    // ------------------------------------------------------------------------------------------------
+    // Hand computed anchors, independent of the model above
+    // ------------------------------------------------------------------------------------------------
+
+    /**
+     * One '-' strand block, chr1:400-500 (0-based half-open, the source bases 401..500 in 1-based) to chr1:5000-5100,
+     * and its inverse (t and q swapped, the strand kept). Expected values were walked base by base, not derived from
+     * the model's formula. On the '-' strand the first source base lands on the LAST target base:
+     * <pre>
+     *   1-based source base p (401..500)  ->  1-based target base 5501 - p
+     *   401 -> 5100   410 -> 5091   411 -> 5090   415 -> 5086   420 -> 5081   450 -> 5051   500 -> 5001
+     * </pre>
+     * so a run of source bases a..b lands on 5501-b .. 5501-a, and a junction before 0-based base x on 5500-x.
+     */
+    private static final String MINUS_CHAIN = CHAIN_HEADER + "\nchr1\t400\t500\tchr1\t5000\t5100\t-\t900\n";
+    private static final String MINUS_CHAIN_INVERSE = CHAIN_HEADER + "\nchr1\t5000\t5100\tchr1\t400\t500\t-\t900\n";
+
+    private static String lift(String chain, String header, String rows, String opts) throws IOException {
+        String c = write("anchor_chain_" + Math.abs(chain.hashCode()) + ".gor", chain);
+        String in = write("anchor_in_" + Math.abs((header + rows).hashCode()) + ".gor", header + "\n" + rows);
+        return TestUtils.runGorPipe("gor " + in + " | liftover " + c + " " + opts);
+    }
+
+    @Test
+    public void minusStrandSnpAnchors() throws IOException {
+        // 401 -> 5100, 410 -> 5091, 500 -> 5001; the output is sorted by the lifted position
+        Assert.assertEquals(String.join("\n",
+                "Chrom\tPos\tRef\tAlt\tId\thgold_Chrom\thgold_Pos\thgold_qStrand\thgold_liftoverStatus",
+                "chr1\t5001\tA\tG\ts3\tchr1\t500\t-\tmapped",
+                "chr1\t5091\tA\tG\ts2\tchr1\t410\t-\tmapped",
+                "chr1\t5100\tA\tG\ts1\tchr1\t401\t-\tmapped", ""),
+                lift(MINUS_CHAIN, "Chrom\tPos\tRef\tAlt\tId",
+                        "chr1\t401\tA\tG\ts1\nchr1\t410\tA\tG\ts2\nchr1\t500\tA\tG\ts3", "-snp"));
+    }
+
+    @Test
+    public void minusStrandVarAnchor() throws IOException {
+        // REF AC at 410: source bases 410, 411 -> target bases 5091, 5090, so the variant starts at 5090 and both
+        // alleles are reverse-complemented: AC -> GT, G -> C
+        Assert.assertEquals(String.join("\n",
+                "Chrom\tPos\tRef\tAlt\tId\thgold_Chrom\thgold_Pos\thgold_qStrand\thgold_liftoverStatus",
+                "chr1\t5090\tGT\tC\tv1\tchr1\t410\t-\tmapped", ""),
+                lift(MINUS_CHAIN, "Chrom\tPos\tRef\tAlt\tId", "chr1\t410\tAC\tG\tv1", "-var"));
+    }
+
+    @Test
+    public void minusStrandSegAnchors() throws IOException {
+        // [410,450) is the source bases 411..450 (1-based) -> 5501-450 .. 5501-411 = 5051..5090, GOR [5050,5090).
+        // The junction before 0-based base 450 (between the source bases 450 and 451, 1-based) is between
+        // the target bases 5051 and 5050: the cut at 5050.
+        Assert.assertEquals(String.join("\n",
+                "Chrom\tStart\tEnd\tId\thgold_Chrom\thgold_Start\thgold_End\thgold_qStrand\thgold_liftoverStatus",
+                "chr1\t5050\t5050\tj1\tchr1\t450\t450\t-\tmapped",
+                "chr1\t5050\t5090\tg1\tchr1\t410\t450\t-\tmapped", ""),
+                lift(MINUS_CHAIN, "Chrom\tStart\tEnd\tId", "chr1\t410\t450\tg1\nchr1\t450\t450\tj1", "-seg"));
+    }
+
+    @Test
+    public void minusStrandBamAnchorsAndTheirInverse() throws IOException {
+        String header = "Chrom\tPos\tEnd\tQName\tSEQ\tQUAL\tCIGAR\tMPOS";
+        // r2: 1-based Pos 411, End 420 = source bases 411..420 -> 5501-420 .. 5501-411 = 5081..5090.
+        //   SEQ AACGTTGCAT: reversed TACGTTGCAA, complemented ATGCAACGTT. QUAL ABCDEFGHIJ -> JIHGFEDCBA.
+        //   CIGAR 3S5M2I (the read's own order) -> 2I5M3S. MPOS 415 -> 5501-415 = 5086 (on chr1, the read's target).
+        // r1: a 1-base read on the block's last base (500) -> 5001, SEQ C -> G, MPOS 0 is no mate: unchanged.
+        String out = lift(MINUS_CHAIN, header,
+                "chr1\t411\t420\tr2\tAACGTTGCAT\tABCDEFGHIJ\t3S5M2I\t415\nchr1\t500\t500\tr1\tC\tI\t1M\t0",
+                "-bam");
+        String expected = String.join("\n",
+                "Chrom\tPos\tEnd\tQName\tSEQ\tQUAL\tCIGAR\tMPOS\thgold_Chrom\thgold_Pos\thgold_End\thgold_qStrand"
+                        + "\thgold_liftoverStatus",
+                "chr1\t5001\t5001\tr1\tG\tI\t1M\t0\tchr1\t500\t500\t-\tmapped",
+                "chr1\t5081\t5090\tr2\tATGCAACGTT\tJIHGFEDCBA\t2I5M3S\t5086\tchr1\t411\t420\t-\tmapped", "");
+        Assert.assertEquals(expected, out);
+
+        // and back through the inverse chain, written out by hand: the original reads, with MPOS 415 again
+        String back = lift(MINUS_CHAIN_INVERSE, header,
+                "chr1\t5001\t5001\tr1\tG\tI\t1M\t0\nchr1\t5081\t5090\tr2\tATGCAACGTT\tJIHGFEDCBA\t2I5M3S\t5086",
+                "-bam");
+        Assert.assertEquals(String.join("\n",
+                "Chrom\tPos\tEnd\tQName\tSEQ\tQUAL\tCIGAR\tMPOS\thgold_Chrom\thgold_Pos\thgold_End\thgold_qStrand"
+                        + "\thgold_liftoverStatus",
+                "chr1\t411\t420\tr2\tAACGTTGCAT\tABCDEFGHIJ\t3S5M2I\t415\tchr1\t5081\t5090\t-\tmapped",
+                "chr1\t500\t500\tr1\tC\tI\t1M\t0\tchr1\t5001\t5001\t-\tmapped", ""), back);
     }
 
     // ------------------------------------------------------------------------------------------------

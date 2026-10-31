@@ -130,8 +130,11 @@ public class UTestLiftoverCoverageGaps {
         // a command that only starts with nor is not nor
         try {
             FileChainSource.resolve("<(norrows 1)", context);
-        } catch (RuntimeException e) {
-            Assert.assertFalse(e.getMessage(), e.getMessage().contains("must be a gor query"));
+            Assert.fail("norrows has no chain columns");
+        } catch (GorParsingException e) {
+            // it ran as a gor query and was refused for its columns, not for being nor
+            Assert.assertEquals("Liftover chain <(norrows 1) has no tEnd column, header: ChromNOR,PosNOR,RowNum",
+                    e.getMessage());
         }
     }
 
