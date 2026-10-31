@@ -78,7 +78,7 @@ import java.util.stream.Stream;
  * <li>{@code D8-bam-last-base}: bam; a 1-base read ({@code Pos == End}) on a block's last base
  * ({@code Pos == tEnd}); old one {@code unmapped} row, new mapped rows equal to the naive model's 1-based interval
  * lift through the containing blocks (all with {@code tEnd == Pos}), with the - strand read transforms and N15
- * MPOS.</li>
+ * MPOS; without {@code -all}, an exact score tie between them gives the one {@code ambiguous} placeholder.</li>
  * </ul>
  * Anything else is unexplained and fails. Before P4 (Task 11) LIFTOVER is still the expansion, so every Id is
  * {@code same}; that proves the harness and the oracle.
@@ -953,7 +953,8 @@ public class UTestGorLiftoverDifferential {
     /**
      * D8: a 1-base bam read on a block's last base. Old is the one unmapped row; new rows are mapped and equal the
      * naive model's 1-based interval lift (one row without -all, one per containing block with -all), and every
-     * containing block ends at Pos.
+     * containing block ends at Pos. Without -all, an exact score tie between the containing blocks gives the one
+     * ambiguous placeholder row (MPOS 0), as the D2 rule.
      */
     private static boolean isLastBase(List<String[]> o, List<String[]> n, String[] in, Layout l, boolean all,
                                       List<ChainBlock> blocks) {
@@ -980,7 +981,13 @@ public class UTestGorLiftoverDifferential {
             expected.add(expectedNewBamRow(in, l, blocks));
         }
         for (String[] r : expected) {
-            if (r == null || !MAPPED.equals(r[l.status()])) {
+            if (r == null) {
+                return false;
+            }
+            // without -all an exact score tie between the containing blocks is the ambiguous placeholder (D2 rule)
+            boolean tie = !all && Arrays.equals(r, placeholder(in, l, AMBIGUOUS, false))
+                    && NaiveLift.AMBIGUOUS.equals(new NaiveLift(blocks).span(pos, end).status());
+            if (!tie && !MAPPED.equals(r[l.status()])) {
                 return false;
             }
         }
@@ -1011,6 +1018,11 @@ public class UTestGorLiftoverDifferential {
             new ChainBlock(100, 200, "chr1", 1000, 1100, "+", 1000),
             new ChainBlock(100, 200, "chr3", 3000, 3100, "+", 1000),
             new ChainBlock(200, 300, "chr3", 5000, 5100, "-", 1000)));
+
+    // chr1 [100,200) -> chr1 1000 + and [150,200) -> chr3 3000 +, equal scores: both end at 200
+    private static final Map<String, List<ChainBlock>> TIE_END_CHAIN = Map.of("chr1", List.of(
+            new ChainBlock(100, 200, "chr1", 1000, 1100, "+", 1000),
+            new ChainBlock(150, 200, "chr3", 3000, 3050, "+", 1000)));
 
     /** Drives classify directly: per category one positive example and at least one near miss that is null. */
     @Test
@@ -1121,6 +1133,19 @@ public class UTestGorLiftoverDifferential {
                 List.of("chr1\t0\t1\tq4\tA\tI\t1M\t-50\tchr1\t200\t200\t\tunmapped"),
                 List.of("chr1\t1101\t1101\tq4\tA\tI\t1M\t1050\tchr1\t200\t200\t+\tmapped"), last, "bam",
                 HAND_CHAIN));
+        // D8 on a tie: both blocks end at 200 with equal scores, so new is the one ambiguous placeholder
+        Assert.assertEquals(D8, classify(
+                List.of("chr1\t0\t1\tq8\tA\tI\t1M\t-50\tchr1\t200\t200\t\tunmapped"),
+                List.of("chr1\t0\t1\tq8\tA\tI\t1M\t0\tchr1\t200\t200\t\tambiguous"),
+                "chr1\t200\t200\tq8\tA\tI\t1M\t150", "bam", TIE_END_CHAIN));
+        Assert.assertNull("tied 1-base read not on tEnd", classify(
+                List.of("chr1\t0\t1\tq9\tA\tI\t1M\t-30\tchr1\t180\t180\t\tunmapped"),
+                List.of("chr1\t0\t1\tq9\tA\tI\t1M\t0\tchr1\t180\t180\t\tambiguous"),
+                "chr1\t180\t180\tq9\tA\tI\t1M\t150", "bam", TIE_END_CHAIN));
+        Assert.assertNull("tied 1-base read on tEnd keeps MPOS", classify(
+                List.of("chr1\t0\t1\tq8\tA\tI\t1M\t-50\tchr1\t200\t200\t\tunmapped"),
+                List.of("chr1\t0\t1\tq8\tA\tI\t1M\t-50\tchr1\t200\t200\t\tambiguous"),
+                "chr1\t200\t200\tq8\tA\tI\t1M\t150", "bam", TIE_END_CHAIN));
         Assert.assertNull("- strand read not transformed", classify(
                 List.of("chr1\t0\t1\tq5\tA\tI\t1M\t-50\tchr1\t300\t300\t\tunmapped\t0.0"),
                 List.of("chr3\t5001\t5001\tq5\tA\tI\t1M\t5051\tchr1\t300\t300\t-\tmapped\t1000.0"), lastMinus,
