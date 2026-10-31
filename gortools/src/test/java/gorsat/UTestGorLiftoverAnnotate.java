@@ -22,9 +22,12 @@
 
 package gorsat;
 
+import gorsat.process.PipeOptions;
+import gorsat.process.TestSessionFactory;
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.gor.session.GorSession;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -77,6 +80,19 @@ public class UTestGorLiftoverAnnotate {
 
     private static String snpRow(String chr, int pos, String id) {
         return chr + "\t" + pos + "\tA\tG\t" + id;
+    }
+
+    /** Runs both queries, asserts equal output and that the output has at least one data row. */
+    private static void assertSameNonEmpty(String query1, String query2) {
+        String r1 = TestUtils.runGorPipe(query1);
+        String r2 = TestUtils.runGorPipe(query2);
+        Assert.assertEquals(r1, r2);
+        assertHasDataRows(r1);
+    }
+
+    private static void assertHasDataRows(String output) {
+        Assert.assertTrue("expected a header and at least one data row, got: " + output,
+                output.split("\n").length >= 2);
     }
 
     private static String q(String chainFile, String input, String opts) {
@@ -270,6 +286,7 @@ public class UTestGorLiftoverAnnotate {
                 + "| select Chrom,Pos,Id,liftover_chrom,liftover_pos,liftover_strand";
         String snpB = "gor " + SNP + " | liftover " + CHAIN_UNIQUE + " -snp | where hgold_liftoverStatus='mapped' "
                 + "| select hgold_Chrom,hgold_Pos,Id,Chrom,Pos,hgold_qStrand | sort genome";
+        assertHasDataRows("header\n" + TestUtils.runGorPipeNoHeader(snpA));
         Assert.assertEquals(TestUtils.runGorPipeNoHeader(snpB), TestUtils.runGorPipeNoHeader(snpA));
 
         String nonSymbolic = "not(Alt ~ '*,*' or Alt ~ '*<*' or Alt ~ '*>*')";
@@ -279,6 +296,7 @@ public class UTestGorLiftoverAnnotate {
         String varB = "gor " + VAR + " | liftover " + CHAIN_UNIQUE + " -var | where hgold_liftoverStatus='mapped' "
                 + "and " + nonSymbolic + " | select hgold_Chrom,hgold_Pos,Id,Chrom,Pos,Ref,Alt,hgold_qStrand "
                 + "| sort genome";
+        assertHasDataRows("header\n" + TestUtils.runGorPipeNoHeader(varA));
         Assert.assertEquals(TestUtils.runGorPipeNoHeader(varB), TestUtils.runGorPipeNoHeader(varA));
     }
 
@@ -350,7 +368,7 @@ public class UTestGorLiftoverAnnotate {
     @Test
     public void linkChainSameOutput() throws IOException {
         String link = write("chain_link.gor.link", CHAIN + "\n");
-        TestUtils.assertTwoGorpipeResults(q(link, SNP, "-snp -overlap best"), q(CHAIN, SNP, "-snp -overlap best"));
+        assertSameNonEmpty(q(link, SNP, "-snp -overlap best"), q(CHAIN, SNP, "-snp -overlap best"));
     }
 
     @Test
@@ -360,12 +378,12 @@ public class UTestGorLiftoverAnnotate {
         String gorz = dir.getAbsolutePath() + "/chain.gorz";
         TestUtils.runGorPipe("gor " + CHAIN + " | write " + gorz);
         Assert.assertTrue(new File(gorz).exists());
-        TestUtils.assertTwoGorpipeResults(q(gorz, SNP, "-snp -overlap best"), q(CHAIN, SNP, "-snp -overlap best"));
+        assertSameNonEmpty(q(gorz, SNP, "-snp -overlap best"), q(CHAIN, SNP, "-snp -overlap best"));
     }
 
     @Test
     public void nestedChainSameOutput() {
-        TestUtils.assertTwoGorpipeResults(q("<(gor " + CHAIN + ")", SNP, "-snp -overlap best"),
+        assertSameNonEmpty(q("<(gor " + CHAIN + ")", SNP, "-snp -overlap best"),
                 q(CHAIN, SNP, "-snp -overlap best"));
         try {
             TestUtils.runGorPipe(q("<(nor " + CHAIN + ")", SNP, "-snp -overlap best"));
@@ -377,7 +395,216 @@ public class UTestGorLiftoverAnnotate {
 
     @Test
     public void pgorEqualsGor() {
-        TestUtils.assertTwoGorpipeResults("pgor " + SNP + " | liftover_annotate " + CHAIN + " -snp -overlap best",
+        assertSameNonEmpty("pgor " + SNP + " | liftover_annotate " + CHAIN + " -snp -overlap best",
                 "gor " + SNP + " | liftover_annotate " + CHAIN + " -snp -overlap best");
+    }
+
+    // Non-default options, end to end
+
+    private static String SEG_CHAIN;
+    private static String SEG_INPUT;
+
+    private static void writeSegFixtures() throws IOException {
+        // two blocks with a 10 base gap in the source and none in the target
+        SEG_CHAIN = write("seg_chain.gor", lines(CHAIN_HEADER,
+                "chr1\t100\t200\tchr1\t1000\t1100\t+\t1000",
+                "chr1\t210\t310\tchr1\t1100\t1200\t+\t1000"));
+        SEG_INPUT = write("seg_input.gor", lines(SEG_HEADER,
+                "chr1\t120\t180\tin",
+                "chr1\t150\t260\tgap"));
+    }
+
+    @Test
+    public void seg1IsOneBasedInclusive() throws IOException {
+        writeSegFixtures();
+        String input = write("seg1_input.gor", lines(SEG_HEADER, "chr1\t121\t180\tin", "chr1\t151\t260\tgap"));
+        // [121,180] 1-based is [120,180) 0-based: block 1 gives 1021..1080; the gap row spans both blocks
+        Assert.assertEquals(lines(SEG_HEADER + "\t" + SEG_COLS,
+                "chr1\t121\t180\tin\tmapped\tchr1\t1021\t1080\t+\t1",
+                "chr1\t151\t260\tgap\tsize_changed\tchr1\t1051\t1150\t+\t2"),
+                TestUtils.runGorPipe(q(SEG_CHAIN, input, "-seg1")));
+    }
+
+    @Test
+    public void diagColumnsOnMappedAndGapRows() throws IOException {
+        writeSegFixtures();
+        String diagCols = "\tliftover_source_size\tliftover_target_size\tliftover_size_ratio\tliftover_start_chrom"
+                + "\tliftover_start_pos\tliftover_start_strand\tliftover_stop_chrom\tliftover_stop_pos"
+                + "\tliftover_stop_strand";
+        // gap row: source 260-151 = 109 bases, the endpoints lift to 1051 and 1150, so target 99
+        String ratio = Double.toString(99.0 / 109.0);
+        Assert.assertEquals(lines(SEG_HEADER + "\t" + SEG_COLS + diagCols,
+                "chr1\t120\t180\tin\tmapped\tchr1\t1020\t1080\t+\t1\t59\t59\t1.0\tchr1\t1021\t+\tchr1\t1080\t+",
+                "chr1\t150\t260\tgap\tsize_changed\tchr1\t1050\t1150\t+\t2\t109\t99\t" + ratio
+                        + "\tchr1\t1051\t+\tchr1\t1150\t+"),
+                TestUtils.runGorPipe(q(SEG_CHAIN, SEG_INPUT, "-seg -diag")));
+    }
+
+    @Test
+    public void toleranceFlipsGapRowBetweenSizeChangedAndMappedAcrossGap() throws IOException {
+        writeSegFixtures();
+        // the gap row has size ratio 99/109 = 0.908
+        String gapDefault = TestUtils.runGorPipe(q(SEG_CHAIN, SEG_INPUT, "-seg")).split("\n")[2];
+        Assert.assertEquals("chr1\t150\t260\tgap\tsize_changed\tchr1\t1050\t1150\t+\t2", gapDefault);
+        String gapLoose = TestUtils.runGorPipe(q(SEG_CHAIN, SEG_INPUT, "-seg -tolerance 0.1")).split("\n")[2];
+        Assert.assertEquals("chr1\t150\t260\tgap\tmapped_across_gap\tchr1\t1050\t1150\t+\t2", gapLoose);
+        String gapTight = TestUtils.runGorPipe(q(SEG_CHAIN, SEG_INPUT, "-seg -tolerance 0.09")).split("\n")[2];
+        Assert.assertEquals(gapDefault, gapTight);
+        // the contained row is mapped whatever the tolerance
+        Assert.assertEquals("chr1\t120\t180\tin\tmapped\tchr1\t1020\t1080\t+\t1",
+                TestUtils.runGorPipe(q(SEG_CHAIN, SEG_INPUT, "-seg -tolerance 0")).split("\n")[1]);
+    }
+
+    @Test
+    public void failOnThrowsOnMatchingStatusOnly() {
+        // the first unmapped row of SNP is chr1:350
+        try {
+            TestUtils.runGorPipe(q(CHAIN, SNP, "-snp -overlap best -failon unmapped"));
+            Assert.fail("expected GorDataException");
+        } catch (GorDataException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("LIFTOVER_ANNOTATE: status 'unmapped' at chr1:350"));
+            Assert.assertEquals("LIFTOVER_ANNOTATE: status 'unmapped' at chr1:350", firstLine(e.getMessage()));
+        }
+        // a list: ambiguous is hit first (chr1:875) only when unmapped is not listed
+        try {
+            TestUtils.runGorPipe(q(CHAIN, SNP, "-snp -overlap best -failon ambiguous"));
+            Assert.fail("expected GorDataException");
+        } catch (GorDataException e) {
+            Assert.assertEquals("LIFTOVER_ANNOTATE: status 'ambiguous' at chr1:875", firstLine(e.getMessage()));
+        }
+        // no row has a listed status: the query passes and returns every row
+        String ok = TestUtils.runGorPipe(q(CHAIN_UNIQUE, SNP, "-snp -failon ambiguous,passthrough,unsupported_contig"));
+        Assert.assertEquals(14, ok.split("\n").length);
+        // segment statuses are accepted for -seg
+        try {
+            TestUtils.runGorPipe(q(CHAIN, SEG, "-seg -overlap best -failon inverted"));
+            Assert.fail("expected GorDataException");
+        } catch (GorDataException e) {
+            Assert.assertEquals("LIFTOVER_ANNOTATE: status 'inverted' at chr1:250", firstLine(e.getMessage()));
+        }
+    }
+
+    private static String firstLine(String message) {
+        return message.split("\n")[0];
+    }
+
+    @Test
+    public void customPrefix() throws IOException {
+        String input = write("prefix_in.gor", lines(SNP_HEADER, snpRow("chr1", 150, "s01"), snpRow("chr1", 350, "dup")));
+        Assert.assertEquals(lines(SNP_HEADER + "\thg38_status\thg38_chrom\thg38_pos\thg38_strand",
+                snpRow("chr1", 150, "s01") + "\tmapped\tchr1\t1150\t+",
+                snpRow("chr1", 350, "dup") + "\tunmapped\t\t0\t"),
+                TestUtils.runGorPipe(q(CHAIN_UNIQUE, input, "-snp -prefix hg38_")));
+        // the default prefix is free to be used by the input then
+        String taken = write("prefix_taken.gor", lines(SNP_HEADER + "\tliftover_status", snpRow("chr1", 150, "s01") + "\tx"));
+        Assert.assertEquals(lines(SNP_HEADER + "\tliftover_status\thg38_status\thg38_chrom\thg38_pos\thg38_strand",
+                snpRow("chr1", 150, "s01") + "\tx\tmapped\tchr1\t1150\t+"),
+                TestUtils.runGorPipe(q(CHAIN_UNIQUE, taken, "-snp -prefix hg38_")));
+    }
+
+    @Test
+    public void customColumnsInGorMode() throws IOException {
+        writeSegFixtures();
+        String input = write("custom_cols.gor", lines("Chrom\tPos\tid\tc2\tp2\te2",
+                "chr1\t1\tx\tchr1\t120\t180",
+                "chr1\t2\ty\tchr1\t150\t260"));
+        String expected = lines("Chrom\tPos\tid\tc2\tp2\te2\t" + SEG_COLS,
+                "chr1\t1\tx\tchr1\t120\t180\tmapped\tchr1\t1020\t1080\t+\t1",
+                "chr1\t2\ty\tchr1\t150\t260\tsize_changed\tchr1\t1050\t1150\t+\t2");
+        Assert.assertEquals(expected, TestUtils.runGorPipe(q(SEG_CHAIN, input, "-seg -chrom c2 -pos p2 -end e2")));
+        // columns by number (1-based)
+        Assert.assertEquals(expected, TestUtils.runGorPipe(q(SEG_CHAIN, input, "-seg -chrom 4 -pos 5 -end 6")));
+    }
+
+    @Test
+    public void norSegWithEnd() throws IOException {
+        writeSegFixtures();
+        String tsv = write("seg_coords.tsv", "#c\tp\te\nchr1\t120\t180\nchr1\t150\t260\n");
+        Assert.assertEquals(lines("ChromNOR\tPosNOR\tc\tp\te\t" + SEG_COLS,
+                "chrN\t0\tchr1\t120\t180\tmapped\tchr1\t1020\t1080\t+\t1",
+                "chrN\t0\tchr1\t150\t260\tsize_changed\tchr1\t1050\t1150\t+\t2"),
+                TestUtils.runGorPipe("nor " + tsv + " | liftover_annotate " + SEG_CHAIN
+                        + " -seg -chrom c -pos p -end e"));
+    }
+
+    // Parse errors through a query
+
+    private static String parseError(String input, String opts) {
+        try {
+            TestUtils.runGorPipe(q(CHAIN_UNIQUE, input, opts));
+        } catch (GorParsingException e) {
+            return e.getMessage();
+        }
+        Assert.fail("expected GorParsingException for " + opts);
+        return null;
+    }
+
+    @Test
+    public void varNeedsRefAndAltColumns() throws IOException {
+        String noAlt = write("no_alt.gor", lines("Chrom\tPos\tRef", "chr1\t150\tA"));
+        Assert.assertTrue(parseError(noAlt, "-var").contains("-var requires an ALT column (ALT/CALL/ALLELE or -alt)"));
+        String noRef = write("no_ref.gor", lines("Chrom\tPos\tAlt", "chr1\t150\tA"));
+        Assert.assertTrue(parseError(noRef, "-var").contains("-var requires a REF column (REF/REFERENCE or -ref)"));
+        // -ref/-alt supply them
+        String named = write("named_ra.gor", lines("Chrom\tPos\tr\ta", "chr1\t150\tA\tG"));
+        Assert.assertEquals(lines("Chrom\tPos\tr\ta\t" + VAR_COLS, "chr1\t150\tA\tG\tmapped\tchr1\t1150\tA\tG\t+"),
+                TestUtils.runGorPipe(q(CHAIN_UNIQUE, named, "-var -ref r -alt a")));
+    }
+
+    @Test
+    public void optionsThatDoNothingInTheModeAreRejected() {
+        Assert.assertTrue(parseError(SNP, "-snp -end Id").contains("-end is only valid with -seg or -seg1"));
+        Assert.assertTrue(parseError(VAR, "-var -end Id").contains("-end is only valid with -seg or -seg1"));
+        Assert.assertTrue(parseError(SNP, "-snp -ref Ref").contains("-ref is only valid with -var"));
+        Assert.assertTrue(parseError(SEG, "-seg -alt Name").contains("-alt is only valid with -var"));
+    }
+
+    @Test
+    public void segWithoutAnEndColumnIsRejected() throws IOException {
+        String twoCols = write("two_cols.gor", lines("Chrom\tPos", "chr1\t150"));
+        Assert.assertTrue(parseError(twoCols, "-seg").contains("-seg requires an end column"));
+        Assert.assertTrue(parseError(twoCols, "-seg1").contains("-seg1 requires an end column"));
+    }
+
+    // Chain link retargeted inside one session
+
+    /**
+     * N6 check. The file reader resolves a link once per session, so repointing the link inside a session is
+     * not seen by any read in that session, plain "gor chain.gor.link" included. The cached chain index must agree
+     * with what the reader serves in that session (its unique id is that of the resolved target), and a new
+     * session must see the new target.
+     */
+    @Test
+    public void retargetedLinkAgreesWithTheReaderInSessionAndIsPickedUpByNewSessions() throws Exception {
+        String chainA = write("retarget_a.gor", lines(CHAIN_HEADER, "chr1\t100\t200\tchr1\t1100\t1200\t+\t1000"));
+        String chainB = write("retarget_b.gor", lines(CHAIN_HEADER, "chr1\t100\t200\tchr1\t7100\t7200\t+\t1000"));
+        String input = write("retarget_in.gor", lines(SNP_HEADER, snpRow("chr1", 150, "r1")));
+        File link = new File(tmpdir.toFile(), "retarget_chain.gor.link");
+        String annotate = q(link.getAbsolutePath(), input, "-snp -overlap best");
+        String plain = "gor " + link.getAbsolutePath();
+
+        PipeOptions options = new PipeOptions();
+        options.parseOptions(new String[]{annotate});
+        GorSession session = new TestSessionFactory(options, null, false, null, new String[]{"user_data"}).create();
+
+        FileUtils.write(link, chainA + "\n", StandardCharsets.UTF_8);
+        Assert.assertEquals(lines(SNP_HEADER + "\t" + SNP_COLS, snpRow("chr1", 150, "r1") + "\tmapped\tchr1\t1150\t+"),
+                TestUtils.runGorPipe(new String[]{annotate}, () -> session));
+
+        FileUtils.write(link, chainB + "\n", StandardCharsets.UTF_8);
+        long later = System.currentTimeMillis() + 10_000;
+        Assert.assertTrue(link.setLastModified(later));
+        Assert.assertTrue(new File(chainB).setLastModified(later));
+
+        // what this session's reader serves for the link now
+        String qStart = TestUtils.runGorPipe(new String[]{plain}, () -> session).split("\n")[1].split("\t")[4];
+        int expectedPos = Integer.parseInt(qStart) + 50;
+        Assert.assertEquals(lines(SNP_HEADER + "\t" + SNP_COLS,
+                snpRow("chr1", 150, "r1") + "\tmapped\tchr1\t" + expectedPos + "\t+"),
+                TestUtils.runGorPipe(new String[]{annotate}, () -> session));
+
+        // a new session sees chain B
+        Assert.assertEquals(lines(SNP_HEADER + "\t" + SNP_COLS, snpRow("chr1", 150, "r1") + "\tmapped\tchr1\t7150\t+"),
+                TestUtils.runGorPipe(annotate));
     }
 }
