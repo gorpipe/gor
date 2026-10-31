@@ -20,11 +20,12 @@ The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequen
    * Identical consecutive unmapped rows are no longer collapsed.
    * Without ``-all``, equal-score overlaps give one row with status ``ambiguous`` instead of duplicate ``mapped`` rows; ``-all`` still lists every containing block.
    * ``-var`` reverse-complements each allele separately, keeping multi-allelic order and symbolic alleles.
-   * ``-bam`` treats reads as 1-based inclusive: ``-`` strand reads move by one base, a read starting on a block's first base no longer maps through that block, and MPOS is lifted rather than shifted (0 when the mate lands elsewhere).
+   * ``-bam`` treats reads as 1-based inclusive: ``-`` strand reads move by one base, a read starting on a block's first base no longer maps through that block, and MPOS is lifted rather than shifted (0 when the mate lands elsewhere, when MRNM is ``*`` or names another contig, or when the read does not map). An MPOS that is not an integer greater than 0 is not a mate position and is kept as it is.
    * A zero-length interval maps only strictly inside a block (unchanged); ``end < start`` is now an error.
    * Input columns named ``liftover_*`` are no longer renamed.
    * An output-name collision is a ``GorParsingException`` naming the column, not a ``GorDataException`` from RENAME.
    * The chain is validated on load (sorted, ungapped, ``tEnd > tStart``, ``qStrand`` ``+`` or ``-``), and it needs a ``qEnd`` column.
+   * A chain with no blocks is an error (it used to leave every row unmapped).
    * ``-ref`` sets the span used for overlap as well as the length.
 
 Usage
