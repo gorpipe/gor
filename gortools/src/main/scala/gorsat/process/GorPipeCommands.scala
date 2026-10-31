@@ -172,6 +172,7 @@ object GorPipeCommands {
       addInfo(new gorsat.Commands.Gava)
       addInfo(new gorsat.Commands.PedPivot)
       addInfo(new gorsat.Commands.Liftover)
+      addInfo(new gorsat.Commands.LiftoverAnnotate)
       addInfo(new Cmd.Cmd)
       addInfo(new gorsat.Commands.PipeSteps)
       addInfo(new gorsat.Commands.Seq)

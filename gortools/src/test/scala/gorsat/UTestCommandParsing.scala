@@ -1311,6 +1311,67 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     performTests(testsToPerform)
   }
 
+  test("Command: LIFTOVER_ANNOTATE") {
+    val testsToPerform = ListBuffer.empty[TestEntry]
+    // Initialize all the tests here
+    val commandName = "LIFTOVER_ANNOTATE"
+    val chainFile = Files.createTempFile("liftoverAnnotateChain", DataType.GOR.suffix)
+    chainFile.toFile.deleteOnExit()
+    val chainWriter = new PrintWriter(chainFile.toFile)
+    chainWriter.println("Chrom\ttStart\ttEnd\tqChrom\tqStart\tqEnd\tqStrand\tqScore")
+    chainWriter.println("chr1\t100\t200\tchr1\t1100\t1200\t+\t1000")
+    chainWriter.println("chr1\t200\t300\tchr1\t1200\t1300\t+\t1000")
+    chainWriter.println("chr1\t400\t500\tchr1\t5000\t5100\t-\t900")
+    chainWriter.close()
+    val chainPath = chainFile.toString
+    val headerVAR = defaultHeaderSNP + "\tRef\tAlt"
+    val headerNOR = "ChromNOR\tPosNOR\tc\tp"
+
+    testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath, defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -var", headerVAR, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg -diag -tolerance 0.1", defaultHeaderSEG, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg1 -failon split_contig", defaultHeaderSEG, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -passthrough chrM -mapped chr1,chr2", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -chrom c -pos p", headerNOR, testShouldSucceed = true, norContext = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -passthrough none", defaultHeaderSNP, testShouldSucceed = true)
+
+    // Exactly one type
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -var", headerVAR, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg -seg1", defaultHeaderSEG, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -bam", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -all", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, "/no/such/chain.gor -snp", defaultHeaderSNP, testShouldSucceed = false)
+
+    // Columns
+    testsToPerform += TestEntry(commandName, chainPath + " -var", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp", headerNOR, testShouldSucceed = false, norContext = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg -chrom c -pos p", headerNOR, testShouldSucceed = false, norContext = true)
+
+    // Option values
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -overlap maybe", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -prefix a,b", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -passthrough chrM -mapped chrM,chr1", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -passthrough chrM,", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -mapped chr1,chr1", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -diag", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -tolerance 0.1", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg -tolerance 1.5", defaultHeaderSEG, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg -tolerance abc", defaultHeaderSEG, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -failon split_contig", defaultHeaderSNP, testShouldSucceed = false)
+
+    // Output column collisions
+    testsToPerform += TestEntry(commandName, chainPath + " -snp", defaultHeaderSNP + "\tliftover_status", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp", defaultHeaderSNP + "\tLIFTOVER_STATUS", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -prefix hg38_", defaultHeaderSNP + "\thg38_pos", testShouldSucceed = false)
+
+    // Not a chain
+    testsToPerform += TestEntry(commandName, patientsPathSNP.toString + " -snp", defaultHeaderSNP, testShouldSucceed = false)
+
+    performTests(testsToPerform)
+  }
+
   test("Command: VARJOIN") {
     val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
