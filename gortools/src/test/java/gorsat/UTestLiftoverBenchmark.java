@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import gorsat.liftover.LegacyLiftoverQuery;
 import org.gorpipe.test.SlowTests;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -43,8 +44,9 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Benchmark of LIFTOVER (query string expansion) against LIFTOVER_ANNOTATE on a synthetic chain.
- * Records wall time and peak heap per query. There are no timing assertions, only row counts.
+ * Benchmark of LIFTOVER and LIFTOVER_ANNOTATE on a synthetic chain without overlaps. "oracle" is the pre-P4 LIFTOVER
+ * query string expansion ({@link LegacyLiftoverQuery}), "liftover" the native LIFTOVER (P4). Records wall time and
+ * peak heap per query. There are no timing assertions, only row counts.
  */
 public class UTestLiftoverBenchmark {
 
@@ -54,6 +56,8 @@ public class UTestLiftoverBenchmark {
 
     private static final String VAR_INPUT = "gorrows -p chr1:1-1000001 | calc Ref 'A' | calc Alt 'G'";
     private static final String SEG_INPUT = "gorrows -p chr1:1-1000001 -segment 50 -step 10";
+    private static final String BAM_INPUT = SEG_INPUT
+            + " | calc SEQ 'ACGTACG' | calc QUAL 'IIIIIII' | calc CIGAR '7M' | calc MPOS 0";
 
     private static Path tmpdir;
     private static String chain;
@@ -85,22 +89,46 @@ public class UTestLiftoverBenchmark {
     @Test
     public void benchmarkVar() {
         run("VAR", VAR_ROWS, List.of(
-                new Variant("old", VAR_INPUT + " | liftover " + chain + " -var"),
+                oracle(VAR_INPUT, "-var"),
+                new Variant("liftover", VAR_INPUT + " | liftover " + chain + " -var"),
                 new Variant("new", VAR_INPUT + " | liftover_annotate " + chain + " -var"),
                 new Variant("new+sort", VAR_INPUT + " | liftover_annotate " + chain + " -var | sort genome")));
     }
 
     @Category(SlowTests.class)
     @Test
+    public void benchmarkVarAll() {
+        run("VAR -all", VAR_ROWS, List.of(
+                oracle(VAR_INPUT, "-var -all"),
+                new Variant("liftover", VAR_INPUT + " | liftover " + chain + " -var -all")));
+    }
+
+    @Category(SlowTests.class)
+    @Test
+    public void benchmarkBamAll() {
+        run("BAM -all", SEG_ROWS, List.of(
+                oracle(BAM_INPUT, "-bam -all"),
+                new Variant("liftover", BAM_INPUT + " | liftover " + chain + " -bam -all")));
+    }
+
+    @Category(SlowTests.class)
+    @Test
     public void benchmarkSeg() {
         run("SEG", SEG_ROWS, List.of(
-                new Variant("old", SEG_INPUT + " | liftover " + chain + " -seg"),
+                oracle(SEG_INPUT, "-seg"),
+                new Variant("liftover", SEG_INPUT + " | liftover " + chain + " -seg"),
                 new Variant("new", SEG_INPUT + " | liftover_annotate " + chain + " -seg"),
                 new Variant("new+sort", SEG_INPUT + " | liftover_annotate " + chain + " -seg | sort genome")));
     }
 
     /** A labelled query to benchmark. */
     private record Variant(String label, String query) { }
+
+    /** The pre-P4 LIFTOVER expansion of {@code liftover chain opts} on input, run as a plain query. */
+    private static Variant oracle(String input, String opts) {
+        String header = TestUtils.runGorPipe(input + " | top 1").split("\n")[0];
+        return new Variant("oracle", input + " | " + LegacyLiftoverQuery.expand(chain, opts, header));
+    }
 
     /**
      * Runs every variant once untimed (warm-up), then times each variant {@link #REPEATS} times, rotating the

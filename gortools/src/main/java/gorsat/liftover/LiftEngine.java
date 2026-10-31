@@ -61,8 +61,11 @@ public final class LiftEngine {
     public record Target(String chrom, int start0, int end0, String strand) {
     }
 
-    /** A target with the score of the block it came through. */
-    public record ScoredTarget(Target target, double score) {
+    /**
+     * A target with the score of the block it came through; block is that block's index in the source contig's
+     * {@link ContigIndex}.
+     */
+    public record ScoredTarget(Target target, double score, int block) {
     }
 
     private static final EndpointLift NO_LIFT = new EndpointLift(ContigIndex.UNMAPPED, NO_ENDPOINT);
@@ -265,9 +268,23 @@ public final class LiftEngine {
         List<ScoredTarget> r = new ArrayList<>(blocks.length);
         for (int i : blocks) {
             Target t = point ? liftAt(ci, i, e0 - 1, e0) : liftAt(ci, i, s0, e0);
-            r.add(new ScoredTarget(t, ci.score(i)));
+            r.add(new ScoredTarget(t, ci.score(i), i));
         }
         return r;
+    }
+
+    /**
+     * -bam MPOS (N15): the 1-based mate position m on the read's source contig, lifted as a point through block
+     * {@code block} of ci when that block contains it (tStart &lt; m &lt;= tEnd), else through the best block of ci.
+     * Returns 0 when m does not lift (no block, or a score tie) or lands on a contig other than targetChrom.
+     */
+    static int liftMate(ContigIndex ci, int block, int m, String targetChrom) {
+        int i = block >= 0 && ci.tStart(block) < m && m <= ci.tEnd(block) ? block : ci.findPoint(m);
+        if (i < 0) {
+            return 0;
+        }
+        Endpoint e = pointThrough(ci, i, m);
+        return e.chrom().equals(targetChrom) ? e.pos() : 0;
     }
 
     /**

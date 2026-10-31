@@ -825,19 +825,27 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     performTests(testsToPerform)
   }
 
-  ignore("Command: LIFTOVER") {
+  test("Command: LIFTOVER") {
     val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here
     val commandName = "LIFTOVER"
+    val chainFile = Files.createTempFile("liftoverChain", DataType.GOR.suffix)
+    chainFile.toFile.deleteOnExit()
+    val chainWriter = new PrintWriter(chainFile.toFile)
+    chainWriter.println("Chrom\ttStart\ttEnd\tqChrom\tqStart\tqEnd\tqStrand\tqScore")
+    chainWriter.println("chr1\t100\t200\tchr1\t1100\t1200\t+\t1000")
+    chainWriter.println("chr1\t400\t500\tchr1\t5000\t5100\t-\t900")
+    chainWriter.close()
+    val chainPath = chainFile.toString
+    val headerBAM = "Chrom\tPos\tEnd\tQName\tSEQ\tQUAL\tCIGAR\tMPOS"
 
     testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
-    testsToPerform += TestEntry(commandName, "", defaultHeaderSNP, testShouldSucceed = false)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString, defaultHeaderSNP, testShouldSucceed = false)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -snp -seg -var -bam", defaultHeaderSNP, testShouldSucceed = false)
-    testsToPerform += TestEntry(commandName, patientsPathSEG.toString + " -snp", defaultHeaderSNP, testShouldSucceed = false)
-
-
-    // "-snp -seg -var -bam -all", "-ref -alt -build"
+    testsToPerform += TestEntry(commandName, chainPath + " -snp", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -seg", defaultHeaderSNP, testShouldSucceed = false)
+    // the output column hgold_pos collides with an input column
+    testsToPerform += TestEntry(commandName, chainPath + " -snp", "Chrom\tpos\thgold_pos", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -bam", headerBAM, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -bam", defaultHeaderSNP, testShouldSucceed = false)
 
     performTests(testsToPerform)
   }

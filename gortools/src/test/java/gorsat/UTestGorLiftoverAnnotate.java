@@ -23,6 +23,9 @@
 package gorsat;
 
 import gorsat.Script.ScriptEngineFactory;
+import gorsat.liftover.ChainBlock;
+import gorsat.liftover.LiftFixtures.NaiveLift;
+import gorsat.liftover.LiftFixtures.RandomChains;
 import gorsat.process.GorInputSources;
 import gorsat.process.GorPipeCommands;
 import gorsat.process.GorPrePipe;
@@ -42,7 +45,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * End-to-end tests of the LIFTOVER_ANNOTATE command (ENGKNOW-4117): the output columns of every mode, the contig
@@ -321,15 +327,228 @@ public class UTestGorLiftoverAnnotate {
         assertHasDataRows("header\n" + TestUtils.runGorPipeNoHeader(snpA));
         Assert.assertEquals(TestUtils.runGorPipeNoHeader(snpB), TestUtils.runGorPipeNoHeader(snpA));
 
-        String nonSymbolic = "not(Alt ~ '*,*' or Alt ~ '*<*' or Alt ~ '*>*')";
+        // symbolic and multi-allelic rows included: both commands reverse-complement per allele (N16)
         String varA = "gor " + VAR + " | liftover_annotate " + CHAIN_UNIQUE + " -var | where liftover_status='mapped' "
-                + "and " + nonSymbolic + " | select Chrom,Pos,Id,liftover_chrom,liftover_pos,liftover_ref,"
-                + "liftover_alt,liftover_strand";
+                + "| select Chrom,Pos,Id,liftover_chrom,liftover_pos,liftover_ref,liftover_alt,liftover_strand";
         String varB = "gor " + VAR + " | liftover " + CHAIN_UNIQUE + " -var | where hgold_liftoverStatus='mapped' "
-                + "and " + nonSymbolic + " | select hgold_Chrom,hgold_Pos,Id,Chrom,Pos,Ref,Alt,hgold_qStrand "
-                + "| sort genome";
+                + "| select hgold_Chrom,hgold_Pos,Id,Chrom,Pos,Ref,Alt,hgold_qStrand | sort genome";
         assertHasDataRows("header\n" + TestUtils.runGorPipeNoHeader(varA));
         Assert.assertEquals(TestUtils.runGorPipeNoHeader(varB), TestUtils.runGorPipeNoHeader(varA));
+    }
+
+    // LIFTOVER on the same engine (P4, Task 11): invariants over the RandomChains chains
+
+    private static final List<String> MODES = List.of("snp", "var", "seg", "bam");
+    private static final int RANDOM_ROWS = 2_000;
+    private static final int SEED_UNIQUE = 4117;
+    private static final int SEED_OVERLAP = 4118;
+
+    private static boolean span(String mode) {
+        return mode.equals("seg") || mode.equals("bam");
+    }
+
+    /** Output rows grouped by the input Id column (Id, or QName for bam), which both commands keep in place. */
+    private static Map<String, List<String[]>> byId(String output, String mode) {
+        String[] lines = output.split("\n");
+        int id = span(mode) ? 3 : 4;
+        Map<String, List<String[]>> m = new LinkedHashMap<>();
+        for (int i = 1; i < lines.length; i++) {
+            String[] c = lines[i].split("\t", -1);
+            m.computeIfAbsent(c[id], k -> new ArrayList<>()).add(c);
+        }
+        return m;
+    }
+
+    /** Input rows by Id, in file order (the dup run three times). */
+    private static Map<String, List<String[]>> inputById(Path input, String mode) throws IOException {
+        List<String> lines = Files.readAllLines(input);
+        int id = span(mode) ? 3 : 4;
+        Map<String, List<String[]>> m = new LinkedHashMap<>();
+        for (String line : lines.subList(1, lines.size())) {
+            String[] c = line.split("\t", -1);
+            m.computeIfAbsent(c[id], k -> new ArrayList<>()).add(c);
+        }
+        return m;
+    }
+
+    private static String liftover(Path chain, Path input, String opts) {
+        return TestUtils.runGorPipe("gor " + input + " | liftover " + chain + " " + opts);
+    }
+
+    /** N8: LIFTOVER's status is the projection of LIFTOVER_ANNOTATE's, and mapped rows agree on the lift. */
+    @Test
+    public void liftoverIsProjectionOfAnnotate() throws IOException {
+        int mapped = 0;
+        int ambiguous = 0;
+        int unmapped = 0;
+        for (int seed : new int[]{SEED_UNIQUE, SEED_OVERLAP}) {
+            Path chain = RandomChains.chain(tmpdir, seed, seed == SEED_OVERLAP);
+            for (String mode : MODES) {
+                Path input = RandomChains.input(tmpdir, chain, seed, mode, RANDOM_ROWS);
+                String annotateMode = mode.equals("bam") ? "-seg1" : "-" + mode;
+                Map<String, List<String[]>> in = inputById(input, mode);
+                Map<String, List<String[]>> lifted = byId(liftover(chain, input, "-" + mode), mode);
+                Map<String, List<String[]>> annotated = byId(TestUtils.runGorPipe("gor " + input
+                        + " | liftover_annotate " + chain + " " + annotateMode + " -overlap best"), mode);
+                Assert.assertEquals(mode + " seed " + seed + ": Ids", in.keySet(), lifted.keySet());
+                for (Map.Entry<String, List<String[]>> e : in.entrySet()) {
+                    String what = mode + " seed " + seed + " Id " + e.getKey();
+                    String[] row = e.getValue().get(0);
+                    int n = row.length;
+                    String[] l = lifted.get(e.getKey()).get(0);
+                    String[] a = annotated.get(e.getKey()).get(0);
+                    int lStrand = n + (span(mode) ? 3 : 2);
+                    String annotateStatus = a[n];
+                    String expected = annotateStatus.equals("mapped") || annotateStatus.equals("ambiguous")
+                            ? annotateStatus : "unmapped";
+                    Assert.assertEquals(what + " status", expected, l[lStrand + 1]);
+                    if (!expected.equals("mapped")) {
+                        if (expected.equals("ambiguous")) {
+                            ambiguous++;
+                        } else {
+                            unmapped++;
+                        }
+                        continue;
+                    }
+                    mapped++;
+                    Assert.assertEquals(what + " chrom", a[n + 1], l[0]);
+                    Assert.assertEquals(what + " pos", a[n + 2], l[1]);
+                    switch (mode) {
+                        case "snp" -> Assert.assertEquals(what + " strand", a[n + 3], l[lStrand]);
+                        case "var" -> {
+                            Assert.assertEquals(what + " ref", a[n + 3], l[2]);
+                            Assert.assertEquals(what + " alt", a[n + 4], l[3]);
+                            Assert.assertEquals(what + " strand", a[n + 5], l[lStrand]);
+                        }
+                        default -> {
+                            Assert.assertEquals(what + " end", a[n + 3], l[2]);
+                            Assert.assertEquals(what + " strand", a[n + 4], l[lStrand]);
+                        }
+                    }
+                }
+            }
+        }
+        System.out.println("liftoverIsProjectionOfAnnotate: " + mapped + " mapped, " + ambiguous + " ambiguous, "
+                + unmapped + " unmapped Ids");
+        Assert.assertTrue(mapped > 0 && ambiguous > 0 && unmapped > 0);
+    }
+
+    /** Without -all LIFTOVER emits exactly one row per input row, on a chain with overlaps and ties. */
+    @Test
+    public void oneRowPerInputWithoutAll() throws IOException {
+        Path chain = RandomChains.chain(tmpdir, SEED_OVERLAP, true);
+        for (String mode : MODES) {
+            Path input = RandomChains.input(tmpdir, chain, SEED_OVERLAP, mode, RANDOM_ROWS);
+            Map<String, List<String[]>> in = inputById(input, mode);
+            Map<String, List<String[]>> out = byId(liftover(chain, input, "-" + mode), mode);
+            Assert.assertEquals(mode + ": Ids", in.keySet(), out.keySet());
+            for (Map.Entry<String, List<String[]>> e : in.entrySet()) {
+                Assert.assertEquals(mode + " Id " + e.getKey(), e.getValue().size(), out.get(e.getKey()).size());
+            }
+            Assert.assertEquals(mode + ": the dup run", 3, out.get(RandomChains.DUP_ID).size());
+        }
+    }
+
+    /** NaiveLift's containing blocks for an input row under LIFTOVER's mode rule (N12, N14, N15). */
+    private static List<NaiveLift.Hit> naiveHits(String[] in, String mode, List<ChainBlock> blocks) {
+        NaiveLift nl = new NaiveLift(blocks);
+        int p = Integer.parseInt(in[1]);
+        switch (mode) {
+            case "snp":
+                return nl.pointHits(p);
+            case "var":
+                return in[2].isEmpty() ? nl.junctionHits(p - 1) : nl.intervalHits(p, p + in[2].length() - 1);
+            case "seg": {
+                int end = Integer.parseInt(in[2]);
+                return end == p ? nl.junctionHits(p) : nl.intervalHits(p + 1, end);
+            }
+            default: {
+                int end = Integer.parseInt(in[2]);
+                return end == p - 1 ? nl.junctionHits(end) : nl.intervalHits(p, end);
+            }
+        }
+    }
+
+    /** The lift part of a LIFTOVER -all row: target, strand, status and score. */
+    private static String allKey(String[] r, String mode, int n) {
+        int strand = n + (span(mode) ? 3 : 2);
+        return r[0] + ":" + r[1] + (span(mode) ? "-" + r[2] : "") + r[strand] + " " + r[strand + 1] + " @"
+                + r[r.length - 1];
+    }
+
+    /** N14: under -all, every containing block gives one mapped row with its score; no block gives one unmapped row. */
+    @Test
+    public void allRowsMatchNaive() throws IOException {
+        int multi = 0;
+        for (int seed : new int[]{SEED_UNIQUE, SEED_OVERLAP}) {
+            Path chain = RandomChains.chain(tmpdir, seed, seed == SEED_OVERLAP);
+            Map<String, List<ChainBlock>> blocks = RandomChains.blocks(chain);
+            for (String mode : MODES) {
+                Path input = RandomChains.input(tmpdir, chain, seed, mode, RANDOM_ROWS);
+                Map<String, List<String[]>> out = byId(liftover(chain, input, "-" + mode + " -all"), mode);
+                for (Map.Entry<String, List<String[]>> e : inputById(input, mode).entrySet()) {
+                    List<String> expected = new ArrayList<>();
+                    for (String[] in : e.getValue()) {
+                        int n = in.length;
+                        List<NaiveLift.Hit> hits = naiveHits(in, mode, blocks.getOrDefault(in[0], List.of()));
+                        if (hits.isEmpty()) {
+                            expected.add(in[0] + ":0" + (span(mode) ? "-1" : "") + " unmapped @0.0");
+                        }
+                        if (hits.size() > 1) {
+                            multi++;
+                        }
+                        for (NaiveLift.Hit h : hits) {
+                            String target = switch (mode) {
+                                case "snp" -> String.valueOf(h.end0());
+                                case "var" -> String.valueOf(h.start0() + 1);
+                                case "seg" -> h.start0() + "-" + h.end0();
+                                default -> (h.start0() + 1) + "-" + h.end0();
+                            };
+                            expected.add(h.chrom() + ":" + target + h.strand() + " mapped @" + h.score());
+                        }
+                        Assert.assertEquals(mode + " Id " + e.getKey() + " width", n + (span(mode) ? 6 : 5),
+                                out.get(e.getKey()).get(0).length);
+                    }
+                    List<String> actual = new ArrayList<>();
+                    int n = e.getValue().get(0).length;
+                    for (String[] r : out.get(e.getKey())) {
+                        actual.add(allKey(r, mode, n));
+                    }
+                    expected.sort(null);
+                    actual.sort(null);
+                    Assert.assertEquals(mode + " seed " + seed + " Id " + e.getKey(), expected, actual);
+                }
+            }
+        }
+        Assert.assertTrue("no input with several containing blocks", multi > 0);
+    }
+
+    private static final String UNIQUE_SNP_ROWS = " | calc Ref 'A' | calc Alt 'G,TA'";
+    private static final String UNIQUE_VAR_ROWS =
+            " | calc Ref if(mod(pos,3)=0,'',if(mod(pos,3)=1,'A','ACG')) | calc Alt 'G,TA'";
+    private static final String UNIQUE_BAM_ROWS =
+            " | calc SEQ 'ACGTACG' | calc QUAL 'IIIIIII' | calc CIGAR '7M' | calc MPOS 0";
+
+    /** N14: on a chain without overlaps, -all equals the default output plus the score column. */
+    @Test
+    public void defaultEqualsAllOnUniqueChain() {
+        for (String range : new String[]{"chr1:1-1000", "chrM:250-400"}) {
+            String points = "gorrows -p " + range;
+            String segments = "gorrows -p " + range + " -segment 7";
+            String[][] inputs = {
+                    {"snp", points + UNIQUE_SNP_ROWS},
+                    {"var", points + UNIQUE_VAR_ROWS},
+                    {"seg", segments},
+                    {"bam", segments + UNIQUE_BAM_ROWS},
+            };
+            for (String[] in : inputs) {
+                String lift = in[1] + " | liftover " + CHAIN_UNIQUE + " -" + in[0];
+                String plain = TestUtils.runGorPipe(lift);
+                Assert.assertEquals(in[0] + " on " + range, plain,
+                        TestUtils.runGorPipe(lift + " -all | hide hgold_score"));
+                Assert.assertTrue(in[0] + " on " + range + ": no mapped rows", plain.contains("\tmapped\n"));
+            }
+        }
     }
 
     // Contig policies

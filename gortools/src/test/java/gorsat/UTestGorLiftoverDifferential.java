@@ -34,7 +34,6 @@ import org.gorpipe.test.SlowTests;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -85,8 +84,8 @@ import java.util.stream.Stream;
  * <li>{@code D9-bam-unmapped-mpos}: bam, unmapped/ambiguous rows; old MPOS is the old {@code MPOS - Pos} shift,
  * new MPOS is 0 (N15), everything else equal.</li>
  * </ul>
- * Anything else is unexplained and fails. Before P4 (Task 11) LIFTOVER is still the expansion, so every Id is
- * {@code same}; that proves the harness and the oracle.
+ * Anything else is unexplained and fails. Before P4 (Task 11) every Id was {@code same}, which proved the harness
+ * and the oracle; {@link #oracleMatchesFrozenLegacy} keeps the oracle pinned to the frozen pre-P4 output.
  */
 public class UTestGorLiftoverDifferential {
 
@@ -141,78 +140,6 @@ public class UTestGorLiftoverDifferential {
     // ------------------------------------------------------------------------------------------------
     // Oracle faithfulness
     // ------------------------------------------------------------------------------------------------
-
-    /** Every Task 1 (chain, input, options) query of UTestGorLiftoverCharacterization. */
-    private static String[][] task1Queries() {
-        String chain = UTestGorLiftoverCharacterization.CHAIN;
-        String ovl = UTestGorLiftoverCharacterization.CHAIN_OVL;
-        String snp = UTestGorLiftoverCharacterization.SNP;
-        String var = UTestGorLiftoverCharacterization.VAR;
-        String seg = UTestGorLiftoverCharacterization.SEG;
-        String seg3 = UTestGorLiftoverCharacterization.SEG3;
-        String edge = UTestGorLiftoverCharacterization.EDGE;
-        String ovlin = UTestGorLiftoverCharacterization.OVLIN;
-        String ovlseg = UTestGorLiftoverCharacterization.OVLSEG;
-        String coll = UTestGorLiftoverCharacterization.COLL;
-        return new String[][]{
-                {chain, snp, "-snp"},
-                {chain, snp, "-snp -build hg19"},
-                {chain, snp, "-snp -all"},
-                {chain, var, "-var"},
-                {chain, var, "-var -all"},
-                {chain, seg, "-seg"},
-                {chain, seg3, "-seg"},
-                {chain, seg, "-seg -all"},
-                {chain, seg3, "-seg -all"},
-                {chain, edge, "-var"},
-                {chain, edge, "-snp"},
-                {ovl, ovlin, "-snp"},
-                {ovl, ovlin, "-var"},
-                {ovl, ovlin, "-snp -all"},
-                {ovl, ovlin, "-var -all"},
-                {ovl, ovlseg, "-seg"},
-                {ovl, ovlseg, "-seg -all"},
-                {chain, UTestGorLiftoverCharacterization.REFOPT, "-var"},
-                {chain, UTestGorLiftoverCharacterization.REFOPT, "-var -ref LongRef"},
-                {chain, UTestGorLiftoverCharacterization.ZSEG, "-seg"},
-                {chain, UTestGorLiftoverCharacterization.MA, "-var"},
-                {ovl, UTestGorLiftoverCharacterization.BAM, "-bam"},
-                {ovl, UTestGorLiftoverCharacterization.BAM, "-bam -all"},
-                {UTestGorLiftoverCharacterization.CHAIN_ZERO, ovlin, "-snp"},
-                {UTestGorLiftoverCharacterization.CHAIN_ZERO, ovlin, "-snp -all"},
-                {"<(gor " + chain + ")", snp, "-snp"},
-                {UTestGorLiftoverCharacterization.MAPSTR_CHAIN, UTestGorLiftoverCharacterization.BIGSCORE_IN,
-                        "-snp -all"},
-                {chain, snp, ""},
-                {chain, snp, "-snp -var"},
-                {chain, coll, "-snp"},
-                {chain, coll, "-snp -build hg19"},
-        };
-    }
-
-    /**
-     * The oracle equals live LIFTOVER on every Task 1 query and on random inputs. Task 11 deletes this;
-     * oracleMatchesFrozenLegacy keeps the proof.
-     */
-    @Test
-    public void oracleMatchesLiftover() {
-        int pairs = 0;
-        for (String[] q : task1Queries()) {
-            assertOracleMatches(q[0], q[1], q[2]);
-            pairs++;
-        }
-        int random = 0;
-        Path chain = RandomChains.chain(tmpdir, SEED_OVERLAP, true);
-        for (String mode : MODES) {
-            Path input = RandomChains.input(tmpdir, chain, SEED_OVERLAP, mode, 1_000);
-            for (String all : List.of("", " -all")) {
-                assertOracleMatches(chain.toString(), input.toString(), "-" + mode + all);
-                random++;
-            }
-        }
-        System.out.println("oracleMatchesLiftover: " + pairs + " Task 1 queries and " + random
-                + " random queries matched");
-    }
 
     /**
      * The oracle equals the frozen pre-P4 LIFTOVER output: every Task 1 query with a {@code *_LEGACY} constant, and
@@ -273,36 +200,6 @@ public class UTestGorLiftoverDifferential {
         } catch (RuntimeException e) {
             Assert.assertTrue(e.getClass().getName(), type.isInstance(e));
             Assert.assertTrue(e.getMessage(), e.getMessage().contains(text));
-        }
-    }
-
-    /** The oracle query and LIFTOVER give the same output, or throw the same exception class and message. */
-    private static void assertOracleMatches(String chain, String input, String opts) {
-        String what = "liftover " + chain + " " + opts + " on " + input;
-        String expected = null;
-        RuntimeException expectedError = null;
-        try {
-            expected = UTestGorLiftoverCharacterization.lift(chain, input, opts);
-        } catch (RuntimeException e) {
-            expectedError = e;
-        }
-        String actual = null;
-        RuntimeException actualError = null;
-        try {
-            actual = TestUtils.runGorPipe("gor " + input + " | "
-                    + LegacyLiftoverQuery.expand(chain, opts, header(Path.of(input))));
-        } catch (RuntimeException e) {
-            actualError = e;
-        }
-        if (expectedError != null) {
-            Assert.assertNotNull(what + ": oracle did not throw " + expectedError, actualError);
-            Assert.assertEquals(what, expectedError.getClass(), actualError.getClass());
-            Assert.assertEquals(what, expectedError.getMessage(), actualError.getMessage());
-        } else {
-            if (actualError != null) {
-                throw new AssertionError(what + ": oracle threw", actualError);
-            }
-            Assert.assertEquals(what, expected, actual);
         }
     }
 
@@ -421,7 +318,6 @@ public class UTestGorLiftoverDifferential {
     }
 
     /** Keeps the differential from passing vacuously after P4: every expected category occurs. */
-    @Ignore("enabled in Task 11")
     @Test
     public void categoriesExpectedAfterP4() {
         Map<String, Integer> unique = new TreeMap<>();
