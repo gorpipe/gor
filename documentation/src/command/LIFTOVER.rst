@@ -37,7 +37,7 @@ Options
 +------------------+-------------------------------------------------------------------------+
 | ``-alt col``     | The column denoting the alternate (alleles) seq. (default #4,call,alt). |
 +------------------+-------------------------------------------------------------------------+
-| ``-build value`` | Source build prefix (default hgOld)                                     |
+| ``-build value`` | Source build prefix (default hgold)                                     |
 +------------------+-------------------------------------------------------------------------+
 | ``-all``         | Include all mappings, not just the one with best score (default).       |
 +------------------+-------------------------------------------------------------------------+

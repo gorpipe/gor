@@ -140,6 +140,9 @@ Commands
    * - :ref:`LIFTOVER`
      - Converts GOR data from one reference genome build to another.
      - GOR
+   * - :ref:`LIFTOVER_ANNOTATE`
+     - Annotates rows with their lifted-over coordinates and a liftover status, without moving them.
+     - GOR/NOR
    * - :ref:`LOG`
      - Specifies how often to log rows when monitoring the progress of a running query.
      - GOR/NOR

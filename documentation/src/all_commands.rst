@@ -55,6 +55,7 @@
    command/LEFTJOIN
    command/LEFTWHERE
    command/LIFTOVER
+   command/LIFTOVER_ANNOTATE
    command/MAP
    command/MERGE
    command/META
