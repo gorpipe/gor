@@ -128,6 +128,13 @@ each allele is reverse complemented separately (the order of a comma separated l
 alleles (starting with ``<``, such as ``<DEL>``), ``*``, ``.`` and breakend alleles (containing ``[`` or ``]``) are left
 as they are. The alleles are empty for rows without a target.
 
+.. note::
+
+   An indel that lifts to the ``-`` strand has its alleles reverse complemented allele by allele, but it is not
+   re-anchored or normalised. The anchor base of a VCF-style indel (the first base of REF and ALT) ends up at the end
+   of the allele instead of the start, and ``liftover_pos`` is the 1-based start of the lifted REF interval, its
+   lowest target coordinate. Left-align and normalise the result before comparing it with variants called on the target build.
+
 ``-seg`` and ``-seg1``: ``liftover_status``, ``liftover_chrom``, ``liftover_start`` (I), ``liftover_stop`` (I),
 ``liftover_strand`` (S), ``liftover_chain_blocks`` (I, the number of chain blocks that overlap the segment, including
 blocks that lose under ``-overlap best``). The start and stop are in the same convention as the input: ``-seg``
@@ -246,10 +253,17 @@ must be sorted as a GOR file. Column names are matched case-insensitively.
   ``-`` means that the source is reverse complemented relative to the target.
 * ``qScore`` is a number (it can be larger than an int). It is used to choose between overlapping blocks with
   ``-overlap best``.
+* The chain must be sorted genomically, that is by contig and then by ``tStart``, with every contig in one run. A file
+  chain is validated one contig at a time, when a row on that contig is first lifted, and it is not scanned as a whole:
+  a contig that reappears later in the file is not noticed, and only its first run is used. A nested chain is read as a
+  whole, and a contig that reappears after another contig is rejected with ``Liftover chain <query>: contig <c> is not
+  contiguous``.
+* A chain with no blocks (a header-only file or an empty nested query) is an error, ``Liftover chain <path> has no
+  blocks``, reported on the first row that needs the chain.
 * The chain is checked when it is loaded. A file chain is loaded one source contig at a time, the first time a row on
   that contig needs it, so an error in a block on a contig that no row uses is never reported (a nested chain is read
   and checked as a whole). A chain that is not sorted by ``tStart``, has a block with ``tEnd <= tStart``,
-  a gapped block, a ``qStrand`` other than ``+`` or ``-``, an invalid score, or (with the default ``-overlap error``)
+  a gapped block, a negative ``tStart`` or ``qStart``, a missing ``tEnd``, ``qChrom``, ``qStart`` or ``qEnd``, a ``qStrand`` other than ``+`` or ``-``, an invalid score, or (with the default ``-overlap error``)
   overlapping blocks is rejected with an error that starts with ``Liftover chain <path>``.
 
 Examples

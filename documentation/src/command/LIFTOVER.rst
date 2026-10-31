@@ -10,18 +10,20 @@ LIFTOVER
 
 The **LIFTOVER** command is used to convert GOR data from one reference genome build to another.  It provides similar functionality as the LiftOver functionality at UCSC, however, executes much faster.  The output of a LIFTOVER command is therefore in different coordinates than the input and therefore it is for instance meaningless to join such data with the source file or other sources in the original genome build.
 
-The mapping between the genome builds for the LIFTOVER command is stored in GOR files, e.g. config/liftover/hg19tohg38.gor, which are typically generated from chain files from UCSC.
+The mapping between the genome builds for the LIFTOVER command is stored in GOR files, e.g. config/liftover/hg19tohg38.gor, which are typically generated from chain files from UCSC.  The chain must be sorted genomically (by contig, then ``tStart``) with each contig in one run.  A chain file is validated one contig at a time, when a row on that contig first needs it, so a contig that is out of order or an error in a block on a contig that no row uses is not reported.  A chain given as a nested query is read and validated as a whole.  The full chain format is described under :ref:`LIFTOVER_ANNOTATE`.
 
 The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequence reads or segments, in order to reverse complement sequence columns where appropriate.  Note, that the LIFTOVER command must re-order the entire output and is therefore a blocking operation similar to SORT genome.
 
 .. versionchanged:: 5.17.0
 
-   * Every mode (``-snp``, ``-var``, ``-seg``, ``-bam``, ``-all``, nested-query chains) runs natively, on the same engine as :ref:`LIFTOVER_ANNOTATE`, and gives the same lift for the same input.
+   * Every mode (``-snp``, ``-var``, ``-seg``, ``-bam``, ``-all``, nested-query chains) runs natively, on the same engine as :ref:`LIFTOVER_ANNOTATE`, and gives the same lift as LIFTOVER_ANNOTATE with ``-overlap best`` for the same input.
    * Identical consecutive unmapped rows are no longer collapsed.
    * Without ``-all``, equal-score overlaps give one row with status ``ambiguous`` instead of duplicate ``mapped`` rows; ``-all`` still lists every containing block.
    * ``-var`` reverse-complements each allele separately, keeping multi-allelic order and symbolic alleles.
    * ``-bam`` treats reads as 1-based inclusive: ``-`` strand reads move by one base, a read starting on a block's first base no longer maps through that block, and MPOS is lifted rather than shifted (0 when the mate lands elsewhere, when MRNM is ``*`` or names another contig, or when the read does not map). An MPOS that is not an integer greater than 0 is not a mate position and is kept as it is.
-   * A zero-length interval maps only strictly inside a block (unchanged); ``end < start`` is now an error.
+   * A zero-length interval maps only strictly inside a block (unchanged). An invalid interval is now an error: ``end < start`` for ``-seg``, and ``End < Pos - 1`` for ``-bam`` (a junction, ``End == Pos - 1``, is valid).
+   * Without ``-all``, a ``-seg`` or ``-bam`` row that no block contains, but whose first or last base lies in an exact score tie, is now ``ambiguous`` instead of ``unmapped``. This happens only on overlapping chains.
+   * A 1-base ``-bam`` read on a block's last base (``Pos == End == tEnd``) now maps through that block.
    * Input columns named ``liftover_*`` are no longer renamed.
    * An output-name collision is a ``GorParsingException`` naming the column, not a ``GorDataException`` from RENAME.
    * The chain is validated on load (sorted, ungapped, ``tEnd > tStart``, ``qStrand`` ``+`` or ``-``), and it needs a ``qEnd`` column.
