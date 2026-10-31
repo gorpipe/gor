@@ -139,11 +139,11 @@ public class LiftoverAnnotateAnalysis extends Analysis {
                 status = span(r, chrom, sb);
                 break;
         }
+        statsInc(status);
         if (config.failOn().contains(status)) {
             throw new GorDataException(PREFIX + "status '" + status + "' at " + chrom + ":"
                     + r.colAsString(config.posCol()));
         }
-        statsInc(status);
         super.process(r.rowWithAddedColumns(sb));
     }
 

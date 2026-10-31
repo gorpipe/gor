@@ -350,4 +350,87 @@ public class UTestLiftoverAnnotateAnalysis {
         Assert.assertEquals(3.0, stats.get("passthrough"), 0.0);
         Assert.assertEquals(1.0, stats.get("mapped"), 0.0);
     }
+
+    @Test
+    public void failOnRowIsCountedInStatsBeforeThrowing() {
+        StatsCollector collector = new StatsCollector();
+        GorSession session = new GenericSessionFactory().create();
+        session.init(session.getProjectContext(), session.getSystemContext(), session.getCache(),
+                new DefaultEventLogger() {
+                    @Override
+                    public StatsCollector getStatsCollector() {
+                        return collector;
+                    }
+                });
+        Run run = new Run(snp(NO_POLICY, Set.of("unmapped")), engine(), new GorContext(session), "chrom\tpos\tx");
+        run.feed("chr1\t101");
+        Assert.assertThrows(GorDataException.class, () -> run.feed("chr1\t401"));
+        Map<String, Double> stats = collector.getStats().get("LiftoverAnnotate:");
+        Assert.assertEquals(1.0, stats.get("mapped"), 0.0);
+        Assert.assertEquals(1.0, stats.get("unmapped"), 0.0);
+    }
+
+    @Test
+    public void nonDefaultColumnsSnp() {
+        LiftoverAnnotateConfig cfg = new LiftoverAnnotateConfig(LiftMode.SNP, 2, 3, -1, -1, -1, NO_POLICY, 0.05,
+                false, Set.of());
+        Run run = new Run(cfg, engine(), null, "chrom\tpos\tc\tp");
+        run.feed("chrN\t0\tchr1\t101");
+        Assert.assertEquals("\tmapped\tchr1\t1001\t+", suffix(run.finish().get(0), "chrN\t0\tchr1\t101"));
+    }
+
+    @Test
+    public void nonDefaultColumnsVar() {
+        // chrom #3, pos #4, alt #5, ref #6 (the row's own #1/#2 are not used)
+        LiftoverAnnotateConfig cfg = new LiftoverAnnotateConfig(LiftMode.VAR, 2, 3, -1, 5, 4, NO_POLICY, 0.05,
+                false, Set.of());
+        Run run = new Run(cfg, engine(), null, "chrom\tpos\tc\tp\talt\tref");
+        String a = "chrN\t0\tchr1\t511\tT,GA\tACG";
+        String b = "chrN\t0\tchr1\t150\tG\tA";
+        run.feed(a, b);
+        List<String> out = run.finish();
+        Assert.assertEquals("\tmapped\tchr1\t5088\tCGT\tA,TC\t-", suffix(out.get(0), a));
+        Assert.assertEquals("\tmapped\tchr1\t1050\tA\tG\t+", suffix(out.get(1), b));
+    }
+
+    @Test
+    public void nonDefaultColumnsSeg() {
+        LiftoverAnnotateConfig cfg = new LiftoverAnnotateConfig(LiftMode.SEG, 0, 1, 3, -1, -1, NO_POLICY, 0.05,
+                false, Set.of());
+        Run run = new Run(cfg, engine(), null, "chrom\tstart\tx\tend");
+        run.feed("chr1\t150\tx\t180");
+        Assert.assertEquals("\tmapped\tchr1\t1050\t1080\t+\t1", suffix(run.finish().get(0), "chr1\t150\tx\t180"));
+    }
+
+    @Test
+    public void varMappedPlusKeepsAlleles() {
+        Run run = new Run(var(NO_POLICY), engine());
+        run.feed("chr1\t150\tA\tG\tx");
+        Assert.assertEquals("\tmapped\tchr1\t1050\tA\tG\t+", suffix(run.finish().get(0), "chr1\t150\tA\tG\tx"));
+    }
+
+    @Test
+    public void absoluteMappedSegValues() {
+        Run seg = new Run(seg(LiftMode.SEG, NO_POLICY, false), engine());
+        seg.feed("chr1\t150\t180", "chr1\t510\t560");
+        List<String> o = seg.finish();
+        Assert.assertEquals("\tmapped\tchr1\t1050\t1080\t+\t1", suffix(o.get(0), "chr1\t150\t180"));
+        Assert.assertEquals("\tmapped\tchr1\t5040\t5090\t-\t1", suffix(o.get(1), "chr1\t510\t560"));
+        Run seg1 = new Run(seg(LiftMode.SEG1, NO_POLICY, false), engine());
+        seg1.feed("chr1\t151\t180", "chr1\t511\t560");
+        o = seg1.finish();
+        Assert.assertEquals("\tmapped\tchr1\t1051\t1080\t+\t1", suffix(o.get(0), "chr1\t151\t180"));
+        Assert.assertEquals("\tmapped\tchr1\t5041\t5090\t-\t1", suffix(o.get(1), "chr1\t511\t560"));
+    }
+
+    @Test
+    public void diagWithRatioAndMappedRow() {
+        Run run = new Run(seg(LiftMode.SEG1, NO_POLICY, true), engine());
+        run.feed("chr1\t251\t350", "chr1\t151\t180");
+        List<String> o = run.finish();
+        Assert.assertEquals("\tsize_changed\tchr1\t1151\t1300\t+\t2\t99\t149\t" + (149 / 99.0)
+                + "\tchr1\t1151\t+\tchr1\t1300\t+", suffix(o.get(0), "chr1\t251\t350"));
+        Assert.assertEquals("\tmapped\tchr1\t1051\t1080\t+\t1\t29\t29\t1.0\tchr1\t1051\t+\tchr1\t1080\t+",
+                suffix(o.get(1), "chr1\t151\t180"));
+    }
 }
