@@ -69,6 +69,9 @@ public final class ContigIndexBuilder {
         if (!"+".equals(strand) && !"-".equals(strand)) {
             throw error("invalid strand '" + strand + "' at " + at);
         }
+        if (Double.isNaN(score) || Double.isInfinite(score)) {
+            throw error("invalid score '" + score + "' at " + at + ", the score must be a finite number");
+        }
         if (n > 0 && tStart < this.tStart[n - 1]) {
             throw error("not sorted by tStart at " + at);
         }

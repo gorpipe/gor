@@ -580,4 +580,66 @@ public class UTestLiftChain {
             Assert.assertTrue(e.getMessage(), e.getMessage().contains("gapped block"));
         }
     }
+
+    @Test
+    public void rejectsNonFiniteScore() {
+        for (double bad : new double[]{Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY}) {
+            assertDataError("invalid score", LiftFixtures.blk(100, 200, "chr1", 0, "+", bad));
+        }
+    }
+
+    @Test
+    public void fileChainWithEmptyScoreFailsOnLoad() throws IOException {
+        String path = writeChain("noscorevalue.gor", HEADER + "\nchr1\t100\t200\tchr1\t0\t100\t+\t\n");
+        FileChainSource src = new FileChainSource(FileChainSource.resolve(path, context), OverlapPolicy.BEST, context);
+        try {
+            src.contig("chr1");
+            Assert.fail();
+        } catch (GorDataException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("Liftover chain"));
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains("invalid score"));
+        }
+    }
+
+    private static final List<ChainBlock> BIG_SCORE_BLOCKS = List.of(
+            LiftFixtures.blk(100, 200, "chr1", 0, "+", 12341034620d),
+            LiftFixtures.blk(150, 250, "chr1", 5000, "+", 12341034619d));
+
+    @Test
+    public void scoreAboveIntMaxLoadsFromFileAndNestedChain() throws IOException {
+        String path = writeChain("bigscore.gor", chainText(HEADER, "chr1", BIG_SCORE_BLOCKS));
+        ResolvedChain resolved = FileChainSource.resolve(path, context);
+        ResolvedChain nested = FileChainSource.resolve("<(gor " + path + ")", context);
+        for (ChainSource src : List.of(new FileChainSource(resolved, OverlapPolicy.BEST, context),
+                FileChainSource.cached(nested, OverlapPolicy.BEST, context))) {
+            ContigIndex idx = src.contig("chr1");
+            Assert.assertEquals(src.toString(), 0, idx.findPoint(175));
+            Assert.assertEquals(src.toString(), 1.234103462E10, idx.score(0), 0);
+            Assert.assertEquals(src.toString(), 1, idx.findPoint(225));
+        }
+    }
+
+    @Test
+    public void nestedChainWithTwoContigs() throws IOException {
+        String path = writeChain("twocontigs.gor", chainText(HEADER, "chr1", LiftFixtures.CHR1_BLOCKS.subList(0, 3))
+                + chainText(HEADER, "chr4", LiftFixtures.CHR4_BLOCKS).substring(HEADER.length() + 1));
+        ChainSource fs = new FileChainSource(FileChainSource.resolve(path, context), OverlapPolicy.BEST, context);
+        NestedChainSource ns = (NestedChainSource) FileChainSource.cached(
+                FileChainSource.resolve("<(gor " + path + ")", context), OverlapPolicy.BEST, context);
+        for (String c : List.of("chr1", "chr4")) {
+            ContigIndex a = fs.contig(c);
+            ContigIndex b = ns.contig(c);
+            Assert.assertEquals(c, a.size(), b.size());
+            Assert.assertTrue(c, b.size() > 0);
+            for (int p = 0; p <= 450; p++) {
+                Assert.assertEquals(c + " findPoint " + p, a.findPoint(p), b.findPoint(p));
+                Assert.assertEquals(c + " findSpan " + p, a.findSpan(p, p + 3), b.findSpan(p, p + 3));
+                Assert.assertArrayEquals(c + " allPoint " + p, a.allPoint(p), b.allPoint(p));
+            }
+        }
+        Assert.assertEquals(3, ns.contig("chr1").size());
+        Assert.assertEquals(1, ns.contig("chr4").findPoint(175));
+        Assert.assertEquals(0, ns.contig("chr2").size());
+        Assert.assertEquals(1, ns.loadCount());
+    }
 }
