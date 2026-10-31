@@ -37,12 +37,24 @@ public final class ContigIndexBuilder {
 
     /** Adds the chain row {@code r} (tStart is the row position) using the column positions in {@code cols}. */
     void addRow(Row r, ChainColumns cols) {
+        requireCell(r, 1, "tStart");
+        requireCell(r, cols.tEnd(), "tEnd");
+        requireCell(r, cols.qChrom(), "qChrom");
+        requireCell(r, cols.qStart(), "qStart");
+        requireCell(r, cols.qEnd(), "qEnd");
         try {
             add(r.pos, r.colAsInt(cols.tEnd()), r.colAsString(cols.qChrom()).toString(), r.colAsInt(cols.qStart()),
                     r.colAsInt(cols.qEnd()), r.colAsString(cols.qStrand()).toString(), r.colAsDouble(cols.qScore()));
         } catch (NumberFormatException e) {
             throw new GorDataException(prefix() + "invalid number in row " + r.chr + ":" + r.pos + ": "
                     + e.getMessage(), e);
+        }
+    }
+
+    /** RowObj.colInt reads an empty cell as 0, which would silently turn a missing coordinate into a valid one. */
+    private void requireCell(Row r, int col, String name) {
+        if (r.colAsString(col).toString().isBlank()) {
+            throw new GorDataException(prefix() + "empty " + name + " in row " + r.chr + ":" + r.pos);
         }
     }
 
@@ -62,6 +74,15 @@ public final class ContigIndexBuilder {
         String at = contig + ":" + tStart + "-" + tEnd;
         if (tEnd <= tStart) {
             throw error("tEnd <= tStart at " + at);
+        }
+        if (tStart < 0) {
+            throw error("tStart < 0 at " + at);
+        }
+        if (qStart < 0) {
+            throw error("qStart < 0 at " + at);
+        }
+        if (qChrom == null || qChrom.isBlank()) {
+            throw error("empty qChrom at " + at);
         }
         if (qEnd - qStart != tEnd - tStart) {
             throw error("gapped block at " + at + ", the chain must have equal source and target lengths");

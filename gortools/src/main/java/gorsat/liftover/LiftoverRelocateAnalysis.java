@@ -113,7 +113,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
 
     private void snp(Row r) {
         String chrom = r.chr;
-        int pos = r.pos;
+        int pos = startColumn(r);
         if (all) {
             List<LiftEngine.ScoredTarget> targets = LiftEngine.liftAll(resolveChain(), chrom, pos - 1, pos, true);
             for (LiftEngine.ScoredTarget st : targets) {
@@ -135,7 +135,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
 
     private void var(Row r) {
         String chrom = r.chr;
-        int pos = r.pos;
+        int pos = startColumn(r);
         int refLen = r.colAsString(cols.ref()).length();
         if (all) {
             int s0 = pos - 1;
@@ -161,7 +161,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
     private void span(Row r) {
         String chrom = r.chr;
         boolean bam = mode == RelocateMode.BAM;
-        int start = r.pos;
+        int start = startColumn(r);
         int end = endColumn(r);
         int s0 = bam ? start - 1 : start;
         if (end < s0) {
@@ -196,13 +196,35 @@ public class LiftoverRelocateAnalysis extends Analysis {
         emit(r, s.chrom(), bam ? s.start1() : s.start1() - 1, s.stop1(), s.strand(), LiftEngine.MAPPED, 0.0, mpos);
     }
 
+    /**
+     * The position cell (column #2) as an int. An empty or blank cell is an error: RowObj.colInt reads it as 0, which
+     * would lift a missing coordinate as if it were a real one.
+     */
+    private int startColumn(Row r) {
+        return coordinate(r, 1, "start");
+    }
+
     private int endColumn(Row r) {
-        try {
-            return r.colAsInt(2);
-        } catch (NumberFormatException e) {
-            throw new GorDataException(PREFIX + "Illegal stop position in column #3: '" + r.colAsString(2) + "'", 3,
-                    getHeader(), r.toString(), e);
+        return coordinate(r, 2, "stop");
+    }
+
+    private int coordinate(Row r, int col, String what) {
+        String cell = r.colAsString(col).toString();
+        if (cell.isBlank()) {
+            throw new GorDataException(PREFIX + "column #" + (col + 1) + " is empty at " + location(r), col + 1,
+                    getHeader(), r.toString());
         }
+        try {
+            return r.colAsInt(col);
+        } catch (NumberFormatException e) {
+            throw new GorDataException(PREFIX + "Illegal " + what + " position in column #" + (col + 1) + ": '"
+                    + cell + "' at " + location(r), col + 1, getHeader(), r.toString(), e);
+        }
+    }
+
+    /** chrom:pos of a row as given in the input, for error messages. */
+    private static String location(Row r) {
+        return r.chr + ":" + r.colAsString(1);
     }
 
     /** MPOS as an integer &gt; 0, or -1 when it is not one: such a value is no mate position (R18). */

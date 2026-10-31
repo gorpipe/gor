@@ -13,6 +13,8 @@ import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.gor.session.GorContext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -27,6 +29,8 @@ public class LiftoverAnnotate extends CommandInfo {
     private static final String DEFAULT_PREFIX = "liftover_";
     private static final String BAD_PREFIX_CHARS = "\\/*+-'$;,";
     private static final double DEFAULT_TOLERANCE = 0.05;
+    private static final String[] VALUE_OPTIONS = {"-failon", "-passthrough", "-mapped", "-prefix", "-overlap",
+            "-tolerance", "-chrom", "-pos", "-end", "-ref", "-alt"};
 
     public LiftoverAnnotate() {
         super("LIFTOVER_ANNOTATE",
@@ -40,6 +44,7 @@ public class LiftoverAnnotate extends CommandInfo {
     @Override
     public CommandParsingResult processArguments(GorContext context, String argString, String[] iargs,
                                                  String[] args, boolean executeNor, String forcedInputHeader) {
+        rejectRepeatedOptions(args);
         LiftMode mode = parseMode(args);
         boolean diag = CommandParseUtilities.hasOption(args, "-diag");
         boolean span = mode == LiftMode.SEG || mode == LiftMode.SEG1;
@@ -158,6 +163,16 @@ public class LiftoverAnnotate extends CommandInfo {
                 LiftoverAnnotateAnalysis.outgoingHeader(header, mode, prefix, diag),
                 () -> FileChainSource.cached(resolved, overlap, context), context);
         return new CommandParsingResult(analysis, outHeader, resolved.usedFiles().toArray(new String[0]), null);
+    }
+
+    /** The option readers use the first occurrence only, so a repeated value option would be silently ignored. */
+    private static void rejectRepeatedOptions(String[] args) {
+        List<String> all = Arrays.asList(args);
+        for (String option : VALUE_OPTIONS) {
+            if (Collections.frequency(all, option) > 1) {
+                throw new GorParsingException(option + " given more than once", option, "");
+            }
+        }
     }
 
     private static LiftMode parseMode(String[] args) {

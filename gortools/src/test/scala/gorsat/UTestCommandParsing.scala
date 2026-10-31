@@ -1392,6 +1392,19 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     testsToPerform += TestEntry(commandName, chainPath + " -var", defaultHeaderSNP + "\tAlt", testShouldSucceed = false)
     testsToPerform += TestEntry(commandName, chainPath + " -var -ref nosuch -alt Alt", headerVAR, testShouldSucceed = false)
 
+    // A value option given more than once is rejected, not silently read from its first occurrence
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -failon unmapped -failon ambiguous", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -passthrough chrM -passthrough chrX", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -mapped chr1 -mapped chr2", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -prefix a_ -prefix b_", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -overlap best -overlap error", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg -tolerance 0.1 -tolerance 0.2", defaultHeaderSEG, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -chrom 1 -chrom 1", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -pos 2 -pos 2", defaultHeaderSNP, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg -end 3 -end 3", defaultHeaderSEG, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -var -ref Ref -ref Ref", headerVAR, testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -var -alt Alt -alt Alt", headerVAR, testShouldSucceed = false)
+
     performTests(testsToPerform)
   }
 

@@ -642,4 +642,88 @@ public class UTestLiftChain {
         Assert.assertEquals(0, ns.contig("chr2").size());
         Assert.assertEquals(1, ns.loadCount());
     }
+
+    // ---- fail-closed chain validation (final review) ----
+
+    @Test
+    public void rejectsNegativeTStart() {
+        assertDataError("tStart < 0", new ChainBlock(-5, 95, "chr1", 0, 100, "+", 10));
+    }
+
+    @Test
+    public void rejectsNegativeQStart() {
+        assertDataError("qStart < 0", LiftFixtures.blk(100, 200, "chr1", -10, "+", 10));
+    }
+
+    @Test
+    public void rejectsEmptyOrBlankQChrom() {
+        assertDataError("empty qChrom", LiftFixtures.blk(100, 200, "", 0, "+", 10));
+        assertDataError("empty qChrom", LiftFixtures.blk(100, 200, "  ", 0, "+", 10));
+    }
+
+    private void assertFileChainError(String name, String row, String expected) throws IOException {
+        String path = writeChain(name, HEADER + "\n" + row + "\n");
+        for (ChainSource src : List.of(new FileChainSource(FileChainSource.resolve(path, context),
+                OverlapPolicy.BEST, context), FileChainSource.cached(
+                FileChainSource.resolve("<(gor " + path + ")", context), OverlapPolicy.BEST, context))) {
+            try {
+                src.contig("chr1");
+                Assert.fail("expected GorDataException containing '" + expected + "' for " + row.replace('\t', '|'));
+            } catch (GorDataException e) {
+                Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("Liftover chain "));
+                Assert.assertTrue(e.getMessage(), e.getMessage().contains(expected));
+            }
+        }
+    }
+
+    @Test
+    public void fileChainRejectsEmptyCoordinateFields() throws IOException {
+        assertFileChainError("emptytend.gor", "chr1\t100\t\tchr1\t0\t100\t+\t10", "empty tEnd");
+        assertFileChainError("emptyqstart.gor", "chr1\t100\t200\tchr1\t\t100\t+\t10", "empty qStart");
+        assertFileChainError("emptyqend.gor", "chr1\t100\t200\tchr1\t0\t\t+\t10", "empty qEnd");
+        assertFileChainError("emptyqchrom.gor", "chr1\t100\t200\t\t0\t100\t+\t10", "empty qChrom");
+        assertFileChainError("blankqchrom.gor", "chr1\t100\t200\t \t0\t100\t+\t10", "empty qChrom");
+    }
+
+    @Test
+    public void fileChainRejectsNegativeStarts() throws IOException {
+        assertFileChainError("negqstart.gor", "chr1\t100\t200\tchr1\t-10\t90\t+\t10", "qStart < 0");
+    }
+
+    @Test
+    public void fileChainWithNegativeTStartIsRejectedByTheReader() throws IOException {
+        // the gor reader refuses a negative position before the chain loader sees the row, so the message has no
+        // chain prefix; the loader's own tStart < 0 check covers every other way to build an index
+        String path = writeChain("negtstart.gor", HEADER + "\nchr1\t-5\t95\tchr1\t0\t100\t+\t10\n");
+        FileChainSource src = new FileChainSource(FileChainSource.resolve(path, context), OverlapPolicy.BEST, context);
+        Assert.assertThrows(GorDataException.class, () -> src.contig("chr1"));
+    }
+
+    @Test
+    public void nestedChainRejectsAContigThatReappears() throws IOException {
+        String text = HEADER + "\nchr1\t100\t200\tchr1\t1000\t1100\t+\t10"
+                + "\nchr2\t100\t200\tchr2\t1000\t1100\t+\t10"
+                + "\nchr1\t300\t400\tchr1\t2000\t2100\t+\t10\n";
+        String path = writeChain("reappear.gor", text);
+        ChainSource src = FileChainSource.cached(FileChainSource.resolve("<(gor " + path + ")", context),
+                OverlapPolicy.BEST, context);
+        try {
+            src.contig("chr2");
+            Assert.fail("expected GorDataException");
+        } catch (GorDataException e) {
+            Assert.assertEquals("Liftover chain <(gor " + path + "): contig chr1 is not contiguous", e.getMessage());
+        }
+    }
+
+    @Test
+    public void nestedChainWithContigsInOneRunEachStillLoads() throws IOException {
+        String text = HEADER + "\nchr1\t100\t200\tchr1\t1000\t1100\t+\t10"
+                + "\nchr1\t300\t400\tchr1\t2000\t2100\t+\t10"
+                + "\nchr2\t100\t200\tchr2\t1000\t1100\t+\t10\n";
+        String path = writeChain("runs.gor", text);
+        ChainSource src = FileChainSource.cached(FileChainSource.resolve("<(gor " + path + ")", context),
+                OverlapPolicy.BEST, context);
+        Assert.assertEquals(2, src.contig("chr1").size());
+        Assert.assertEquals(1, src.contig("chr2").size());
+    }
 }

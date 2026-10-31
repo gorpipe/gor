@@ -301,6 +301,48 @@ public class UTestLiftoverCoverageGaps {
         return out;
     }
 
+    private static LiftoverRelocateAnalysis relocate(RelocateMode mode) {
+        RowHeader out = RowHeader.apply(OUT_HEADER, new String[]{"S", "I", "S", "S", "I", "S", "S"});
+        return new LiftoverRelocateAnalysis(mode, false, RelocateColumns.NONE, out, () -> LiftFixtures.ENGINE_CHAIN);
+    }
+
+    private static void assertRelocateEmptyCell(RelocateMode mode, String row, String what, String at) {
+        LiftoverRelocateAnalysis step = relocate(mode);
+        step.setRowHeader(IN_HEADER);
+        try {
+            lift(step, row);
+            Assert.fail("expected GorDataException for " + row.replace('\t', '|'));
+        } catch (GorDataException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("LIFTOVER: "));
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains(what + " is empty"));
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains(" at " + at));
+        }
+    }
+
+    @Test
+    public void relocateEmptyCoordinateCellsAreInvalid() {
+        assertRelocateEmptyCell(RelocateMode.SNP, "chr1\t\tx", "column #2", "chr1:");
+        assertRelocateEmptyCell(RelocateMode.SNP, "chr1\t \tx", "column #2", "chr1: ");
+        // seg: an empty start must not lift [0,end), an empty end must not lift [start,0)
+        assertRelocateEmptyCell(RelocateMode.SEG, "chr1\t\t200\tx", "column #2", "chr1:");
+        assertRelocateEmptyCell(RelocateMode.SEG, "chr1\t100\t\tx", "column #3", "chr1:100");
+        assertRelocateEmptyCell(RelocateMode.BAM, "chr1\t\t200\tx", "column #2", "chr1:");
+        assertRelocateEmptyCell(RelocateMode.BAM, "chr1\t100\t\tx", "column #3", "chr1:100");
+    }
+
+    @Test
+    public void relocateNonIntegerEndNamesChromAndPos() {
+        LiftoverRelocateAnalysis step = relocate(RelocateMode.SEG);
+        step.setRowHeader(IN_HEADER);
+        try {
+            lift(step, "chr1\t150\tNA\tx");
+            Assert.fail();
+        } catch (GorDataException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains("Illegal stop position in column #3: 'NA'"));
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains(" at chr1:150"));
+        }
+    }
+
     @Test
     public void relocateStepWithoutANextStepTakesTheHeader() {
         LiftoverRelocateAnalysis step = relocate();

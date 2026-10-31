@@ -324,6 +324,42 @@ public class UTestLiftoverAnnotateAnalysis {
         Assert.assertTrue(e2.getMessage(), e2.getMessage().contains("Row: chrN\t0\tchr1\tNA"));
     }
 
+    private static void assertEmptyCell(Run run, String row, String column, String at) {
+        GorDataException e = Assert.assertThrows(GorDataException.class, () -> run.feed(row));
+        Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("LIFTOVER_ANNOTATE: "));
+        Assert.assertTrue(e.getMessage(), e.getMessage().contains("column #"));
+        Assert.assertTrue(e.getMessage(), e.getMessage().contains("(" + column + ") is empty"));
+        Assert.assertTrue(e.getMessage(), e.getMessage().contains(" at " + at));
+    }
+
+    @Test
+    public void emptyCoordinateCellsAreInvalid() {
+        assertEmptyCell(new Run(snp(NO_POLICY, Set.of()), engine()), "chr1\t\tx", "pos", "chr1:");
+        assertEmptyCell(new Run(snp(NO_POLICY, Set.of()), engine()), "chr1\t \tx", "pos", "chr1: ");
+        assertEmptyCell(new Run(var(NO_POLICY), engine()), "chr1\t\tA\tG\tx", "pos", "chr1:");
+        // seg: an empty start must not lift [0,end), an empty end must not lift [start,0)
+        assertEmptyCell(new Run(seg(LiftMode.SEG, NO_POLICY, false), engine()), "chr1\t\t200", "start", "chr1:");
+        assertEmptyCell(new Run(seg(LiftMode.SEG, NO_POLICY, false), engine()), "chr1\t100\t", "end", "chr1:100");
+        assertEmptyCell(new Run(seg(LiftMode.SEG1, NO_POLICY, false), engine()), "chr1\t100\t", "end", "chr1:100");
+    }
+
+    @Test
+    public void emptyPosColumnInNorMode() {
+        LiftoverAnnotateConfig cfg = new LiftoverAnnotateConfig(LiftMode.SNP, 2, 3, -1, -1, -1, NO_POLICY, 0.05,
+                false, Set.of());
+        Run snp = new Run(cfg, engine(), null, "chrom\tpos\tc\tp");
+        assertEmptyCell(snp, "chrN\t0\tchr1\t", "p", "chr1:");
+    }
+
+    @Test
+    public void nonIntegerCoordinateErrorNamesChromAndPos() {
+        Run seg = new Run(seg(LiftMode.SEG, NO_POLICY, false), engine());
+        GorDataException e = Assert.assertThrows(GorDataException.class, () -> seg.feed("chr1\t150\tNA"));
+        Assert.assertTrue(e.getMessage(), e.getMessage().contains("is not an integer: 'NA'"));
+        Assert.assertTrue(e.getMessage(), e.getMessage().contains("(end)"));
+        Assert.assertTrue(e.getMessage(), e.getMessage().contains(" at chr1:150"));
+    }
+
     @Test
     public void contigNamingMismatchIsUnmapped() {
         Run run = new Run(snp(NO_POLICY, Set.of()), engine());

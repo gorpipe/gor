@@ -169,13 +169,32 @@ public class LiftoverAnnotateAnalysis extends Analysis {
         super.process(r.rowWithAddedColumns(sb));
     }
 
+    /**
+     * A coordinate cell as an int. An empty or blank cell is an error: RowObj.colInt reads it as 0, which would lift a
+     * missing coordinate as if it were a real one (for -seg that gives a mapped [0,end)).
+     */
     private int intCol(Row r, int col) {
+        String cell = r.colAsString(col).toString();
+        if (cell.isBlank()) {
+            throw new GorDataException(PREFIX + "column #" + (col + 1) + " (" + columnName(col) + ") is empty at "
+                    + location(r), col + 1, getHeader(), r.toString());
+        }
         try {
             return r.colAsInt(col);
         } catch (NumberFormatException e) {
-            throw new GorDataException(PREFIX + "column #" + (col + 1) + " is not an integer: '"
-                    + r.colAsString(col) + "'", col + 1, getHeader(), r.toString());
+            throw new GorDataException(PREFIX + "column #" + (col + 1) + " (" + columnName(col)
+                    + ") is not an integer: '" + cell + "' at " + location(r), col + 1, getHeader(), r.toString());
         }
+    }
+
+    private String columnName(int col) {
+        RowHeader h = rowHeader();
+        return h != null && col < h.columnNames().length ? h.columnNames()[col] : "#" + (col + 1);
+    }
+
+    /** chrom:pos of a row as given in the input, for error messages. */
+    private String location(Row r) {
+        return r.colAsString(config.chromCol()) + ":" + r.colAsString(config.posCol());
     }
 
     private String snp(Row r, String chrom, StringBuilder sb) {

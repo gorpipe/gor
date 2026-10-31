@@ -584,6 +584,29 @@ public class UTestGorLiftoverAnnotate {
     }
 
     @Test
+    public void norEmptyPosColumnFailsWithColumnAndChrom() throws IOException {
+        String tsv = write("coords_empty.tsv", "#c\tp\nchr1\t150\nchr1\t\n");
+        try {
+            TestUtils.runGorPipe("nor " + tsv + " | liftover_annotate " + CHAIN_UNIQUE + " -snp -chrom c -pos p");
+            Assert.fail("expected GorDataException");
+        } catch (GorDataException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("LIFTOVER_ANNOTATE: "));
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains("(p) is empty at chr1:"));
+        }
+    }
+
+    @Test
+    public void gorEmptyEndCellInSegFails() throws IOException {
+        String input = write("empty_end.gor", "Chrom\tStart\tEnd\nchr1\t120\t\n");
+        try {
+            TestUtils.runGorPipe(q(CHAIN_UNIQUE, input, "-seg"));
+            Assert.fail("expected GorDataException");
+        } catch (GorDataException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains("(End) is empty at chr1:120"));
+        }
+    }
+
+    @Test
     public void collisionFailsLoudly() throws IOException {
         String input = write("collision.gor", lines("Chrom\tPos\tliftover_status", "chr1\t150\tx"));
         try {
@@ -808,6 +831,25 @@ public class UTestGorLiftoverAnnotate {
         Assert.assertTrue(parseError(VAR, "-var -end Id").contains("-end is only valid with -seg or -seg1"));
         Assert.assertTrue(parseError(SNP, "-snp -ref Ref").contains("-ref is only valid with -var"));
         Assert.assertTrue(parseError(SEG, "-seg -alt Name").contains("-alt is only valid with -var"));
+    }
+
+    @Test
+    public void valueOptionsGivenTwiceAreRejected() throws IOException {
+        String[][] cases = {
+                {SNP, "-snp -failon unmapped -failon ambiguous", "-failon"},
+                {SNP, "-snp -passthrough chrM -passthrough chrX", "-passthrough"},
+                {SNP, "-snp -mapped chr1 -mapped chr2", "-mapped"},
+                {SNP, "-snp -prefix a_ -prefix b_", "-prefix"},
+                {SNP, "-snp -overlap best -overlap error", "-overlap"},
+                {SEG, "-seg -tolerance 0.1 -tolerance 0.2", "-tolerance"},
+                {SNP, "-snp -chrom Chrom -chrom Chrom", "-chrom"},
+                {SNP, "-snp -pos Pos -pos Pos", "-pos"},
+                {SEG, "-seg -end End -end End", "-end"},
+                {VAR, "-var -ref Ref -ref Ref", "-ref"},
+                {VAR, "-var -alt Alt -alt Alt", "-alt"}};
+        for (String[] c : cases) {
+            Assert.assertTrue(c[2], parseError(c[0], c[1]).contains(c[2] + " given more than once"));
+        }
     }
 
     @Test

@@ -52,8 +52,18 @@ public final class NestedChainSource implements ChainSource {
         Map<String, ContigIndexBuilder> builders = new LinkedHashMap<>();
         DynamicRowSource rows = new DynamicRowSource(query, context, true);
         try {
+            String last = null;
             while (rows.hasNext()) {
                 Row row = rows.next();
+                if (!row.chr.equals(last)) {
+                    // a contig that comes back after another one would be merged here, while a file chain reads only
+                    // its first run, so the two sources would disagree
+                    if (builders.containsKey(row.chr)) {
+                        throw new GorDataException("Liftover chain " + source + ": contig " + row.chr
+                                + " is not contiguous");
+                    }
+                    last = row.chr;
+                }
                 builders.computeIfAbsent(row.chr, c -> new ContigIndexBuilder(c, policy, source)).addRow(row, cols);
             }
         } finally {
