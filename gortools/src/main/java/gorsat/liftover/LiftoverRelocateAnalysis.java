@@ -103,9 +103,12 @@ public class LiftoverRelocateAnalysis extends Analysis {
         }
     }
 
-    /** The status projection (N8): mapped and ambiguous stay, everything else is unmapped. */
+    /**
+     * The status projection (N8) of a status that is not mapped (the callers place mapped rows themselves):
+     * ambiguous stays, everything else is unmapped.
+     */
     private static String project(String status) {
-        return LiftEngine.MAPPED.equals(status) || LiftEngine.AMBIGUOUS.equals(status) ? status : LiftEngine.UNMAPPED;
+        return LiftEngine.AMBIGUOUS.equals(status) ? LiftEngine.AMBIGUOUS : LiftEngine.UNMAPPED;
     }
 
     private void snp(Row r) {
