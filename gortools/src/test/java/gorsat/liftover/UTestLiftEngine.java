@@ -497,6 +497,38 @@ public class UTestLiftEngine {
         Assert.assertEquals("T,", LiftEngine.revcompAlleles("A,"));
     }
 
+    // ---- liftMate (-bam MPOS, N15) ----
+
+    @Test
+    public void liftMate() {
+        // A [100,200) -> chr1 1000 + 1000; B [150,300) -> chr3 5000 + 900; C [400,500) -> chr1 7000 - 1000;
+        // D and E [600,700) -> chr1 8000 + and 9000 +, both 500 (an exact tie)
+        ContigIndex ci = ContigIndex.of("chr1", OverlapPolicy.BEST, List.of(
+                LiftFixtures.blk(100, 200, "chr1", 1000, "+", 1000),
+                LiftFixtures.blk(150, 300, "chr3", 5000, "+", 900),
+                LiftFixtures.blk(400, 500, "chr1", 7000, "-", 1000),
+                LiftFixtures.blk(600, 700, "chr1", 8000, "+", 500),
+                LiftFixtures.blk(600, 700, "chr1", 9000, "+", 500)));
+        int a = ci.findPoint(120);
+        int b = ci.findSpan(249, 260);
+        Assert.assertEquals("chr1", ci.qChrom(a));
+        Assert.assertEquals("chr3", ci.qChrom(b));
+        // through the row's own block B, although A is the best block for 170
+        Assert.assertEquals(5020, LiftEngine.liftMate(ci, b, 170, "chr3"));
+        Assert.assertEquals(1070, LiftEngine.liftMate(ci, a, 170, "chr1"));
+        // A does not contain 450: the best block C (-) lifts it
+        Assert.assertEquals(7051, LiftEngine.liftMate(ci, a, 450, "chr1"));
+        // A does not contain 260: the best block B lands on chr3, not the row's chr1
+        Assert.assertEquals(0, LiftEngine.liftMate(ci, a, 260, "chr1"));
+        // 650 is in the D/E tie
+        Assert.assertEquals(0, LiftEngine.liftMate(ci, a, 650, "chr1"));
+        // 550 is in no block
+        Assert.assertEquals(0, LiftEngine.liftMate(ci, a, 550, "chr1"));
+        // the block's last base is contained (tStart < m <= tEnd), its first is not
+        Assert.assertEquals(1100, LiftEngine.liftMate(ci, a, 200, "chr1"));
+        Assert.assertEquals(0, LiftEngine.liftMate(ci, a, 100, "chr1"));
+    }
+
     // ---- liftAll ----
 
     private static String all(String chrom, int s0, int e0, boolean point) {

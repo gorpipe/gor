@@ -855,6 +855,103 @@ public class UTestGorLiftoverCharacterization {
         }
     }
 
+    // R18: an MPOS that is not an integer > 0 is no mate position and passes through, mapped or not; an integer > 0
+    // on a read that does not map becomes 0.
+    @Test
+    public void bamMposThatIsNoPositionPassesThrough() throws IOException {
+        String bamHeader = "Chrom\tPos\tEnd\tQName\tSEQ\tQUAL\tCIGAR\tMPOS";
+        String in = write("bam_mpos_edges", lines(bamHeader,
+                "chr1\t160\t190\te1\tAACG\tIIJK\t4M\t*",
+                "chr1\t160\t190\te2\tAACG\tIIJK\t4M\t0",
+                "chr1\t160\t190\te5\tAACG\tIIJK\t4M\t-5",
+                "chr1\t300\t350\te3\tAACG\tIIJK\t4M\t*",
+                "chr1\t300\t350\te4\tAACG\tIIJK\t4M\t0",
+                "chr1\t300\t350\te6\tAACG\tIIJK\t4M\t310"));
+        Assert.assertEquals(lines(BAM_OUT_HEADER,
+                "chr1\t0\t1\te3\tAACG\tIIJK\t4M\t*\tchr1\t300\t350\t\tunmapped",
+                "chr1\t0\t1\te4\tAACG\tIIJK\t4M\t0\tchr1\t300\t350\t\tunmapped",
+                "chr1\t0\t1\te6\tAACG\tIIJK\t4M\t0\tchr1\t300\t350\t\tunmapped",
+                "chr1\t1160\t1190\te1\tAACG\tIIJK\t4M\t*\tchr1\t160\t190\t+\tmapped",
+                "chr1\t1160\t1190\te2\tAACG\tIIJK\t4M\t0\tchr1\t160\t190\t+\tmapped",
+                "chr1\t1160\t1190\te5\tAACG\tIIJK\t4M\t-5\tchr1\t160\t190\t+\tmapped"), lift(in, "-bam"));
+    }
+
+    // N15: MRNM '*' puts the mate nowhere (MPOS 0); contig names match ignoring case and a leading chr, M == MT.
+    @Test
+    public void bamMrnmNames() throws IOException {
+        String in = write("bam_mrnm_names", lines(BAM_MRNM_HEADER,
+                "chr1\t160\t190\tn1\tAACG\tIIJK\t4M\t*\t170",
+                "chr1\t160\t190\tn2\tAACG\tIIJK\t4M\tChr1\t170",
+                "chr1\t160\t190\tn3\tAACG\tIIJK\t4M\tCHR1\t170",
+                "chrM\t1000\t1010\tn4\tAACG\tIIJK\t4M\tMT\t1005",
+                "chrM\t1000\t1010\tn5\tAACG\tIIJK\t4M\tM\t1005",
+                "chrM\t1000\t1010\tn6\tAACG\tIIJK\t4M\tchrMT\t1005",
+                "chrM\t1000\t1010\tn7\tAACG\tIIJK\t4M\t*\t1005"));
+        String lifted = "\thgold_Chrom\thgold_Pos\thgold_End\thgold_qStrand\thgold_liftoverStatus";
+        Assert.assertEquals(lines(BAM_MRNM_HEADER + lifted,
+                "chr1\t1160\t1190\tn1\tAACG\tIIJK\t4M\t*\t0\tchr1\t160\t190\t+\tmapped",
+                "chr1\t1160\t1190\tn2\tAACG\tIIJK\t4M\tChr1\t1170\tchr1\t160\t190\t+\tmapped",
+                "chr1\t1160\t1190\tn3\tAACG\tIIJK\t4M\tCHR1\t1170\tchr1\t160\t190\t+\tmapped",
+                "chrM\t998\t1008\tn4\tAACG\tIIJK\t4M\tMT\t1003\tchrM\t1000\t1010\t+\tmapped",
+                "chrM\t998\t1008\tn5\tAACG\tIIJK\t4M\tM\t1003\tchrM\t1000\t1010\t+\tmapped",
+                "chrM\t998\t1008\tn6\tAACG\tIIJK\t4M\tchrMT\t1003\tchrM\t1000\t1010\t+\tmapped",
+                "chrM\t998\t1008\tn7\tAACG\tIIJK\t4M\t*\t0\tchrM\t1000\t1010\t+\tmapped"), lift(in, "-bam"));
+    }
+
+    // R17: a chain with no blocks fails closed, for a header-only file and for an empty nested query.
+    @Test
+    public void emptyChainRejected() throws IOException {
+        String headerOnly = write("chain_header_only", lines(CHAIN_HEADER));
+        assertChainError(() -> lift(headerOnly, SNP, "-snp"));
+        assertChainError(() -> TestUtils.runGorPipe("gor " + SNP + " | liftover <(gor " + CHAIN + " | where 2=3) -snp"));
+    }
+
+    private static void assertChainError(Runnable query) {
+        try {
+            query.run();
+            Assert.fail("expected GorDataException");
+        } catch (GorDataException e) {
+            Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("Liftover chain"));
+            Assert.assertTrue(e.getMessage(), e.getMessage().contains("has no blocks"));
+        }
+    }
+
+    /** The message of the GorParsingException that liftover with opts throws on a one-row input with header. */
+    private static String parseError(String name, String header, String opts) throws IOException {
+        String[] cols = header.split("\t", -1);
+        String[] row = new String[cols.length];
+        for (int i = 0; i < cols.length; i++) {
+            row[i] = i == 0 ? "chr1" : i < 3 ? "150" : "A";
+        }
+        String in = write(name, lines(header, String.join("\t", row)));
+        try {
+            lift(in, opts);
+            Assert.fail("expected GorParsingException for " + opts + " on " + header);
+            return null;
+        } catch (GorParsingException e) {
+            return e.getMessage();
+        }
+    }
+
+    @Test
+    public void parseErrors() throws IOException {
+        String two = "Chrom\tPos";
+        Assert.assertTrue(parseError("pe_seg2", two, "-seg").contains("-seg requires an end column (#3)"));
+        Assert.assertTrue(parseError("pe_bam2", two, "-bam").contains("-bam requires an end column (#3)"));
+        Assert.assertTrue(parseError("pe_noqual", "Chrom\tPos\tEnd\tQName\tSEQ\tCIGAR\tMPOS", "-bam")
+                .contains("-bam requires a QUAL column"));
+        Assert.assertTrue(parseError("pe_nocigar", "Chrom\tPos\tEnd\tQName\tSEQ\tQUAL\tMPOS", "-bam")
+                .contains("-bam requires a CIGAR column"));
+        Assert.assertTrue(parseError("pe_nompos", "Chrom\tPos\tEnd\tQName\tSEQ\tQUAL\tCIGAR", "-bam")
+                .contains("-bam requires a MPOS column"));
+        Assert.assertTrue(parseError("pe_segcoll", "Chrom\tStart\tEnd\thgold_End", "-seg").contains("hgold_End"));
+        Assert.assertTrue(parseError("pe_bamcoll", "Chrom\tPos\tEnd\tQName\tSEQ\tQUAL\tCIGAR\tMPOS\thgold_Chrom",
+                "-bam").contains("hgold_Chrom"));
+        Assert.assertTrue(parseError("pe_allcoll", "Chrom\tPos\thgold_score", "-snp -all").contains("hgold_score"));
+        Assert.assertTrue(parseError("pe_noref", two, "-var").contains("-var requires a REF column"));
+        Assert.assertTrue(parseError("pe_noalt", "Chrom\tPos\tRef", "-var").contains("-var requires an ALT column"));
+    }
+
     // N9: an unsorted chain fails the load. Before P4 the same query silently gave unmapped rows.
     @Test
     public void invalidChainRejectedP4() throws IOException {

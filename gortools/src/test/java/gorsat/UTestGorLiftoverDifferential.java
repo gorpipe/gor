@@ -64,7 +64,7 @@ import java.util.stream.Stream;
  * <ul>
  * <li>{@code D1-collapse}: the dup run; old has the row once, new three times, rows otherwise equal.</li>
  * <li>{@code D2-tie}: not {@code -all}; old is exactly the k &gt;= 2 tied max-score rows of the old model, new one
- * {@code ambiguous} row at {@code (src chrom, 0[, 1])} (bam MPOS 0), and the naive model under the new rules is
+ * {@code ambiguous} row at {@code (src chrom, 0[, 1])} (bam MPOS per R18), and the naive model under the new rules is
  * ambiguous.</li>
  * <li>{@code D3-allele-revcomp}: var on {@code -}; rows equal except REF/ALT, new REF/ALT =
  * {@code revcompAlleles(input)}.</li>
@@ -76,7 +76,7 @@ import java.util.stream.Stream;
  * {@code unmapped} row.</li>
  * <li>{@code D6-bam-mpos}: bam, mapped rows; rows equal except MPOS (old the old shift, new per N15).</li>
  * <li>{@code D7-endpoint-tie}: seg/bam, not {@code -all}; old one {@code unmapped} row, new one {@code ambiguous}
- * row at the same placement, every other column equal (bam MPOS: old shifted, new 0); no block contains the
+ * row at the same placement, every other column equal (bam MPOS: old shifted, new per R18); no block contains the
  * interval and its first or last base is in an exact score tie (naive model).</li>
  * <li>{@code D8-bam-last-base}: bam, a 1-base read ({@code Pos == End}); old equals the old model (strict
  * {@code tStart < Pos < tEnd}), new equals the new model (N15, {@code tStart < Pos <= tEnd}, best or ambiguous
@@ -84,6 +84,10 @@ import java.util.stream.Stream;
  * <li>{@code D9-bam-unmapped-mpos}: bam, unmapped/ambiguous rows; old MPOS is the old {@code MPOS - Pos} shift,
  * new MPOS is 0 (N15), everything else equal.</li>
  * </ul>
+ * MPOS under R18: an MPOS that is not an integer &gt; 0 is no mate position and passes through unchanged on every new
+ * row; only an integer &gt; 0 becomes 0 (rows that do not map) or is lifted (N15). The old side keeps the old rule
+ * (the {@code MPOS - Pos} shift for every integer), so for an integer MPOS &lt;= 0 D6/D9 compare the old shift with
+ * the unchanged value.
  * Anything else is unexplained and fails. Before P4 (Task 11) every Id was {@code same}, which proved the harness
  * and the oracle; {@link #oracleMatchesFrozenLegacy} keeps the oracle pinned to the frozen pre-P4 output.
  */
@@ -616,7 +620,25 @@ public class UTestGorLiftoverDifferential {
         return sameMultiset(x, y);
     }
 
-    /** The row new LIFTOVER emits for an input that does not map: (src chrom, 0[, 1]), strand '', bam MPOS 0. */
+    /** MPOS as an integer &gt; 0, or -1 when it is not one: no mate position, it passes through (R18). */
+    private static int matePos(String[] in) {
+        try {
+            int m = Integer.parseInt(in[MPOS]);
+            return m > 0 ? m : -1;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    /** The new MPOS of a bam row that does not map: 0 for a mate position, any other value unchanged (N15, R18). */
+    private static String newUnplacedMpos(String[] in) {
+        return matePos(in) > 0 ? "0" : in[MPOS];
+    }
+
+    /**
+     * The row new LIFTOVER emits for an input that does not map: (src chrom, 0[, 1]), strand '', bam MPOS per
+     * {@link #newUnplacedMpos}.
+     */
     private static String[] placeholder(String[] in, Layout l, String status, boolean all) {
         List<String> r = new ArrayList<>();
         r.add(in[0]);
@@ -625,7 +647,7 @@ public class UTestGorLiftoverDifferential {
             r.add("1");
         }
         for (int k = l.firstInputCol(); k < in.length; k++) {
-            r.add(l.bam() && k == MPOS ? "0" : in[k]);
+            r.add(l.bam() && k == MPOS ? newUnplacedMpos(in) : in[k]);
         }
         r.add(in[0]);
         r.add(in[1]);
@@ -955,7 +977,7 @@ public class UTestGorLiftoverDifferential {
             }
             boolean samePlace = x[1].equals(y[1]) && x[2].equals(y[2]);
             if (!MAPPED.equals(y[l.status()])) {
-                if (!samePlace || !x[MPOS].equals(oldMpos(in, 0)) || !"0".equals(y[MPOS])) {
+                if (!samePlace || !x[MPOS].equals(oldMpos(in, 0)) || !y[MPOS].equals(newUnplacedMpos(in))) {
                     return null;
                 }
                 d9 = true;
@@ -1038,24 +1060,16 @@ public class UTestGorLiftoverDifferential {
     }
 
     /**
-     * N15 MPOS of a new bam row: 0 for a row that does not map; otherwise MPOS lifted as a point through the row's
-     * block when it contains MPOS, else through the best block, kept only on the row's target chrom, else 0.
-     * null when it cannot be decided (MPOS not an integer &gt;= 0, or no unique row block).
+     * N15/R18 MPOS of a new bam row: an MPOS that is not an integer &gt; 0 unchanged; else 0 for a row that does not
+     * map; otherwise MPOS lifted as a point through the row's block when it contains MPOS, else through the best
+     * block, kept only on the row's target chrom, else 0. null when it cannot be decided (no unique row block).
      */
     private static String expectedMpos(String[] in, String[] row, Layout l, boolean all, List<ChainBlock> blocks) {
-        if (!MAPPED.equals(row[l.status()])) {
-            return "0";
-        }
-        int m;
-        try {
-            m = Integer.parseInt(in[MPOS]);
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        int m = matePos(in);
         if (m < 0) {
-            return null;
+            return in[MPOS];
         }
-        if (m == 0) {
+        if (!MAPPED.equals(row[l.status()])) {
             return "0";
         }
         Set<String> values = new HashSet<>();
@@ -1272,6 +1286,30 @@ public class UTestGorLiftoverDifferential {
         Assert.assertNull("old MPOS is not the shift", classify(
                 List.of("chr1\t0\t1\tq0\tAACCGGTTAC\tABCDEFGHIJ\t10M\t21\tchr1\t500\t509\t\tunmapped"),
                 List.of(offNew), off, "bam", HAND_CHAIN));
+
+        // R18: an MPOS that is not an integer > 0 passes through on new rows; the old side still shifts integers
+        String star = "chr1\t500\t509\tq9\tA\tI\t1M\t*";
+        String starRow = "chr1\t0\t1\tq9\tA\tI\t1M\t*\tchr1\t500\t509\t\tunmapped";
+        Assert.assertEquals(SAME, classify(List.of(starRow), List.of(starRow), star, "bam", HAND_CHAIN));
+        String zero = "chr1\t500\t509\tq9\tA\tI\t1M\t0";
+        Assert.assertEquals(D9, classify(List.of("chr1\t0\t1\tq9\tA\tI\t1M\t-500\tchr1\t500\t509\t\tunmapped"),
+                List.of("chr1\t0\t1\tq9\tA\tI\t1M\t0\tchr1\t500\t509\t\tunmapped"), zero, "bam", HAND_CHAIN));
+        String negative = "chr1\t500\t509\tq9\tA\tI\t1M\t-5";
+        String negativeOld = "chr1\t0\t1\tq9\tA\tI\t1M\t-505\tchr1\t500\t509\t\tunmapped";
+        Assert.assertEquals(D9, classify(List.of(negativeOld),
+                List.of("chr1\t0\t1\tq9\tA\tI\t1M\t-5\tchr1\t500\t509\t\tunmapped"), negative, "bam",
+                HAND_CHAIN));
+        Assert.assertNull("an MPOS <= 0 is not zeroed", classify(List.of(negativeOld),
+                List.of("chr1\t0\t1\tq9\tA\tI\t1M\t0\tchr1\t500\t509\t\tunmapped"), negative, "bam",
+                HAND_CHAIN));
+        // mapped through [100,200) +: MPOS 0 stays 0 (old shift 0-150+1050 = 900), '*' stays '*'
+        String mappedZero = "chr1\t150\t159\tq9\tA\tI\t1M\t0";
+        Assert.assertEquals(D6, classify(List.of("chr1\t1050\t1059\tq9\tA\tI\t1M\t900\tchr1\t150\t159\t+\tmapped"),
+                List.of("chr1\t1050\t1059\tq9\tA\tI\t1M\t0\tchr1\t150\t159\t+\tmapped"), mappedZero, "bam",
+                HAND_CHAIN));
+        String mappedStar = "chr1\t1050\t1059\tq9\tA\tI\t1M\t*\tchr1\t150\t159\t+\tmapped";
+        Assert.assertEquals(SAME, classify(List.of(mappedStar), List.of(mappedStar),
+                "chr1\t150\t159\tq9\tA\tI\t1M\t*", "bam", HAND_CHAIN));
 
         // D7: seg [150,250) is in no block and its first base 151 is in the exact tie
         String seg = "chr1\t150\t250\tg1";

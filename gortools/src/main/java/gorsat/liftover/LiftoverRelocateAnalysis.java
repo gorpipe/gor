@@ -23,7 +23,8 @@ import java.util.function.Supplier;
  * mapped row with its score, and an input no block contains gives one unmapped row with score 0.0.
  * <p>
  * On the - strand, -var reverse-complements REF and ALT per allele (N16), and -bam reverse-complements SEQ, reverses
- * QUAL and reverses CIGAR. -bam lifts MPOS on every row (N15).
+ * QUAL and reverses CIGAR. -bam lifts MPOS on every row (N15); an MPOS that is not an integer &gt; 0 passes through
+ * unchanged (R18).
  */
 public class LiftoverRelocateAnalysis extends Analysis {
 
@@ -201,27 +202,41 @@ public class LiftoverRelocateAnalysis extends Analysis {
         }
     }
 
+    /** MPOS as an integer &gt; 0, or -1 when it is not one: such a value is no mate position (R18). */
+    private int matePosition(Row r) {
+        try {
+            int m = Integer.parseInt(r.colAsString(cols.mpos()).toString());
+            return m > 0 ? m : -1;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
     /**
-     * N15 MPOS of a mapped read: 0 when an MRNM column puts the mate on another contig, or MPOS is not an integer
-     * &gt; 0; otherwise MPOS lifted through the read's block, or the best block, kept only on the read's target chrom.
+     * N15 MPOS of a mapped read. An MPOS that is not an integer &gt; 0 passes through unchanged (R18). Otherwise it is
+     * 0 when an MRNM column puts the mate elsewhere ('*', or a contig other than the read's), else MPOS lifted through
+     * the read's block, or the best block, kept only on the read's target chrom (else 0).
      */
     private String mate(Row r, String chrom, ContigIndex ci, int block, String targetChrom) {
+        int m = matePosition(r);
+        if (m < 0) {
+            return r.colAsString(cols.mpos()).toString();
+        }
         if (cols.mrnm() >= 0 && !sameContig(r.colAsString(cols.mrnm()).toString(), chrom)) {
-            return "0";
-        }
-        int m;
-        try {
-            m = r.colAsInt(cols.mpos());
-        } catch (NumberFormatException e) {
-            return "0";
-        }
-        if (m <= 0) {
             return "0";
         }
         return Integer.toString(LiftEngine.liftMate(ci, block, m, targetChrom));
     }
 
-    /** MRNM names the read's contig: '=', or the same name ignoring a leading chr, with M and MT equal. */
+    /** MPOS of a read that does not map: 0 for a mate position, any other value unchanged (N15, R18). */
+    private String unplacedMate(Row r) {
+        return matePosition(r) > 0 ? "0" : r.colAsString(cols.mpos()).toString();
+    }
+
+    /**
+     * MRNM names the read's contig: '=', or the same name ignoring case and a leading chr, with M and MT equal. '*'
+     * (no mate contig) never matches.
+     */
     private static boolean sameContig(String mrnm, String chrom) {
         return mrnm.equals("=") || contigKey(mrnm).equals(contigKey(chrom));
     }
@@ -232,9 +247,9 @@ public class LiftoverRelocateAnalysis extends Analysis {
         return k.equals("M") ? "MT" : k;
     }
 
-    /** A row that does not map: placed at (source chrom, 0[, 1]), strand '', bam MPOS 0, -all score 0.0. */
+    /** A row that does not map: placed at (source chrom, 0[, 1]), strand '', bam MPOS 0 (R18), -all score 0.0. */
     private void emitUnplaced(Row r, String status) {
-        emit(r, r.chr, 0, 1, "", status, 0.0, mode == RelocateMode.BAM ? "0" : null);
+        emit(r, r.chr, 0, 1, "", status, 0.0, mode == RelocateMode.BAM ? unplacedMate(r) : null);
     }
 
     /**
