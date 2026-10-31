@@ -306,14 +306,16 @@ public final class LiftFixtures {
      * {500, 900, 1000}, and 20% of the blocks get an extra copy: half an overlapping block (other t-range, length,
      * score and target), half an exact-tie copy (same t-range and score, other target). Blocks stay sorted by tStart.
      * <p>
-     * Inputs: rows sorted by contig and position, each with a unique Id ({@code r<n>}), 60% of positions within 2
-     * bases of a block edge, and one run of 3 identical consecutive rows with Id {@code dup1}, placed past the
+     * Inputs: rows sorted by contig and position, each with a unique Id ({@code r<n>}), 1 row in 20 on chr15 or
+     * chrX (absent from the chain; chr15 sorts between chr1 and chr2, chrX after chrM), 60% of the other positions
+     * within 2 bases of a block edge, and one run of 3 identical consecutive rows with Id {@code dup1}, placed past the
      * last block of chr2 so it is unmapped in every mode. Layouts by mode:
      * <ul>
      * <li>snp: {@code Chrom Pos Ref Alt Id};</li>
      * <li>var: the same, Ref from {"", A, AC, ACGT, 10 random bases}, Alt from {G, "A,TC", {@code <DEL>}, *, "G,TTA"};</li>
      * <li>seg: {@code Chrom Start End Id}, lengths 0-300 (0 is a junction);</li>
-     * <li>bam: {@code Chrom Pos End QName SEQ QUAL CIGAR MPOS}, {@code End - Pos + 1} in 1-150, SEQ and QUAL of
+     * <li>bam: {@code Chrom Pos End QName SEQ QUAL CIGAR MPOS}, {@code End - Pos + 1} in 1-150 (1 in 20 reads
+     * exactly 1), SEQ and QUAL of
      * that length, CIGAR {@code <n>M} or {@code <a>S<b>M}, MPOS in Pos +-300 (at least 1), QName the Id. The dup
      * run has MPOS = Pos, so its old shifted MPOS (MPOS - Pos + 0) equals the new unmapped MPOS 0 and the run
      * differs only by the collapse.</li>
@@ -324,6 +326,8 @@ public final class LiftFixtures {
         public static final String CHAIN_HEADER = "Chrom\ttStart\ttEnd\tqChrom\tqStart\tqEnd\tqStrand\tqScore";
         public static final List<String> SOURCE_CONTIGS = List.of("chr1", "chr2", "chrM");
         public static final List<String> TARGET_CONTIGS = List.of("chr1", "chr3", "chrUn_x");
+        /** Input contigs in GOR order: the chain's, plus chr15 and chrX, which the chain does not have. */
+        public static final List<String> INPUT_CONTIGS = List.of("chr1", "chr15", "chr2", "chrM", "chrX");
         public static final int BLOCKS = 150;
         /** Id of the 3 identical consecutive unmapped rows. */
         public static final String DUP_ID = "dup1";
@@ -408,13 +412,17 @@ public final class LiftFixtures {
             // start, end and the rest of the row after the position columns, per row
             List<Object[]> out = new ArrayList<>();
             for (int i = 0; i < rows - 3; i++) {
-                int ci = rnd.nextInt(SOURCE_CONTIGS.size());
-                List<ChainBlock> bl = chainBlocks.get(SOURCE_CONTIGS.get(ci));
-                int maxEnd = maxEnd(bl);
-                int len = seg ? rnd.nextInt(301) : bam ? 1 + rnd.nextInt(150) : 0;
+                // 1 row in 20 on a contig the chain does not have
+                String contig = rnd.nextInt(20) == 0 ? (rnd.nextBoolean() ? "chr15" : "chrX")
+                        : SOURCE_CONTIGS.get(rnd.nextInt(SOURCE_CONTIGS.size()));
+                int ci = INPUT_CONTIGS.indexOf(contig);
+                List<ChainBlock> bl = chainBlocks.getOrDefault(contig, List.of());
+                int maxEnd = bl.isEmpty() ? 20_000 : maxEnd(bl);
+                // 1 bam read in 20 is a 1-base read, so reads on a block's last base occur
+                int len = seg ? rnd.nextInt(301) : bam ? (rnd.nextInt(20) == 0 ? 1 : 1 + rnd.nextInt(150)) : 0;
                 boolean anchorEnd = (seg || bam) && rnd.nextBoolean();
                 int p;
-                if (rnd.nextInt(10) < 6) {
+                if (!bl.isEmpty() && rnd.nextInt(10) < 6) {
                     ChainBlock b = bl.get(rnd.nextInt(bl.size()));
                     p = (rnd.nextBoolean() ? b.tStart() : b.tEnd()) + rnd.nextInt(5) - 2;
                 } else {
@@ -442,7 +450,7 @@ public final class LiftFixtures {
             int dupEnd = seg ? dupPos + 10 : bam ? dupPos + 9 : dupPos;
             String dupTail = mode.equals("snp") || mode.equals("var") ? "A\tG" : bam ? "ACGTACGTAC\tIIIIIIIIII\t10M\t" + dupPos : "";
             for (int k = 0; k < 3; k++) {
-                out.add(new Object[]{SOURCE_CONTIGS.indexOf("chr2"), dupPos, dupEnd, dupTail, DUP_ID});
+                out.add(new Object[]{INPUT_CONTIGS.indexOf("chr2"), dupPos, dupEnd, dupTail, DUP_ID});
             }
             out.sort(Comparator.<Object[]>comparingInt(r -> (Integer) r[0]).thenComparingInt(r -> (Integer) r[1])
                     .thenComparingInt(r -> (Integer) r[2])); // stable, so the dup run stays together
@@ -455,7 +463,7 @@ public final class LiftFixtures {
             int n = 0;
             for (Object[] r : out) {
                 String id = r.length > 4 ? (String) r[4] : "r" + (n++);
-                sb.append(SOURCE_CONTIGS.get((Integer) r[0])).append('\t').append(r[1]);
+                sb.append(INPUT_CONTIGS.get((Integer) r[0])).append('\t').append(r[1]);
                 String tail = (String) r[3];
                 if (seg) {
                     sb.append('\t').append(r[2]).append('\t').append(id);
