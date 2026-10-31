@@ -931,6 +931,12 @@ public class UTestGorLiftoverAnnotate {
     }
 
     @Test
+    public void usedFilesContainChainForLiftoverLegacy() throws Exception {
+        assertUsesChainOnly(usedFiles("gor " + SNP + " | liftover_legacy " + CHAIN + " -snp -build hg19"), CHAIN,
+                "hg19");
+    }
+
+    @Test
     public void usedFilesContainNestedChainForLiftoverAnnotate() throws Exception {
         assertUsesChainOnly(usedFiles("gor " + SNP + " | liftover_annotate <(gor " + CHAIN + ") -snp"), CHAIN);
     }

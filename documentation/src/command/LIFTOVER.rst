@@ -29,6 +29,7 @@ The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequen
    * The chain is validated on load (sorted, ungapped, ``tEnd > tStart``, ``qStrand`` ``+`` or ``-``), and it needs a ``qEnd`` column.
    * A chain with no blocks is an error (it used to leave every row unmapped).
    * ``-ref`` sets the span used for overlap as well as the length.
+   * The previous implementation is available, for comparison only, as ``LIFTOVER_LEGACY`` with the same arguments. It will be removed in a later release.
 
 Usage
 =====

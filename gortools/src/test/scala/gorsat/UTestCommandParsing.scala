@@ -850,6 +850,27 @@ class UTestCommandParsing extends AnyFunSuite with BeforeAndAfter {
     performTests(testsToPerform)
   }
 
+  test("Command: LIFTOVER_LEGACY") {
+    val testsToPerform = ListBuffer.empty[TestEntry]
+    // Initialize all the tests here
+    val commandName = "LIFTOVER_LEGACY"
+    val chainFile = Files.createTempFile("liftoverLegacyChain", DataType.GOR.suffix)
+    chainFile.toFile.deleteOnExit()
+    val chainWriter = new PrintWriter(chainFile.toFile)
+    chainWriter.println("Chrom\ttStart\ttEnd\tqChrom\tqStart\tqEnd\tqStrand\tqScore")
+    chainWriter.println("chr1\t100\t200\tchr1\t1100\t1200\t+\t1000")
+    chainWriter.close()
+    val chainPath = chainFile.toString
+
+    testsToPerform += TestEntry(commandName, "", "", testShouldSucceed = false)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -var", defaultHeaderSNP, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -seg -all", defaultHeaderSEG, testShouldSucceed = true)
+    testsToPerform += TestEntry(commandName, chainPath + " -snp -seg", defaultHeaderSNP, testShouldSucceed = false)
+
+    performTests(testsToPerform)
+  }
+
   test("Command: MAP") {
     val testsToPerform = ListBuffer.empty[TestEntry]
     // Initialize all the tests here

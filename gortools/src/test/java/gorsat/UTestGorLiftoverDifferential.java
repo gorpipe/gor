@@ -151,6 +151,25 @@ public class UTestGorLiftoverDifferential {
      */
     @Test
     public void oracleMatchesFrozenLegacy() {
+        assertMatchesFrozenLegacy("oracle",
+                (chain, input, opts) -> LegacyLiftoverQuery.expand(chain, opts, header(Path.of(input))));
+    }
+
+    /**
+     * LIFTOVER_LEGACY, the pre-P4 command kept for comparison, equals the same frozen output as the oracle, so the
+     * frozen constants, the oracle and the old command agree.
+     */
+    @Test
+    public void liftoverLegacyMatchesFrozenLegacy() {
+        assertMatchesFrozenLegacy("LIFTOVER_LEGACY", (chain, input, opts) -> "liftover_legacy " + chain + " " + opts);
+    }
+
+    /** The pipe step that lifts {@code input} through {@code chain} with the LIFTOVER options {@code opts}. */
+    private interface LegacyStep {
+        String step(String chain, String input, String opts);
+    }
+
+    private static void assertMatchesFrozenLegacy(String what, LegacyStep legacy) {
         String chain = UTestGorLiftoverCharacterization.CHAIN;
         String ovl = UTestGorLiftoverCharacterization.CHAIN_OVL;
         String zero = UTestGorLiftoverCharacterization.CHAIN_ZERO;
@@ -185,21 +204,21 @@ public class UTestGorLiftoverDifferential {
         };
         for (Object[] f : frozen) {
             String in = (String) f[1];
-            Assert.assertEquals("oracle " + f[0] + " " + f[2] + " on " + in, f[3],
-                    TestUtils.runGorPipe("gor " + in + " | "
-                            + LegacyLiftoverQuery.expand((String) f[0], (String) f[2], header(Path.of(in)))));
+            Assert.assertEquals(what + " " + f[0] + " " + f[2] + " on " + in, f[3],
+                    TestUtils.runGorPipe("gor " + in + " | " + legacy.step((String) f[0], in, (String) f[2])));
         }
         // the Task 1 error cases, frozen
-        assertOracleThrows(chain, snp, "", GorDataException.class, "Illegal stop position in column #3");
-        assertOracleThrows(chain, snp, "-snp -var", GorParsingException.class, "specify only one liftover type");
-        assertOracleThrows(chain, coll, "-snp", GorDataException.class, "Duplicate column name 'hgold_POS'");
-        System.out.println("oracleMatchesFrozenLegacy: " + frozen.length + " frozen outputs and 3 errors matched");
+        assertLegacyThrows(legacy, chain, snp, "", GorDataException.class, "Illegal stop position in column #3");
+        assertLegacyThrows(legacy, chain, snp, "-snp -var", GorParsingException.class,
+                "specify only one liftover type");
+        assertLegacyThrows(legacy, chain, coll, "-snp", GorDataException.class, "Duplicate column name 'hgold_POS'");
+        System.out.println(what + " matches frozen legacy: " + frozen.length + " frozen outputs and 3 errors");
     }
 
-    private static void assertOracleThrows(String chain, String input, String opts, Class<?> type, String text) {
+    private static void assertLegacyThrows(LegacyStep legacy, String chain, String input, String opts,
+                                           Class<?> type, String text) {
         try {
-            TestUtils.runGorPipe("gor " + input + " | "
-                    + LegacyLiftoverQuery.expand(chain, opts, header(Path.of(input))));
+            TestUtils.runGorPipe("gor " + input + " | " + legacy.step(chain, input, opts));
             Assert.fail("expected " + type.getSimpleName() + " for " + opts);
         } catch (RuntimeException e) {
             Assert.assertTrue(e.getClass().getName(), type.isInstance(e));
@@ -400,6 +419,8 @@ public class UTestGorLiftoverDifferential {
 
         String oldOut = TestUtils.runGorPipe("gor " + input + " | "
                 + LegacyLiftoverQuery.expand(chainArg, opts, header(input)));
+        Assert.assertEquals(name + ": oracle differs from LIFTOVER_LEGACY",
+                TestUtils.runGorPipe("gor " + input + " | liftover_legacy " + chainArg + " " + opts), oldOut);
         String newOut = TestUtils.runGorPipe("gor " + input + " | liftover " + chainArg + " " + opts);
         return compare(name, mode, all, input, oldOut, newOut, RandomChains.blocks(chain));
     }
