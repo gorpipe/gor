@@ -46,20 +46,25 @@ public class PlatformJWTAuth extends GorAuth {
         long expiration = jwt.getExpirationTime();
         String username = getUsername(jwt);
         String cacheId = project + ":" + username;
+        List<String> roles = getUserRoles(jwt);
 
         // We cache a basic gorauthtoken with all the lookups, then we always add the roles.
         GorAuthInfo gorAuthInfo = gorAuthInfoCache.get(cacheId);
         if (gorAuthInfo == null) {
             try {
-                gorAuthInfo = updateGorAuthInfo(new GeneralAuthInfo(0, project, username, "", null, 0, Long.MAX_VALUE));
-                // If we got project id we keep tihs for ever, otherwise just 1 min.
-                gorAuthInfoCache.add(cacheId, gorAuthInfo, gorAuthInfo.getProjectId() > 0 ?  Long.MAX_VALUE : 60000);
+                // Pass the token roles in so CSA isn't asked for roles that would be replaced by them anyway.
+                gorAuthInfo = updateGorAuthInfo(new GeneralAuthInfo(0, project, username, "", roles, 0, Long.MAX_VALUE));
+                // If we got project id we keep this for ever, otherwise just 1 min.  The cache expires entries by
+                // the expiration of the stored auth info, so it must carry the 1 min too.
+                long cacheExpiration = gorAuthInfo.getProjectId() > 0 ? Long.MAX_VALUE : System.currentTimeMillis() + 60000;
+                gorAuthInfo = new GeneralAuthInfo(gorAuthInfo.getProjectId(), project, username, gorAuthInfo.getUserId(),
+                        gorAuthInfo.getUserRoles(), gorAuthInfo.getOrganizationId(), cacheExpiration);
+                gorAuthInfoCache.add(cacheId, gorAuthInfo, cacheExpiration);
             } catch (Exception e) {
                 throw new GorSystemException(e);
             }
         }
 
-        List<String> roles = getUserRoles(jwt);
         gorAuthInfo = new GeneralAuthInfo(gorAuthInfo.getProjectId(), project, username, gorAuthInfo.getUserId(),
                 roles, gorAuthInfo.getOrganizationId(), expiration);
         return gorAuthInfo;
