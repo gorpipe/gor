@@ -146,6 +146,11 @@ public class CramIterator extends BamIterator {
             closeReferenceFile();
         } catch (IOException ex) {
             throw new GorResourceException("Failed to close CRAM iterator.", fileName, ex);
+        } finally {
+            if (projectRefSeq != null) {
+                projectRefSeq.close();
+                projectRefSeq = null;
+            }
         }
     }
 

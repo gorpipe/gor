@@ -443,10 +443,12 @@ object GorPileup {
     BinAnalysis(pooledPileupRowHandler(grCols, pa, columns), BinAggregator(pooledPileupFactory(session, grCols, pa, refSeq), span + 50, span)) {
 
     override def finish(): Unit = {
-      super.finish()
-
-      if (refSeq != null) {
-        refSeq.close()
+      try {
+        super.finish()
+      } finally {
+        if (refSeq != null) {
+          refSeq.close()
+        }
       }
     }
   }
