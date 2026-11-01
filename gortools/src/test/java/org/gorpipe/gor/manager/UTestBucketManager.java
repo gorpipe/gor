@@ -486,6 +486,39 @@ public class UTestBucketManager {
     }
 
     @Test
+    public void testCleaningOfOldTempDirs() throws Exception {
+        String name = "testCleaningOfOldTempDirs";
+
+        // Setup small table
+
+        int fileCount = 2;
+        String[] sources = IntStream.range(1, fileCount).mapToObj(i -> String.format("PN%d", i)).toArray(size -> new String[size]);
+        Map<String, List<String>> dataFiles = GorDictionarySetup.createDataFilesMap(
+                name, workDirPath, fileCount, new int[]{1, 2, 3}, 10, "PN", true, sources);
+
+        GorDictionaryTable table = TestUtils.createDictionaryWithData(name, workDirPath, dataFiles);
+        BucketManager buc = new BucketManager(table);
+        buc.setMinBucketSize(2);
+        buc.setBucketSize(10);
+
+        // Create artificial temp meta data folder (non empty), as created when the temp table is opened.
+        Path tempDirPath = workDirPath.resolve("." + buc.getTempTablePrefix() + "111");
+        Files.createDirectory(tempDirPath);
+        Files.createDirectory(tempDirPath.resolve("history"));
+        Files.writeString(tempDirPath.resolve("history").resolve("old.gord"), "#file\n");
+        Assert.assertTrue(Files.exists(tempDirPath));
+
+        // Bucketize
+
+        buc.bucketize(BucketManager.BucketPackLevel.FULL_PACKING, 100);
+
+        String[] buckets = table.selectAll().stream().filter(l -> l.hasBucket() && !l.isDeleted()).map(e -> e.getBucket()).distinct().toArray(String[]::new);
+        Assert.assertEquals("Should have one bucket", 1, buckets.length);
+
+        Assert.assertFalse(Files.exists(tempDirPath));
+    }
+
+    @Test
     public void testCleaningOfDeletedBuckets() throws Exception {
         String name = "testCleaningOfDeletedBuckets";
 
