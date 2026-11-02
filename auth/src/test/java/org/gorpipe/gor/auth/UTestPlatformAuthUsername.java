@@ -156,6 +156,37 @@ public class UTestPlatformAuthUsername {
         verify(csaApiService, never()).getUserByEmail(anyString());
     }
 
+    @Test
+    public void jwtAuthCachesUnresolvedProject() throws Exception {
+        CsaApiService csaApiService = mock(CsaApiService.class);
+        doReturn(null).when(csaApiService).getProject(anyString());
+        doReturn("CSA").when(config).updateAuthInfoPolicy();
+
+        PlatformJWTAuth auth = new PlatformJWTAuth(config, csaApiService);
+        auth.getGorAuthInfo(PROJECT, parse(token().withClaim("email", EMAIL)));
+        GorAuthInfo info = auth.getGorAuthInfo(PROJECT, parse(token().withClaim("email", EMAIL)));
+
+        // A project CSA can't resolve is cached for a short while, not looked up again on every request.
+        verify(csaApiService, times(1)).getProject(PROJECT);
+        verify(csaApiService, times(1)).getUserByEmail(EMAIL);
+        Assert.assertEquals(List.of("prj:test-proj:query"), info.getUserRoles());
+    }
+
+    @Test
+    public void jwtAuthDoesNotLookUpCsaRolesWhenTokenHasRoles() throws Exception {
+        CsaApiService csaApiService = mock(CsaApiService.class);
+        doReturn(Collections.singletonMap("id", 5)).when(csaApiService).getProject(PROJECT);
+        doReturn("CSA").when(config).updateAuthInfoPolicy();
+
+        GorAuthInfo info = new PlatformJWTAuth(config, csaApiService)
+                .getGorAuthInfo(PROJECT, parse(token().withClaim("email", EMAIL)));
+
+        // Roles always come from the token, so a CSA role lookup would be thrown away.
+        verify(csaApiService, never()).getUserRoleList(anyString(), anyString());
+        Assert.assertEquals(5, info.getProjectId());
+        Assert.assertEquals(List.of("prj:test-proj:query"), info.getUserRoles());
+    }
+
     // --- PlatformAuth ---
 
     @Test
