@@ -1,0 +1,596 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>LIFTOVER_ANNOTATE &mdash; GOR Open Source v.2.0 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/gorpipe.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <nav class="wy-master-nav">
+    <div class="gor-logo-home">
+        <a href="../index.html">
+            <img src="../_static/GORLogoText.svg" class="logo" />
+        </a>
+    </div>
+    <div role="search" class="wxnc-search-form">
+        <button class="wxnc-search-button" form="wxnc-search-form" formmethod="get">
+            <i class="fa fa-search" aria-hidden="true"> </i>
+        </button>
+        <form id="wxnc-search-form" class="wy-form" action="../search.html" method="get">
+            <input class="wxnc-no-right-border" size="30" type="text" name="q" placeholder="Search the user manual..."/>
+            <input type="hidden" name="check_keywords" value="yes" />
+            <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+</nav>
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            
+            
+              <div class="version">
+                <a href="../index.html">
+                  GOR Open Source
+                  <p class="wxnc-subtitle">Documentation</p>
+                </a>
+              </div>
+            
+          
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GOR Open Source</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>LIFTOVER_ANNOTATE</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span style="float:right; padding-top:10px; color:#BABABA;">Used in: gor/nor</span><div class="section" id="liftover-annotate">
+<span id="id1"></span><h1>LIFTOVER_ANNOTATE<a class="headerlink" href="#liftover-annotate" title="Permalink to this headline">¶</a></h1>
+<p>The <strong>LIFTOVER_ANNOTATE</strong> command looks up where each input row lands in another genome build and appends the result as
+extra columns. Unlike <a class="reference internal" href="LIFTOVER.html#liftover"><span class="std std-ref">LIFTOVER</span></a> it does not move the rows: every input row produces exactly one output row, in the
+same place and in the same order, with its original coordinates, followed by a liftover status and the lifted-over
+location. No row is dropped, merged or reordered.</p>
+<p>Because the rows stay in place the output is still sorted by the input coordinates, no <code class="docutils literal notranslate"><span class="pre">sort</span> <span class="pre">genome</span></code> is needed and
+the command is safe to use under <code class="docutils literal notranslate"><span class="pre">pgor</span></code>. The lifted-over coordinates are ordinary columns, so you can filter on the
+status, keep only the mapped rows, or relocate the rows yourself (see the notes below).</p>
+<p>The mapping between the builds is read from a chain file, a GOR file with the header
+<code class="docutils literal notranslate"><span class="pre">Chrom</span> <span class="pre">tStart</span> <span class="pre">tEnd</span> <span class="pre">qChrom</span> <span class="pre">qStart</span> <span class="pre">qEnd</span> <span class="pre">qStrand</span> <span class="pre">qScore</span></code> (see <a class="reference internal" href="#chain-format">Chain format</a>), typically generated from a UCSC chain
+file. The chain can also be a nested query, <code class="docutils literal notranslate"><span class="pre">&lt;(gor</span> <span class="pre">...)</span></code>.</p>
+<p>The command must know the type of the data, and exactly one of <code class="docutils literal notranslate"><span class="pre">-snp</span></code>, <code class="docutils literal notranslate"><span class="pre">-var</span></code>, <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-seg1</span></code> is required.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">LIFTOVER_ANNOTATE</span> &lt;chain&gt; ( -snp | -var | -seg | -seg1 ) [&lt;options&gt;]
+
+<span class="nd">nor</span> ... | <span class="nb">LIFTOVER_ANNOTATE</span> &lt;chain&gt; ( -snp | -var ) -chrom &lt;col&gt; -<span class="na">pos</span> &lt;col&gt; [&lt;options&gt;]
+
+<span class="nd">nor</span> ... | <span class="nb">LIFTOVER_ANNOTATE</span> &lt;chain&gt; ( -seg | -seg1 ) -chrom &lt;col&gt; -<span class="na">pos</span> &lt;col&gt; -end &lt;col&gt; [&lt;options&gt;]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;chain&gt;</span></code> is a chain file or a nested query <code class="docutils literal notranslate"><span class="pre">&lt;(gor</span> <span class="pre">...)</span></code>.</p>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<p>Input type (exactly one is required):</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-snp</span></code></p></td>
+<td><p>A single position. <code class="docutils literal notranslate"><span class="pre">-pos</span></code> is the 1-based position.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-var</span></code></p></td>
+<td><p>A variant. The position is <code class="docutils literal notranslate"><span class="pre">-pos</span></code>, and the REF and ALT columns are used to get the
+length of the variant and to produce the lifted-over alleles.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-seg</span></code></p></td>
+<td><p>A segment in GOR coordinates, half-open: <code class="docutils literal notranslate"><span class="pre">[start,end)</span></code> with 0-based start. This is
+the format of a normal GOR row where start is column 2 and end is column 3.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-seg1</span></code></p></td>
+<td><p>A segment in 1-based inclusive coordinates: <code class="docutils literal notranslate"><span class="pre">[start,end]</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Input columns:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-chrom</span> <span class="pre">&lt;col&gt;</span></code></p></td>
+<td><p>The chromosome column. Default is column 1 (<code class="docutils literal notranslate"><span class="pre">#1</span></code>) in gor. Required in nor.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-pos</span> <span class="pre">&lt;col&gt;</span></code></p></td>
+<td><p>The position column (the start for <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-seg1</span></code>). Default is column 2 (<code class="docutils literal notranslate"><span class="pre">#2</span></code>)
+in gor. Required in nor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-end</span> <span class="pre">&lt;col&gt;</span></code></p></td>
+<td><p>The end column. Only valid with <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-seg1</span></code>. Default is column 3 (<code class="docutils literal notranslate"><span class="pre">#3</span></code>) in
+gor. Required in nor. The input must have such a column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-ref</span> <span class="pre">&lt;col&gt;</span></code></p></td>
+<td><p>The reference allele column. Only valid with <code class="docutils literal notranslate"><span class="pre">-var</span></code>. Default is the column named
+<code class="docutils literal notranslate"><span class="pre">REF</span></code> or <code class="docutils literal notranslate"><span class="pre">REFERENCE</span></code>. There is no fallback to column 3.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-alt</span> <span class="pre">&lt;col&gt;</span></code></p></td>
+<td><p>The alternate allele column. Only valid with <code class="docutils literal notranslate"><span class="pre">-var</span></code>. Default is the column named
+<code class="docutils literal notranslate"><span class="pre">ALT</span></code>, <code class="docutils literal notranslate"><span class="pre">CALL</span></code> or <code class="docutils literal notranslate"><span class="pre">ALLELE</span></code>. There is no fallback to column 4.</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">-var</span></code> requires both a REF and an ALT column. Columns can be given by name or by number. Column names are matched
+case-insensitively.</p>
+<p>Output and behaviour:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-prefix</span> <span class="pre">&lt;p&gt;</span></code></p></td>
+<td><p>Prefix of the appended column names. Default is <code class="docutils literal notranslate"><span class="pre">liftover_</span></code>. The prefix cannot
+contain any of <code class="docutils literal notranslate"><span class="pre">\</span> <span class="pre">/</span> <span class="pre">*</span> <span class="pre">+</span> <span class="pre">-</span> <span class="pre">'</span> <span class="pre">$</span> <span class="pre">;</span> <span class="pre">,</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-passthrough</span> <span class="pre">&lt;c&gt;</span></code></p></td>
+<td><p>Comma separated list of source contigs that are copied through unchanged, with the
+status <code class="docutils literal notranslate"><span class="pre">passthrough</span></code>, without using the chain. There is no default: without the
+option no contig is passed through. <code class="docutils literal notranslate"><span class="pre">-passthrough</span> <span class="pre">none</span></code> means an empty list. Contigs
+are matched exactly and are case-sensitive.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-mapped</span> <span class="pre">&lt;c&gt;</span></code></p></td>
+<td><p>Comma separated list of the contigs that are accepted, both as source contigs and as
+target contigs. A row on another source contig, or one that lifts to another contig,
+gets the status <code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code>. By default all contigs are accepted. A contig
+cannot be in both <code class="docutils literal notranslate"><span class="pre">-passthrough</span></code> and <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-overlap</span> <span class="pre">&lt;policy&gt;</span></code></p></td>
+<td><p>What to do when blocks of the chain overlap on the source side. <code class="docutils literal notranslate"><span class="pre">error</span></code> (the default)
+rejects such a chain with an error. <code class="docutils literal notranslate"><span class="pre">best</span></code> uses the overlapping block with the highest
+score, and if two such blocks have exactly the same score the status is <code class="docutils literal notranslate"><span class="pre">ambiguous</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-failon</span> <span class="pre">&lt;s&gt;</span></code></p></td>
+<td><p>Comma separated list of statuses. The query fails on the first row that gets one of
+them. The statuses are checked against the statuses of the input type (see
+<a class="reference internal" href="#status-values">Status values</a>) when the query is parsed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-tolerance</span> <span class="pre">&lt;t&gt;</span></code></p></td>
+<td><p>Only valid with <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-seg1</span></code>. A segment whose lifted-over size is within
+<code class="docutils literal notranslate"><span class="pre">t</span></code> (relative) of its source size is <code class="docutils literal notranslate"><span class="pre">mapped_across_gap</span></code>, otherwise <code class="docutils literal notranslate"><span class="pre">size_changed</span></code>
+(see <a class="reference internal" href="#status-values">Status values</a>). A number in [0,1). Default is 0.05.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-diag</span></code></p></td>
+<td><p>Only valid with <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-seg1</span></code>. Adds diagnostic columns with the sizes and the
+lifted-over endpoints (see <a class="reference internal" href="#output-columns">Output columns</a>).</p></td>
+</tr>
+</tbody>
+</table>
+<p>If an appended column has the same name as a column of the input the query fails with an error. Use <code class="docutils literal notranslate"><span class="pre">-prefix</span></code> to
+choose other names.</p>
+</div>
+<div class="section" id="output-columns">
+<h2>Output columns<a class="headerlink" href="#output-columns" title="Permalink to this headline">¶</a></h2>
+<p>The columns below are appended to the input columns, in this order. The names are shown with the default prefix
+<code class="docutils literal notranslate"><span class="pre">liftover_</span></code>. A row with a status that has no target location (for example <code class="docutils literal notranslate"><span class="pre">unmapped</span></code>) gets an empty location: the
+empty string in the target contig and strand columns (and in <code class="docutils literal notranslate"><span class="pre">liftover_ref</span></code> and <code class="docutils literal notranslate"><span class="pre">liftover_alt</span></code> for <code class="docutils literal notranslate"><span class="pre">-var</span></code>) and
+<code class="docutils literal notranslate"><span class="pre">0</span></code> in the position columns (<code class="docutils literal notranslate"><span class="pre">liftover_pos</span></code>, or <code class="docutils literal notranslate"><span class="pre">liftover_start</span></code> and <code class="docutils literal notranslate"><span class="pre">liftover_stop</span></code>). The other columns
+(<code class="docutils literal notranslate"><span class="pre">liftover_status</span></code>, and <code class="docutils literal notranslate"><span class="pre">liftover_chain_blocks</span></code> and the <code class="docutils literal notranslate"><span class="pre">-diag</span></code> columns of <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-seg1</span></code>) always have
+values.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-snp</span></code>: <code class="docutils literal notranslate"><span class="pre">liftover_status</span></code>, <code class="docutils literal notranslate"><span class="pre">liftover_chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">liftover_pos</span></code> (I, the 1-based target position),
+<code class="docutils literal notranslate"><span class="pre">liftover_strand</span></code> (S).</p>
+<p><code class="docutils literal notranslate"><span class="pre">-var</span></code>: <code class="docutils literal notranslate"><span class="pre">liftover_status</span></code>, <code class="docutils literal notranslate"><span class="pre">liftover_chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">liftover_pos</span></code> (I, the 1-based target position of the start of
+the variant), <code class="docutils literal notranslate"><span class="pre">liftover_ref</span></code> (S), <code class="docutils literal notranslate"><span class="pre">liftover_alt</span></code> (S), <code class="docutils literal notranslate"><span class="pre">liftover_strand</span></code> (S). When the target strand is <code class="docutils literal notranslate"><span class="pre">-</span></code>
+each allele is reverse complemented separately (the order of a comma separated list of alleles is kept). Symbolic
+alleles (starting with <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, such as <code class="docutils literal notranslate"><span class="pre">&lt;DEL&gt;</span></code>), <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">.</span></code> and breakend alleles (containing <code class="docutils literal notranslate"><span class="pre">[</span></code> or <code class="docutils literal notranslate"><span class="pre">]</span></code>) are left
+as they are. The alleles are empty for rows without a target.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>An indel that lifts to the <code class="docutils literal notranslate"><span class="pre">-</span></code> strand has its alleles reverse complemented allele by allele, but it is not
+re-anchored or normalised. The anchor base of a VCF-style indel (the first base of REF and ALT) ends up at the end
+of the allele instead of the start, and <code class="docutils literal notranslate"><span class="pre">liftover_pos</span></code> is the 1-based start of the lifted REF interval, its
+lowest target coordinate. Left-align and normalise the result before comparing it with variants called on the target build.</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-seg1</span></code>: <code class="docutils literal notranslate"><span class="pre">liftover_status</span></code>, <code class="docutils literal notranslate"><span class="pre">liftover_chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">liftover_start</span></code> (I), <code class="docutils literal notranslate"><span class="pre">liftover_stop</span></code> (I),
+<code class="docutils literal notranslate"><span class="pre">liftover_strand</span></code> (S), <code class="docutils literal notranslate"><span class="pre">liftover_chain_blocks</span></code> (I, the number of chain blocks that overlap the segment, including
+blocks that lose under <code class="docutils literal notranslate"><span class="pre">-overlap</span> <span class="pre">best</span></code>). The start and stop are in the same convention as the input: <code class="docutils literal notranslate"><span class="pre">-seg</span></code>
+gives GOR half-open coordinates and <code class="docutils literal notranslate"><span class="pre">-seg1</span></code> gives 1-based inclusive coordinates.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">liftover_strand</span></code> column is <code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">-</span></code> for the strand of the target relative to the source, and empty when
+there is no target, and for <code class="docutils literal notranslate"><span class="pre">passthrough</span></code> rows.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">-diag</span></code> the following columns are added after <code class="docutils literal notranslate"><span class="pre">liftover_chain_blocks</span></code>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 5%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">liftover_source_size</span></code></p></td>
+<td><p>I</p></td>
+<td><p>The size of the source segment, last base minus first base, so a 100 base
+segment gives 99.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">liftover_target_size</span></code></p></td>
+<td><p>I</p></td>
+<td><p>The distance between the two lifted-over endpoints when both endpoints lift
+to the same target contig, otherwise 0. A segment that is contained in one
+chain block has the same target size as source size.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">liftover_size_ratio</span></code></p></td>
+<td><p>D</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">target_size</span> <span class="pre">/</span> <span class="pre">source_size</span></code>: 1.0 for a contained segment, 0.0 when the
+endpoints do not lift to one contig. Printed as a Java <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">liftover_start_chrom</span></code></p></td>
+<td><p>S</p></td>
+<td><p>The contig of the lifted-over first base of the segment. Empty when the
+endpoint does not lift.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">liftover_start_pos</span></code></p></td>
+<td><p>I</p></td>
+<td><p>The 1-based position of the lifted-over first base. 0 when it does not lift.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">liftover_start_strand</span></code></p></td>
+<td><p>S</p></td>
+<td><p>The strand of the lift of the first base. Empty when it does not lift.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">liftover_stop_chrom</span></code></p></td>
+<td><p>S</p></td>
+<td><p>The same as <code class="docutils literal notranslate"><span class="pre">liftover_start_chrom</span></code>, for the last base of the segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">liftover_stop_pos</span></code></p></td>
+<td><p>I</p></td>
+<td><p>The same as <code class="docutils literal notranslate"><span class="pre">liftover_start_pos</span></code>, for the last base.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">liftover_stop_strand</span></code></p></td>
+<td><p>S</p></td>
+<td><p>The same as <code class="docutils literal notranslate"><span class="pre">liftover_start_strand</span></code>, for the last base.</p></td>
+</tr>
+</tbody>
+</table>
+<p>A segment that one block contains reports its diagnostics through that block: the target size equals the source size,
+the size ratio is 1.0 and the endpoints are lifted through the block, whether the status is <code class="docutils literal notranslate"><span class="pre">mapped</span></code> or
+<code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code> (the block lifts to a contig that is not in <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>). A <code class="docutils literal notranslate"><span class="pre">passthrough</span></code> row has the target size
+equal to the source size, a ratio of 1.0 and empty endpoints (<code class="docutils literal notranslate"><span class="pre">''</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">''</span></code>). A junction (see <a class="reference internal" href="#notes">Notes</a>) has
+empty endpoints. Endpoints that do not lift are also <code class="docutils literal notranslate"><span class="pre">''</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">''</span></code>.</p>
+<p>The diagnostic columns are useful to see why a segment did not map, for example the size ratio of a
+<code class="docutils literal notranslate"><span class="pre">size_changed</span></code> row, or which end of an <code class="docutils literal notranslate"><span class="pre">inverted</span></code> row went where.</p>
+</div>
+<div class="section" id="status-values">
+<h2>Status values<a class="headerlink" href="#status-values" title="Permalink to this headline">¶</a></h2>
+<p>Every row gets exactly one status. The statuses are tested in the order below, and the first one that applies is
+used.</p>
+<p><code class="docutils literal notranslate"><span class="pre">-snp</span></code> and <code class="docutils literal notranslate"><span class="pre">-var</span></code>:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">passthrough</span></code>: the source contig is in <code class="docutils literal notranslate"><span class="pre">-passthrough</span></code>. The row is copied through unchanged (chrom and pos are the
+input values, the strand is empty).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code>: the source contig is not in <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ambiguous</span></code>: with <code class="docutils literal notranslate"><span class="pre">-overlap</span> <span class="pre">best</span></code>, two best blocks have exactly the same score.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unmapped</span></code>: no block contains the position. For <code class="docutils literal notranslate"><span class="pre">-var</span></code> the block must contain the whole of REF. An empty REF is
+a junction (see <a class="reference internal" href="#notes">Notes</a>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code>: the block lifts to a contig that is not in <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mapped</span></code>.</p></li>
+</ol>
+<p><code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-seg1</span></code>:</p>
+<ol class="arabic">
+<li><p><code class="docutils literal notranslate"><span class="pre">passthrough</span></code>: the source contig is in <code class="docutils literal notranslate"><span class="pre">-passthrough</span></code>. The row is copied through unchanged.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code>: the source contig is not in <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>.</p></li>
+<li><p>If one block (the best block under <code class="docutils literal notranslate"><span class="pre">-overlap</span> <span class="pre">best</span></code>) contains the entire segment:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ambiguous</span></code>: two best blocks have exactly the same score.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code>: the block lifts to a contig that is not in <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mapped</span></code>.</p></li>
+</ul>
+<p>This is the case for almost every segment, and the endpoint statuses below are then not considered.</p>
+</li>
+<li><p>Otherwise no block contains the segment as a whole, and the first and last base are lifted on their own:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">unmapped</span></code>: a segment that is a single base or a junction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ambiguous</span></code>: the first or the last base is ambiguous, even when the other base does not lift.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unmapped</span></code>: neither the first nor the last base lifts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_unmapped</span></code>: only the first base does not lift.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stop_unmapped</span></code>: only the last base does not lift.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">split_contig</span></code>: the two bases lift to different contigs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code>: both lift to a contig that is not in <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inverted</span></code>: the two bases lift to opposite strands, or to the wrong order on the target.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mapped_across_gap</span></code>: both bases lift to the same contig and strand, in the same order, and the lifted size is
+within the tolerance of the source size, that is <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">tolerance</span> <span class="pre">&lt;</span> <span class="pre">size_ratio</span> <span class="pre">&lt;</span> <span class="pre">1</span> <span class="pre">+</span> <span class="pre">tolerance</span></code>. The segment spans
+a gap between blocks that is small.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size_changed</span></code>: as above, but the size ratio is outside the tolerance.</p></li>
+</ul>
+</li>
+</ol>
+<p>Rows with a status that has a target (<code class="docutils literal notranslate"><span class="pre">mapped</span></code>, <code class="docutils literal notranslate"><span class="pre">mapped_across_gap</span></code>, <code class="docutils literal notranslate"><span class="pre">size_changed</span></code> and <code class="docutils literal notranslate"><span class="pre">passthrough</span></code>) have the
+target location filled in. For the other statuses the location is empty (<code class="docutils literal notranslate"><span class="pre">''</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">''</span></code>).</p>
+</div>
+<div class="section" id="coordinate-conventions">
+<h2>Coordinate conventions<a class="headerlink" href="#coordinate-conventions" title="Permalink to this headline">¶</a></h2>
+<p>The input is converted to 0-based half-open coordinates before it is lifted, so a position <code class="docutils literal notranslate"><span class="pre">p</span></code> is <code class="docutils literal notranslate"><span class="pre">[p-1,p)</span></code>, a
+variant is <code class="docutils literal notranslate"><span class="pre">[pos-1,</span> <span class="pre">pos-1+len(REF))</span></code> and a segment is <code class="docutils literal notranslate"><span class="pre">[start,end)</span></code> for <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">[start-1,end)</span></code> for
+<code class="docutils literal notranslate"><span class="pre">-seg1</span></code>. This is the one place where <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-seg1</span></code> differ: the first is the GOR convention used for the
+start and end columns of gor rows, the second a 1-based inclusive range as used by VCF positions, BED-like tools that
+report <code class="docutils literal notranslate"><span class="pre">start+1</span></code> and so on. The output uses the same convention as the input in each case, so with <code class="docutils literal notranslate"><span class="pre">-seg1</span></code> the
+lifted-over start is also 1-based and inclusive.</p>
+<p>A segment is <code class="docutils literal notranslate"><span class="pre">mapped</span></code> only when a single chain block contains all of it. Adjacent blocks that together cover the
+segment can give <code class="docutils literal notranslate"><span class="pre">mapped_across_gap</span></code> or <code class="docutils literal notranslate"><span class="pre">size_changed</span></code> (see the example below), and also <code class="docutils literal notranslate"><span class="pre">inverted</span></code> or
+<code class="docutils literal notranslate"><span class="pre">split_contig</span></code> when the blocks lead to opposite strands or to different contigs.</p>
+<div class="section" id="chain-format">
+<h3>Chain format<a class="headerlink" href="#chain-format" title="Permalink to this headline">¶</a></h3>
+<p>The chain is a GOR file (or nested query) with the columns <code class="docutils literal notranslate"><span class="pre">Chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">tStart</span></code>, <code class="docutils literal notranslate"><span class="pre">tEnd</span></code>, <code class="docutils literal notranslate"><span class="pre">qChrom</span></code>, <code class="docutils literal notranslate"><span class="pre">qStart</span></code>,
+<code class="docutils literal notranslate"><span class="pre">qEnd</span></code>, <code class="docutils literal notranslate"><span class="pre">qStrand</span></code> and <code class="docutils literal notranslate"><span class="pre">qScore</span></code>. The first two columns are the source contig and the 0-based start, so the file
+must be sorted as a GOR file. Column names are matched case-insensitively.</p>
+<ul class="simple">
+<li><p>The blocks are ungapped, 0-based half-open intervals: <code class="docutils literal notranslate"><span class="pre">tEnd</span> <span class="pre">-</span> <span class="pre">tStart</span></code> must equal <code class="docutils literal notranslate"><span class="pre">qEnd</span> <span class="pre">-</span> <span class="pre">qStart</span></code>.</p></li>
+<li><p>The target interval is always given on the forward strand of <code class="docutils literal notranslate"><span class="pre">qChrom</span></code>, and <code class="docutils literal notranslate"><span class="pre">qStrand</span></code> is <code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">-</span></code>, where
+<code class="docutils literal notranslate"><span class="pre">-</span></code> means that the source is reverse complemented relative to the target.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">qScore</span></code> is a number (it can be larger than an int). It is used to choose between overlapping blocks with
+<code class="docutils literal notranslate"><span class="pre">-overlap</span> <span class="pre">best</span></code>.</p></li>
+<li><p>The chain must be sorted genomically, that is by contig and then by <code class="docutils literal notranslate"><span class="pre">tStart</span></code>, with every contig in one run. A file
+chain is validated one contig at a time, when a row on that contig is first lifted, and it is not scanned as a whole:
+a contig that reappears later in the file is not noticed, and which of its blocks are found is undefined. A nested
+chain is read as a whole, and a contig that reappears after another contig is rejected with <code class="docutils literal notranslate"><span class="pre">Liftover</span> <span class="pre">chain</span>
+<span class="pre">&lt;query&gt;:</span> <span class="pre">contig</span> <span class="pre">&lt;c&gt;</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">contiguous</span></code>.</p></li>
+<li><p>A chain with no blocks (a header-only file or an empty nested query) is an error, <code class="docutils literal notranslate"><span class="pre">Liftover</span> <span class="pre">chain</span> <span class="pre">&lt;path&gt;</span> <span class="pre">has</span> <span class="pre">no</span>
+<span class="pre">blocks</span></code>, reported on the first row that needs the chain.</p></li>
+<li><p>The chain is checked when it is loaded. A file chain is loaded one source contig at a time, the first time a row on
+that contig needs it, so an error in a block on a contig that no row uses is never reported (a nested chain is read
+and checked as a whole). A chain that is not sorted by <code class="docutils literal notranslate"><span class="pre">tStart</span></code>, has a block with <code class="docutils literal notranslate"><span class="pre">tEnd</span> <span class="pre">&lt;=</span> <span class="pre">tStart</span></code>,
+a gapped block, a negative <code class="docutils literal notranslate"><span class="pre">qStart</span></code>, a missing <code class="docutils literal notranslate"><span class="pre">tEnd</span></code>, <code class="docutils literal notranslate"><span class="pre">qChrom</span></code>, <code class="docutils literal notranslate"><span class="pre">qStart</span></code> or <code class="docutils literal notranslate"><span class="pre">qEnd</span></code>, a lone <code class="docutils literal notranslate"><span class="pre">-</span></code> as
+<code class="docutils literal notranslate"><span class="pre">tEnd</span></code>, <code class="docutils literal notranslate"><span class="pre">qStart</span></code> or <code class="docutils literal notranslate"><span class="pre">qEnd</span></code>, a <code class="docutils literal notranslate"><span class="pre">qStrand</span></code> other than <code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">-</span></code>, an invalid score, or (with the default
+<code class="docutils literal notranslate"><span class="pre">-overlap</span> <span class="pre">error</span></code>) overlapping blocks is rejected with an error that starts with <code class="docutils literal notranslate"><span class="pre">Liftover</span> <span class="pre">chain</span> <span class="pre">&lt;path&gt;</span></code>. A
+negative <code class="docutils literal notranslate"><span class="pre">tStart</span></code> is the row position, so the GOR reader rejects it with its own error before the chain is
+checked.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>The segment examples use this chain. It has two adjacent blocks on chr1, a block on the reverse strand, a block that
+moves to another contig, two overlapping blocks (<code class="docutils literal notranslate"><span class="pre">chr1</span> <span class="pre">800-900</span></code> and <code class="docutils literal notranslate"><span class="pre">chr1</span> <span class="pre">850-950</span></code>) and a block on chrM. The chain
+has overlapping blocks, so <code class="docutils literal notranslate"><span class="pre">-overlap</span> <span class="pre">best</span></code> is needed to load it.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Chrom  tStart  tEnd  qChrom  qStart  qEnd  qStrand  qScore
+chr1   100     200   chr1    1100    1200  +        1000
+chr1   200     300   chr1    1200    1300  +        1000
+chr1   400     500   chr1    5000    5100  -        900
+chr1   600     700   chr2    2100    2200  +        800
+chr1   800     900   chr1    8800    8900  +        500
+chr1   850     950   chr1    9850    9950  +        500
+chrM   300     3100  chrM    298     3098  +        100
+</pre></div>
+</div>
+<p>Segments in GOR coordinates, with <code class="docutils literal notranslate"><span class="pre">-seg</span></code>:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> segments.gor | <span class="nb">LIFTOVER_ANNOTATE</span> chain.gor -seg -overlap best
+</pre></div>
+</div>
+<p>Input rows <code class="docutils literal notranslate"><span class="pre">chr1</span> <span class="pre">120</span> <span class="pre">180</span></code>, <code class="docutils literal notranslate"><span class="pre">chr1</span> <span class="pre">150</span> <span class="pre">250</span></code> and <code class="docutils literal notranslate"><span class="pre">chr1</span> <span class="pre">250</span> <span class="pre">450</span></code> (named g01, g02 and g03) give:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="na">Chrom</span>   Start   End     Name    liftover_status     liftover_chrom  liftover_start  liftover_stop   liftover_strand liftover_chain_blocks
+chr1    120     180     g01     mapped              chr1            1120            1180            +               1
+chr1    150     250     g02     mapped_across_gap   chr1            1150            1250            +               2
+chr1    250     450     g03     inverted                            0               0                               2
+</pre></div>
+</div>
+<p>g01 lies inside the first block. g02 crosses from the first block into the second, so it is not contained in one block,
+but both ends lift to the same contig and strand and the size is unchanged. g03 starts on the forward strand and ends
+inside the reverse strand block, so it is <code class="docutils literal notranslate"><span class="pre">inverted</span></code> and has no target location.</p>
+<p>Segments in 1-based inclusive coordinates, with <code class="docutils literal notranslate"><span class="pre">-seg1</span></code>. The same three segments written as <code class="docutils literal notranslate"><span class="pre">121-180</span></code>,
+<code class="docutils literal notranslate"><span class="pre">151-250</span></code> and <code class="docutils literal notranslate"><span class="pre">251-450</span></code>:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> segments1.gor | <span class="nb">LIFTOVER_ANNOTATE</span> chain.gor -seg1 -overlap best
+</pre></div>
+</div>
+<p>gives:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="na">Chrom</span>   Start   End     Name    liftover_status     liftover_chrom  liftover_start  liftover_stop   liftover_strand liftover_chain_blocks
+chr1    121     180     g01     mapped              chr1            1121            1180            +               1
+chr1    151     250     g02     mapped_across_gap   chr1            1151            1250            +               2
+chr1    251     450     g03     inverted                            0               0                               2
+</pre></div>
+</div>
+<p>The lifted start is 1-based here as well (1121 where <code class="docutils literal notranslate"><span class="pre">-seg</span></code> gave 1120).</p>
+<p>A segment spanning a gap in the source that is closed in the target, with <code class="docutils literal notranslate"><span class="pre">-diag</span></code>. The chain has the blocks
+<code class="docutils literal notranslate"><span class="pre">chr1</span> <span class="pre">100-200</span> <span class="pre">-&gt;</span> <span class="pre">1000-1100</span></code> and <code class="docutils literal notranslate"><span class="pre">chr1</span> <span class="pre">210-310</span> <span class="pre">-&gt;</span> <span class="pre">1100-1200</span></code>, there is a gap of 10 bases between the blocks in the
+source, and none in the target:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">LIFTOVER_ANNOTATE</span> chain.gor -seg -diag
+
+<span class="na">Chrom</span>  Start  End  Name  liftover_status  liftover_chrom  liftover_start  liftover_stop  liftover_strand  liftover_chain_blocks  liftover_source_size  liftover_target_size  liftover_size_ratio  liftover_start_chrom  liftover_start_pos  liftover_start_strand  liftover_stop_chrom  liftover_stop_pos  liftover_stop_strand
+chr1   120    180    in    mapped           chr1            1020            1080           +                1                      59                    59                    1.0                  chr1                  1021                +                      chr1                 1080               +
+chr1   150    260    gap   size_changed     chr1            1050            1150           +                2                      109                   99                    0.908256880733945   chr1                  1051                +                      chr1                 1150               +
+</pre></div>
+</div>
+<p>The gap row has a size ratio of 99/109, outside the default tolerance of 0.05, so it is <code class="docutils literal notranslate"><span class="pre">size_changed</span></code>. With
+<code class="docutils literal notranslate"><span class="pre">-tolerance</span> <span class="pre">0.1</span></code> it is <code class="docutils literal notranslate"><span class="pre">mapped_across_gap</span></code>.</p>
+<p>A custom prefix for the new columns, with <code class="docutils literal notranslate"><span class="pre">-snp</span></code>:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> snps.gor | <span class="nb">LIFTOVER_ANNOTATE</span> chain.gor -snp -prefix hg38_
+</pre></div>
+</div>
+<p>adds the columns <code class="docutils literal notranslate"><span class="pre">hg38_status</span></code>, <code class="docutils literal notranslate"><span class="pre">hg38_chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">hg38_pos</span></code> and <code class="docutils literal notranslate"><span class="pre">hg38_strand</span></code>. With <code class="docutils literal notranslate"><span class="pre">-seg</span> <span class="pre">-prefix</span> <span class="pre">lifted_</span> <span class="pre">-diag</span></code>
+the names are <code class="docutils literal notranslate"><span class="pre">lifted_status</span></code>, <code class="docutils literal notranslate"><span class="pre">lifted_chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">lifted_start</span></code>, <code class="docutils literal notranslate"><span class="pre">lifted_stop</span></code>, <code class="docutils literal notranslate"><span class="pre">lifted_strand</span></code>,
+<code class="docutils literal notranslate"><span class="pre">lifted_chain_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">lifted_source_size</span></code>, <code class="docutils literal notranslate"><span class="pre">lifted_target_size</span></code>, <code class="docutils literal notranslate"><span class="pre">lifted_size_ratio</span></code>,
+<code class="docutils literal notranslate"><span class="pre">lifted_start_chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">lifted_start_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">lifted_start_strand</span></code>, <code class="docutils literal notranslate"><span class="pre">lifted_stop_chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">lifted_stop_pos</span></code> and
+<code class="docutils literal notranslate"><span class="pre">lifted_stop_strand</span></code>.</p>
+<p>Keep the rows that mapped (and the chrM rows that were passed through), and, in the second query, fail on rows that
+cannot be lifted:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> variants.gor | <span class="nb">LIFTOVER_ANNOTATE</span> hg19tohg38.gor -var -passthrough chrM | <span class="nb">WHERE</span> liftover_status = &#39;mapped&#39; or liftover_status = &#39;passthrough&#39;
+
+<span class="nd">gor</span> variants.gor | <span class="nb">LIFTOVER_ANNOTATE</span> hg19tohg38.gor -var -failon unmapped,ambiguous
+</pre></div>
+</div>
+</div>
+<div class="section" id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>The rows are not relocated: the output has the same coordinates and order as the input, so the command is safe to
+use with <code class="docutils literal notranslate"><span class="pre">pgor</span></code>. If you want the rows at their lifted-over positions, move the lifted-over columns into the first
+columns yourself and use <code class="docutils literal notranslate"><span class="pre">SORT</span> <span class="pre">GENOME</span></code> after that, because the relocated rows are no longer in order.</p></li>
+<li><p>The chain can be a nested query, <code class="docutils literal notranslate"><span class="pre">&lt;(gor</span> <span class="pre">...)</span></code>, for example <code class="docutils literal notranslate"><span class="pre">LIFTOVER_ANNOTATE</span> <span class="pre">&lt;(gor</span> <span class="pre">chain.gor</span> <span class="pre">|</span> <span class="pre">where</span> <span class="pre">qScore</span> <span class="pre">&gt;</span> <span class="pre">100)</span> <span class="pre">-snp</span></code>.
+A nested chain is read once per pipe step and is validated like a file, but it is not cached across queries. A
+chain file is cached for the session, so repeated queries on the same file do not read it again. A nested <code class="docutils literal notranslate"><span class="pre">nor</span></code>
+query is not accepted as a chain.</p></li>
+<li><p>To be cached, a chain file must have a unique source id in its file system or driver. A chain file without one is
+rejected with an error.</p></li>
+<li><p>A zero-length interval is a junction between two bases: <code class="docutils literal notranslate"><span class="pre">-seg</span></code> with <code class="docutils literal notranslate"><span class="pre">end</span> <span class="pre">==</span> <span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">-seg1</span></code> with
+<code class="docutils literal notranslate"><span class="pre">end</span> <span class="pre">==</span> <span class="pre">start</span> <span class="pre">-</span> <span class="pre">1</span></code>, and <code class="docutils literal notranslate"><span class="pre">-var</span></code> with an empty REF. A junction maps only when it lies strictly inside a chain block,
+that is not at the edge of the block. The output of a junction is again a zero-length interval (<code class="docutils literal notranslate"><span class="pre">-seg</span></code>: start =
+stop, <code class="docutils literal notranslate"><span class="pre">-seg1</span></code>: stop = start - 1). An interval with <code class="docutils literal notranslate"><span class="pre">end</span> <span class="pre">&lt;</span> <span class="pre">start</span></code> (<code class="docutils literal notranslate"><span class="pre">end</span> <span class="pre">&lt;</span> <span class="pre">start</span> <span class="pre">-</span> <span class="pre">1</span></code> for <code class="docutils literal notranslate"><span class="pre">-seg1</span></code>) is an error.</p></li>
+<li><p>The status of a segment comes from containment first. The endpoint statuses (<code class="docutils literal notranslate"><span class="pre">start_unmapped</span></code>, <code class="docutils literal notranslate"><span class="pre">split_contig</span></code>,
+<code class="docutils literal notranslate"><span class="pre">inverted</span></code> and so on) are only used when no single block contains the whole segment.</p></li>
+<li><p>Errors in the data start with <code class="docutils literal notranslate"><span class="pre">LIFTOVER_ANNOTATE:</span></code> and contain the contig and position of the row.</p></li>
+<li><p>In nor, the chromosome, position and, for segments, end columns must be given with <code class="docutils literal notranslate"><span class="pre">-chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">-pos</span></code> and <code class="docutils literal notranslate"><span class="pre">-end</span></code>.</p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020 GOR Open Source Project
+
+    </p>
+  </div> 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
