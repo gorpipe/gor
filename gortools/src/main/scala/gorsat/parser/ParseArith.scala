@@ -50,6 +50,7 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
   @transient private val pathfunctions = CalcFunctions.pathutilregistry
 
   private val subFilters = new util.ArrayList[ParseArith]
+  private val buildRefSeqs = new util.ArrayList[RefSeq]
 
   var refSeq: RefSeq = _
   var context: GorContext = new GorContext()
@@ -107,6 +108,17 @@ class ParseArith(rs: GenomicIterator = null) extends JavaTokenParsers with Seria
 
   def close(): Unit = {
     subFilters.forEach(f => f.close())
+    buildRefSeqs.forEach(r => r.close())
+    if (refSeq != null) refSeq.close()
+  }
+
+  /**
+    * Create a RefSeq for an explicit build path, owned by this parser and closed with it.
+    */
+  def createBuildRefSeq(buildPath: String): RefSeq = {
+    val r = context.getSession.getProjectContext.createRefSeq(buildPath)
+    buildRefSeqs.add(r)
+    r
   }
 
   /**

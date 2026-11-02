@@ -36,6 +36,7 @@ trait Expressions {
   var expressions: Array[ParseArith] = _
 
   def prepareExpressions(n: Int, context: GorContext, forNor: Boolean): Unit = {
+    closeExpressions()
     expressionTypes = Array.fill(n)('S')
     expressions = Array.fill(n)(new ParseArith())
     expressions.foreach(ex => ex.setContext(context, forNor))
