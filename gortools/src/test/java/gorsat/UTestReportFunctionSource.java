@@ -119,6 +119,52 @@ public class UTestReportFunctionSource {
     }
 
     @Test
+    public void testReportWithNewlineAfterInputSource() throws Exception {
+        // ENGKNOW-4164: a rendered query with a newline, not a space, after its input source, e.g. "gor\n${file.val}"
+        File gor = FileTestUtils.createTempFile(workDir.getRoot(), "data.gor", "chrom\tpos\tref\talt\nchr1\t1\tA\tC\n");
+        File yml = FileTestUtils.createTempFile(workDir.getRoot(), "newline.yml",
+                "newline:\n" +
+                        "  query: |\n" +
+                        "    gor\n" +
+                        "    ${file.val}\n" +
+                        "  arguments:\n" +
+                        "    - name: file\n" +
+                        "      type: string\n");
+
+        String expected = TestUtils.runGorPipe("gor " + yml.getAbsolutePath() + "(file='" + gor.getAbsolutePath() + "')");
+        String result = TestUtils.runGorPipe("gor report(" + yml.getAbsolutePath() + ", file='" + gor.getAbsolutePath() + "')");
+        Assert.assertEquals("chrom\tpos\tref\talt\nchr1\t1\tA\tC\n", expected);
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
+    public void testReportWithNewlineAfterNorInputSource() throws Exception {
+        File tsv = FileTestUtils.createTempFile(workDir.getRoot(), "data.tsv", "#a\tb\n1\tx\n");
+        File yml = FileTestUtils.createTempFile(workDir.getRoot(), "nornewline.yml",
+                "NorNewline:\n" +
+                        "  query: |\n" +
+                        "    nor\n" +
+                        "    " + tsv.getAbsolutePath() + "\n");
+
+        String result = TestUtils.runGorPipe("nor report(" + yml.getAbsolutePath() + ")");
+        Assert.assertEquals("ChromNOR\tPosNOR\ta\tb\nchrN\t0\t1\tx\n", result);
+    }
+
+    @Test
+    public void testReportAsPipeStepsWithNewlineAfterCommand() throws Exception {
+        File yml = FileTestUtils.createTempFile(workDir.getRoot(), "steps.yml",
+                "steps:\n" +
+                        "  query: |\n" +
+                        "    top\n" +
+                        "    ${top.val}\n" +
+                        "  arguments:\n" +
+                        "    - name: top\n" +
+                        "      type: string\n");
+
+        Assert.assertEquals(3, TestUtils.runGorPipeCount("gor ../tests/data/gor/genes.gor | pipesteps report(" + yml.getAbsolutePath() + ", top=3)"));
+    }
+
+    @Test
     public void testReportRenderingGorQueryInNor() {
         Assert.assertEquals(4, TestUtils.runGorPipeCount("nor report(" + REPORTS + "/test2.yml, top=4)"));
     }

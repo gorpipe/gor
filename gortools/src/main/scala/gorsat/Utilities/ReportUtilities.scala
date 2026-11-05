@@ -76,10 +76,14 @@ object ReportUtilities {
       .orElseThrow(() => new GorParsingException(s"No report found in yml report builder $resource"))
       .trim
 
-    val firstCommand = query.split("\\s+", 2)(0)
+    // The leading command is separated from its arguments by a single space, as the rendered query is rewritten by
+    // code that matches its input source by prefix, e.g. "gor ", while a yml query may put arguments on the next line
+    val commandSplit = query.split("\\s+", 2)
+    val firstCommand = commandSplit(0)
+    val normalizedQuery = if (commandSplit.length > 1) firstCommand + " " + commandSplit(1) else firstCommand
     val isQuery = ScriptParsers.isScript(CommandParseUtilities.quoteSafeSplitAndTrim(query, ';')) ||
       GorInputSources.getInfo(firstCommand) != null || GorPipeMacros.getInfo(firstCommand).isDefined
-    if (isQuery) query else "gor " + query
+    if (isQuery) normalizedQuery else "gor " + normalizedQuery
   }
 
   private def parseParameter(cmd: String): String = {
