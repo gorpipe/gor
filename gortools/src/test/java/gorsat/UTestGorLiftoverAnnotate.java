@@ -24,6 +24,7 @@ package gorsat;
 
 import gorsat.Script.ScriptEngineFactory;
 import gorsat.liftover.ChainBlock;
+import gorsat.liftover.LiftFixtures;
 import gorsat.liftover.LiftFixtures.NaiveLift;
 import gorsat.liftover.LiftFixtures.RandomChains;
 import gorsat.process.GorInputSources;
@@ -80,13 +81,11 @@ public class UTestGorLiftoverAnnotate {
     private static Path tmpdir;
 
     private static String lines(String... lines) {
-        return String.join("\n", lines) + "\n";
+        return LiftFixtures.lines(lines);
     }
 
     private static String write(String name, String content) throws IOException {
-        File f = new File(tmpdir.toFile(), name);
-        FileUtils.write(f, content, StandardCharsets.UTF_8);
-        return f.getAbsolutePath();
+        return LiftFixtures.write(tmpdir, name, content);
     }
 
     private static String snpRow(String chr, int pos, String id) {

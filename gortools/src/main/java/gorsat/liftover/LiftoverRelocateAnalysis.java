@@ -25,30 +25,58 @@ import java.util.function.Supplier;
  * On the - strand, -var reverse-complements REF and ALT per allele (N16), and -bam reverse-complements SEQ, reverses
  * QUAL and reverses CIGAR. -bam lifts MPOS on every row (N15); an MPOS that is not an integer &gt; 0 passes through
  * unchanged (R18).
+ * <p>
+ * With -mapped, -passthrough or -failon (fullStatus, ENGKNOW-4191) the status is the engine's own, as in
+ * LIFTOVER_ANNOTATE, and the contig policy applies: a passthrough row keeps its location, strand '', without the
+ * chain; a -seg row that is mapped_across_gap or size_changed is placed at its target (a -bam read is not: its SEQ,
+ * QUAL and CIGAR would not fit the lifted span); every other row that does not map is placed at
+ * (source chrom, 0[, 1]) as before. A row whose status is in failOn fails the query.
  */
 public class LiftoverRelocateAnalysis extends Analysis {
 
     private static final String PREFIX = "LIFTOVER: ";
     private static final String STATS_SENDER = "Liftover";
     private static final ContigPolicy NO_POLICY = new ContigPolicy(Set.of(), null);
-    /** Only used by the interval taxonomy, which the status projection collapses to unmapped. */
-    private static final double TOLERANCE = 0.05;
 
     private final RelocateMode mode;
     private final boolean all;
     private final RelocateColumns cols;
     private final RowHeader outgoingHeader;
     private final Supplier<ChainSource> chainFactory;
+    private final boolean fullStatus;
+    private final ContigPolicy policy;
+    private final Set<String> failOn;
+    /** The mapped_across_gap / size_changed boundary; without fullStatus both are reported as unmapped. */
+    private final double tolerance;
     private ChainSource chain;
     private final Supplier<ChainSource> lazyChain = this::resolveChain;
 
+    /** The step without -mapped, -passthrough or -failon: the projected statuses, no contig policy. */
     public LiftoverRelocateAnalysis(RelocateMode mode, boolean all, RelocateColumns cols, RowHeader outHeader,
                                     Supplier<ChainSource> chainFactory) {
+        this(mode, all, cols, outHeader, chainFactory, false, NO_POLICY, Set.of(), LiftoverArgs.DEFAULT_TOLERANCE);
+    }
+
+    /**
+     * fullStatus reports the engine's statuses and places passthrough rows, and -seg mapped_across_gap and
+     * size_changed rows (set by -mapped, -passthrough, -failon or -tolerance, which give policy, failOn and
+     * tolerance). fullStatus cannot be combined with all.
+     */
+    public LiftoverRelocateAnalysis(RelocateMode mode, boolean all, RelocateColumns cols, RowHeader outHeader,
+                                    Supplier<ChainSource> chainFactory, boolean fullStatus, ContigPolicy policy,
+                                    Set<String> failOn, double tolerance) {
+        if (fullStatus && all) {
+            throw new IllegalArgumentException("fullStatus cannot be combined with all");
+        }
         this.mode = mode;
         this.all = all;
         this.cols = cols;
         this.outgoingHeader = outHeader;
         this.chainFactory = chainFactory;
+        this.fullStatus = fullStatus;
+        this.policy = policy == null ? NO_POLICY : policy;
+        this.failOn = failOn == null ? Set.of() : Set.copyOf(failOn);
+        this.tolerance = tolerance;
         statsSenderName_$eq(STATS_SENDER);
     }
 
@@ -69,7 +97,8 @@ public class LiftoverRelocateAnalysis extends Analysis {
         if (pipeTo() != null || pipeFrom() != null) {
             throw new UnsupportedOperationException("LIFTOVER cannot be cloned inside a connected pipe");
         }
-        LiftoverRelocateAnalysis copy = new LiftoverRelocateAnalysis(mode, all, cols, outgoingHeader, chainFactory);
+        LiftoverRelocateAnalysis copy = new LiftoverRelocateAnalysis(mode, all, cols, outgoingHeader, chainFactory,
+                fullStatus, policy, failOn, tolerance);
         cloned_$eq(copy);
         init(copy);
         return copy;
@@ -104,10 +133,13 @@ public class LiftoverRelocateAnalysis extends Analysis {
     }
 
     /**
-     * The status projection (N8) of a status that is not mapped (the callers place mapped rows themselves):
-     * ambiguous stays, everything else is unmapped.
+     * The reported status of a row that is not mapped (the callers place mapped rows themselves). Under fullStatus
+     * the engine's status; otherwise its projection (N8): ambiguous stays, everything else is unmapped.
      */
-    private static String project(String status) {
+    private String reportedStatus(String status) {
+        if (fullStatus) {
+            return status;
+        }
         return LiftEngine.AMBIGUOUS.equals(status) ? LiftEngine.AMBIGUOUS : LiftEngine.UNMAPPED;
     }
 
@@ -125,11 +157,11 @@ public class LiftoverRelocateAnalysis extends Analysis {
             }
             return;
         }
-        LiftEngine.PointResult p = LiftEngine.liftSnp(lazyChain, chrom, pos, NO_POLICY);
-        if (LiftEngine.MAPPED.equals(p.status())) {
-            emit(r, p.chrom(), p.pos(), 0, p.strand(), LiftEngine.MAPPED, 0.0, null);
+        LiftEngine.PointResult p = LiftEngine.liftSnp(lazyChain, chrom, pos, policy);
+        if (LiftEngine.MAPPED.equals(p.status()) || LiftEngine.PASSTHROUGH.equals(p.status())) {
+            emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null);
         } else {
-            emitUnplaced(r, project(p.status()));
+            emitUnplaced(r, reportedStatus(p.status()));
         }
     }
 
@@ -149,11 +181,11 @@ public class LiftoverRelocateAnalysis extends Analysis {
             }
             return;
         }
-        LiftEngine.PointResult p = LiftEngine.liftVar(lazyChain, chrom, pos, refLen, NO_POLICY);
-        if (LiftEngine.MAPPED.equals(p.status())) {
-            emit(r, p.chrom(), p.pos(), 0, p.strand(), LiftEngine.MAPPED, 0.0, null);
+        LiftEngine.PointResult p = LiftEngine.liftVar(lazyChain, chrom, pos, refLen, policy);
+        if (LiftEngine.MAPPED.equals(p.status()) || LiftEngine.PASSTHROUGH.equals(p.status())) {
+            emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null);
         } else {
-            emitUnplaced(r, project(p.status()));
+            emitUnplaced(r, reportedStatus(p.status()));
         }
     }
 
@@ -182,9 +214,18 @@ public class LiftoverRelocateAnalysis extends Analysis {
             }
             return;
         }
-        LiftEngine.SpanResult s = LiftEngine.classifySpan(lazyChain, chrom, s0 + 1, end, NO_POLICY, TOLERANCE);
-        if (!LiftEngine.MAPPED.equals(s.status())) {
-            emitUnplaced(r, project(s.status()));
+        LiftEngine.SpanResult s = LiftEngine.classifySpan(lazyChain, chrom, s0 + 1, end, policy, tolerance);
+        String status = s.status();
+        if (LiftEngine.PASSTHROUGH.equals(status)) {
+            // only with -passthrough: the row keeps its location and MPOS, and the chain is not used
+            emit(r, chrom, start, end, "", status, 0.0, bam ? r.colAsString(cols.mpos()).toString() : null);
+            return;
+        }
+        // a -bam read across a gap is not moved: its SEQ, QUAL and CIGAR would not fit the lifted span
+        boolean placed = LiftEngine.MAPPED.equals(status)
+                || (fullStatus && !bam && LiftEngine.HAS_TARGET.contains(status));
+        if (!placed) {
+            emitUnplaced(r, reportedStatus(status));
             return;
         }
         String mpos = null;
@@ -193,7 +234,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
             ContigIndex ci = resolveChain().contig(chrom);
             mpos = mate(r, chrom, ci, ci.findSpan(s0, end), s.chrom());
         }
-        emit(r, s.chrom(), bam ? s.start1() : s.start1() - 1, s.stop1(), s.strand(), LiftEngine.MAPPED, 0.0, mpos);
+        emit(r, s.chrom(), bam ? s.start1() : s.start1() - 1, s.stop1(), s.strand(), status, 0.0, mpos);
     }
 
     /**
@@ -286,6 +327,9 @@ public class LiftoverRelocateAnalysis extends Analysis {
      */
     private void emit(Row r, String tChrom, int a, int b, String strand, String status, double score, String mpos) {
         statsInc(status);
+        if (failOn.contains(status)) {
+            throw new GorDataException(PREFIX + "status '" + status + "' at " + location(r));
+        }
         boolean span = mode.isSpan();
         boolean minus = "-".equals(strand);
         int n = r.numCols();
