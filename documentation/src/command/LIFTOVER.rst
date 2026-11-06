@@ -31,12 +31,19 @@ The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequen
    * ``-ref`` sets the span used for overlap as well as the length.
    * The previous implementation is available, for comparison only, as ``LIFTOVER_LEGACY`` with the same arguments. It will be removed in a later release.
 
+.. versionchanged:: 5.17.0
+
+   ``-mapped``, ``-passthrough`` and ``-failon``, with the same meaning, parsing and error messages as in
+   :ref:`LIFTOVER_ANNOTATE`. With any of them the status column reports the full set of liftover statuses (see
+   `Status values`_). Calls without them are unchanged.
+
 Usage
 =====
 
 .. code-block:: gor
 
 	gor ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | -bam ] [ -all ]
+	    [ -build <build> ] [ -mapped <contigs> ] [ -passthrough <contigs> | none ] [ -failon <statuses> ]
 
 Options
 =======
@@ -57,10 +64,71 @@ Options
 | ``-build value`` | Source build prefix (default hgold)                                     |
 +------------------+-------------------------------------------------------------------------+
 | ``-all``         | Include all mappings, not just the one with best score (default).       |
+|                  | Cannot be combined with ``-mapped``, ``-passthrough`` or ``-failon``.   |
 +------------------+-------------------------------------------------------------------------+
+
+Contig policy and failures (as in :ref:`LIFTOVER_ANNOTATE`):
+
++-----------------------+------------------------------------------------------------------------------------------+
+| ``-passthrough <c>``  | Comma separated list of source contigs that are copied through unchanged, with the       |
+|                       | status ``passthrough``, without using the chain: the row keeps its location (and MPOS    |
+|                       | for ``-bam``) and the strand is empty. ``-passthrough none`` means an empty list.        |
+|                       | Contigs are matched exactly and are case-sensitive.                                      |
++-----------------------+------------------------------------------------------------------------------------------+
+| ``-mapped <c>``       | Comma separated list of the contigs that are accepted, both as source contigs and as     |
+|                       | target contigs. A row on another source contig, or one that lifts to another contig,     |
+|                       | gets the status ``unsupported_contig``. By default all contigs are accepted. A contig    |
+|                       | cannot be in both ``-passthrough`` and ``-mapped``.                                      |
++-----------------------+------------------------------------------------------------------------------------------+
+| ``-failon <s>``       | Comma separated list of statuses. The query fails on the first row that gets one of      |
+|                       | them, with ``LIFTOVER: status '<s>' at <chrom>:<pos>``. The statuses are checked         |
+|                       | against the statuses of the input type when the query is parsed: ``-snp`` and ``-var``   |
+|                       | have the point statuses, ``-seg`` and ``-bam`` the segment statuses.                     |
++-----------------------+------------------------------------------------------------------------------------------+
+
+Each of these options may be given once. Unlike LIFTOVER_ANNOTATE, LIFTOVER has no ``-prefix``: the names of the
+added columns are set by ``-build``.
+
+Output columns
+==============
+
+The output row is the lifted location (``Chrom``, ``Pos`` and, for ``-seg`` and ``-bam``, the end column), the
+remaining input columns, the source location as ``<build>_<column>`` (for example ``hgold_Chrom`` and ``hgold_Pos``),
+``<build>_qStrand`` (``+`` or ``-``, empty when the row is not lifted) and ``<build>_liftoverStatus``, and with
+``-all`` ``<build>_score``. The rows are sorted on the lifted location.
+
+A row that is not lifted is placed at (source contig, 0), and for ``-seg`` and ``-bam`` with end 1, so it sorts first
+on its source contig.
+
+Status values
+=============
+
+Without ``-mapped``, ``-passthrough`` and ``-failon`` the status is ``mapped``, ``ambiguous`` (two best blocks have
+exactly the same score) or ``unmapped`` (everything else). Only ``mapped`` rows are moved.
+
+With any of ``-mapped``, ``-passthrough`` or ``-failon`` (``-passthrough none`` is enough) the status is the one
+:ref:`LIFTOVER_ANNOTATE` reports with ``-overlap best`` and the default tolerance of 0.05, see its status values:
+
+* ``-snp`` and ``-var``: ``passthrough``, ``unsupported_contig``, ``ambiguous``, ``unmapped``, ``mapped``.
+* ``-seg`` and ``-bam``: ``passthrough``, ``unsupported_contig``, ``ambiguous``, ``unmapped``, ``start_unmapped``,
+  ``stop_unmapped``, ``split_contig``, ``inverted``, ``mapped``, ``mapped_across_gap``, ``size_changed``.
+
+``mapped`` rows, and for ``-seg`` and ``-bam`` also ``mapped_across_gap`` and ``size_changed`` rows, are moved to
+their lifted location. ``passthrough`` rows keep their location. Rows with any other status are placed at
+(source contig, 0) as above.
 
 Examples
 ========
+Lift variants from hg19 to hg38, keep chrM as it is, and fail if a variant does not lift:
+
+.. code-block:: gor
+
+   gor variants.gor | LIFTOVER hg19tohg38.gor -var -build hg19 -mapped chr1,chr2,chrX -passthrough chrM
+      -failon unmapped,ambiguous
+
+Rows on chr1, chr2 and chrX are lifted (a row that lifts to another contig is ``unsupported_contig``), chrM rows are
+returned unchanged with the status ``passthrough``, and rows on any other contig are ``unsupported_contig``.
+
 When doing a liftover on segments, we can use the approach below to minimize the unmapped segments.  The occurrence of unmapped segments is because of partial overlap with the segments that come from the UCSC chain-files.
 
 The query below maps the individual overlaps and then merges them (given they are not too far apart, e.g. 1000bp).  The 20Mbp is the maxseg in the liftover segments.  Rownum and liftsplits is just calculated to be able to see how each gene is split up.

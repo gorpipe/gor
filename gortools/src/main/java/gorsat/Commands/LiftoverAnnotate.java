@@ -13,11 +13,7 @@ import org.gorpipe.exceptions.GorParsingException;
 import org.gorpipe.gor.session.GorContext;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -44,7 +40,7 @@ public class LiftoverAnnotate extends CommandInfo {
     @Override
     public CommandParsingResult processArguments(GorContext context, String argString, String[] iargs,
                                                  String[] args, boolean executeNor, String forcedInputHeader) {
-        rejectRepeatedOptions(args);
+        LiftoverArgs.rejectRepeatedOptions(args, VALUE_OPTIONS);
         LiftMode mode = parseMode(args);
         boolean diag = CommandParseUtilities.hasOption(args, "-diag");
         boolean span = mode == LiftMode.SEG || mode == LiftMode.SEG1;
@@ -86,20 +82,9 @@ public class LiftoverAnnotate extends CommandInfo {
             }
         }
 
-        Set<String> passthrough = CommandParseUtilities.hasOption(args, "-passthrough")
-                ? contigList(args, "-passthrough", true) : Set.of();
-        Set<String> mapped = CommandParseUtilities.hasOption(args, "-mapped")
-                ? contigList(args, "-mapped", false) : null;
-        if (mapped != null) {
-            for (String c : passthrough) {
-                if (mapped.contains(c)) {
-                    throw new GorParsingException("Contig " + c + " is in both -passthrough and -mapped",
-                            "-mapped", c);
-                }
-            }
-        }
+        ContigPolicy policy = LiftoverArgs.contigPolicy(args);
 
-        Set<String> failOn = parseFailOn(args, mode);
+        Set<String> failOn = LiftoverArgs.failOn(args, mode.statuses(), mode.flag());
 
         String header = forcedInputHeader;
         int chromCol;
@@ -158,21 +143,11 @@ public class LiftoverAnnotate extends CommandInfo {
         String outHeader = IteratorUtilities.validHeader(String.join("\t", outNames), true);
 
         LiftoverAnnotateConfig config = new LiftoverAnnotateConfig(mode, chromCol, posCol, endCol, refCol, altCol,
-                new ContigPolicy(passthrough, mapped), tolerance, diag, failOn);
+                policy, tolerance, diag, failOn);
         LiftoverAnnotateAnalysis analysis = new LiftoverAnnotateAnalysis(config,
                 LiftoverAnnotateAnalysis.outgoingHeader(header, mode, prefix, diag),
                 () -> FileChainSource.cached(resolved, overlap, context), context);
         return new CommandParsingResult(analysis, outHeader, resolved.usedFiles().toArray(new String[0]), null);
-    }
-
-    /** The option readers use the first occurrence only, so a repeated value option would be silently ignored. */
-    private static void rejectRepeatedOptions(String[] args) {
-        List<String> all = Arrays.asList(args);
-        for (String option : VALUE_OPTIONS) {
-            if (Collections.frequency(all, option) > 1) {
-                throw new GorParsingException(option + " given more than once", option, "");
-            }
-        }
     }
 
     private static LiftMode parseMode(String[] args) {
@@ -194,41 +169,5 @@ public class LiftoverAnnotate extends CommandInfo {
         if (!CommandParseUtilities.hasOption(args, option)) {
             throw new GorParsingException(option + " is required with " + why, option, "");
         }
-    }
-
-    /** A comma separated contig list. Empty entries and duplicates are errors; "none" may mean the empty set. */
-    private static Set<String> contigList(String[] args, String option, boolean noneIsEmpty) {
-        String value = CommandParseUtilities.stringValueOfOption(args, option).trim();
-        if (noneIsEmpty && value.equals("none")) {
-            return Set.of();
-        }
-        Set<String> contigs = new LinkedHashSet<>();
-        for (String c : value.split(",", -1)) {
-            String contig = c.trim();
-            if (contig.isEmpty()) {
-                throw new GorParsingException("Empty contig in " + option + " list '" + value + "'", option, value);
-            }
-            if (!contigs.add(contig)) {
-                throw new GorParsingException("Duplicate contig " + contig + " in " + option, option, value);
-            }
-        }
-        return contigs;
-    }
-
-    private static Set<String> parseFailOn(String[] args, LiftMode mode) {
-        if (!CommandParseUtilities.hasOption(args, "-failon")) {
-            return Set.of();
-        }
-        String value = CommandParseUtilities.stringValueOfOption(args, "-failon");
-        Set<String> failOn = new LinkedHashSet<>();
-        for (String s : value.split(",", -1)) {
-            String status = s.trim();
-            if (!mode.statuses().contains(status)) {
-                throw new GorParsingException("Invalid -failon status '" + status + "' for " + mode.flag()
-                        + ", valid: " + String.join(",", mode.statuses()).toLowerCase(Locale.ROOT), "-failon", value);
-            }
-            failOn.add(status);
-        }
-        return failOn;
     }
 }
