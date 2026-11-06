@@ -87,6 +87,28 @@ public final class LiftoverArgs {
         return contigs;
     }
 
+    /** The default mapped_across_gap / size_changed boundary of -tolerance. */
+    public static final double DEFAULT_TOLERANCE = 0.05;
+
+    /**
+     * -tolerance, a number in [0,1), only valid for the segment types (span), which spanFlags names in the error;
+     * {@link #DEFAULT_TOLERANCE} without the option.
+     */
+    public static double tolerance(String[] args, boolean span, String spanFlags) {
+        if (!CommandParseUtilities.hasOption(args, "-tolerance")) {
+            return DEFAULT_TOLERANCE;
+        }
+        if (!span) {
+            throw new GorParsingException("-tolerance is only valid with " + spanFlags, "-tolerance", "");
+        }
+        double tolerance = CommandParseUtilities.doubleValueOfOption(args, "-tolerance");
+        if (!(tolerance >= 0 && tolerance < 1)) {
+            throw new GorParsingException("Invalid -tolerance " + tolerance + ", it must be in [0,1)",
+                    "-tolerance", Double.toString(tolerance));
+        }
+        return tolerance;
+    }
+
     /**
      * The -failon statuses, each checked against the statuses the input type can report; empty without -failon.
      * modeFlag names the input type in the error message.

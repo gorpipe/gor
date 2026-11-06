@@ -33,7 +33,7 @@ The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequen
 
 .. versionchanged:: 5.17.0
 
-   ``-mapped``, ``-passthrough`` and ``-failon``, with the same meaning, parsing and error messages as in
+   ``-mapped``, ``-passthrough``, ``-failon`` and ``-tolerance``, with the same meaning, parsing and error messages as in
    :ref:`LIFTOVER_ANNOTATE`. With any of them the status column reports the full set of liftover statuses (see
    `Status values`_). Calls without them are unchanged.
 
@@ -44,6 +44,7 @@ Usage
 
 	gor ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | -bam ] [ -all ]
 	    [ -build <build> ] [ -mapped <contigs> ] [ -passthrough <contigs> | none ] [ -failon <statuses> ]
+	    [ -tolerance <t> ]
 
 Options
 =======
@@ -64,7 +65,8 @@ Options
 | ``-build value`` | Source build prefix (default hgold)                                     |
 +------------------+-------------------------------------------------------------------------+
 | ``-all``         | Include all mappings, not just the one with best score (default).       |
-|                  | Cannot be combined with ``-mapped``, ``-passthrough`` or ``-failon``.   |
+|                  | Cannot be combined with ``-mapped``, ``-passthrough``, ``-failon`` or   |
+|                  | ``-tolerance``.                                                         |
 +------------------+-------------------------------------------------------------------------+
 
 Contig policy and failures (as in :ref:`LIFTOVER_ANNOTATE`):
@@ -83,7 +85,16 @@ Contig policy and failures (as in :ref:`LIFTOVER_ANNOTATE`):
 | ``-failon <s>``       | Comma separated list of statuses. The query fails on the first row that gets one of      |
 |                       | them, with ``LIFTOVER: status '<s>' at <chrom>:<pos>``. The statuses are checked         |
 |                       | against the statuses of the input type when the query is parsed: ``-snp`` and ``-var``   |
-|                       | have the point statuses, ``-seg`` and ``-bam`` the segment statuses.                     |
+|                       | have the point statuses, ``-seg`` and ``-bam`` the segment statuses. The statuses are    |
+|                       | the full ones (see `Status values`_), so with ``-seg`` and ``-bam`` ``-failon unmapped`` |
+|                       | does not fail on ``start_unmapped``, ``stop_unmapped``, ``split_contig``, ``inverted``,  |
+|                       | ``mapped_across_gap`` or ``size_changed`` rows, which a call without these options       |
+|                       | reports as ``unmapped``. List every status that should fail.                             |
++-----------------------+------------------------------------------------------------------------------------------+
+| ``-tolerance <t>``    | Only valid with ``-seg`` and ``-bam``. A segment that no single block contains, but      |
+|                       | whose ends lift to the same contig and strand, is ``mapped_across_gap`` when its lifted  |
+|                       | size is within ``t`` (relative) of its source size, otherwise ``size_changed``. A number |
+|                       | in [0,1). Default is 0.05.                                                               |
 +-----------------------+------------------------------------------------------------------------------------------+
 
 Each of these options may be given once. Unlike LIFTOVER_ANNOTATE, LIFTOVER has no ``-prefix``: the names of the
@@ -106,16 +117,17 @@ Status values
 Without ``-mapped``, ``-passthrough`` and ``-failon`` the status is ``mapped``, ``ambiguous`` (two best blocks have
 exactly the same score) or ``unmapped`` (everything else). Only ``mapped`` rows are moved.
 
-With any of ``-mapped``, ``-passthrough`` or ``-failon`` (``-passthrough none`` is enough) the status is the one
-:ref:`LIFTOVER_ANNOTATE` reports with ``-overlap best`` and the default tolerance of 0.05, see its status values:
+With any of ``-mapped``, ``-passthrough``, ``-failon`` or ``-tolerance`` (``-passthrough none`` is enough) the status
+is the one :ref:`LIFTOVER_ANNOTATE` reports with ``-overlap best`` and the same ``-tolerance``, see its status values:
 
 * ``-snp`` and ``-var``: ``passthrough``, ``unsupported_contig``, ``ambiguous``, ``unmapped``, ``mapped``.
 * ``-seg`` and ``-bam``: ``passthrough``, ``unsupported_contig``, ``ambiguous``, ``unmapped``, ``start_unmapped``,
   ``stop_unmapped``, ``split_contig``, ``inverted``, ``mapped``, ``mapped_across_gap``, ``size_changed``.
 
-``mapped`` rows, and for ``-seg`` and ``-bam`` also ``mapped_across_gap`` and ``size_changed`` rows, are moved to
-their lifted location. ``passthrough`` rows keep their location. Rows with any other status are placed at
-(source contig, 0) as above.
+``mapped`` rows, and for ``-seg`` also ``mapped_across_gap`` and ``size_changed`` rows, are moved to their lifted
+location. ``passthrough`` rows keep their location. Rows with any other status are placed at (source contig, 0) as
+above. This includes ``-bam`` reads that are ``mapped_across_gap`` or ``size_changed``: their SEQ, QUAL and CIGAR
+would not fit the lifted span.
 
 Examples
 ========

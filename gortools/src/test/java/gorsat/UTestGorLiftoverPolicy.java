@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import gorsat.liftover.LiftFixtures;
 import gorsat.process.GorInputSources;
 import gorsat.process.GorPipeCommands;
 import org.apache.commons.io.FileUtils;
@@ -32,11 +33,14 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static gorsat.liftover.LiftFixtures.lines;
 
 /**
  * The contig policy and failure options of the relocating LIFTOVER (ENGKNOW-4191): -mapped, -passthrough and
@@ -60,19 +64,19 @@ public class UTestGorLiftoverPolicy {
     private static String snp;
     private static String var;
     private static String seg;
-
-    private static String lines(String... lines) {
-        return String.join("\n", lines) + "\n";
-    }
+    private static final String BAM = "../tests/data/bvl_min/bam/BVL_INDEX_SLC52A2.bam";
 
     private static String write(String name, String content) throws IOException {
-        File f = new File(tmpdir.toFile(), name);
-        FileUtils.write(f, content, StandardCharsets.UTF_8);
-        return f.getAbsolutePath();
+        return LiftFixtures.write(tmpdir, name, content);
     }
 
-    private static java.util.List<String> sortedLines(String s) {
-        return java.util.Arrays.stream(s.split("\n")).sorted().collect(java.util.stream.Collectors.toList());
+    private static List<String> sortedLines(String s) {
+        return Arrays.stream(s.split("\n")).sorted().collect(Collectors.toList());
+    }
+
+    /** The data rows of a query whose output must be empty, or the rows it gave. */
+    private static String dataRows(String output) {
+        return output.substring(output.indexOf('\n') + 1);
     }
 
     private static String run(String input, String chainFile, String opts) {
@@ -188,8 +192,13 @@ public class UTestGorLiftoverPolicy {
 
     @Test
     public void passthroughSegKeepsInterval() {
-        Assert.assertTrue(run(seg, chain, "-seg -passthrough chrM")
-                .contains("chrM\t1000\t1100\tm\tchrM\t1000\t1100\t\tpassthrough\n"));
+        Assert.assertEquals(lines(SEG_OUT,
+                "chr1\t0\t1\tinv\tchr1\t250\t450\t\tinverted",
+                "chr1\t1120\t1180\tin\tchr1\t120\t180\t+\tmapped",
+                "chr1\t1150\t1250\tgap\tchr1\t150\t250\t+\tmapped_across_gap",
+                "chr2\t2150\t2160\tother\tchr1\t650\t660\t+\tmapped",
+                "chrM\t1000\t1100\tm\tchrM\t1000\t1100\t\tpassthrough"),
+                run(seg, chain, "-seg -passthrough chrM"));
     }
 
     @Test
@@ -226,7 +235,7 @@ public class UTestGorLiftoverPolicy {
 
     @Test
     public void passthroughBamKeepsReadsUnchanged() {
-        String bam = "../tests/data/bvl_min/bam/BVL_INDEX_SLC52A2.bam";
+        String bam = BAM;
         String input = TestUtils.runGorPipe("gor " + bam);
         int n = input.split("\n", 2)[0].split("\t").length;
         String lifted = TestUtils.runGorPipe("gor " + bam + " | liftover " + chain
@@ -237,6 +246,54 @@ public class UTestGorLiftoverPolicy {
         Assert.assertEquals(sortedLines(input), sortedLines(lifted));
         assertParsingError(bam, "-bam -failon passthrough,mapped_across_gap,bogus",
                 "Invalid -failon status 'bogus' for -bam, valid: " + SPAN_STATUSES);
+    }
+
+    @Test
+    public void bamGapStatusesAreNotRelocated() throws IOException {
+        // a 10 base gap in the source at chr8:145578400-145578410 that the target closes: reads across it are
+        // size_changed (ratio about 0.9), or mapped_across_gap with -tolerance 0.2, and stay unplaced since their
+        // SEQ/QUAL/CIGAR would no longer fit the lifted span; the other reads move by 0 or -10
+        String gapped = write("chr8_gap_chain.gor", lines(CHAIN_HEADER,
+                "chr8\t0\t145578400\tchr8\t0\t145578400\t+\t1000",
+                "chr8\t145578410\t250000000\tchr8\t145578400\t249999990\t+\t1000"));
+        String q = "gor " + BAM + " | liftover " + gapped + " -bam ";
+        String gapRows = " | where hgold_liftoverStatus = 'size_changed' or hgold_liftoverStatus = 'mapped_across_gap'";
+        String sizeChanged = TestUtils.runGorPipe(q + "-passthrough none" + gapRows);
+        Assert.assertFalse("expected reads across the gap", dataRows(sizeChanged).isEmpty());
+        Assert.assertEquals("", dataRows(TestUtils.runGorPipe(q + "-passthrough none" + gapRows
+                + " | where not (hgold_liftoverStatus = 'size_changed' and Pos = 0 and End = 1"
+                + " and hgold_qStrand = '')")));
+        String acrossGap = TestUtils.runGorPipe(q + "-tolerance 0.2" + gapRows);
+        Assert.assertEquals(sizeChanged.split("\n").length, acrossGap.split("\n").length);
+        Assert.assertEquals("", dataRows(TestUtils.runGorPipe(q + "-tolerance 0.2" + gapRows
+                + " | where not (hgold_liftoverStatus = 'mapped_across_gap' and Pos = 0 and End = 1)")));
+        // without the new options the same reads are unmapped, as before
+        Assert.assertEquals("", dataRows(TestUtils.runGorPipe(q.trim() + gapRows)));
+    }
+
+    // -tolerance
+
+    @Test
+    public void toleranceSetsTheGapBoundaryForSegments() throws IOException {
+        String gapped = write("gap_chain.gor", lines(CHAIN_HEADER,
+                "chr1\t100\t200\tchr1\t1000\t1100\t+\t1000",
+                "chr1\t210\t310\tchr1\t1100\t1200\t+\t1000"));
+        String input = write("gap_seg.gor", lines("Chrom\tStart\tEnd\tName", "chr1\t150\t260\tgap"));
+        Assert.assertEquals(lines(SEG_OUT, "chr1\t0\t1\tgap\tchr1\t150\t260\t\tunmapped"),
+                run(input, gapped, "-seg"));
+        Assert.assertEquals(lines(SEG_OUT, "chr1\t1050\t1150\tgap\tchr1\t150\t260\t+\tsize_changed"),
+                run(input, gapped, "-seg -passthrough none"));
+        // -tolerance alone also gives the full statuses
+        Assert.assertEquals(lines(SEG_OUT, "chr1\t1050\t1150\tgap\tchr1\t150\t260\t+\tmapped_across_gap"),
+                run(input, gapped, "-seg -tolerance 0.1"));
+    }
+
+    @Test
+    public void toleranceErrors() {
+        assertParsingError("-snp -tolerance 0.1", "-tolerance is only valid with -seg and -bam");
+        assertParsingError(var, "-var -tolerance 0.1", "-tolerance is only valid with -seg and -bam");
+        assertParsingError("-seg -tolerance 1", "Invalid -tolerance 1.0, it must be in [0,1)");
+        assertParsingError("-seg -tolerance 0.1 -tolerance 0.2", "-tolerance given more than once");
     }
 
     // -mapped
@@ -265,6 +322,25 @@ public class UTestGorLiftoverPolicy {
                 run(seg, chain, "-seg -mapped chr1"));
     }
 
+    @Test
+    public void mappedVarKeepsAllelesOfUnsupportedRows() {
+        Assert.assertEquals(lines(VAR_OUT,
+                "chr1\t0\tC\tG\tchr1\t650\t\tunsupported_contig",
+                "chr1\t1150\tA\tG\tchr1\t150\t+\tmapped",
+                "chr1\t5050\tGT\tA\tchr1\t450\t-\tmapped",
+                "chrM\t0\tA\tG,T\tchrM\t1000\t\tunsupported_contig"),
+                run(var, chain, "-var -mapped chr1"));
+    }
+
+    @Test
+    public void mappedBamMarksOtherContigsUnsupported() {
+        String all = TestUtils.runGorPipe("gor " + BAM + " | liftover " + chain + " -bam -mapped chr1");
+        Assert.assertTrue(all.split("\n").length > 1);
+        Assert.assertEquals("", dataRows(TestUtils.runGorPipe("gor " + BAM + " | liftover " + chain
+                + " -bam -mapped chr1 | where not (hgold_liftoverStatus = 'unsupported_contig' and Chromo = 'chr8'"
+                + " and Pos = 0 and End = 1 and hgold_qStrand = '')")));
+    }
+
     // -failon
 
     @Test
@@ -287,6 +363,13 @@ public class UTestGorLiftoverPolicy {
             Assert.fail("expected GorDataException");
         } catch (GorDataException e) {
             Assert.assertTrue(e.getMessage(), e.getMessage().contains("LIFTOVER: status 'inverted' at chr1:250"));
+        }
+        try {
+            run(var, chain, "-var -mapped chr1 -failon unsupported_contig");
+            Assert.fail("expected GorDataException");
+        } catch (GorDataException e) {
+            Assert.assertTrue(e.getMessage(),
+                    e.getMessage().contains("LIFTOVER: status 'unsupported_contig' at chr1:650"));
         }
     }
 
@@ -324,7 +407,10 @@ public class UTestGorLiftoverPolicy {
     @Test
     public void allCannotBeCombinedWithPolicyOptions() {
         for (String opt : new String[]{"-mapped chr1", "-passthrough chrM", "-failon unmapped"}) {
-            assertParsingError("-snp -all " + opt, "-all cannot be combined with -mapped, -passthrough or -failon");
+            assertParsingError("-snp -all " + opt,
+                    "-all cannot be combined with -mapped, -passthrough, -failon or -tolerance");
         }
+        assertParsingError("-seg -all -tolerance 0.1",
+                "-all cannot be combined with -mapped, -passthrough, -failon or -tolerance");
     }
 }

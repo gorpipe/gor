@@ -24,7 +24,6 @@ public class LiftoverAnnotate extends CommandInfo {
 
     private static final String DEFAULT_PREFIX = "liftover_";
     private static final String BAD_PREFIX_CHARS = "\\/*+-'$;,";
-    private static final double DEFAULT_TOLERANCE = 0.05;
     private static final String[] VALUE_OPTIONS = {"-failon", "-passthrough", "-mapped", "-prefix", "-overlap",
             "-tolerance", "-chrom", "-pos", "-end", "-ref", "-alt"};
 
@@ -46,9 +45,6 @@ public class LiftoverAnnotate extends CommandInfo {
         boolean span = mode == LiftMode.SEG || mode == LiftMode.SEG1;
         if (!span && diag) {
             throw new GorParsingException("-diag is only valid with -seg and -seg1", "-diag", "");
-        }
-        if (!span && CommandParseUtilities.hasOption(args, "-tolerance")) {
-            throw new GorParsingException("-tolerance is only valid with -seg and -seg1", "-tolerance", "");
         }
 
         if (!span && CommandParseUtilities.hasOption(args, "-end")) {
@@ -73,14 +69,7 @@ public class LiftoverAnnotate extends CommandInfo {
         OverlapPolicy overlap = OverlapPolicy.parse(CommandParseUtilities.stringValueOfOptionWithDefaultWithErrorCheck(
                 args, "-overlap", "error", new String[]{"error", "best"}));
 
-        double tolerance = DEFAULT_TOLERANCE;
-        if (CommandParseUtilities.hasOption(args, "-tolerance")) {
-            tolerance = CommandParseUtilities.doubleValueOfOption(args, "-tolerance");
-            if (!(tolerance >= 0 && tolerance < 1)) {
-                throw new GorParsingException("Invalid -tolerance " + tolerance + ", it must be in [0,1)",
-                        "-tolerance", Double.toString(tolerance));
-            }
-        }
+        double tolerance = LiftoverArgs.tolerance(args, span, "-seg and -seg1");
 
         ContigPolicy policy = LiftoverArgs.contigPolicy(args);
 
