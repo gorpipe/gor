@@ -181,9 +181,16 @@
 <li><p>The previous implementation is available, for comparison only, as <code class="docutils literal notranslate"><span class="pre">LIFTOVER_LEGACY</span></code> with the same arguments. It will be removed in a later release.</p></li>
 </ul>
 </div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.17.0: </span><code class="docutils literal notranslate"><span class="pre">-mapped</span></code>, <code class="docutils literal notranslate"><span class="pre">-passthrough</span></code>, <code class="docutils literal notranslate"><span class="pre">-failon</span></code> and <code class="docutils literal notranslate"><span class="pre">-tolerance</span></code>, with the same meaning, parsing and error messages as in
+<a class="reference internal" href="LIFTOVER_ANNOTATE.html#liftover-annotate"><span class="std std-ref">LIFTOVER_ANNOTATE</span></a>. With any of them the status column reports the full set of liftover statuses (see
+<a class="reference internal" href="#status-values">Status values</a>). Calls without them are unchanged.</p>
+</div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | -bam ] [ -all ]
+    [ -build &lt;build&gt; ] [ -mapped &lt;contigs&gt; ] [ -passthrough &lt;contigs&gt; | none ] [ -failon &lt;statuses&gt; ]
+    [ -tolerance &lt;t&gt; ]
 </pre></div>
 </div>
 </div>
@@ -217,13 +224,86 @@
 <td><p>Source build prefix (default hgold)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-all</span></code></p></td>
-<td><p>Include all mappings, not just the one with best score (default).</p></td>
+<td><p>Include all mappings, not just the one with best score (default).
+Cannot be combined with <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>, <code class="docutils literal notranslate"><span class="pre">-passthrough</span></code>, <code class="docutils literal notranslate"><span class="pre">-failon</span></code> or
+<code class="docutils literal notranslate"><span class="pre">-tolerance</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
+<p>Contig policy and failures (as in <a class="reference internal" href="LIFTOVER_ANNOTATE.html#liftover-annotate"><span class="std std-ref">LIFTOVER_ANNOTATE</span></a>):</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-passthrough</span> <span class="pre">&lt;c&gt;</span></code></p></td>
+<td><p>Comma separated list of source contigs that are copied through unchanged, with the
+status <code class="docutils literal notranslate"><span class="pre">passthrough</span></code>, without using the chain: the row keeps its location (and MPOS
+for <code class="docutils literal notranslate"><span class="pre">-bam</span></code>) and the strand is empty. <code class="docutils literal notranslate"><span class="pre">-passthrough</span> <span class="pre">none</span></code> means an empty list.
+Contigs are matched exactly and are case-sensitive.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-mapped</span> <span class="pre">&lt;c&gt;</span></code></p></td>
+<td><p>Comma separated list of the contigs that are accepted, both as source contigs and as
+target contigs. A row on another source contig, or one that lifts to another contig,
+gets the status <code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code>. By default all contigs are accepted. A contig
+cannot be in both <code class="docutils literal notranslate"><span class="pre">-passthrough</span></code> and <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-failon</span> <span class="pre">&lt;s&gt;</span></code></p></td>
+<td><p>Comma separated list of statuses. The query fails on the first row that gets one of
+them, with <code class="docutils literal notranslate"><span class="pre">LIFTOVER:</span> <span class="pre">status</span> <span class="pre">'&lt;s&gt;'</span> <span class="pre">at</span> <span class="pre">&lt;chrom&gt;:&lt;pos&gt;</span></code>. The statuses are checked
+against the statuses of the input type when the query is parsed: <code class="docutils literal notranslate"><span class="pre">-snp</span></code> and <code class="docutils literal notranslate"><span class="pre">-var</span></code>
+have the point statuses, <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-bam</span></code> the segment statuses. The statuses are
+the full ones (see <a class="reference internal" href="#status-values">Status values</a>), so with <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-bam</span></code> <code class="docutils literal notranslate"><span class="pre">-failon</span> <span class="pre">unmapped</span></code>
+does not fail on <code class="docutils literal notranslate"><span class="pre">start_unmapped</span></code>, <code class="docutils literal notranslate"><span class="pre">stop_unmapped</span></code>, <code class="docutils literal notranslate"><span class="pre">split_contig</span></code>, <code class="docutils literal notranslate"><span class="pre">inverted</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mapped_across_gap</span></code> or <code class="docutils literal notranslate"><span class="pre">size_changed</span></code> rows, which a call without these options
+reports as <code class="docutils literal notranslate"><span class="pre">unmapped</span></code>. List every status that should fail.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-tolerance</span> <span class="pre">&lt;t&gt;</span></code></p></td>
+<td><p>Only valid with <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-bam</span></code>. A segment that no single block contains, but
+whose ends lift to the same contig and strand, is <code class="docutils literal notranslate"><span class="pre">mapped_across_gap</span></code> when its lifted
+size is within <code class="docutils literal notranslate"><span class="pre">t</span></code> (relative) of its source size, otherwise <code class="docutils literal notranslate"><span class="pre">size_changed</span></code>. A number
+in [0,1). Default is 0.05.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Each of these options may be given once. Unlike LIFTOVER_ANNOTATE, LIFTOVER has no <code class="docutils literal notranslate"><span class="pre">-prefix</span></code>: the names of the
+added columns are set by <code class="docutils literal notranslate"><span class="pre">-build</span></code>.</p>
+</div>
+<div class="section" id="output-columns">
+<h2>Output columns<a class="headerlink" href="#output-columns" title="Permalink to this headline">¶</a></h2>
+<p>The output row is the lifted location (<code class="docutils literal notranslate"><span class="pre">Chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">Pos</span></code> and, for <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-bam</span></code>, the end column), the
+remaining input columns, the source location as <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_&lt;column&gt;</span></code> (for example <code class="docutils literal notranslate"><span class="pre">hgold_Chrom</span></code> and <code class="docutils literal notranslate"><span class="pre">hgold_Pos</span></code>),
+<code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_qStrand</span></code> (<code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">-</span></code>, empty when the row is not lifted) and <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_liftoverStatus</span></code>, and with
+<code class="docutils literal notranslate"><span class="pre">-all</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_score</span></code>. The rows are sorted on the lifted location.</p>
+<p>A row that is not lifted is placed at (source contig, 0), and for <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-bam</span></code> with end 1, so it sorts first
+on its source contig.</p>
+</div>
+<div class="section" id="status-values">
+<h2>Status values<a class="headerlink" href="#status-values" title="Permalink to this headline">¶</a></h2>
+<p>Without <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>, <code class="docutils literal notranslate"><span class="pre">-passthrough</span></code> and <code class="docutils literal notranslate"><span class="pre">-failon</span></code> the status is <code class="docutils literal notranslate"><span class="pre">mapped</span></code>, <code class="docutils literal notranslate"><span class="pre">ambiguous</span></code> (two best blocks have
+exactly the same score) or <code class="docutils literal notranslate"><span class="pre">unmapped</span></code> (everything else). Only <code class="docutils literal notranslate"><span class="pre">mapped</span></code> rows are moved.</p>
+<p>With any of <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>, <code class="docutils literal notranslate"><span class="pre">-passthrough</span></code>, <code class="docutils literal notranslate"><span class="pre">-failon</span></code> or <code class="docutils literal notranslate"><span class="pre">-tolerance</span></code> (<code class="docutils literal notranslate"><span class="pre">-passthrough</span> <span class="pre">none</span></code> is enough) the status
+is the one <a class="reference internal" href="LIFTOVER_ANNOTATE.html#liftover-annotate"><span class="std std-ref">LIFTOVER_ANNOTATE</span></a> reports with <code class="docutils literal notranslate"><span class="pre">-overlap</span> <span class="pre">best</span></code> and the same <code class="docutils literal notranslate"><span class="pre">-tolerance</span></code>, see its status values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-snp</span></code> and <code class="docutils literal notranslate"><span class="pre">-var</span></code>: <code class="docutils literal notranslate"><span class="pre">passthrough</span></code>, <code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code>, <code class="docutils literal notranslate"><span class="pre">ambiguous</span></code>, <code class="docutils literal notranslate"><span class="pre">unmapped</span></code>, <code class="docutils literal notranslate"><span class="pre">mapped</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-bam</span></code>: <code class="docutils literal notranslate"><span class="pre">passthrough</span></code>, <code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code>, <code class="docutils literal notranslate"><span class="pre">ambiguous</span></code>, <code class="docutils literal notranslate"><span class="pre">unmapped</span></code>, <code class="docutils literal notranslate"><span class="pre">start_unmapped</span></code>,
+<code class="docutils literal notranslate"><span class="pre">stop_unmapped</span></code>, <code class="docutils literal notranslate"><span class="pre">split_contig</span></code>, <code class="docutils literal notranslate"><span class="pre">inverted</span></code>, <code class="docutils literal notranslate"><span class="pre">mapped</span></code>, <code class="docutils literal notranslate"><span class="pre">mapped_across_gap</span></code>, <code class="docutils literal notranslate"><span class="pre">size_changed</span></code>.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">mapped</span></code> rows, and for <code class="docutils literal notranslate"><span class="pre">-seg</span></code> also <code class="docutils literal notranslate"><span class="pre">mapped_across_gap</span></code> and <code class="docutils literal notranslate"><span class="pre">size_changed</span></code> rows, are moved to their lifted
+location. <code class="docutils literal notranslate"><span class="pre">passthrough</span></code> rows keep their location. Rows with any other status are placed at (source contig, 0) as
+above. This includes <code class="docutils literal notranslate"><span class="pre">-bam</span></code> reads that are <code class="docutils literal notranslate"><span class="pre">mapped_across_gap</span></code> or <code class="docutils literal notranslate"><span class="pre">size_changed</span></code>: their SEQ, QUAL and CIGAR
+would not fit the lifted span.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Lift variants from hg19 to hg38, keep chrM as it is, and fail if a variant does not lift:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> variants.gor | <span class="nb">LIFTOVER</span> hg19tohg38.gor -var -build hg19 -mapped chr1,chr2,chrX -passthrough chrM
+   -failon unmapped,ambiguous
+</pre></div>
+</div>
+<p>Rows on chr1, chr2 and chrX are lifted (a row that lifts to another contig is <code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code>), chrM rows are
+returned unchanged with the status <code class="docutils literal notranslate"><span class="pre">passthrough</span></code>, and rows on any other contig are <code class="docutils literal notranslate"><span class="pre">unsupported_contig</span></code>.</p>
 <p>When doing a liftover on segments, we can use the approach below to minimize the unmapped segments.  The occurrence of unmapped segments is because of partial overlap with the segments that come from the UCSC chain-files.</p>
 <p>The query below maps the individual overlaps and then merges them (given they are not too far apart, e.g. 1000bp).  The 20Mbp is the maxseg in the liftover segments.  Rownum and liftsplits is just calculated to be able to see how each gene is split up.</p>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> #genes# | <span class="nb">ROWNUM</span> | <span class="nb">JOIN</span> -segseg -maxseg 20000000 -rprefix lift
