@@ -21,6 +21,18 @@ public final class LiftFixtures {
     private LiftFixtures() {
     }
 
+    /** The lines joined with and ended by a newline: the content of a small gor file. */
+    public static String lines(String... lines) {
+        return String.join("\n", lines) + "\n";
+    }
+
+    /** Writes content to dir/name and returns its absolute path. */
+    public static String write(Path dir, String name, String content) throws IOException {
+        Path f = dir.resolve(name);
+        Files.writeString(f, content, StandardCharsets.UTF_8);
+        return f.toAbsolutePath().toString();
+    }
+
     /** Chain source over explicit per-contig indexes; an absent contig gives {@link ContigIndex#empty}. */
     public static ChainSource mapChain(Map<String, ContigIndex> m) {
         return contig -> m.getOrDefault(contig, ContigIndex.empty(contig));

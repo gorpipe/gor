@@ -24,6 +24,7 @@ package gorsat.Commands;
 
 import gorsat.Analysis.SortGenome;
 import gorsat.Utilities.IteratorUtilities;
+import gorsat.liftover.ContigPolicy;
 import gorsat.liftover.FileChainSource;
 import gorsat.liftover.LiftoverArgs;
 import gorsat.liftover.LiftoverRelocateAnalysis;
@@ -50,10 +51,13 @@ public class Liftover extends CommandInfo {
     private static final String[] MODE_FLAGS = {"-snp", "-seg", "-var", "-bam"};
     private static final RelocateMode[] MODES = {RelocateMode.SNP, RelocateMode.SEG, RelocateMode.VAR,
             RelocateMode.BAM};
+    /** The contig policy, failure and tolerance options shared with LIFTOVER_ANNOTATE (ENGKNOW-4191). */
+    private static final String[] POLICY_OPTIONS = {"-mapped", "-passthrough", "-failon", "-tolerance"};
 
     public Liftover() {
         super("LIFTOVER",
-                new CommandArguments("-snp -seg -var -bam -all", "-ref -alt -build", 1, 1, false),
+                new CommandArguments("-snp -seg -var -bam -all", "-ref -alt -build -mapped -passthrough -failon -tolerance",
+                        1, 1, false),
                 new CommandOptions(true, false, false, true, true, false),
                 false);
     }
@@ -109,6 +113,21 @@ public class Liftover extends CommandInfo {
         String build = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-build", "hgold");
         boolean all = CommandParseUtilities.hasOption(args, "-all");
 
+        // -mapped, -passthrough, -failon and -tolerance parse as in LIFTOVER_ANNOTATE, and any of them gives the
+        // full statuses
+        LiftoverArgs.rejectRepeatedOptions(args, POLICY_OPTIONS);
+        boolean fullStatus = false;
+        for (String option : POLICY_OPTIONS) {
+            fullStatus |= CommandParseUtilities.hasOption(args, option);
+        }
+        if (fullStatus && all) {
+            throw new GorParsingException("-all cannot be combined with -mapped, -passthrough, -failon or -tolerance",
+                    "-all", "");
+        }
+        ContigPolicy policy = LiftoverArgs.contigPolicy(args);
+        Set<String> failOn = LiftoverArgs.failOn(args, mode.statuses(), modeFlag);
+        double tolerance = LiftoverArgs.tolerance(args, mode.isSpan(), "-seg and -bam");
+
         // output: target location, the input columns after the location, source location, strand, status[, score]
         int loc = mode.isSpan() ? 3 : 2;
         List<String> locNames = mode == RelocateMode.BAM
@@ -152,7 +171,8 @@ public class Liftover extends CommandInfo {
         String outHeader = String.join("\t", names);
         LiftoverRelocateAnalysis relocate = new LiftoverRelocateAnalysis(mode, all, cols,
                 new RowHeader(names.toArray(new String[0]), types.toArray(new String[0])),
-                () -> FileChainSource.cached(resolved, OverlapPolicy.BEST, context));
+                () -> FileChainSource.cached(resolved, OverlapPolicy.BEST, context), fullStatus, policy, failOn,
+                tolerance);
         relocate.setContext(context);
 
         SortGenome sort = new SortGenome(outHeader, context.getSession(),
