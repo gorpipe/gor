@@ -193,8 +193,8 @@ used.
    input values, the strand is empty).
 2. ``unsupported_contig``: the source contig is not in ``-mapped``.
 3. ``ambiguous``: with ``-overlap best``, two best blocks have exactly the same score.
-4. ``unmapped``: no block contains the position. For ``-var`` the block must contain the whole of REF. An empty REF is
-   a junction (see `Notes`_).
+4. ``unmapped``: no block contains the position, and no equal gap does either (see `Equal gaps`_). For ``-var`` the
+   block must contain the whole of REF. An empty REF is a junction (see `Notes`_).
 5. ``unsupported_contig``: the block lifts to a contig that is not in ``-mapped``.
 6. ``mapped``.
 
@@ -240,6 +240,26 @@ lifted-over start is also 1-based and inclusive.
 A segment is ``mapped`` only when a single chain block contains all of it. Adjacent blocks that together cover the
 segment can give ``mapped_across_gap`` or ``size_changed`` (see the example below), and also ``inverted`` or
 ``split_contig`` when the blocks lead to opposite strands or to different contigs.
+
+Equal gaps
+----------
+
+UCSC chains encode a run of substituted bases as a gap of the same length on both sides between two blocks (most are
+one base). Such a gap is lifted as if the chain had been merged across it: a position in it is placed by its offset from
+the block before it. Without this, a liftover with a chain that has not been merged reports those bases as
+``unmapped``, while the opposite direction maps onto them.
+
+A gap is filled only when all of these hold:
+
+* the blocks on either side are consecutive rows of the chain, with the same ``qChrom``, ``qStrand`` and ``qScore``
+  (a chain file has no chain id, and ``qScore`` is the score of the whole chain);
+* the gap has the same length on the source and the target side, and is not empty;
+* no other block lies in or reaches into the gap.
+
+An unequal gap (an indel), a gap between blocks of different chains and a gap that holds a block of another chain stay
+unmapped. A gap is used only when no real block contains the input, it is not counted in ``liftover_chain_blocks``, and
+a segment that runs from a gap into a block is classified by its endpoints like a segment across two abutting blocks
+(usually ``mapped_across_gap``). A segment or ``-var`` REF that lies inside one gap is ``mapped``.
 
 Chain format
 ------------

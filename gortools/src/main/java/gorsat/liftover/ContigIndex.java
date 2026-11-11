@@ -11,6 +11,12 @@ import java.util.function.IntConsumer;
  *
  * Block indexes are positions in tStart order. Lookups return a block index, {@link #UNMAPPED} when no block
  * contains the position or span, or {@link #AMBIGUOUS} when several contain it with exactly the same best score.
+ *
+ * Gap blocks (CG-805) span an equal double-sided gap between two consecutive blocks of one chain, with no other block
+ * in it, and lift it by offset, as if the chain had been merged across it. They have indexes {@link #size()} to
+ * size() + {@link #gapCount()} - 1, every accessor takes them, and lookups return one only when no real block
+ * contains the input. {@link #nextInChain} and {@link #prevInChain} walk a chain across abutting blocks and gap
+ * blocks.
  */
 public final class ContigIndex {
 
@@ -29,9 +35,19 @@ public final class ContigIndex {
     private final double[] score;
     private final String[] qChrom;
     private final boolean overlapping;
+    /** The gap blocks, an index of their own, or null when there are none. */
+    private final ContigIndex gaps;
+    /** Chain links over real and gap indexes, -1 at a break; null when there are no blocks. */
+    private final int[] next;
+    private final int[] prev;
 
     ContigIndex(String contig, int size, int[] tStart, int[] tEnd, int[] qStart, int[] prefMaxEnd, byte[] minus,
                 double[] score, String[] qChrom, boolean overlapping) {
+        this(contig, size, tStart, tEnd, qStart, prefMaxEnd, minus, score, qChrom, overlapping, null, null, null);
+    }
+
+    ContigIndex(String contig, int size, int[] tStart, int[] tEnd, int[] qStart, int[] prefMaxEnd, byte[] minus,
+                double[] score, String[] qChrom, boolean overlapping, ContigIndex gaps, int[] next, int[] prev) {
         this.contig = contig;
         this.size = size;
         this.tStart = tStart;
@@ -42,6 +58,9 @@ public final class ContigIndex {
         this.score = score;
         this.qChrom = qChrom;
         this.overlapping = overlapping;
+        this.gaps = gaps;
+        this.next = next;
+        this.prev = prev;
     }
 
     public static ContigIndex empty(String contig) {
@@ -64,37 +83,61 @@ public final class ContigIndex {
         return contig;
     }
 
+    /** The number of real blocks. */
     public int size() {
         return size;
     }
 
+    /** The number of gap blocks, whose indexes follow the real blocks. */
+    public int gapCount() {
+        return gaps == null ? 0 : gaps.size;
+    }
+
+    /** True when i is a gap block. */
+    public boolean isGap(int i) {
+        return i >= size;
+    }
+
     public int tStart(int i) {
-        return tStart[i];
+        return i < size ? tStart[i] : gaps.tStart[i - size];
     }
 
     public int tEnd(int i) {
-        return tEnd[i];
+        return i < size ? tEnd[i] : gaps.tEnd[i - size];
     }
 
     public String qChrom(int i) {
-        return qChrom[i];
+        return i < size ? qChrom[i] : gaps.qChrom[i - size];
     }
 
     public int qStart(int i) {
-        return qStart[i];
+        return i < size ? qStart[i] : gaps.qStart[i - size];
     }
 
     public boolean minus(int i) {
-        return minus[i] != 0;
+        return (i < size ? minus[i] : gaps.minus[i - size]) != 0;
     }
 
     public double score(int i) {
-        return score[i];
+        return i < size ? score[i] : gaps.score[i - size];
+    }
+
+    /**
+     * The block that continues the chain of block i (real or gap) without a break: the next block of the chain when
+     * it abuts i on both sides, the gap block when an equal gap follows, or -1.
+     */
+    public int nextInChain(int i) {
+        return next == null ? -1 : next[i];
+    }
+
+    /** The block that i continues without a break, the mirror of {@link #nextInChain}, or -1. */
+    public int prevInChain(int i) {
+        return prev == null ? -1 : prev[i];
     }
 
     /** Best block containing the 1-based position p, that is tStart &lt; p &lt;= tEnd. */
     public int findPoint(int p) {
-        return contain(p - 1, p);
+        return orGap(contain(p - 1, p), p - 1, p);
     }
 
     /**
@@ -105,12 +148,21 @@ public final class ContigIndex {
         if (e0 < s0) {
             return UNMAPPED;
         }
-        return e0 == s0 ? contain(s0 - 1, s0 + 1) : contain(s0, e0);
+        return e0 == s0 ? orGap(contain(s0 - 1, s0 + 1), s0 - 1, s0 + 1) : orGap(contain(s0, e0), s0, e0);
+    }
+
+    /** A real lookup result, or the best gap block containing [a, b] when no real block does. */
+    private int orGap(int real, int a, int b) {
+        if (real != UNMAPPED || gaps == null) {
+            return real;
+        }
+        int g = gaps.contain(a, b);
+        return g < 0 ? g : size + g;
     }
 
     /** All blocks containing the 1-based position p, in ascending block index. */
     public int[] allPoint(int p) {
-        return collect(p - 1, p);
+        return orGaps(collect(p - 1, p), p - 1, p);
     }
 
     /** All blocks containing the span, same rule as {@link #findSpan}, in ascending block index. */
@@ -118,10 +170,24 @@ public final class ContigIndex {
         if (e0 < s0) {
             return NONE;
         }
-        return e0 == s0 ? collect(s0 - 1, s0 + 1) : collect(s0, e0);
+        return e0 == s0 ? orGaps(collect(s0 - 1, s0 + 1), s0 - 1, s0 + 1) : orGaps(collect(s0, e0), s0, e0);
     }
 
-    /** Number of blocks overlapping the 1-based inclusive span [s1, e1]: tStart &lt; e1 and tEnd &gt;= s1. */
+    private int[] orGaps(int[] real, int a, int b) {
+        if (real.length > 0 || gaps == null) {
+            return real;
+        }
+        int[] g = gaps.collect(a, b);
+        for (int k = 0; k < g.length; k++) {
+            g[k] += size;
+        }
+        return g;
+    }
+
+    /**
+     * Number of real blocks overlapping the 1-based inclusive span [s1, e1]: tStart &lt; e1 and tEnd &gt;= s1. Gap
+     * blocks are not counted.
+     */
     public int countBlocks(int s1, int e1) {
         int hi = lowerBound(tStart, e1);
         if (!overlapping) {
