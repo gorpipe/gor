@@ -57,7 +57,8 @@ public class Liftover extends CommandInfo {
 
     public Liftover() {
         super("LIFTOVER",
-                new CommandArguments("-snp -seg -var -bam -all -aligned", "-ref -alt -build -mapped -passthrough -failon -tolerance",
+                new CommandArguments("-snp -seg -var -bam -all -aligned -nogapfill",
+                        "-ref -alt -build -mapped -passthrough -failon -tolerance",
                         1, 1, false),
                 new CommandOptions(true, false, false, true, true, false),
                 false);
@@ -117,6 +118,7 @@ public class Liftover extends CommandInfo {
         if (aligned && mode != RelocateMode.VAR) {
             throw new GorParsingException("-aligned is only valid with -var", "-aligned", "");
         }
+        boolean fillGaps = !CommandParseUtilities.hasOption(args, "-nogapfill");
 
         // -mapped, -passthrough, -failon and -tolerance parse as in LIFTOVER_ANNOTATE, and any of them gives the
         // full statuses
@@ -184,8 +186,8 @@ public class Liftover extends CommandInfo {
         String outHeader = String.join("\t", names);
         LiftoverRelocateAnalysis relocate = new LiftoverRelocateAnalysis(mode, all, cols,
                 new RowHeader(names.toArray(new String[0]), types.toArray(new String[0])),
-                () -> FileChainSource.cached(resolved, OverlapPolicy.BEST, context), fullStatus, policy, failOn,
-                tolerance, aligned);
+                () -> FileChainSource.cached(resolved, OverlapPolicy.BEST, fillGaps, context), fullStatus, policy,
+                failOn, tolerance, aligned);
         relocate.setContext(context);
 
         SortGenome sort = new SortGenome(outHeader, context.getSession(),

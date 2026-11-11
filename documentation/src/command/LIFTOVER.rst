@@ -24,9 +24,10 @@ The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequen
    * A zero-length interval maps only strictly inside a block (unchanged). An invalid interval is now an error: ``end < start`` for ``-seg``, and ``End < Pos - 1`` for ``-bam`` (a junction, ``End == Pos - 1``, is valid).
    * Without ``-all``, a ``-seg`` or ``-bam`` row that no block contains, but whose first or last base lies in an exact score tie, is now ``ambiguous`` instead of ``unmapped``. This happens only on overlapping chains.
    * A 1-base ``-bam`` read on a block's last base (``Pos == End == tEnd``) now maps through that block.
-   * A position in a gap of equal length on both sides between two consecutive blocks of one chain is lifted by its
-     offset from the block before it, instead of being ``unmapped`` (see the Equal gaps section of
-     :ref:`LIFTOVER_ANNOTATE`).
+   * A position in a gap of equal length on both sides (at most 50 bases, Java property ``gor.liftover.gapfill.max``)
+     between two consecutive blocks of one chain is lifted by its offset from the block before it, instead of being
+     ``unmapped``, and a segment, variant or read across such gaps is lifted as on a merged chain (see the Equal
+     gaps section of :ref:`LIFTOVER_ANNOTATE`). ``-nogapfill`` gives the old result.
    * Input columns named ``liftover_*`` are no longer renamed.
    * An output-name collision is a ``GorParsingException`` naming the column, not a ``GorDataException`` from RENAME.
    * The chain is validated on load (sorted, ungapped, ``tEnd > tStart``, ``qStrand`` ``+`` or ``-``), and it needs a ``qEnd`` column.
@@ -77,6 +78,9 @@ Options
 +------------------+-------------------------------------------------------------------------+
 | ``-aligned``     | Only valid with ``-var``. Adds ``<build>_alignedLeft`` and              |
 |                  | ``<build>_alignedRight``, see `Aligned extent`_.                        |
++------------------+-------------------------------------------------------------------------+
+| ``-nogapfill``   | Do not fill equal gaps between the blocks of a chain: positions in them |
+|                  | stay ``unmapped``, as in 5.16 (see :ref:`LIFTOVER_ANNOTATE`).           |
 +------------------+-------------------------------------------------------------------------+
 
 Contig policy and failures (as in :ref:`LIFTOVER_ANNOTATE`):
@@ -146,12 +150,13 @@ Aligned extent
 With ``-var -aligned`` every row also gets ``<build>_alignedLeft`` and ``<build>_alignedRight``: the number of target
 bases left and right of the lifted position that are in the same gap-free alignment as the variant. The alignment is
 the chain block the variant lifts through, joined with the adjacent blocks of the same chain (same target contig,
-strand and score) that continue it: blocks that abut in both builds, or that have a gap of the same length in both
-builds with nothing else in it (such a gap counts as aligned). A gap of different lengths in the two builds (a build
-indel), or a block of another chain, ends it. Left and right are in target orientation: on a ``-`` strand
-lift the source bases after the variant are on the left. The lifted base itself is in neither count, and the other
-bases of a longer REF count on the right. A row that is not lifted through the chain (any status other than
-``mapped``, including ``passthrough``) has 0 and 0.
+strand and score) that continue it: blocks that abut in both builds, or that have a filled gap between them, a gap of
+the same length in both builds, of at most 50 bases (the ``gor.liftover.gapfill.max`` property), with nothing else
+in it (such a gap counts as aligned). A gap of different lengths in the two builds (a build indel), an unfilled gap
+(longer than the limit, or any gap with ``-nogapfill``), or a block of another chain between them, ends it. Left
+and right are in target orientation: on a ``-`` strand lift the source bases after the variant are on the left. The
+lifted base itself is in neither count, and the other bases of a longer REF count on the right. A row that is not
+lifted through the chain (any status other than ``mapped``, including ``passthrough``) has 0 and 0.
 
 The extent says which bases of a reference window around the variant can be compared position by position between
 the two builds. A 21-base window compared position by position counts every base past a nearby 1 bp build indel as a

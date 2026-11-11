@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * CG-805: a position inside a double-sided gap of equal length between two consecutive blocks of the same chain
+ * ENGKNOW-4208 (formerly CG-805): a position inside a double-sided gap of equal length between two consecutive blocks of the same chain
  * (same qChrom, strand and score) is lifted by its offset from the preceding block. UCSC chains encode runs of
  * substituted bases this way (mostly 1/1), and a chain file that has not been merged left them unmapped.
  * Unequal gaps (real indels), gaps between different chains and gaps that hold another block stay unmapped.
@@ -145,12 +145,24 @@ public class UTestLiftEqualGaps {
         Assert.assertEquals("mapped chr5:103+", snp("chr1", 1603));
     }
 
+    private static String var(String chrom, int pos, int refLen) {
+        LiftEngine.PointResult r = LiftEngine.liftVar(chain, chrom, pos, refLen, NO_POLICY);
+        return r.status() + " " + r.chrom() + ":" + r.pos() + r.strand();
+    }
+
     @Test
-    public void varInGapMapsAndVarAcrossGapAndBlockDoesNot() {
-        LiftEngine.PointResult in = LiftEngine.liftVar(chain, "chr1", 303, 2, NO_POLICY);
-        Assert.assertEquals("mapped chr1:1203+", in.status() + " " + in.chrom() + ":" + in.pos() + in.strand());
-        // a REF that runs from the gap into the next block is not contained in one block, as across two blocks today
-        Assert.assertEquals(LiftEngine.UNMAPPED, LiftEngine.liftVar(chain, "chr1", 305, 2, NO_POLICY).status());
+    public void varInAGapOrAcrossAGapAndABlockMapsAsOnAMergedChain() {
+        Assert.assertEquals("mapped chr1:1203+", var("chr1", 303, 2));
+        // a REF that runs from the gap into the next block lifts through the run, as through one merged block
+        Assert.assertEquals("mapped chr1:1205+", var("chr1", 305, 2));
+        Assert.assertEquals("mapped chr1:1100+", var("chr1", 200, 2));
+        // and on the minus strand: [300,305) spans block 2, the 3/3 gap and block 3
+        Assert.assertEquals("mapped chr3:4896-", var("chr3", 301, 5));
+        // a junction (empty REF) on the boundary between a block and a gap
+        Assert.assertEquals("mapped chr1:1102+", var("chr1", 202, 0));
+        Assert.assertEquals("mapped chr1:1101+", var("chr1", 201, 0));
+        // a REF reaching into an unequal gap does not
+        Assert.assertEquals(UNMAPPED, var("chr1", 400, 2));
     }
 
     private static String seg(String chrom, int s1, int e1) {
@@ -159,19 +171,36 @@ public class UTestLiftEqualGaps {
     }
 
     @Test
-    public void segmentsWithAnEndpointInAGapAreClassifiedThroughIt() {
-        // start in the 1/1 gap: lifted by offset instead of start_unmapped
-        Assert.assertEquals("mapped_across_gap chr1:1101-1150+", seg("chr1", 201, 250));
+    public void segmentsAcrossFilledGapsAreMappedAsOnAMergedChain() {
+        // start in the 1/1 gap
+        Assert.assertEquals("mapped chr1:1101-1150+", seg("chr1", 201, 250));
         // stop in the 5/5 gap
-        Assert.assertEquals("mapped_across_gap chr1:1150-1203+", seg("chr1", 250, 303));
+        Assert.assertEquals("mapped chr1:1150-1203+", seg("chr1", 250, 303));
         // inside the gap
         Assert.assertEquals("mapped chr1:1202-1204+", seg("chr1", 302, 304));
-        // across blocks and gaps of one chain, as across abutting blocks
-        Assert.assertEquals("mapped_across_gap chr1:1050-1250+", seg("chr1", 150, 350));
+        // across three blocks and two gaps of one chain
+        Assert.assertEquals("mapped chr1:1050-1250+", seg("chr1", 150, 350));
         // minus strand, start in the 3/3 gap
-        Assert.assertEquals("mapped_across_gap chr3:4847-4898-", seg("chr3", 303, 354));
-        // an endpoint in an unequal gap is still unmapped
+        Assert.assertEquals("mapped chr3:4847-4898-", seg("chr3", 303, 354));
+        // into the 10/5 gap (an indel): classified by its endpoints as before
         Assert.assertEquals(LiftEngine.START_UNMAPPED + " :0-0", seg("chr1", 405, 450));
+        Assert.assertEquals(LiftEngine.SIZE_CHANGED + " chr1:1250-1335+", seg("chr1", 350, 440));
+    }
+
+    @Test
+    public void chainBlocksCountsTheGapBlocksASegmentCovers() {
+        Assert.assertEquals(1, LiftEngine.classifySpan(chain, "chr1", 302, 304, NO_POLICY, 0.05).chainBlocks());
+        // block A, the 1/1 gap, block B, the 5/5 gap and block C
+        Assert.assertEquals(5, LiftEngine.classifySpan(chain, "chr1", 150, 350, NO_POLICY, 0.05).chainBlocks());
+    }
+
+    @Test
+    public void liftAllListsTheRunWhenNoBlockContainsTheInput() {
+        List<LiftEngine.ScoredTarget> all = LiftEngine.liftAll(chain.get(), "chr1", 304, 306, false);
+        Assert.assertEquals(1, all.size());
+        Assert.assertEquals(1204, all.get(0).target().start0());
+        Assert.assertEquals(1206, all.get(0).target().end0());
+        Assert.assertEquals(1000.0, all.get(0).score(), 0.0);
     }
 
     @Test
@@ -198,9 +227,18 @@ public class UTestLiftEqualGaps {
         Assert.assertEquals(1, ci.prevInChain(gap));
         Assert.assertEquals(0, ci.prevInChain(1));
         Assert.assertEquals(-1, ci.prevInChain(0));
+        // lookup results that are not blocks have no neighbours
+        Assert.assertEquals(-1, ci.nextInChain(ContigIndex.UNMAPPED));
+        Assert.assertEquals(-1, ci.prevInChain(ContigIndex.AMBIGUOUS));
+        Assert.assertEquals(-1, ci.nextInChain(gap + 1));
         Assert.assertEquals(gap, ci.findPoint(21));
-        // gap blocks are not chain blocks of a segment
-        Assert.assertEquals(0, ci.countBlocks(21, 21));
+        Assert.assertEquals(1, ci.countBlocks(21, 21));
+        // a span across abutting blocks and the gap lifts through the run, from its first block
+        Assert.assertEquals(0, ci.findSpan(5, 25));
+        // across abutting blocks alone it does not (no gap was filled; they are classified by their endpoints)
+        Assert.assertEquals(ContigIndex.UNMAPPED, ci.findSpan(5, 15));
+        // across the 10/5 gap it does not
+        Assert.assertEquals(ContigIndex.UNMAPPED, ci.findSpan(25, 45));
     }
 
     @Test
@@ -228,7 +266,113 @@ public class UTestLiftEqualGaps {
         String input = write("seg.gor", "Chrom\tStart\tEnd\tName\nchr1\t200\t250\ts\n");
         String out = TestUtils.runGorPipe("gor " + input + " | liftover_annotate " + chainFile + " -seg");
         // [200,250): first base 201 is the 1/1 gap base, last base 250 is in the next block
-        Assert.assertTrue(out, out.contains("chr1\t200\t250\ts\tmapped_across_gap\tchr1\t1100\t1150\t+"));
+        Assert.assertEquals("Chrom\tStart\tEnd\tName\tliftover_status\tliftover_chrom\tliftover_start\t"
+                + "liftover_stop\tliftover_strand\tliftover_chain_blocks\n"
+                + "chr1\t200\t250\ts\tmapped\tchr1\t1100\t1150\t+\t2\n", out);
+    }
+
+    @Test
+    public void nogapfillIndexHasNoGapBlocksButKeepsAbuttingLinks() {
+        ContigIndex ci = ContigIndex.of("chr9", OverlapPolicy.ERROR, List.of(
+                new ChainBlock(0, 10, "chr9", 100, 110, "+", 5),
+                new ChainBlock(10, 20, "chr9", 110, 120, "+", 5),
+                new ChainBlock(21, 30, "chr9", 121, 130, "+", 5)), "<memory>", 0);
+        Assert.assertEquals(0, ci.gapCount());
+        Assert.assertEquals(1, ci.nextInChain(0));
+        Assert.assertEquals(-1, ci.nextInChain(1));
+        Assert.assertEquals(ContigIndex.UNMAPPED, ci.findPoint(21));
+        Assert.assertEquals(ContigIndex.UNMAPPED, ci.findSpan(5, 25));
+    }
+
+    @Test
+    public void nogapfillRestoresTheUnfilledLiftInBothOperators() throws IOException {
+        String input = write("snp_nogapfill.gor", "Chrom\tPos\tId\nchr1\t201\ta\nchr1\t250\te\nchr3\t302\td\n");
+        Assert.assertEquals("Chrom\tPos\tId\tliftover_status\tliftover_chrom\tliftover_pos\tliftover_strand\n"
+                        + "chr1\t201\ta\tunmapped\t\t0\t\n"
+                        + "chr1\t250\te\tmapped\tchr1\t1150\t+\n"
+                        + "chr3\t302\td\tunmapped\t\t0\t\n",
+                TestUtils.runGorPipe("gor " + input + " | liftover_annotate " + chainFile + " -snp -nogapfill"));
+        Assert.assertEquals("Chrom\tPos\tId\thgold_Chrom\thgold_Pos\thgold_qStrand\thgold_liftoverStatus\n"
+                        + "chr1\t1150\te\tchr1\t250\t+\tmapped\n",
+                TestUtils.runGorPipe("gor " + input + " | liftover " + chainFile + " -snp -nogapfill"
+                        + " | where hgold_liftoverStatus = 'mapped'"));
+        Assert.assertEquals("Chrom\tPos\tId\tliftover_status\tliftover_chrom\tliftover_pos\tliftover_strand\n"
+                        + "chr1\t201\ta\tunmapped\t\t0\t\n"
+                        + "chr1\t250\te\tmapped\tchr1\t1150\t+\n"
+                        + "chr3\t302\td\tunmapped\t\t0\t\n",
+                TestUtils.runGorPipe("gor " + input + " | liftover_annotate <(gor " + chainFile + ") -snp -nogapfill"));
+        String seg = write("seg_nogapfill.gor", "Chrom\tStart\tEnd\tName\nchr1\t200\t250\ts\n");
+        Assert.assertEquals("Chrom\tStart\tEnd\tName\tliftover_status\tliftover_chrom\tliftover_start\t"
+                        + "liftover_stop\tliftover_strand\tliftover_chain_blocks\n"
+                        + "chr1\t200\t250\ts\tstart_unmapped\t\t0\t0\t\t1\n",
+                TestUtils.runGorPipe("gor " + seg + " | liftover_annotate " + chainFile + " -seg -nogapfill"));
+    }
+
+    @Test
+    public void aChainWithAndWithoutNogapfillIsNotSharedInOneSession() throws IOException {
+        String input = write("snp_both.gor", "Chrom\tPos\tId\nchr1\t201\ta\n");
+        String out = TestUtils.runGorPipe("gor " + input
+                + " | liftover_annotate " + chainFile + " -snp -nogapfill -prefix off_"
+                + " | liftover_annotate " + chainFile + " -snp -prefix on_"
+                + " | select 1,2,off_status,on_status");
+        Assert.assertEquals("Chrom\tPos\toff_status\ton_status\nchr1\t201\tunmapped\tmapped\n", out);
+    }
+
+    /** A + chain on chr7 with a 50/50 gap at 100-150 and a 51/51 gap at 250-301. */
+    private static String sizeChain() throws IOException {
+        return write("size_chain.gor", HEADER + "\n"
+                + "chr7\t0\t100\tchr7\t1000\t1100\t+\t11\n"
+                + "chr7\t150\t250\tchr7\t1150\t1250\t+\t11\n"
+                + "chr7\t301\t401\tchr7\t1301\t1401\t+\t11\n");
+    }
+
+    private static String sizeQuery() throws IOException {
+        String input = write("size_snp.gor", "Chrom\tPos\tId\nchr7\t120\ta\nchr7\t280\tb\n");
+        return "gor " + input + " | liftover_annotate " + sizeChain() + " -snp | select 1,2,liftover_status,liftover_pos";
+    }
+
+    private static final String SIZE_HEADER = "Chrom\tPos\tliftover_status\tliftover_pos\n";
+
+    @Test
+    public void gapsUpToFiftyBasesAreFilledByDefault() throws IOException {
+        Assert.assertEquals(SIZE_HEADER + "chr7\t120\tmapped\t1120\nchr7\t280\tunmapped\t0\n",
+                TestUtils.runGorPipe(sizeQuery()));
+    }
+
+    @Test
+    public void theGapSizeLimitIsAJavaProperty() throws IOException {
+        String old = System.getProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY);
+        try {
+            System.setProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY, "100");
+            Assert.assertEquals(SIZE_HEADER + "chr7\t120\tmapped\t1120\nchr7\t280\tmapped\t1280\n",
+                    TestUtils.runGorPipe(sizeQuery()));
+            System.setProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY, "0");
+            Assert.assertEquals(SIZE_HEADER + "chr7\t120\tunmapped\t0\nchr7\t280\tunmapped\t0\n",
+                    TestUtils.runGorPipe(sizeQuery()));
+            System.setProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY, "-1");
+            try {
+                TestUtils.runGorPipe(sizeQuery());
+                Assert.fail("expected an error for a negative gap size limit");
+            } catch (RuntimeException e) {
+                Assert.assertTrue(e.getMessage(), e.getMessage().contains(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY));
+            }
+        } finally {
+            if (old == null) {
+                System.clearProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY);
+            } else {
+                System.setProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY, old);
+            }
+        }
+    }
+
+    @Test
+    public void inMemoryIndexTakesTheGapSizeLimit() {
+        List<ChainBlock> blocks = List.of(
+                new ChainBlock(0, 10, "chr9", 100, 110, "+", 5),
+                new ChainBlock(13, 20, "chr9", 113, 120, "+", 5));
+        Assert.assertEquals(1, ContigIndex.of("chr9", OverlapPolicy.ERROR, blocks, "<memory>", 3).gapCount());
+        Assert.assertEquals(0, ContigIndex.of("chr9", OverlapPolicy.ERROR, blocks, "<memory>", 2).gapCount());
+        Assert.assertEquals(0, ContigIndex.of("chr9", OverlapPolicy.ERROR, blocks, "<memory>", 0).gapCount());
     }
 
     @Test
