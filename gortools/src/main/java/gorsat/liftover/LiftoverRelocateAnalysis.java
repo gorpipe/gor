@@ -31,6 +31,10 @@ import java.util.function.Supplier;
  * chain; a -seg row that is mapped_across_gap or size_changed is placed at its target (a -bam read is not: its SEQ,
  * QUAL and CIGAR would not fit the lifted span); every other row that does not map is placed at
  * (source chrom, 0[, 1]) as before. A row whose status is in failOn fails the query.
+ * <p>
+ * With -var -aligned (ENGKNOW-4207) each row also carries its aligned extent ({@link LiftEngine#alignedExtent}): the
+ * target bases left and right of the lifted position in the same gap-free alignment, after the status. A row that
+ * does not lift through the chain (unmapped, ambiguous, unsupported_contig, passthrough) has 0 and 0.
  */
 public class LiftoverRelocateAnalysis extends Analysis {
 
@@ -48,13 +52,16 @@ public class LiftoverRelocateAnalysis extends Analysis {
     private final Set<String> failOn;
     /** The mapped_across_gap / size_changed boundary; without fullStatus both are reported as unmapped. */
     private final double tolerance;
+    /** -var -aligned: emit the aligned extent of every row. */
+    private final boolean aligned;
     private ChainSource chain;
     private final Supplier<ChainSource> lazyChain = this::resolveChain;
 
     /** The step without -mapped, -passthrough or -failon: the projected statuses, no contig policy. */
     public LiftoverRelocateAnalysis(RelocateMode mode, boolean all, RelocateColumns cols, RowHeader outHeader,
                                     Supplier<ChainSource> chainFactory) {
-        this(mode, all, cols, outHeader, chainFactory, false, NO_POLICY, Set.of(), LiftoverArgs.DEFAULT_TOLERANCE);
+        this(mode, all, cols, outHeader, chainFactory, false, NO_POLICY, Set.of(), LiftoverArgs.DEFAULT_TOLERANCE,
+                false);
     }
 
     /**
@@ -65,8 +72,18 @@ public class LiftoverRelocateAnalysis extends Analysis {
     public LiftoverRelocateAnalysis(RelocateMode mode, boolean all, RelocateColumns cols, RowHeader outHeader,
                                     Supplier<ChainSource> chainFactory, boolean fullStatus, ContigPolicy policy,
                                     Set<String> failOn, double tolerance) {
+        this(mode, all, cols, outHeader, chainFactory, fullStatus, policy, failOn, tolerance, false);
+    }
+
+    /** As the step above, and with aligned (-var -aligned, ENGKNOW-4207) each row carries its aligned extent. */
+    public LiftoverRelocateAnalysis(RelocateMode mode, boolean all, RelocateColumns cols, RowHeader outHeader,
+                                    Supplier<ChainSource> chainFactory, boolean fullStatus, ContigPolicy policy,
+                                    Set<String> failOn, double tolerance, boolean aligned) {
         if (fullStatus && all) {
             throw new IllegalArgumentException("fullStatus cannot be combined with all");
+        }
+        if (aligned && mode != RelocateMode.VAR) {
+            throw new IllegalArgumentException("aligned is only valid with VAR");
         }
         this.mode = mode;
         this.all = all;
@@ -77,6 +94,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
         this.policy = policy == null ? NO_POLICY : policy;
         this.failOn = failOn == null ? Set.of() : Set.copyOf(failOn);
         this.tolerance = tolerance;
+        this.aligned = aligned;
         statsSenderName_$eq(STATS_SENDER);
     }
 
@@ -98,7 +116,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
             throw new UnsupportedOperationException("LIFTOVER cannot be cloned inside a connected pipe");
         }
         LiftoverRelocateAnalysis copy = new LiftoverRelocateAnalysis(mode, all, cols, outgoingHeader, chainFactory,
-                fullStatus, policy, failOn, tolerance);
+                fullStatus, policy, failOn, tolerance, aligned);
         cloned_$eq(copy);
         init(copy);
         return copy;
@@ -150,7 +168,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
             List<LiftEngine.ScoredTarget> targets = LiftEngine.liftAll(resolveChain(), chrom, pos - 1, pos, true);
             for (LiftEngine.ScoredTarget st : targets) {
                 LiftEngine.Target t = st.target();
-                emit(r, t.chrom(), t.end0(), 0, t.strand(), LiftEngine.MAPPED, st.score(), null);
+                emit(r, t.chrom(), t.end0(), 0, t.strand(), LiftEngine.MAPPED, st.score(), null, null);
             }
             if (targets.isEmpty()) {
                 emitUnplaced(r, LiftEngine.UNMAPPED);
@@ -159,7 +177,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
         }
         LiftEngine.PointResult p = LiftEngine.liftSnp(lazyChain, chrom, pos, policy);
         if (LiftEngine.MAPPED.equals(p.status()) || LiftEngine.PASSTHROUGH.equals(p.status())) {
-            emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null);
+            emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null, null);
         } else {
             emitUnplaced(r, reportedStatus(p.status()));
         }
@@ -172,9 +190,11 @@ public class LiftoverRelocateAnalysis extends Analysis {
         if (all) {
             int s0 = pos - 1;
             List<LiftEngine.ScoredTarget> targets = LiftEngine.liftAll(resolveChain(), chrom, s0, s0 + refLen, false);
+            ContigIndex ci = aligned && !targets.isEmpty() ? resolveChain().contig(chrom) : null;
             for (LiftEngine.ScoredTarget st : targets) {
                 LiftEngine.Target t = st.target();
-                emit(r, t.chrom(), t.start0() + 1, 0, t.strand(), LiftEngine.MAPPED, st.score(), null);
+                LiftEngine.Extent extent = ci == null ? null : LiftEngine.alignedExtent(ci, st.block(), pos, refLen);
+                emit(r, t.chrom(), t.start0() + 1, 0, t.strand(), LiftEngine.MAPPED, st.score(), null, extent);
             }
             if (targets.isEmpty()) {
                 emitUnplaced(r, LiftEngine.UNMAPPED);
@@ -183,7 +203,9 @@ public class LiftoverRelocateAnalysis extends Analysis {
         }
         LiftEngine.PointResult p = LiftEngine.liftVar(lazyChain, chrom, pos, refLen, policy);
         if (LiftEngine.MAPPED.equals(p.status()) || LiftEngine.PASSTHROUGH.equals(p.status())) {
-            emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null);
+            LiftEngine.Extent extent = aligned && LiftEngine.MAPPED.equals(p.status())
+                    ? LiftEngine.alignedExtent(resolveChain(), chrom, pos, refLen) : null;
+            emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null, extent);
         } else {
             emitUnplaced(r, reportedStatus(p.status()));
         }
@@ -207,7 +229,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
                 LiftEngine.Target t = st.target();
                 String mpos = bam ? mate(r, chrom, ci, st.block(), t.chrom()) : null;
                 emit(r, t.chrom(), bam ? t.start0() + 1 : t.start0(), t.end0(), t.strand(), LiftEngine.MAPPED,
-                        st.score(), mpos);
+                        st.score(), mpos, null);
             }
             if (targets.isEmpty()) {
                 emitUnplaced(r, LiftEngine.UNMAPPED);
@@ -218,7 +240,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
         String status = s.status();
         if (LiftEngine.PASSTHROUGH.equals(status)) {
             // only with -passthrough: the row keeps its location and MPOS, and the chain is not used
-            emit(r, chrom, start, end, "", status, 0.0, bam ? r.colAsString(cols.mpos()).toString() : null);
+            emit(r, chrom, start, end, "", status, 0.0, bam ? r.colAsString(cols.mpos()).toString() : null, null);
             return;
         }
         // a -bam read across a gap is not moved: its SEQ, QUAL and CIGAR would not fit the lifted span
@@ -234,7 +256,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
             ContigIndex ci = resolveChain().contig(chrom);
             mpos = mate(r, chrom, ci, ci.findSpan(s0, end), s.chrom());
         }
-        emit(r, s.chrom(), bam ? s.start1() : s.start1() - 1, s.stop1(), s.strand(), status, 0.0, mpos);
+        emit(r, s.chrom(), bam ? s.start1() : s.start1() - 1, s.stop1(), s.strand(), status, 0.0, mpos, null);
     }
 
     /**
@@ -318,14 +340,16 @@ public class LiftoverRelocateAnalysis extends Analysis {
 
     /** A row that does not map: placed at (source chrom, 0[, 1]), strand '', bam MPOS 0 (R18), -all score 0.0. */
     private void emitUnplaced(Row r, String status) {
-        emit(r, r.chr, 0, 1, "", status, 0.0, mode == RelocateMode.BAM ? unplacedMate(r) : null);
+        emit(r, r.chr, 0, 1, "", status, 0.0, mode == RelocateMode.BAM ? unplacedMate(r) : null, null);
     }
 
     /**
      * Emits tChrom, a[, b], the input columns after the location (rewritten on the - strand), the source location,
-     * strand and status, and the score under -all. mpos replaces the -bam MPOS column.
+     * strand and status, the aligned extent under -aligned ({@link LiftEngine.Extent#NONE} when extent is null) and
+     * the score under -all. mpos replaces the -bam MPOS column.
      */
-    private void emit(Row r, String tChrom, int a, int b, String strand, String status, double score, String mpos) {
+    private void emit(Row r, String tChrom, int a, int b, String strand, String status, double score, String mpos,
+                      LiftEngine.Extent extent) {
         statsInc(status);
         if (failOn.contains(status)) {
             throw new GorDataException(PREFIX + "status '" + status + "' at " + location(r));
@@ -346,6 +370,10 @@ public class LiftoverRelocateAnalysis extends Analysis {
             sb.append('\t').append(r.colAsString(2));
         }
         sb.append('\t').append(strand).append('\t').append(status);
+        if (aligned) {
+            LiftEngine.Extent e = extent == null ? LiftEngine.Extent.NONE : extent;
+            sb.append('\t').append(e.left()).append('\t').append(e.right());
+        }
         if (all) {
             sb.append('\t').append(Double.toString(score));
         }

@@ -68,6 +68,15 @@ public final class LiftEngine {
     public record ScoredTarget(Target target, double score, int block) {
     }
 
+    /**
+     * The aligned extent of a lifted -var position (ENGKNOW-4207): the number of target bases left and right of it
+     * that lie in the same gap-free alignment, in target orientation. The lifted base itself is in neither count.
+     */
+    public record Extent(int left, int right) {
+        /** The extent of a row that does not lift through the chain. */
+        public static final Extent NONE = new Extent(0, 0);
+    }
+
     private static final EndpointLift NO_LIFT = new EndpointLift(ContigIndex.UNMAPPED, NO_ENDPOINT);
 
     private LiftEngine() {
@@ -162,6 +171,45 @@ public final class LiftEngine {
             return noPoint(UNSUPPORTED_CONTIG);
         }
         return new PointResult(MAPPED, t.chrom(), t.start0() + 1, t.strand());
+    }
+
+    /**
+     * The aligned extent (ENGKNOW-4207) of the -var input pos/refLen on chrom, through the block {@link #liftVar}
+     * lifts it through; {@link Extent#NONE} when no single best block contains it. The contig policy is not applied:
+     * callers ask only for rows liftVar mapped.
+     */
+    public static Extent alignedExtent(ChainSource chain, String chrom, int pos, int refLen) {
+        ContigIndex ci = chain.contig(chrom);
+        int s0 = pos - 1;
+        int i = ci.findSpan(s0, s0 + refLen);
+        return i < 0 ? Extent.NONE : alignedExtent(ci, i, pos, refLen);
+    }
+
+    /**
+     * The aligned extent of the -var input pos/refLen lifted through block i of ci.
+     * <p>
+     * The gap-free alignment is the run of chain blocks around block i that {@link ContigIndex#prevInChain} and
+     * {@link ContigIndex#nextInChain} link: blocks of one chain that abut on both sides, or with an equal-length gap
+     * on both sides (a gap block, which counts as aligned). A build indel (an unequal gap) ends it. The reported
+     * position is source base a = pos on + and a = pos + refLen - 1 on - (the base that becomes the first target
+     * base), so on + left counts the source bases before a and right those after it, and on - the other way round.
+     */
+    static Extent alignedExtent(ContigIndex ci, int i, int pos, int refLen) {
+        int first = i;
+        for (int p = ci.prevInChain(first); p >= 0; p = ci.prevInChain(p)) {
+            first = p;
+        }
+        int last = i;
+        for (int n = ci.nextInChain(last); n >= 0; n = ci.nextInChain(n)) {
+            last = n;
+        }
+        int rs0 = ci.tStart(first);
+        int re0 = ci.tEnd(last);
+        if (ci.minus(i)) {
+            int a = pos + refLen - 1;
+            return new Extent(Math.max(re0 - a, 0), Math.max(a - 1 - rs0, 0));
+        }
+        return new Extent(Math.max(pos - 1 - rs0, 0), Math.max(re0 - pos, 0));
     }
 
     /**

@@ -105,6 +105,9 @@ Output and behaviour:
 | ``-diag``             | Only valid with ``-seg`` and ``-seg1``. Adds diagnostic columns with the sizes and the   |
 |                       | lifted-over endpoints (see `Output columns`_).                                           |
 +-----------------------+------------------------------------------------------------------------------------------+
+| ``-aligned``          | Only valid with ``-var``. Adds ``liftover_aligned_left`` and ``liftover_aligned_right``, |
+|                       | the aligned extent of the variant (see `Output columns`_).                               |
++-----------------------+------------------------------------------------------------------------------------------+
 
 If an appended column has the same name as a column of the input the query fails with an error. Use ``-prefix`` to
 choose other names.
@@ -134,6 +137,12 @@ as they are. The alleles are empty for rows without a target.
    re-anchored or normalised. The anchor base of a VCF-style indel (the first base of REF and ALT) ends up at the end
    of the allele instead of the start, and ``liftover_pos`` is the 1-based start of the lifted REF interval, its
    lowest target coordinate. Left-align and normalise the result before comparing it with variants called on the target build.
+
+With ``-var -aligned`` two columns are added after ``liftover_strand``: ``liftover_aligned_left`` (I) and
+``liftover_aligned_right`` (I), the number of target bases left and right of ``liftover_pos`` that are in the same
+gap-free alignment as the variant, as described for ``-aligned`` in :ref:`LIFTOVER` (Aligned extent). They are 0 for
+every row that is not ``mapped``, including ``passthrough`` rows. Use them to compare reference windows around the
+variant between the builds without counting the bases a nearby build indel shifts.
 
 ``-seg`` and ``-seg1``: ``liftover_status``, ``liftover_chrom``, ``liftover_start`` (I), ``liftover_stop`` (I),
 ``liftover_strand`` (S), ``liftover_chain_blocks`` (I, the number of chain blocks that overlap the segment, including
