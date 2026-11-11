@@ -25,8 +25,9 @@ The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequen
    * Without ``-all``, a ``-seg`` or ``-bam`` row that no block contains, but whose first or last base lies in an exact score tie, is now ``ambiguous`` instead of ``unmapped``. This happens only on overlapping chains.
    * A 1-base ``-bam`` read on a block's last base (``Pos == End == tEnd``) now maps through that block.
    * A position in a gap of equal length on both sides between two consecutive blocks of one chain is lifted by its
-     offset from the block before it, instead of being ``unmapped`` (see the Equal gaps section of
-     :ref:`LIFTOVER_ANNOTATE`).
+     offset from the block before it, instead of being ``unmapped``, and a segment, variant or read across such gaps is
+     lifted as on a merged chain (see the Equal gaps section of :ref:`LIFTOVER_ANNOTATE`). ``-nogapfill`` gives the
+     old result.
    * Input columns named ``liftover_*`` are no longer renamed.
    * An output-name collision is a ``GorParsingException`` naming the column, not a ``GorDataException`` from RENAME.
    * The chain is validated on load (sorted, ungapped, ``tEnd > tStart``, ``qStrand`` ``+`` or ``-``), and it needs a ``qEnd`` column.
@@ -70,6 +71,9 @@ Options
 | ``-all``         | Include all mappings, not just the one with best score (default).       |
 |                  | Cannot be combined with ``-mapped``, ``-passthrough``, ``-failon`` or   |
 |                  | ``-tolerance``.                                                         |
++------------------+-------------------------------------------------------------------------+
+| ``-nogapfill``   | Do not fill equal gaps between the blocks of a chain: positions in them |
+|                  | stay ``unmapped``, as in 5.16 (see :ref:`LIFTOVER_ANNOTATE`).           |
 +------------------+-------------------------------------------------------------------------+
 
 Contig policy and failures (as in :ref:`LIFTOVER_ANNOTATE`):

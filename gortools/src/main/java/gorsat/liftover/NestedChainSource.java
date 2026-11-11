@@ -18,14 +18,22 @@ public final class NestedChainSource implements ChainSource {
     private final String query;
     private final ChainColumns cols;
     private final OverlapPolicy policy;
+    private final boolean fillGaps;
     private final GorContext context;
     private final AtomicInteger loadCount = new AtomicInteger();
     private volatile Map<String, ContigIndex> contigs;
 
     public NestedChainSource(String query, ChainColumns cols, OverlapPolicy policy, GorContext context) {
+        this(query, cols, policy, true, context);
+    }
+
+    /** fillGaps false is -nogapfill. */
+    public NestedChainSource(String query, ChainColumns cols, OverlapPolicy policy, boolean fillGaps,
+                             GorContext context) {
         this.query = query;
         this.cols = cols;
         this.policy = policy;
+        this.fillGaps = fillGaps;
         this.context = context;
     }
 
@@ -64,7 +72,7 @@ public final class NestedChainSource implements ChainSource {
                     }
                     last = row.chr;
                 }
-                builders.computeIfAbsent(row.chr, c -> new ContigIndexBuilder(c, policy, source)).addRow(row, cols);
+                builders.computeIfAbsent(row.chr, c -> new ContigIndexBuilder(c, policy, source, fillGaps)).addRow(row, cols);
             }
         } finally {
             rows.close();

@@ -29,7 +29,7 @@ public class LiftoverAnnotate extends CommandInfo {
 
     public LiftoverAnnotate() {
         super("LIFTOVER_ANNOTATE",
-                new CommandArguments("-snp -var -seg -seg1 -diag",
+                new CommandArguments("-snp -var -seg -seg1 -diag -nogapfill",
                         "-prefix -passthrough -mapped -overlap -tolerance -failon -chrom -pos -end -ref -alt",
                         1, 1, false),
                 new CommandOptions(true, true, false, true, true, false),
@@ -42,6 +42,7 @@ public class LiftoverAnnotate extends CommandInfo {
         LiftoverArgs.rejectRepeatedOptions(args, VALUE_OPTIONS);
         LiftMode mode = parseMode(args);
         boolean diag = CommandParseUtilities.hasOption(args, "-diag");
+        boolean fillGaps = !CommandParseUtilities.hasOption(args, "-nogapfill");
         boolean span = mode == LiftMode.SEG || mode == LiftMode.SEG1;
         if (!span && diag) {
             throw new GorParsingException("-diag is only valid with -seg and -seg1", "-diag", "");
@@ -135,7 +136,7 @@ public class LiftoverAnnotate extends CommandInfo {
                 policy, tolerance, diag, failOn);
         LiftoverAnnotateAnalysis analysis = new LiftoverAnnotateAnalysis(config,
                 LiftoverAnnotateAnalysis.outgoingHeader(header, mode, prefix, diag),
-                () -> FileChainSource.cached(resolved, overlap, context), context);
+                () -> FileChainSource.cached(resolved, overlap, fillGaps, context), context);
         return new CommandParsingResult(analysis, outHeader, resolved.usedFiles().toArray(new String[0]), null);
     }
 

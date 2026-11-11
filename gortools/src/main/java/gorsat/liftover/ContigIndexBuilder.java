@@ -14,7 +14,7 @@ import java.util.List;
  * It also links each block to the block before it when both belong to one chain. A chain file carries no chain id, so
  * blocks with the same qChrom, strand and score are taken to be one chain (the score is the chain score). Two that
  * abut on both sides are linked directly. Two separated by a double-sided gap of equal length that no other block
- * reaches into (a run of substituted bases in a UCSC chain) get a synthetic gap block that spans the gap (CG-805), as
+ * reaches into (a run of substituted bases in a UCSC chain) get a synthetic gap block that spans the gap (ENGKNOW-4208), as
  * if the chain file had been merged across it.
  */
 public final class ContigIndexBuilder {
@@ -35,6 +35,8 @@ public final class ContigIndexBuilder {
 
     /** False for the builder of the gap blocks themselves, which are not linked into chains. */
     private final boolean linkChains;
+    /** False with -nogapfill: equal gaps are not filled, abutting blocks are still linked. */
+    private final boolean fillGaps;
     /** Pairs (i, j) of real blocks of one chain that abut on both sides. */
     private final List<int[]> abutting = new ArrayList<>();
     /** The gap blocks, in tStart order. */
@@ -48,11 +50,18 @@ public final class ContigIndexBuilder {
         this(contig, policy, source, true);
     }
 
-    private ContigIndexBuilder(String contig, OverlapPolicy policy, String source, boolean linkChains) {
+    /** With fillGaps false (-nogapfill) no gap block is made, so the index lifts as it did before ENGKNOW-4208. */
+    public ContigIndexBuilder(String contig, OverlapPolicy policy, String source, boolean fillGaps) {
+        this(contig, policy, source, true, fillGaps);
+    }
+
+    private ContigIndexBuilder(String contig, OverlapPolicy policy, String source, boolean linkChains,
+                               boolean fillGaps) {
         this.contig = contig;
         this.policy = policy;
         this.source = source;
         this.linkChains = linkChains;
+        this.fillGaps = fillGaps;
     }
 
     public void add(ChainBlock b) {
@@ -172,7 +181,7 @@ public final class ContigIndexBuilder {
         }
         if (gap == 0) {
             abutting.add(new int[]{i, j});
-        } else {
+        } else if (fillGaps) {
             // + lifts the gap on from the end of i; - lifts it on from the end of j, which comes first on the query
             int q = minusStrand ? qEndJ : qEndI;
             gaps.add(new PendingGap(new ChainBlock(tEnd[i], tStart[j], qChrom[i], q, q + gap,
@@ -200,7 +209,7 @@ public final class ContigIndexBuilder {
         int[] prev = null;
         if (linkChains && (!gaps.isEmpty() || !abutting.isEmpty())) {
             // a gap lies between two consecutive blocks, so the gaps do not overlap and arrive in tStart order
-            ContigIndexBuilder gb = new ContigIndexBuilder(contig, OverlapPolicy.ERROR, source, false);
+            ContigIndexBuilder gb = new ContigIndexBuilder(contig, OverlapPolicy.ERROR, source, false, false);
             for (PendingGap g : gaps) {
                 gb.add(g.block());
             }
