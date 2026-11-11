@@ -77,6 +77,9 @@ case-insensitively.
 Output and behaviour:
 
 +-----------------------+------------------------------------------------------------------------------------------+
+| ``-nogapfill``        | Do not fill equal gaps between the blocks of a chain (see `Equal gaps`_): a position in  |
+|                       | such a gap is ``unmapped``, as before 5.17.0.                                            |
++-----------------------+------------------------------------------------------------------------------------------+
 | ``-prefix <p>``       | Prefix of the appended column names. Default is ``liftover_``. The prefix cannot         |
 |                       | contain any of ``\ / * + - ' $ ; ,``.                                                    |
 +-----------------------+------------------------------------------------------------------------------------------+
@@ -104,6 +107,9 @@ Output and behaviour:
 +-----------------------+------------------------------------------------------------------------------------------+
 | ``-diag``             | Only valid with ``-seg`` and ``-seg1``. Adds diagnostic columns with the sizes and the   |
 |                       | lifted-over endpoints (see `Output columns`_).                                           |
++-----------------------+------------------------------------------------------------------------------------------+
+| ``-aligned``          | Only valid with ``-var``. Adds ``liftover_aligned_left`` and ``liftover_aligned_right``, |
+|                       | the aligned extent of the variant (see `Output columns`_).                               |
 +-----------------------+------------------------------------------------------------------------------------------+
 
 If an appended column has the same name as a column of the input the query fails with an error. Use ``-prefix`` to
@@ -135,9 +141,15 @@ as they are. The alleles are empty for rows without a target.
    of the allele instead of the start, and ``liftover_pos`` is the 1-based start of the lifted REF interval, its
    lowest target coordinate. Left-align and normalise the result before comparing it with variants called on the target build.
 
+With ``-var -aligned`` two columns are added after ``liftover_strand``: ``liftover_aligned_left`` (I) and
+``liftover_aligned_right`` (I), the number of target bases left and right of ``liftover_pos`` that are in the same
+gap-free alignment as the variant, as described for ``-aligned`` in :ref:`LIFTOVER` (Aligned extent). They are 0 for
+every row that is not ``mapped``, including ``passthrough`` rows. Use them to compare reference windows around the
+variant between the builds without counting the bases a nearby build indel shifts.
+
 ``-seg`` and ``-seg1``: ``liftover_status``, ``liftover_chrom``, ``liftover_start`` (I), ``liftover_stop`` (I),
 ``liftover_strand`` (S), ``liftover_chain_blocks`` (I, the number of chain blocks that overlap the segment, including
-blocks that lose under ``-overlap best``). The start and stop are in the same convention as the input: ``-seg``
+blocks that lose under ``-overlap best`` and filled gaps, see `Equal gaps`_). The start and stop are in the same convention as the input: ``-seg``
 gives GOR half-open coordinates and ``-seg1`` gives 1-based inclusive coordinates.
 
 The ``liftover_strand`` column is ``+`` or ``-`` for the strand of the target relative to the source, and empty when
@@ -193,8 +205,8 @@ used.
    input values, the strand is empty).
 2. ``unsupported_contig``: the source contig is not in ``-mapped``.
 3. ``ambiguous``: with ``-overlap best``, two best blocks have exactly the same score.
-4. ``unmapped``: no block contains the position. For ``-var`` the block must contain the whole of REF. An empty REF is
-   a junction (see `Notes`_).
+4. ``unmapped``: no block contains the position, and no filled gap or run of one chain does either (see
+   `Equal gaps`_). For ``-var`` the block (or run) must contain the whole of REF. An empty REF is a junction (see `Notes`_).
 5. ``unsupported_contig``: the block lifts to a contig that is not in ``-mapped``.
 6. ``mapped``.
 
@@ -240,6 +252,39 @@ lifted-over start is also 1-based and inclusive.
 A segment is ``mapped`` only when a single chain block contains all of it. Adjacent blocks that together cover the
 segment can give ``mapped_across_gap`` or ``size_changed`` (see the example below), and also ``inverted`` or
 ``split_contig`` when the blocks lead to opposite strands or to different contigs.
+
+Equal gaps
+----------
+
+UCSC chains encode a run of substituted bases as a gap of the same length on both sides between two blocks (most are
+one base). Such a gap is lifted as if the chain had been merged across it: a position in it is placed by its offset from
+the block before it. Without this, a liftover with a chain that has not been merged reports those bases as
+``unmapped``, while the opposite direction maps onto them.
+
+A gap is filled only when all of these hold:
+
+* the blocks on either side are consecutive rows of the chain, with the same ``qChrom``, ``qStrand`` and ``qScore``
+  (a chain file has no chain id, and ``qScore`` is the score of the whole chain);
+* the gap has the same length on the source and the target side, and is not empty;
+* the gap is at most 50 bases long;
+* no other block lies in or reaches into the gap.
+
+Longer equal gaps are blocks of different sequence rather than substituted bases, so they stay unmapped. The limit is
+set with the Java property ``gor.liftover.gapfill.max`` (a whole number of bases, default ``50``; ``0`` fills no gap,
+as ``-nogapfill`` does). It is read when the chain is loaded, and chains loaded with different limits are not shared.
+
+An unequal gap (an indel), a gap longer than the limit, a gap between blocks of different chains and a gap that holds a
+block of another chain stay unmapped.
+
+A filled gap is used only when no real block contains the input. Along a chain joined by filled gaps the offset does
+not change, so a segment, ``-var`` REF or ``-bam`` read that runs from a block through one or more filled gaps into the
+next blocks of the same chain is ``mapped`` through them, as it would be on a merged chain, and a junction on the edge
+of a filled gap lifts too. Blocks that merely abut, with no filled gap between them, are not joined this way: a segment
+across them is still classified by its endpoints (usually ``mapped_across_gap``). ``liftover_chain_blocks`` counts the
+filled gaps a segment covers as blocks, and LIFTOVER ``-all`` lists the run with the chain score when no block contains
+the input.
+
+``-nogapfill`` turns all of this off, for the result of 5.16 and earlier.
 
 Chain format
 ------------

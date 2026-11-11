@@ -173,6 +173,10 @@
 <li><p>A zero-length interval maps only strictly inside a block (unchanged). An invalid interval is now an error: <code class="docutils literal notranslate"><span class="pre">end</span> <span class="pre">&lt;</span> <span class="pre">start</span></code> for <code class="docutils literal notranslate"><span class="pre">-seg</span></code>, and <code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">&lt;</span> <span class="pre">Pos</span> <span class="pre">-</span> <span class="pre">1</span></code> for <code class="docutils literal notranslate"><span class="pre">-bam</span></code> (a junction, <code class="docutils literal notranslate"><span class="pre">End</span> <span class="pre">==</span> <span class="pre">Pos</span> <span class="pre">-</span> <span class="pre">1</span></code>, is valid).</p></li>
 <li><p>Without <code class="docutils literal notranslate"><span class="pre">-all</span></code>, a <code class="docutils literal notranslate"><span class="pre">-seg</span></code> or <code class="docutils literal notranslate"><span class="pre">-bam</span></code> row that no block contains, but whose first or last base lies in an exact score tie, is now <code class="docutils literal notranslate"><span class="pre">ambiguous</span></code> instead of <code class="docutils literal notranslate"><span class="pre">unmapped</span></code>. This happens only on overlapping chains.</p></li>
 <li><p>A 1-base <code class="docutils literal notranslate"><span class="pre">-bam</span></code> read on a block’s last base (<code class="docutils literal notranslate"><span class="pre">Pos</span> <span class="pre">==</span> <span class="pre">End</span> <span class="pre">==</span> <span class="pre">tEnd</span></code>) now maps through that block.</p></li>
+<li><p>A position in a gap of equal length on both sides (at most 50 bases, Java property <code class="docutils literal notranslate"><span class="pre">gor.liftover.gapfill.max</span></code>)
+between two consecutive blocks of one chain is lifted by its offset from the block before it, instead of being
+<code class="docutils literal notranslate"><span class="pre">unmapped</span></code>, and a segment, variant or read across such gaps is lifted as on a merged chain (see the Equal
+gaps section of <a class="reference internal" href="LIFTOVER_ANNOTATE.html#liftover-annotate"><span class="std std-ref">LIFTOVER_ANNOTATE</span></a>). <code class="docutils literal notranslate"><span class="pre">-nogapfill</span></code> gives the old result.</p></li>
 <li><p>Input columns named <code class="docutils literal notranslate"><span class="pre">liftover_*</span></code> are no longer renamed.</p></li>
 <li><p>An output-name collision is a <code class="docutils literal notranslate"><span class="pre">GorParsingException</span></code> naming the column, not a <code class="docutils literal notranslate"><span class="pre">GorDataException</span></code> from RENAME.</p></li>
 <li><p>The chain is validated on load (sorted, ungapped, <code class="docutils literal notranslate"><span class="pre">tEnd</span> <span class="pre">&gt;</span> <span class="pre">tStart</span></code>, <code class="docutils literal notranslate"><span class="pre">qStrand</span></code> <code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">-</span></code>), and it needs a <code class="docutils literal notranslate"><span class="pre">qEnd</span></code> column.</p></li>
@@ -186,9 +190,12 @@
 <a class="reference internal" href="LIFTOVER_ANNOTATE.html#liftover-annotate"><span class="std std-ref">LIFTOVER_ANNOTATE</span></a>. With any of them the status column reports the full set of liftover statuses (see
 <a class="reference internal" href="#status-values">Status values</a>). Calls without them are unchanged.</p>
 </div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 5.17.0: </span><code class="docutils literal notranslate"><span class="pre">-aligned</span></code> (with <code class="docutils literal notranslate"><span class="pre">-var</span></code>) adds the aligned extent of each variant, see <a class="reference internal" href="#aligned-extent">Aligned extent</a>.</p>
+</div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | -bam ] [ -all ]
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | -bam ] [ -all ] [ -aligned ]
     [ -build &lt;build&gt; ] [ -mapped &lt;contigs&gt; ] [ -passthrough &lt;contigs&gt; | none ] [ -failon &lt;statuses&gt; ]
     [ -tolerance &lt;t&gt; ]
 </pre></div>
@@ -227,6 +234,14 @@
 <td><p>Include all mappings, not just the one with best score (default).
 Cannot be combined with <code class="docutils literal notranslate"><span class="pre">-mapped</span></code>, <code class="docutils literal notranslate"><span class="pre">-passthrough</span></code>, <code class="docutils literal notranslate"><span class="pre">-failon</span></code> or
 <code class="docutils literal notranslate"><span class="pre">-tolerance</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-aligned</span></code></p></td>
+<td><p>Only valid with <code class="docutils literal notranslate"><span class="pre">-var</span></code>. Adds <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alignedLeft</span></code> and
+<code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alignedRight</span></code>, see <a class="reference internal" href="#aligned-extent">Aligned extent</a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-nogapfill</span></code></p></td>
+<td><p>Do not fill equal gaps between the blocks of a chain: positions in them
+stay <code class="docutils literal notranslate"><span class="pre">unmapped</span></code>, as in 5.16 (see <a class="reference internal" href="LIFTOVER_ANNOTATE.html#liftover-annotate"><span class="std std-ref">LIFTOVER_ANNOTATE</span></a>).</p></td>
 </tr>
 </tbody>
 </table>
@@ -274,8 +289,9 @@ added columns are set by <code class="docutils literal notranslate"><span class=
 <h2>Output columns<a class="headerlink" href="#output-columns" title="Permalink to this headline">¶</a></h2>
 <p>The output row is the lifted location (<code class="docutils literal notranslate"><span class="pre">Chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">Pos</span></code> and, for <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-bam</span></code>, the end column), the
 remaining input columns, the source location as <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_&lt;column&gt;</span></code> (for example <code class="docutils literal notranslate"><span class="pre">hgold_Chrom</span></code> and <code class="docutils literal notranslate"><span class="pre">hgold_Pos</span></code>),
-<code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_qStrand</span></code> (<code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">-</span></code>, empty when the row is not lifted) and <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_liftoverStatus</span></code>, and with
-<code class="docutils literal notranslate"><span class="pre">-all</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_score</span></code>. The rows are sorted on the lifted location.</p>
+<code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_qStrand</span></code> (<code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">-</span></code>, empty when the row is not lifted) and <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_liftoverStatus</span></code>, with
+<code class="docutils literal notranslate"><span class="pre">-aligned</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alignedLeft</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alignedRight</span></code>, and with <code class="docutils literal notranslate"><span class="pre">-all</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_score</span></code>. The rows are
+sorted on the lifted location.</p>
 <p>A row that is not lifted is placed at (source contig, 0), and for <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-bam</span></code> with end 1, so it sorts first
 on its source contig.</p>
 </div>
@@ -294,6 +310,30 @@ is the one <a class="reference internal" href="LIFTOVER_ANNOTATE.html#liftover-a
 location. <code class="docutils literal notranslate"><span class="pre">passthrough</span></code> rows keep their location. Rows with any other status are placed at (source contig, 0) as
 above. This includes <code class="docutils literal notranslate"><span class="pre">-bam</span></code> reads that are <code class="docutils literal notranslate"><span class="pre">mapped_across_gap</span></code> or <code class="docutils literal notranslate"><span class="pre">size_changed</span></code>: their SEQ, QUAL and CIGAR
 would not fit the lifted span.</p>
+</div>
+<div class="section" id="aligned-extent">
+<h2>Aligned extent<a class="headerlink" href="#aligned-extent" title="Permalink to this headline">¶</a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">-var</span> <span class="pre">-aligned</span></code> every row also gets <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alignedLeft</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alignedRight</span></code>: the number of target
+bases left and right of the lifted position that are in the same gap-free alignment as the variant. The alignment is
+the chain block the variant lifts through, joined with the adjacent blocks of the same chain (same target contig,
+strand and score) that continue it: blocks that abut in both builds, or that have a filled gap between them, a gap of
+the same length in both builds, of at most 50 bases (the <code class="docutils literal notranslate"><span class="pre">gor.liftover.gapfill.max</span></code> property), with nothing else
+in it (such a gap counts as aligned). A gap of different lengths in the two builds (a build indel), an unfilled gap
+(longer than the limit, or any gap with <code class="docutils literal notranslate"><span class="pre">-nogapfill</span></code>), or a block of another chain between them, ends it. Left
+and right are in target orientation: on a <code class="docutils literal notranslate"><span class="pre">-</span></code> strand lift the source bases after the variant are on the left. The
+lifted base itself is in neither count, and the other bases of a longer REF count on the right. A row that is not
+lifted through the chain (any status other than <code class="docutils literal notranslate"><span class="pre">mapped</span></code>, including <code class="docutils literal notranslate"><span class="pre">passthrough</span></code>) has 0 and 0.</p>
+<p>The extent says which bases of a reference window around the variant can be compared position by position between
+the two builds. A 21-base window compared position by position counts every base past a nearby 1 bp build indel as a
+mismatch, because the indel shifts one side of the window. Compare only the bases within the extent instead, for
+example <code class="docutils literal notranslate"><span class="pre">min(alignedLeft,10)</span></code> bases left and <code class="docutils literal notranslate"><span class="pre">min(alignedRight,10)</span></code> bases right of the variant in both builds:</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> variants.gor | <span class="nb">LIFTOVER</span> hg19tohg38.gor -var -build hg19 -aligned
+| <span class="nb">CALC</span> l <span class="no">min</span>(hg19_alignedLeft,10) | <span class="nb">CALC</span> r <span class="no">min</span>(hg19_alignedRight,10)
+| <span class="nb">CALC</span> target_window refbases_with_build(#1,#2-l,#2+r,&#39;ref/hg38&#39;)
+</pre></div>
+</div>
+<p>The matching source window is <code class="docutils literal notranslate"><span class="pre">hg19_Pos-l</span> <span class="pre">..</span> <span class="pre">hg19_Pos+r</span></code> on a <code class="docutils literal notranslate"><span class="pre">+</span></code> lift, and the reverse complement of
+<code class="docutils literal notranslate"><span class="pre">hg19_Pos+len(REF)-1-r</span> <span class="pre">..</span> <span class="pre">hg19_Pos+len(REF)-1+l</span></code> on a <code class="docutils literal notranslate"><span class="pre">-</span></code> lift.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
