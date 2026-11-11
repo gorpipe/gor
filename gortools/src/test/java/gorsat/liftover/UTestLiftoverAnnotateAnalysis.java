@@ -27,15 +27,15 @@ public class UTestLiftoverAnnotateAnalysis {
     private static final ContigPolicy NO_POLICY = LiftFixtures.NO_POLICY;
 
     private static LiftoverAnnotateConfig snp(ContigPolicy policy, Set<String> failOn) {
-        return new LiftoverAnnotateConfig(LiftMode.SNP, 0, 1, -1, -1, -1, policy, 0.05, false, failOn);
+        return new LiftoverAnnotateConfig(LiftMode.SNP, 0, 1, -1, -1, -1, policy, 0.05, false, failOn, false);
     }
 
     private static LiftoverAnnotateConfig var(ContigPolicy policy) {
-        return new LiftoverAnnotateConfig(LiftMode.VAR, 0, 1, -1, 2, 3, policy, 0.05, false, Set.of());
+        return new LiftoverAnnotateConfig(LiftMode.VAR, 0, 1, -1, 2, 3, policy, 0.05, false, Set.of(), false);
     }
 
     private static LiftoverAnnotateConfig seg(LiftMode mode, ContigPolicy policy, boolean diag) {
-        return new LiftoverAnnotateConfig(mode, 0, 1, 2, -1, -1, policy, 0.05, diag, Set.of());
+        return new LiftoverAnnotateConfig(mode, 0, 1, 2, -1, -1, policy, 0.05, diag, Set.of(), false);
     }
 
     private static final class Run {
@@ -43,7 +43,8 @@ public class UTestLiftoverAnnotateAnalysis {
         final Analysis pipe;
 
         Run(LiftoverAnnotateConfig cfg, Supplier<ChainSource> chain, GorContext ctx, String inHeader) {
-            RowHeader out = LiftoverAnnotateAnalysis.outgoingHeader(inHeader, cfg.mode(), "liftover_", cfg.diag());
+            RowHeader out = LiftoverAnnotateAnalysis.outgoingHeader(inHeader, cfg.mode(), "liftover_", cfg.diag(),
+                    cfg.aligned());
             pipe = new LiftoverAnnotateAnalysis(cfg, out, chain, ctx).$bar(sink);
             pipe.setRowHeader(RowHeader.apply(inHeader, headerTypes(inHeader)));
         }
@@ -103,7 +104,7 @@ public class UTestLiftoverAnnotateAnalysis {
     public void cloneIsAWorkingCopy() {
         LiftoverAnnotateConfig cfg = snp(NO_POLICY, Set.of());
         String inHeader = headerFor(cfg);
-        RowHeader out = LiftoverAnnotateAnalysis.outgoingHeader(inHeader, cfg.mode(), "liftover_", false);
+        RowHeader out = LiftoverAnnotateAnalysis.outgoingHeader(inHeader, cfg.mode(), "liftover_", false, false);
         LiftoverAnnotateAnalysis original = new LiftoverAnnotateAnalysis(cfg, out, engine(), null);
         original.setRowHeader(RowHeader.apply(inHeader, headerTypes(inHeader)));
 
@@ -317,7 +318,7 @@ public class UTestLiftoverAnnotateAnalysis {
         Assert.assertTrue(e.getMessage(), e.getMessage().contains("Row: chr1\t150\tNA"));
 
         LiftoverAnnotateConfig cfg = new LiftoverAnnotateConfig(LiftMode.SNP, 2, 3, -1, -1, -1, NO_POLICY, 0.05,
-                false, Set.of());
+                false, Set.of(), false);
         Run snp = new Run(cfg, engine(), null, "chrom\tpos\tc\tp");
         GorDataException e2 = Assert.assertThrows(GorDataException.class, () -> snp.feed("chrN\t0\tchr1\tNA"));
         Assert.assertTrue(e2.getMessage(), e2.getMessage().startsWith("LIFTOVER_ANNOTATE: "));
@@ -346,7 +347,7 @@ public class UTestLiftoverAnnotateAnalysis {
     @Test
     public void emptyPosColumnInNorMode() {
         LiftoverAnnotateConfig cfg = new LiftoverAnnotateConfig(LiftMode.SNP, 2, 3, -1, -1, -1, NO_POLICY, 0.05,
-                false, Set.of());
+                false, Set.of(), false);
         Run snp = new Run(cfg, engine(), null, "chrom\tpos\tc\tp");
         assertEmptyCell(snp, "chrN\t0\tchr1\t", "p", "chr1:");
     }
@@ -401,8 +402,9 @@ public class UTestLiftoverAnnotateAnalysis {
         Assert.assertEquals(List.of("status", "chrom", "pos", "ref", "alt", "strand"), names(LiftMode.VAR, "", false));
         Assert.assertEquals(List.of("status", "chrom", "start", "stop", "strand", "chain_blocks"),
                 names(LiftMode.SEG, "", false));
-        Assert.assertEquals(15, LiftoverAnnotateAnalysis.outputColumns(LiftMode.SEG1, "", true).size());
-        List<LiftoverAnnotateAnalysis.OutputColumn> cols = LiftoverAnnotateAnalysis.outputColumns(LiftMode.SEG, "", true);
+        Assert.assertEquals(15, LiftoverAnnotateAnalysis.outputColumns(LiftMode.SEG1, "", true, false).size());
+        List<LiftoverAnnotateAnalysis.OutputColumn> cols =
+                LiftoverAnnotateAnalysis.outputColumns(LiftMode.SEG, "", true, false);
         Assert.assertEquals("D", cols.get(8).type());
         Assert.assertEquals("size_ratio", cols.get(8).name());
         Assert.assertEquals("I", cols.get(5).type());
@@ -410,7 +412,8 @@ public class UTestLiftoverAnnotateAnalysis {
 
     private static List<String> names(LiftMode mode, String prefix, boolean diag) {
         List<String> r = new ArrayList<>();
-        for (LiftoverAnnotateAnalysis.OutputColumn c : LiftoverAnnotateAnalysis.outputColumns(mode, prefix, diag)) {
+        for (LiftoverAnnotateAnalysis.OutputColumn c
+                : LiftoverAnnotateAnalysis.outputColumns(mode, prefix, diag, false)) {
             r.add(c.name());
         }
         return r;
@@ -466,7 +469,7 @@ public class UTestLiftoverAnnotateAnalysis {
     @Test
     public void nonDefaultColumnsSnp() {
         LiftoverAnnotateConfig cfg = new LiftoverAnnotateConfig(LiftMode.SNP, 2, 3, -1, -1, -1, NO_POLICY, 0.05,
-                false, Set.of());
+                false, Set.of(), false);
         Run run = new Run(cfg, engine(), null, "chrom\tpos\tc\tp");
         run.feed("chrN\t0\tchr1\t101");
         Assert.assertEquals("\tmapped\tchr1\t1001\t+", suffix(run.finish().get(0), "chrN\t0\tchr1\t101"));
@@ -476,7 +479,7 @@ public class UTestLiftoverAnnotateAnalysis {
     public void nonDefaultColumnsVar() {
         // chrom #3, pos #4, alt #5, ref #6 (the row's own #1/#2 are not used)
         LiftoverAnnotateConfig cfg = new LiftoverAnnotateConfig(LiftMode.VAR, 2, 3, -1, 5, 4, NO_POLICY, 0.05,
-                false, Set.of());
+                false, Set.of(), false);
         Run run = new Run(cfg, engine(), null, "chrom\tpos\tc\tp\talt\tref");
         String a = "chrN\t0\tchr1\t511\tT,GA\tACG";
         String b = "chrN\t0\tchr1\t150\tG\tA";
@@ -489,7 +492,7 @@ public class UTestLiftoverAnnotateAnalysis {
     @Test
     public void nonDefaultColumnsSeg() {
         LiftoverAnnotateConfig cfg = new LiftoverAnnotateConfig(LiftMode.SEG, 0, 1, 3, -1, -1, NO_POLICY, 0.05,
-                false, Set.of());
+                false, Set.of(), false);
         Run run = new Run(cfg, engine(), null, "chrom\tstart\tx\tend");
         run.feed("chr1\t150\tx\t180");
         Assert.assertEquals("\tmapped\tchr1\t1050\t1080\t+\t1", suffix(run.finish().get(0), "chr1\t150\tx\t180"));

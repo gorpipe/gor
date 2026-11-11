@@ -11,6 +11,16 @@ import java.util.function.IntConsumer;
  *
  * Block indexes are positions in tStart order. Lookups return a block index, {@link #UNMAPPED} when no block
  * contains the position or span, or {@link #AMBIGUOUS} when several contain it with exactly the same best score.
+ *
+ * Gap blocks (ENGKNOW-4208) span an equal double-sided gap between two consecutive blocks of one chain, with no other
+ * block in it, and lift it by offset, as if the chain had been merged across it. They have indexes {@link #size()} to
+ * size() + {@link #gapCount()} - 1 and every accessor takes them. {@link #nextInChain} and {@link #prevInChain} walk
+ * a chain across abutting blocks and gap blocks; along such a run the offset does not change, so any block of it lifts
+ * every position of the run.
+ *
+ * A lookup that no real block answers falls back to a gap block that contains the input, and a span that no single
+ * block contains falls back to a run through at least one gap block that does, reported as the run's first block. A
+ * run of abutting blocks alone is not used, so chains without filled gaps behave as before.
  */
 public final class ContigIndex {
 
@@ -29,9 +39,19 @@ public final class ContigIndex {
     private final double[] score;
     private final String[] qChrom;
     private final boolean overlapping;
+    /** The gap blocks, an index of their own, or null when there are none. */
+    private final ContigIndex gaps;
+    /** Chain links over real and gap indexes, -1 at a break; null when there are no blocks. */
+    private final int[] next;
+    private final int[] prev;
 
     ContigIndex(String contig, int size, int[] tStart, int[] tEnd, int[] qStart, int[] prefMaxEnd, byte[] minus,
                 double[] score, String[] qChrom, boolean overlapping) {
+        this(contig, size, tStart, tEnd, qStart, prefMaxEnd, minus, score, qChrom, overlapping, null, null, null);
+    }
+
+    ContigIndex(String contig, int size, int[] tStart, int[] tEnd, int[] qStart, int[] prefMaxEnd, byte[] minus,
+                double[] score, String[] qChrom, boolean overlapping, ContigIndex gaps, int[] next, int[] prev) {
         this.contig = contig;
         this.size = size;
         this.tStart = tStart;
@@ -42,6 +62,9 @@ public final class ContigIndex {
         this.score = score;
         this.qChrom = qChrom;
         this.overlapping = overlapping;
+        this.gaps = gaps;
+        this.next = next;
+        this.prev = prev;
     }
 
     public static ContigIndex empty(String contig) {
@@ -53,7 +76,13 @@ public final class ContigIndex {
     }
 
     public static ContigIndex of(String contig, OverlapPolicy policy, List<ChainBlock> blocks, String source) {
-        ContigIndexBuilder builder = new ContigIndexBuilder(contig, policy, source);
+        return of(contig, policy, blocks, source, ContigIndexBuilder.maxGapFillProperty());
+    }
+
+    /** As above, filling equal gaps of at most maxGapFill bases (0, as with -nogapfill, fills none). */
+    public static ContigIndex of(String contig, OverlapPolicy policy, List<ChainBlock> blocks, String source,
+                                 int maxGapFill) {
+        ContigIndexBuilder builder = new ContigIndexBuilder(contig, policy, source, maxGapFill);
         for (ChainBlock b : blocks) {
             builder.add(b);
         }
@@ -64,37 +93,105 @@ public final class ContigIndex {
         return contig;
     }
 
+    /** The number of real blocks. */
     public int size() {
         return size;
     }
 
+    /** The number of gap blocks, whose indexes follow the real blocks. */
+    public int gapCount() {
+        return gaps == null ? 0 : gaps.size;
+    }
+
+    /** True when i is a gap block. */
+    public boolean isGap(int i) {
+        return i >= size;
+    }
+
     public int tStart(int i) {
-        return tStart[i];
+        return i < size ? tStart[i] : gaps.tStart[i - size];
     }
 
     public int tEnd(int i) {
-        return tEnd[i];
+        return i < size ? tEnd[i] : gaps.tEnd[i - size];
     }
 
     public String qChrom(int i) {
-        return qChrom[i];
+        return i < size ? qChrom[i] : gaps.qChrom[i - size];
     }
 
     public int qStart(int i) {
-        return qStart[i];
+        return i < size ? qStart[i] : gaps.qStart[i - size];
     }
 
     public boolean minus(int i) {
-        return minus[i] != 0;
+        return (i < size ? minus[i] : gaps.minus[i - size]) != 0;
     }
 
     public double score(int i) {
-        return score[i];
+        return i < size ? score[i] : gaps.score[i - size];
+    }
+
+    /**
+     * The block that continues the chain of block i (real or gap) without a break: the next block of the chain when
+     * it abuts i on both sides, the gap block when an equal gap follows, or -1.
+     */
+    public int nextInChain(int i) {
+        return next == null || i < 0 || i >= next.length ? -1 : next[i];
+    }
+
+    /** The block that i continues without a break, the mirror of {@link #nextInChain}, or -1. */
+    public int prevInChain(int i) {
+        return prev == null || i < 0 || i >= prev.length ? -1 : prev[i];
+    }
+
+    /**
+     * The 0-based source start of the run of linked blocks that block i (real or gap) is in: the tStart of its first
+     * block when following {@link #prevInChain} (ENGKNOW-4207).
+     */
+    public int runStart(int i) {
+        return next == null ? tStart(i) : runs()[0][i];
+    }
+
+    /** The 0-based half-open source end of the run of linked blocks that block i is in, the mirror of runStart. */
+    public int runEnd(int i) {
+        return next == null ? tEnd(i) : runs()[1][i];
+    }
+
+    /** Run bounds per real and gap index, computed once on first use; a race only computes the same arrays twice. */
+    private volatile int[][] runs;
+
+    private int[][] runs() {
+        int[][] r = runs;
+        if (r == null) {
+            int m = next.length;
+            int[] start = new int[m];
+            int[] end = new int[m];
+            for (int i = 0; i < m; i++) {
+                if (prev[i] >= 0) {
+                    continue;
+                }
+                // i starts a run: walk it once and give every block in it the run's bounds
+                int last = i;
+                while (next[last] >= 0) {
+                    last = next[last];
+                }
+                int s = tStart(i);
+                int e = tEnd(last);
+                for (int k = i; k >= 0; k = next[k]) {
+                    start[k] = s;
+                    end[k] = e;
+                }
+            }
+            r = new int[][]{start, end};
+            runs = r;
+        }
+        return r;
     }
 
     /** Best block containing the 1-based position p, that is tStart &lt; p &lt;= tEnd. */
     public int findPoint(int p) {
-        return contain(p - 1, p);
+        return orGap(contain(p - 1, p), p - 1, p);
     }
 
     /**
@@ -105,12 +202,52 @@ public final class ContigIndex {
         if (e0 < s0) {
             return UNMAPPED;
         }
-        return e0 == s0 ? contain(s0 - 1, s0 + 1) : contain(s0, e0);
+        int i = e0 == s0 ? orGap(contain(s0 - 1, s0 + 1), s0 - 1, s0 + 1) : orGap(contain(s0, e0), s0, e0);
+        return i == UNMAPPED ? run(s0, e0) : i;
+    }
+
+    /** The block (real or gap) that lifts the 0-based base b, or UNMAPPED/AMBIGUOUS. */
+    private int base(int b) {
+        return orGap(contain(b, b + 1), b, b + 1);
+    }
+
+    /**
+     * The first block of a run that contains the span [s0, e0) and crosses at least one gap block, or UNMAPPED. A
+     * junction is contained when the bases on both sides of it are.
+     */
+    private int run(int s0, int e0) {
+        if (gaps == null) {
+            return UNMAPPED;
+        }
+        int first = e0 == s0 ? base(s0 - 1) : base(s0);
+        int last = e0 == s0 ? base(s0) : base(e0 - 1);
+        if (first < 0 || last < 0) {
+            return UNMAPPED;
+        }
+        int lastStart = tStart(last);
+        boolean gap = isGap(first);
+        for (int i = first; i != last; ) {
+            i = next[i];
+            if (i < 0 || tStart(i) > lastStart) {
+                return UNMAPPED;
+            }
+            gap |= isGap(i);
+        }
+        return gap ? first : UNMAPPED;
+    }
+
+    /** A real lookup result, or the best gap block containing [a, b] when no real block does. */
+    private int orGap(int real, int a, int b) {
+        if (real != UNMAPPED || gaps == null) {
+            return real;
+        }
+        int g = gaps.contain(a, b);
+        return g < 0 ? g : size + g;
     }
 
     /** All blocks containing the 1-based position p, in ascending block index. */
     public int[] allPoint(int p) {
-        return collect(p - 1, p);
+        return orGaps(collect(p - 1, p), p - 1, p);
     }
 
     /** All blocks containing the span, same rule as {@link #findSpan}, in ascending block index. */
@@ -118,11 +255,34 @@ public final class ContigIndex {
         if (e0 < s0) {
             return NONE;
         }
-        return e0 == s0 ? collect(s0 - 1, s0 + 1) : collect(s0, e0);
+        int[] r = e0 == s0 ? orGaps(collect(s0 - 1, s0 + 1), s0 - 1, s0 + 1) : orGaps(collect(s0, e0), s0, e0);
+        if (r.length > 0) {
+            return r;
+        }
+        int i = run(s0, e0);
+        return i < 0 ? NONE : new int[]{i};
     }
 
-    /** Number of blocks overlapping the 1-based inclusive span [s1, e1]: tStart &lt; e1 and tEnd &gt;= s1. */
+    private int[] orGaps(int[] real, int a, int b) {
+        if (real.length > 0 || gaps == null) {
+            return real;
+        }
+        int[] g = gaps.collect(a, b);
+        for (int k = 0; k < g.length; k++) {
+            g[k] += size;
+        }
+        return g;
+    }
+
+    /**
+     * Number of blocks, gap blocks included, overlapping the 1-based inclusive span [s1, e1]: tStart &lt; e1 and
+     * tEnd &gt;= s1.
+     */
     public int countBlocks(int s1, int e1) {
+        return countReal(s1, e1) + (gaps == null ? 0 : gaps.countReal(s1, e1));
+    }
+
+    private int countReal(int s1, int e1) {
         int hi = lowerBound(tStart, e1);
         if (!overlapping) {
             // tEnd is sorted too when the blocks do not overlap

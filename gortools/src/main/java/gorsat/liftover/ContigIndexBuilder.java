@@ -1,15 +1,29 @@
 package gorsat.liftover;
 
 import org.gorpipe.exceptions.GorDataException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.Row;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Accumulates the blocks of one contig, validating each as it is added, and builds the {@link ContigIndex}.
  * Blocks must arrive sorted by tStart. Not thread safe.
+ *
+ * It also links each block to the block before it when both belong to one chain. A chain file carries no chain id, so
+ * blocks with the same qChrom, strand and score are taken to be one chain (the score is the chain score). Two that
+ * abut on both sides are linked directly. Two separated by a double-sided gap of equal length that no other block
+ * reaches into (a run of substituted bases in a UCSC chain) get a synthetic gap block that spans the gap (ENGKNOW-4208), as
+ * if the chain file had been merged across it. Only gaps of at most {@link #MAX_GAP_FILL_PROPERTY} bases (default
+ * {@value #DEFAULT_MAX_GAP_FILL}) are filled: longer equal gaps are blocks of different sequence, not substitutions.
  */
 public final class ContigIndexBuilder {
+
+    /** The Java property that sets the longest equal gap that is filled, in bases; 0 fills none. */
+    public static final String MAX_GAP_FILL_PROPERTY = "gor.liftover.gapfill.max";
+    public static final int DEFAULT_MAX_GAP_FILL = 50;
 
     private final String contig;
     private final OverlapPolicy policy;
@@ -25,10 +39,63 @@ public final class ContigIndexBuilder {
     private String[] qChrom = new String[16];
     private boolean overlapping;
 
+    /** False for the builder of the gap blocks themselves, which are not linked into chains. */
+    private final boolean linkChains;
+    /** The longest equal gap that is filled; 0 (-nogapfill) fills none, abutting blocks are still linked. */
+    private final int maxGapFill;
+    /** Pairs (i, j) of real blocks of one chain that abut on both sides. */
+    private final List<int[]> abutting = new ArrayList<>();
+    /** The gap blocks, in tStart order. */
+    private final List<PendingGap> gaps = new ArrayList<>();
+
+    /** An equal double-sided gap between real blocks prev and next of one chain. */
+    private record PendingGap(ChainBlock block, int prev, int next) {
+    }
+
+    /** Fills equal gaps up to {@link #maxGapFillProperty()} bases. */
     public ContigIndexBuilder(String contig, OverlapPolicy policy, String source) {
+        this(contig, policy, source, maxGapFillProperty());
+    }
+
+    /**
+     * Fills equal gaps of at most maxGapFill bases. With 0 (-nogapfill) no gap block is made, so the index lifts as it
+     * did before ENGKNOW-4208.
+     */
+    public ContigIndexBuilder(String contig, OverlapPolicy policy, String source, int maxGapFill) {
+        this(contig, policy, source, true, maxGapFill);
+    }
+
+    private ContigIndexBuilder(String contig, OverlapPolicy policy, String source, boolean linkChains,
+                               int maxGapFill) {
+        if (maxGapFill < 0) {
+            throw new IllegalArgumentException("negative gap size limit " + maxGapFill);
+        }
         this.contig = contig;
         this.policy = policy;
         this.source = source;
+        this.linkChains = linkChains;
+        this.maxGapFill = maxGapFill;
+    }
+
+    /**
+     * The longest equal gap to fill, from the Java property {@link #MAX_GAP_FILL_PROPERTY}, default
+     * {@value #DEFAULT_MAX_GAP_FILL}. A value that is not a whole number of 0 or more is an error.
+     */
+    public static int maxGapFillProperty() {
+        String value = System.getProperty(MAX_GAP_FILL_PROPERTY);
+        if (value == null || value.isBlank()) {
+            return DEFAULT_MAX_GAP_FILL;
+        }
+        try {
+            int max = Integer.parseInt(value.trim());
+            if (max >= 0) {
+                return max;
+            }
+        } catch (NumberFormatException e) {
+            // reported below
+        }
+        throw new GorSystemException("Invalid value '" + value + "' for the Java property " + MAX_GAP_FILL_PROPERTY
+                + ", it must be a whole number of bases, 0 or more", null);
     }
 
     public void add(ChainBlock b) {
@@ -120,7 +187,40 @@ public final class ContigIndexBuilder {
         this.minus[n] = (byte) ("-".equals(strand) ? 1 : 0);
         this.score[n] = score;
         this.qChrom[n] = qChrom.intern();
+        if (linkChains && n > 0) {
+            link(n - 1, n);
+        }
         n++;
+    }
+
+    /**
+     * Links block j to block i before it when both are one chain and they abut, or are separated by an equal gap that
+     * no earlier block reaches into.
+     */
+    private void link(int i, int j) {
+        if (minus[i] != minus[j] || score[i] != score[j] || !qChrom[i].equals(qChrom[j])) {
+            return;
+        }
+        int gap = tStart[j] - tEnd[i];
+        if (gap < 0 || prefMaxEnd[i] > tEnd[i]) {
+            // overlapping blocks (-overlap best) are not consecutive blocks of a chain
+            return;
+        }
+        int qEndI = qStart[i] + tEnd[i] - tStart[i];
+        int qEndJ = qStart[j] + tEnd[j] - tStart[j];
+        boolean minusStrand = minus[i] != 0;
+        int qGap = minusStrand ? qStart[i] - qEndJ : qStart[j] - qEndI;
+        if (qGap != gap) {
+            return;
+        }
+        if (gap == 0) {
+            abutting.add(new int[]{i, j});
+        } else if (gap <= maxGapFill) {
+            // + lifts the gap on from the end of i; - lifts it on from the end of j, which comes first on the query
+            int q = minusStrand ? qEndJ : qEndI;
+            gaps.add(new PendingGap(new ChainBlock(tEnd[i], tStart[j], qChrom[i], q, q + gap,
+                    minusStrand ? "-" : "+", score[i]), i, j));
+        }
     }
 
     private void grow() {
@@ -138,8 +238,35 @@ public final class ContigIndexBuilder {
         if (n == 0) {
             return ContigIndex.empty(contig);
         }
+        ContigIndex gapIndex = null;
+        int[] next = null;
+        int[] prev = null;
+        if (linkChains && (!gaps.isEmpty() || !abutting.isEmpty())) {
+            // a gap lies between two consecutive blocks, so the gaps do not overlap and arrive in tStart order
+            ContigIndexBuilder gb = new ContigIndexBuilder(contig, OverlapPolicy.ERROR, source, false, 0);
+            for (PendingGap g : gaps) {
+                gb.add(g.block());
+            }
+            gapIndex = gaps.isEmpty() ? null : gb.build();
+            next = new int[n + gaps.size()];
+            prev = new int[n + gaps.size()];
+            Arrays.fill(next, -1);
+            Arrays.fill(prev, -1);
+            for (int[] ab : abutting) {
+                next[ab[0]] = ab[1];
+                prev[ab[1]] = ab[0];
+            }
+            for (int k = 0; k < gaps.size(); k++) {
+                PendingGap g = gaps.get(k);
+                int gi = n + k;
+                next[g.prev()] = gi;
+                prev[gi] = g.prev();
+                next[gi] = g.next();
+                prev[g.next()] = gi;
+            }
+        }
         return new ContigIndex(contig, n, Arrays.copyOf(tStart, n), Arrays.copyOf(tEnd, n),
                 Arrays.copyOf(qStart, n), Arrays.copyOf(prefMaxEnd, n), Arrays.copyOf(minus, n),
-                Arrays.copyOf(score, n), Arrays.copyOf(qChrom, n), overlapping);
+                Arrays.copyOf(score, n), Arrays.copyOf(qChrom, n), overlapping, gapIndex, next, prev);
     }
 }

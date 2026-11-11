@@ -45,6 +45,7 @@ import java.util.Set;
 /**
  * LIFTOVER: moves rows to their lifted location on the target assembly and sorts the result. Every mode (-snp, -var,
  * -seg, -bam, -all) and nested-query chains run on the same engine as LIFTOVER_ANNOTATE (ENGKNOW-4117, N17).
+ * -var -aligned adds the aligned extent of each row (ENGKNOW-4207).
  */
 public class Liftover extends CommandInfo {
 
@@ -56,7 +57,8 @@ public class Liftover extends CommandInfo {
 
     public Liftover() {
         super("LIFTOVER",
-                new CommandArguments("-snp -seg -var -bam -all", "-ref -alt -build -mapped -passthrough -failon -tolerance",
+                new CommandArguments("-snp -seg -var -bam -all -aligned -nogapfill",
+                        "-ref -alt -build -mapped -passthrough -failon -tolerance",
                         1, 1, false),
                 new CommandOptions(true, false, false, true, true, false),
                 false);
@@ -112,6 +114,11 @@ public class Liftover extends CommandInfo {
 
         String build = CommandParseUtilities.stringValueOfOptionWithDefault(args, "-build", "hgold");
         boolean all = CommandParseUtilities.hasOption(args, "-all");
+        boolean aligned = CommandParseUtilities.hasOption(args, "-aligned");
+        if (aligned && mode != RelocateMode.VAR) {
+            throw new GorParsingException("-aligned is only valid with -var", "-aligned", "");
+        }
+        boolean fillGaps = !CommandParseUtilities.hasOption(args, "-nogapfill");
 
         // -mapped, -passthrough, -failon and -tolerance parse as in LIFTOVER_ANNOTATE, and any of them gives the
         // full statuses
@@ -139,6 +146,10 @@ public class Liftover extends CommandInfo {
         }
         names.add(build + "_qStrand");
         names.add(build + "_liftoverStatus");
+        if (aligned) {
+            names.add(build + "_alignedLeft");
+            names.add(build + "_alignedRight");
+        }
         if (all) {
             names.add(build + "_score");
         }
@@ -155,6 +166,10 @@ public class Liftover extends CommandInfo {
         }
         types.add("S");
         types.add("S");
+        if (aligned) {
+            types.add("I");
+            types.add("I");
+        }
         if (all) {
             types.add("D");
         }
@@ -171,8 +186,8 @@ public class Liftover extends CommandInfo {
         String outHeader = String.join("\t", names);
         LiftoverRelocateAnalysis relocate = new LiftoverRelocateAnalysis(mode, all, cols,
                 new RowHeader(names.toArray(new String[0]), types.toArray(new String[0])),
-                () -> FileChainSource.cached(resolved, OverlapPolicy.BEST, context), fullStatus, policy, failOn,
-                tolerance);
+                () -> FileChainSource.cached(resolved, OverlapPolicy.BEST, fillGaps, context), fullStatus, policy,
+                failOn, tolerance, aligned);
         relocate.setContext(context);
 
         SortGenome sort = new SortGenome(outHeader, context.getSession(),

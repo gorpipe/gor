@@ -29,7 +29,7 @@ public class LiftoverAnnotate extends CommandInfo {
 
     public LiftoverAnnotate() {
         super("LIFTOVER_ANNOTATE",
-                new CommandArguments("-snp -var -seg -seg1 -diag",
+                new CommandArguments("-snp -var -seg -seg1 -diag -aligned -nogapfill",
                         "-prefix -passthrough -mapped -overlap -tolerance -failon -chrom -pos -end -ref -alt",
                         1, 1, false),
                 new CommandOptions(true, true, false, true, true, false),
@@ -42,6 +42,7 @@ public class LiftoverAnnotate extends CommandInfo {
         LiftoverArgs.rejectRepeatedOptions(args, VALUE_OPTIONS);
         LiftMode mode = parseMode(args);
         boolean diag = CommandParseUtilities.hasOption(args, "-diag");
+        boolean fillGaps = !CommandParseUtilities.hasOption(args, "-nogapfill");
         boolean span = mode == LiftMode.SEG || mode == LiftMode.SEG1;
         if (!span && diag) {
             throw new GorParsingException("-diag is only valid with -seg and -seg1", "-diag", "");
@@ -49,6 +50,10 @@ public class LiftoverAnnotate extends CommandInfo {
 
         if (!span && CommandParseUtilities.hasOption(args, "-end")) {
             throw new GorParsingException("-end is only valid with -seg or -seg1", "-end", "");
+        }
+        boolean aligned = CommandParseUtilities.hasOption(args, "-aligned");
+        if (aligned && mode != LiftMode.VAR) {
+            throw new GorParsingException("-aligned is only valid with -var", "-aligned", "");
         }
         if (mode != LiftMode.VAR) {
             for (String option : new String[]{"-ref", "-alt"}) {
@@ -112,7 +117,7 @@ public class LiftoverAnnotate extends CommandInfo {
         }
 
         List<LiftoverAnnotateAnalysis.OutputColumn> outputColumns =
-                LiftoverAnnotateAnalysis.outputColumns(mode, prefix, diag);
+                LiftoverAnnotateAnalysis.outputColumns(mode, prefix, diag, aligned);
         String[] inputColumns = header.split("\t", -1);
         for (LiftoverAnnotateAnalysis.OutputColumn out : outputColumns) {
             for (String in : inputColumns) {
@@ -132,10 +137,10 @@ public class LiftoverAnnotate extends CommandInfo {
         String outHeader = IteratorUtilities.validHeader(String.join("\t", outNames), true);
 
         LiftoverAnnotateConfig config = new LiftoverAnnotateConfig(mode, chromCol, posCol, endCol, refCol, altCol,
-                policy, tolerance, diag, failOn);
+                policy, tolerance, diag, failOn, aligned);
         LiftoverAnnotateAnalysis analysis = new LiftoverAnnotateAnalysis(config,
-                LiftoverAnnotateAnalysis.outgoingHeader(header, mode, prefix, diag),
-                () -> FileChainSource.cached(resolved, overlap, context), context);
+                LiftoverAnnotateAnalysis.outgoingHeader(header, mode, prefix, diag, aligned),
+                () -> FileChainSource.cached(resolved, overlap, fillGaps, context), context);
         return new CommandParsingResult(analysis, outHeader, resolved.usedFiles().toArray(new String[0]), null);
     }
 

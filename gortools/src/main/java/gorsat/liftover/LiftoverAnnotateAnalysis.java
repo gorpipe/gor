@@ -53,8 +53,11 @@ public class LiftoverAnnotateAnalysis extends Analysis {
         return chain;
     }
 
-    /** The appended columns of a mode, in output order, names prefixed with prefix. */
-    public static List<OutputColumn> outputColumns(LiftMode mode, String prefix, boolean diag) {
+    /**
+     * The appended columns of a mode, in output order, names prefixed with prefix; with aligned (-var -aligned) also
+     * the extent columns.
+     */
+    public static List<OutputColumn> outputColumns(LiftMode mode, String prefix, boolean diag, boolean aligned) {
         List<OutputColumn> cols = new ArrayList<>();
         cols.add(new OutputColumn(prefix + "status", "S"));
         switch (mode) {
@@ -75,6 +78,10 @@ public class LiftoverAnnotateAnalysis extends Analysis {
                 break;
         }
         cols.add(new OutputColumn(prefix + "strand", "S"));
+        if (aligned) {
+            cols.add(new OutputColumn(prefix + "aligned_left", "I"));
+            cols.add(new OutputColumn(prefix + "aligned_right", "I"));
+        }
         if (mode == LiftMode.SEG || mode == LiftMode.SEG1) {
             cols.add(new OutputColumn(prefix + "chain_blocks", "I"));
             if (diag) {
@@ -96,9 +103,10 @@ public class LiftoverAnnotateAnalysis extends Analysis {
      * The header of the output rows: the input columns with index-string type placeholders (resolved against the
      * incoming header by {@link RowHeader#propagateTypes}), followed by {@link #outputColumns}.
      */
-    public static RowHeader outgoingHeader(String inputHeader, LiftMode mode, String prefix, boolean diag) {
+    public static RowHeader outgoingHeader(String inputHeader, LiftMode mode, String prefix, boolean diag,
+                                           boolean aligned) {
         String[] in = inputHeader.split("\t");
-        List<OutputColumn> out = outputColumns(mode, prefix, diag);
+        List<OutputColumn> out = outputColumns(mode, prefix, diag, aligned);
         String[] names = new String[in.length + out.size()];
         String[] types = new String[names.length];
         for (int i = 0; i < in.length; i++) {
@@ -212,7 +220,8 @@ public class LiftoverAnnotateAnalysis extends Analysis {
         int pos = intCol(r, config.posCol());
         String ref = r.colAsString(config.refCol()).toString();
         String alt = r.colAsString(config.altCol()).toString();
-        LiftEngine.PointResult p = LiftEngine.liftVar(lazyChain, chrom, pos, ref.length(), config.policy());
+        LiftEngine.VarLift v = LiftEngine.liftVarAt(lazyChain, chrom, pos, ref.length(), config.policy());
+        LiftEngine.PointResult p = v.point();
         String outRef;
         String outAlt;
         if (p.status().equals(LiftEngine.MAPPED) && p.strand().equals("-")) {
@@ -227,6 +236,11 @@ public class LiftoverAnnotateAnalysis extends Analysis {
         }
         sb.append(p.status()).append('\t').append(p.chrom()).append('\t').append(p.pos()).append('\t')
                 .append(outRef).append('\t').append(outAlt).append('\t').append(p.strand());
+        if (config.aligned()) {
+            // only a row lifted through the chain has an extent; passthrough and the failures have 0 and 0
+            LiftEngine.Extent e = LiftEngine.alignedExtent(v, pos, ref.length());
+            sb.append('\t').append(e.left()).append('\t').append(e.right());
+        }
         return p.status();
     }
 
