@@ -257,10 +257,15 @@ A gap is filled only when all of these hold:
 * the blocks on either side are consecutive rows of the chain, with the same ``qChrom``, ``qStrand`` and ``qScore``
   (a chain file has no chain id, and ``qScore`` is the score of the whole chain);
 * the gap has the same length on the source and the target side, and is not empty;
+* the gap is at most 50 bases long;
 * no other block lies in or reaches into the gap.
 
-An unequal gap (an indel), a gap between blocks of different chains and a gap that holds a block of another chain stay
-unmapped.
+Longer equal gaps are blocks of different sequence rather than substituted bases, so they stay unmapped. The limit is
+set with the Java property ``gor.liftover.gapfill.max`` (a whole number of bases, default ``50``; ``0`` fills no gap,
+as ``-nogapfill`` does). It is read when the chain is loaded, and chains loaded with different limits are not shared.
+
+An unequal gap (an indel), a gap longer than the limit, a gap between blocks of different chains and a gap that holds a
+block of another chain stay unmapped.
 
 A filled gap is used only when no real block contains the input. Along a chain joined by filled gaps the offset does
 not change, so a segment, ``-var`` REF or ``-bam`` read that runs from a block through one or more filled gaps into the

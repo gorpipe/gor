@@ -76,13 +76,13 @@ public final class ContigIndex {
     }
 
     public static ContigIndex of(String contig, OverlapPolicy policy, List<ChainBlock> blocks, String source) {
-        return of(contig, policy, blocks, source, true);
+        return of(contig, policy, blocks, source, ContigIndexBuilder.maxGapFillProperty());
     }
 
-    /** As above; with fillGaps false (-nogapfill) equal gaps are not filled. */
+    /** As above, filling equal gaps of at most maxGapFill bases (0, as with -nogapfill, fills none). */
     public static ContigIndex of(String contig, OverlapPolicy policy, List<ChainBlock> blocks, String source,
-                                 boolean fillGaps) {
-        ContigIndexBuilder builder = new ContigIndexBuilder(contig, policy, source, fillGaps);
+                                 int maxGapFill) {
+        ContigIndexBuilder builder = new ContigIndexBuilder(contig, policy, source, maxGapFill);
         for (ChainBlock b : blocks) {
             builder.add(b);
         }

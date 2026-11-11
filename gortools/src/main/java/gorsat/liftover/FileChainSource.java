@@ -32,7 +32,7 @@ public final class FileChainSource implements ChainSource {
 
     private final ResolvedChain chain;
     private final OverlapPolicy policy;
-    private final boolean fillGaps;
+    private final int maxGapFill;
     private final GorContext context;
     private final ConcurrentHashMap<String, CompletableFuture<ContigIndex>> loaded = new ConcurrentHashMap<>();
     private final AtomicInteger loadCount = new AtomicInteger();
@@ -40,14 +40,14 @@ public final class FileChainSource implements ChainSource {
 
     /** Does no IO. */
     FileChainSource(ResolvedChain chain, OverlapPolicy policy, GorContext context) {
-        this(chain, policy, true, context);
+        this(chain, policy, ContigIndexBuilder.maxGapFillProperty(), context);
     }
 
-    /** Does no IO. fillGaps false is -nogapfill. */
-    FileChainSource(ResolvedChain chain, OverlapPolicy policy, boolean fillGaps, GorContext context) {
+    /** Does no IO. Fills equal gaps of at most maxGapFill bases; 0 is -nogapfill. */
+    FileChainSource(ResolvedChain chain, OverlapPolicy policy, int maxGapFill, GorContext context) {
         this.chain = chain;
         this.policy = policy;
-        this.fillGaps = fillGaps;
+        this.maxGapFill = maxGapFill;
         this.context = context;
     }
 
@@ -115,16 +115,20 @@ public final class FileChainSource implements ChainSource {
         return cached(chain, policy, true, context);
     }
 
-    /** As above; a chain loaded with -nogapfill (fillGaps false) is cached apart from one loaded without it. */
+    /**
+     * As above. With fillGaps (no -nogapfill) equal gaps up to {@link ContigIndexBuilder#maxGapFillProperty()} bases
+     * are filled; the limit is part of the cache key, so chains loaded with different limits are not shared.
+     */
     public static ChainSource cached(ResolvedChain chain, OverlapPolicy policy, boolean fillGaps,
                                      GorContext context) {
+        int maxGapFill = fillGaps ? ContigIndexBuilder.maxGapFillProperty() : 0;
         if (chain.nestedQuery() != null) {
-            return new NestedChainSource(chain.nestedQuery(), chain.cols(), policy, fillGaps, context);
+            return new NestedChainSource(chain.nestedQuery(), chain.cols(), policy, maxGapFill, context);
         }
-        String key = "liftover_chain|" + chain.path() + "|" + chain.uniqueId() + "|" + policy
-                + (fillGaps ? "" : "|nogapfill");
+        String key = "liftover_chain|" + chain.path() + "|" + chain.uniqueId() + "|" + policy + "|gapfill="
+                + maxGapFill;
         return (ChainSource) context.getSession().getCache().getObjectHashMap()
-                .computeIfAbsent(key, k -> new FileChainSource(chain, policy, fillGaps, context));
+                .computeIfAbsent(key, k -> new FileChainSource(chain, policy, maxGapFill, context));
     }
 
     int loadCount() {
@@ -173,7 +177,7 @@ public final class FileChainSource implements ChainSource {
 
     private ContigIndex load(String chrom) {
         loadCount.incrementAndGet();
-        ContigIndexBuilder builder = new ContigIndexBuilder(chrom, policy, chain.path(), fillGaps);
+        ContigIndexBuilder builder = new ContigIndexBuilder(chrom, policy, chain.path(), maxGapFill);
         SingleFileSource source = new SingleFileSource(chain.path(), chain.root(), context);
         try {
             source.seek(chrom, 0);

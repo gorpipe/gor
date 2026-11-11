@@ -276,7 +276,7 @@ public class UTestLiftEqualGaps {
         ContigIndex ci = ContigIndex.of("chr9", OverlapPolicy.ERROR, List.of(
                 new ChainBlock(0, 10, "chr9", 100, 110, "+", 5),
                 new ChainBlock(10, 20, "chr9", 110, 120, "+", 5),
-                new ChainBlock(21, 30, "chr9", 121, 130, "+", 5)), "<memory>", false);
+                new ChainBlock(21, 30, "chr9", 121, 130, "+", 5)), "<memory>", 0);
         Assert.assertEquals(0, ci.gapCount());
         Assert.assertEquals(1, ci.nextInChain(0));
         Assert.assertEquals(-1, ci.nextInChain(1));
@@ -316,6 +316,63 @@ public class UTestLiftEqualGaps {
                 + " | liftover_annotate " + chainFile + " -snp -prefix on_"
                 + " | select 1,2,off_status,on_status");
         Assert.assertEquals("Chrom\tPos\toff_status\ton_status\nchr1\t201\tunmapped\tmapped\n", out);
+    }
+
+    /** A + chain on chr7 with a 50/50 gap at 100-150 and a 51/51 gap at 250-301. */
+    private static String sizeChain() throws IOException {
+        return write("size_chain.gor", HEADER + "\n"
+                + "chr7\t0\t100\tchr7\t1000\t1100\t+\t11\n"
+                + "chr7\t150\t250\tchr7\t1150\t1250\t+\t11\n"
+                + "chr7\t301\t401\tchr7\t1301\t1401\t+\t11\n");
+    }
+
+    private static String sizeQuery() throws IOException {
+        String input = write("size_snp.gor", "Chrom\tPos\tId\nchr7\t120\ta\nchr7\t280\tb\n");
+        return "gor " + input + " | liftover_annotate " + sizeChain() + " -snp | select 1,2,liftover_status,liftover_pos";
+    }
+
+    private static final String SIZE_HEADER = "Chrom\tPos\tliftover_status\tliftover_pos\n";
+
+    @Test
+    public void gapsUpToFiftyBasesAreFilledByDefault() throws IOException {
+        Assert.assertEquals(SIZE_HEADER + "chr7\t120\tmapped\t1120\nchr7\t280\tunmapped\t0\n",
+                TestUtils.runGorPipe(sizeQuery()));
+    }
+
+    @Test
+    public void theGapSizeLimitIsAJavaProperty() throws IOException {
+        String old = System.getProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY);
+        try {
+            System.setProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY, "100");
+            Assert.assertEquals(SIZE_HEADER + "chr7\t120\tmapped\t1120\nchr7\t280\tmapped\t1280\n",
+                    TestUtils.runGorPipe(sizeQuery()));
+            System.setProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY, "0");
+            Assert.assertEquals(SIZE_HEADER + "chr7\t120\tunmapped\t0\nchr7\t280\tunmapped\t0\n",
+                    TestUtils.runGorPipe(sizeQuery()));
+            System.setProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY, "-1");
+            try {
+                TestUtils.runGorPipe(sizeQuery());
+                Assert.fail("expected an error for a negative gap size limit");
+            } catch (RuntimeException e) {
+                Assert.assertTrue(e.getMessage(), e.getMessage().contains(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY));
+            }
+        } finally {
+            if (old == null) {
+                System.clearProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY);
+            } else {
+                System.setProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY, old);
+            }
+        }
+    }
+
+    @Test
+    public void inMemoryIndexTakesTheGapSizeLimit() {
+        List<ChainBlock> blocks = List.of(
+                new ChainBlock(0, 10, "chr9", 100, 110, "+", 5),
+                new ChainBlock(13, 20, "chr9", 113, 120, "+", 5));
+        Assert.assertEquals(1, ContigIndex.of("chr9", OverlapPolicy.ERROR, blocks, "<memory>", 3).gapCount());
+        Assert.assertEquals(0, ContigIndex.of("chr9", OverlapPolicy.ERROR, blocks, "<memory>", 2).gapCount());
+        Assert.assertEquals(0, ContigIndex.of("chr9", OverlapPolicy.ERROR, blocks, "<memory>", 0).gapCount());
     }
 
     @Test

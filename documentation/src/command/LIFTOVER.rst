@@ -24,10 +24,10 @@ The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequen
    * A zero-length interval maps only strictly inside a block (unchanged). An invalid interval is now an error: ``end < start`` for ``-seg``, and ``End < Pos - 1`` for ``-bam`` (a junction, ``End == Pos - 1``, is valid).
    * Without ``-all``, a ``-seg`` or ``-bam`` row that no block contains, but whose first or last base lies in an exact score tie, is now ``ambiguous`` instead of ``unmapped``. This happens only on overlapping chains.
    * A 1-base ``-bam`` read on a block's last base (``Pos == End == tEnd``) now maps through that block.
-   * A position in a gap of equal length on both sides between two consecutive blocks of one chain is lifted by its
-     offset from the block before it, instead of being ``unmapped``, and a segment, variant or read across such gaps is
-     lifted as on a merged chain (see the Equal gaps section of :ref:`LIFTOVER_ANNOTATE`). ``-nogapfill`` gives the
-     old result.
+   * A position in a gap of equal length on both sides (at most 50 bases, Java property ``gor.liftover.gapfill.max``)
+     between two consecutive blocks of one chain is lifted by its offset from the block before it, instead of being
+     ``unmapped``, and a segment, variant or read across such gaps is lifted as on a merged chain (see the Equal
+     gaps section of :ref:`LIFTOVER_ANNOTATE`). ``-nogapfill`` gives the old result.
    * Input columns named ``liftover_*`` are no longer renamed.
    * An output-name collision is a ``GorParsingException`` naming the column, not a ``GorDataException`` from RENAME.
    * The chain is validated on load (sorted, ungapped, ``tEnd > tStart``, ``qStrand`` ``+`` or ``-``), and it needs a ``qEnd`` column.
