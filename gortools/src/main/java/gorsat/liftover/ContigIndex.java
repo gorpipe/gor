@@ -135,6 +135,50 @@ public final class ContigIndex {
         return prev == null ? -1 : prev[i];
     }
 
+    /**
+     * The 0-based source start of the run of linked blocks that block i (real or gap) is in: the tStart of its first
+     * block when following {@link #prevInChain} (ENGKNOW-4207).
+     */
+    public int runStart(int i) {
+        return next == null ? tStart(i) : runs()[0][i];
+    }
+
+    /** The 0-based half-open source end of the run of linked blocks that block i is in, the mirror of runStart. */
+    public int runEnd(int i) {
+        return next == null ? tEnd(i) : runs()[1][i];
+    }
+
+    /** Run bounds per real and gap index, computed once on first use; a race only computes the same arrays twice. */
+    private volatile int[][] runs;
+
+    private int[][] runs() {
+        int[][] r = runs;
+        if (r == null) {
+            int m = next.length;
+            int[] start = new int[m];
+            int[] end = new int[m];
+            for (int i = 0; i < m; i++) {
+                if (prev[i] >= 0) {
+                    continue;
+                }
+                // i starts a run: walk it once and give every block in it the run's bounds
+                int last = i;
+                while (next[last] >= 0) {
+                    last = next[last];
+                }
+                int s = tStart(i);
+                int e = tEnd(last);
+                for (int k = i; k >= 0; k = next[k]) {
+                    start[k] = s;
+                    end[k] = e;
+                }
+            }
+            r = new int[][]{start, end};
+            runs = r;
+        }
+        return r;
+    }
+
     /** Best block containing the 1-based position p, that is tStart &lt; p &lt;= tEnd. */
     public int findPoint(int p) {
         return orGap(contain(p - 1, p), p - 1, p);

@@ -118,6 +118,33 @@ public class UTestLiftAlignedExtent {
     }
 
     @Test
+    public void variantInsideAnEqualGapLiftsThroughTheGapBlock() {
+        // source base 28 is unaligned on both sides; the gap block lifts it by offset and is part of the run
+        ChainSource plus = chain(blk(0, 27, "chr1", 0, "+", 10), blk(28, 60, "chr1", 28, "+", 10));
+        Assert.assertEquals(new LiftEngine.PointResult(LiftEngine.MAPPED, "chr1", 28, "+"),
+                LiftEngine.liftVar(() -> plus, "chr1", 28, 1, LiftFixtures.NO_POLICY));
+        assertExtent(27, 32, extent(plus, 28, 1));
+        ChainSource minus = chain(blk(0, 27, "chr1", 33, "-", 10), blk(28, 60, "chr1", 0, "-", 10));
+        // the target is 61 - p throughout: block 28..60 gives 1..32, the gap base 28 gives 33
+        Assert.assertEquals(new LiftEngine.PointResult(LiftEngine.MAPPED, "chr1", 33, "-"),
+                LiftEngine.liftVar(() -> minus, "chr1", 28, 1, LiftFixtures.NO_POLICY));
+        assertExtent(32, 27, extent(minus, 28, 1));
+    }
+
+    @Test
+    public void anotherChainBetweenTwoBlocksEndsTheRun() {
+        // chain A abuts at 30 in both builds, but chain B's block starts between A's blocks in tStart order, so A's
+        // blocks are not linked: only blocks next to each other in tStart order are (ENGKNOW-4208)
+        ChainSource interleaved = mapChain(Map.of("chr1", ContigIndex.of("chr1", OverlapPolicy.BEST, List.of(
+                blk(0, 30, "chr1", 0, "+", 10), blk(20, 40, "chr2", 500, "+", 5), blk(30, 60, "chr1", 30, "+", 10)))));
+        assertExtent(14, 15, extent(interleaved, 45, 1));
+        // an equal gap that holds another chain's block is not filled either
+        ChainSource gapWithBlock = chain(blk(0, 27, "chr1", 0, "+", 10), blk(27, 28, "chr2", 500, "+", 5),
+                blk(28, 60, "chr1", 28, "+", 10));
+        assertExtent(2, 29, extent(gapWithBlock, 31, 1));
+    }
+
+    @Test
     public void unmappedVariantHasNoExtent() {
         ChainSource c = chain(blk(0, 27, "chr1", 0, "+", 10), blk(28, 60, "chr1", 27, "+", 10));
         Assert.assertEquals(LiftEngine.Extent.NONE, extent(c, 28, 1));

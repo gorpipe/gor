@@ -36,6 +36,7 @@ public class UTestGorLiftoverAlignedExtent {
     private static String deletionChain;
     private static String minusDeletionChain;
     private static String singleBlockChain;
+    private static String tieChain;
     private static String variants;
 
     @BeforeClass
@@ -51,6 +52,9 @@ public class UTestGorLiftoverAlignedExtent {
                 + "chr1\t0\t27\tchr1\t32\t59\t-\t100\n"
                 + "chr1\t28\t60\tchr1\t0\t32\t-\t100\n");
         singleBlockChain = write("single.gor", CHAIN_HEADER + "chr1\t0\t60\tchr1\t0\t60\t+\t100\n");
+        tieChain = write("tie.gor", CHAIN_HEADER
+                + "chr1\t0\t60\tchr1\t0\t60\t+\t100\n"
+                + "chr1\t0\t60\tchr2\t0\t60\t+\t100\n");
         variants = write("variants.gor", "Chrom\tPos\tRef\tAlt\n"
                 + "chr1\t28\tC\tA\n"
                 + "chr1\t31\tC\tT\n"
@@ -166,6 +170,35 @@ public class UTestGorLiftoverAlignedExtent {
         String result = TestUtils.runGorPipe("gor " + variants + " | liftover_annotate " + deletionChain
                 + " -var -aligned -passthrough chr1");
         Assert.assertEquals("chr1\t31\tC\tT\tpassthrough\tchr1\t31\tC\tT\t\t0\t0", rows(result)[1]);
+    }
+
+    @Test
+    public void liftoverAnnotateMinusStrand() {
+        String row = rows(TestUtils.runGorPipe("gor " + variants + " | liftover_annotate " + minusDeletionChain
+                + " -var -aligned"))[1];
+        Assert.assertEquals("chr1\t31\tC\tT\tmapped\tchr1\t30\tG\tA\t-\t29\t2", row);
+    }
+
+    @Test
+    public void unsupportedContigAndAmbiguousRowsHaveNoExtent() {
+        String unsupported = rows(TestUtils.runGorPipe("gor " + variants + " | liftover_annotate " + deletionChain
+                + " -var -aligned -mapped chr2"))[1];
+        Assert.assertEquals("chr1\t31\tC\tT\tunsupported_contig\t\t0\t\t\t\t0\t0", unsupported);
+        // two blocks with the same best score contain every position
+        String tie = rows(TestUtils.runGorPipe("gor " + variants + " | liftover_annotate " + tieChain
+                + " -var -aligned -overlap best"))[1];
+        Assert.assertEquals("chr1\t31\tC\tT\tambiguous\t\t0\t\t\t\t0\t0", tie);
+        String relocated = rows(TestUtils.runGorPipe("gor " + variants + " | liftover " + deletionChain
+                + " -var -build hg19 -aligned -mapped chr2 | where hg19_Pos = 31"))[0];
+        Assert.assertEquals("chr1\t0\tC\tT\tchr1\t31\t\tunsupported_contig\t0\t0", relocated);
+    }
+
+    @Test
+    public void liftoverAnnotateNorInput() {
+        String result = TestUtils.runGorPipe("nor " + variants + " | liftover_annotate " + deletionChain
+                + " -var -aligned -chrom Chrom -pos Pos");
+        String row = rows(result)[1];
+        Assert.assertTrue(row, row.endsWith("\tchr1\t31\tC\tT\tmapped\tchr1\t30\tC\tT\t+\t2\t29"));
     }
 
     @Test

@@ -17,10 +17,4 @@ public record LiftoverAnnotateConfig(LiftMode mode, int chromCol, int posCol, in
             throw new IllegalArgumentException("aligned is only valid with VAR");
         }
     }
-
-    /** A step without -aligned. */
-    public LiftoverAnnotateConfig(LiftMode mode, int chromCol, int posCol, int endCol, int refCol, int altCol,
-                                  ContigPolicy policy, double tolerance, boolean diag, Set<String> failOn) {
-        this(mode, chromCol, posCol, endCol, refCol, altCol, policy, tolerance, diag, failOn, false);
-    }
 }

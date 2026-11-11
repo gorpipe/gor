@@ -79,6 +79,9 @@ public final class LiftEngine {
 
     private static final EndpointLift NO_LIFT = new EndpointLift(ContigIndex.UNMAPPED, NO_ENDPOINT);
 
+    /** No passthrough contigs and no -mapped restriction. */
+    private static final ContigPolicy NO_POLICY = new ContigPolicy(Set.of(), null);
+
     private LiftEngine() {
     }
 
@@ -147,64 +150,75 @@ public final class LiftEngine {
      */
     public static PointResult liftVar(Supplier<ChainSource> chain, String chrom, int pos, int refLen,
                                       ContigPolicy policy) {
+        return liftVarAt(chain, chrom, pos, refLen, policy).point();
+    }
+
+    /**
+     * A {@link #liftVar} result with the block it lifted through: index and block are set only when the point is
+     * {@link #MAPPED}, otherwise index is null and block -1.
+     */
+    record VarLift(PointResult point, ContigIndex index, int block) {
+    }
+
+    /** {@link #liftVar}, also returning the block, so a caller that needs it does not look it up again. */
+    static VarLift liftVarAt(Supplier<ChainSource> chain, String chrom, int pos, int refLen, ContigPolicy policy) {
         if (refLen < 0) {
             throw new IllegalArgumentException("negative REF length " + refLen + " at " + chrom + ":" + pos);
         }
         if (policy.isPassthrough(chrom)) {
-            return new PointResult(PASSTHROUGH, chrom, pos, "");
+            return noVar(new PointResult(PASSTHROUGH, chrom, pos, ""));
         }
         if (!policy.allowsTarget(chrom)) {
-            return noPoint(UNSUPPORTED_CONTIG);
+            return noVar(noPoint(UNSUPPORTED_CONTIG));
         }
         ContigIndex ci = chain.get().contig(chrom);
         int s0 = pos - 1;
         int e0 = s0 + refLen;
         int i = ci.findSpan(s0, e0);
         if (i == ContigIndex.AMBIGUOUS) {
-            return noPoint(AMBIGUOUS);
+            return noVar(noPoint(AMBIGUOUS));
         }
         if (i < 0) {
-            return noPoint(UNMAPPED);
+            return noVar(noPoint(UNMAPPED));
         }
         Target t = liftAt(ci, i, s0, e0);
         if (!policy.allowsTarget(t.chrom())) {
-            return noPoint(UNSUPPORTED_CONTIG);
+            return noVar(noPoint(UNSUPPORTED_CONTIG));
         }
-        return new PointResult(MAPPED, t.chrom(), t.start0() + 1, t.strand());
+        return new VarLift(new PointResult(MAPPED, t.chrom(), t.start0() + 1, t.strand()), ci, i);
+    }
+
+    private static VarLift noVar(PointResult p) {
+        return new VarLift(p, null, -1);
     }
 
     /**
-     * The aligned extent (ENGKNOW-4207) of the -var input pos/refLen on chrom, through the block {@link #liftVar}
-     * lifts it through; {@link Extent#NONE} when no single best block contains it. The contig policy is not applied:
-     * callers ask only for rows liftVar mapped.
+     * The aligned extent (ENGKNOW-4207) of the -var input pos/refLen on chrom, without a contig policy;
+     * {@link Extent#NONE} when it is not mapped.
      */
     public static Extent alignedExtent(ChainSource chain, String chrom, int pos, int refLen) {
-        ContigIndex ci = chain.contig(chrom);
-        int s0 = pos - 1;
-        int i = ci.findSpan(s0, s0 + refLen);
-        return i < 0 ? Extent.NONE : alignedExtent(ci, i, pos, refLen);
+        return alignedExtent(liftVarAt(() -> chain, chrom, pos, refLen, NO_POLICY), pos, refLen);
+    }
+
+    /** The aligned extent of a {@link #liftVarAt} result; {@link Extent#NONE} when it is not mapped. */
+    static Extent alignedExtent(VarLift v, int pos, int refLen) {
+        return v.index() == null ? Extent.NONE : alignedExtent(v.index(), v.block(), pos, refLen);
     }
 
     /**
      * The aligned extent of the -var input pos/refLen lifted through block i of ci.
      * <p>
      * The gap-free alignment is the run of chain blocks around block i that {@link ContigIndex#prevInChain} and
-     * {@link ContigIndex#nextInChain} link: blocks of one chain that abut on both sides, or with an equal-length gap
-     * on both sides (a gap block, which counts as aligned). A build indel (an unequal gap) ends it. The reported
-     * position is source base a = pos on + and a = pos + refLen - 1 on - (the base that becomes the first target
-     * base), so on + left counts the source bases before a and right those after it, and on - the other way round.
+     * {@link ContigIndex#nextInChain} link ({@link ContigIndex#runStart}, {@link ContigIndex#runEnd}): blocks of one
+     * chain that abut on both sides, or with an equal-length gap on both sides (a gap block, which counts as
+     * aligned). A build indel (an unequal gap) ends it, and so does another chain's block between two blocks of the
+     * chain, since only blocks next to each other in tStart order are linked. The reported position is source base
+     * a = pos on + and a = pos + refLen - 1 on - (the base that becomes the first target base), so on + left counts
+     * the source bases before a and right those after it, and on - the other way round.
      */
     static Extent alignedExtent(ContigIndex ci, int i, int pos, int refLen) {
-        int first = i;
-        for (int p = ci.prevInChain(first); p >= 0; p = ci.prevInChain(p)) {
-            first = p;
-        }
-        int last = i;
-        for (int n = ci.nextInChain(last); n >= 0; n = ci.nextInChain(n)) {
-            last = n;
-        }
-        int rs0 = ci.tStart(first);
-        int re0 = ci.tEnd(last);
+        int rs0 = ci.runStart(i);
+        int re0 = ci.runEnd(i);
         if (ci.minus(i)) {
             int a = pos + refLen - 1;
             return new Extent(Math.max(re0 - a, 0), Math.max(a - 1 - rs0, 0));

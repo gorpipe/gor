@@ -168,7 +168,8 @@ public class LiftoverRelocateAnalysis extends Analysis {
             List<LiftEngine.ScoredTarget> targets = LiftEngine.liftAll(resolveChain(), chrom, pos - 1, pos, true);
             for (LiftEngine.ScoredTarget st : targets) {
                 LiftEngine.Target t = st.target();
-                emit(r, t.chrom(), t.end0(), 0, t.strand(), LiftEngine.MAPPED, st.score(), null, null);
+                emit(r, t.chrom(), t.end0(), 0, t.strand(), LiftEngine.MAPPED, st.score(), null,
+                        LiftEngine.Extent.NONE);
             }
             if (targets.isEmpty()) {
                 emitUnplaced(r, LiftEngine.UNMAPPED);
@@ -177,7 +178,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
         }
         LiftEngine.PointResult p = LiftEngine.liftSnp(lazyChain, chrom, pos, policy);
         if (LiftEngine.MAPPED.equals(p.status()) || LiftEngine.PASSTHROUGH.equals(p.status())) {
-            emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null, null);
+            emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null, LiftEngine.Extent.NONE);
         } else {
             emitUnplaced(r, reportedStatus(p.status()));
         }
@@ -193,7 +194,8 @@ public class LiftoverRelocateAnalysis extends Analysis {
             ContigIndex ci = aligned && !targets.isEmpty() ? resolveChain().contig(chrom) : null;
             for (LiftEngine.ScoredTarget st : targets) {
                 LiftEngine.Target t = st.target();
-                LiftEngine.Extent extent = ci == null ? null : LiftEngine.alignedExtent(ci, st.block(), pos, refLen);
+                LiftEngine.Extent extent = ci == null ? LiftEngine.Extent.NONE
+                        : LiftEngine.alignedExtent(ci, st.block(), pos, refLen);
                 emit(r, t.chrom(), t.start0() + 1, 0, t.strand(), LiftEngine.MAPPED, st.score(), null, extent);
             }
             if (targets.isEmpty()) {
@@ -201,10 +203,10 @@ public class LiftoverRelocateAnalysis extends Analysis {
             }
             return;
         }
-        LiftEngine.PointResult p = LiftEngine.liftVar(lazyChain, chrom, pos, refLen, policy);
+        LiftEngine.VarLift v = LiftEngine.liftVarAt(lazyChain, chrom, pos, refLen, policy);
+        LiftEngine.PointResult p = v.point();
         if (LiftEngine.MAPPED.equals(p.status()) || LiftEngine.PASSTHROUGH.equals(p.status())) {
-            LiftEngine.Extent extent = aligned && LiftEngine.MAPPED.equals(p.status())
-                    ? LiftEngine.alignedExtent(resolveChain(), chrom, pos, refLen) : null;
+            LiftEngine.Extent extent = aligned ? LiftEngine.alignedExtent(v, pos, refLen) : LiftEngine.Extent.NONE;
             emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null, extent);
         } else {
             emitUnplaced(r, reportedStatus(p.status()));
@@ -229,7 +231,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
                 LiftEngine.Target t = st.target();
                 String mpos = bam ? mate(r, chrom, ci, st.block(), t.chrom()) : null;
                 emit(r, t.chrom(), bam ? t.start0() + 1 : t.start0(), t.end0(), t.strand(), LiftEngine.MAPPED,
-                        st.score(), mpos, null);
+                        st.score(), mpos, LiftEngine.Extent.NONE);
             }
             if (targets.isEmpty()) {
                 emitUnplaced(r, LiftEngine.UNMAPPED);
@@ -240,7 +242,8 @@ public class LiftoverRelocateAnalysis extends Analysis {
         String status = s.status();
         if (LiftEngine.PASSTHROUGH.equals(status)) {
             // only with -passthrough: the row keeps its location and MPOS, and the chain is not used
-            emit(r, chrom, start, end, "", status, 0.0, bam ? r.colAsString(cols.mpos()).toString() : null, null);
+            emit(r, chrom, start, end, "", status, 0.0, bam ? r.colAsString(cols.mpos()).toString() : null,
+                    LiftEngine.Extent.NONE);
             return;
         }
         // a -bam read across a gap is not moved: its SEQ, QUAL and CIGAR would not fit the lifted span
@@ -256,7 +259,8 @@ public class LiftoverRelocateAnalysis extends Analysis {
             ContigIndex ci = resolveChain().contig(chrom);
             mpos = mate(r, chrom, ci, ci.findSpan(s0, end), s.chrom());
         }
-        emit(r, s.chrom(), bam ? s.start1() : s.start1() - 1, s.stop1(), s.strand(), status, 0.0, mpos, null);
+        emit(r, s.chrom(), bam ? s.start1() : s.start1() - 1, s.stop1(), s.strand(), status, 0.0, mpos,
+                LiftEngine.Extent.NONE);
     }
 
     /**
@@ -340,13 +344,14 @@ public class LiftoverRelocateAnalysis extends Analysis {
 
     /** A row that does not map: placed at (source chrom, 0[, 1]), strand '', bam MPOS 0 (R18), -all score 0.0. */
     private void emitUnplaced(Row r, String status) {
-        emit(r, r.chr, 0, 1, "", status, 0.0, mode == RelocateMode.BAM ? unplacedMate(r) : null, null);
+        emit(r, r.chr, 0, 1, "", status, 0.0, mode == RelocateMode.BAM ? unplacedMate(r) : null,
+                LiftEngine.Extent.NONE);
     }
 
     /**
      * Emits tChrom, a[, b], the input columns after the location (rewritten on the - strand), the source location,
-     * strand and status, the aligned extent under -aligned ({@link LiftEngine.Extent#NONE} when extent is null) and
-     * the score under -all. mpos replaces the -bam MPOS column.
+     * strand and status, the aligned extent under -aligned and the score under -all. mpos replaces the -bam MPOS
+     * column.
      */
     private void emit(Row r, String tChrom, int a, int b, String strand, String status, double score, String mpos,
                       LiftEngine.Extent extent) {
@@ -371,8 +376,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
         }
         sb.append('\t').append(strand).append('\t').append(status);
         if (aligned) {
-            LiftEngine.Extent e = extent == null ? LiftEngine.Extent.NONE : extent;
-            sb.append('\t').append(e.left()).append('\t').append(e.right());
+            sb.append('\t').append(extent.left()).append('\t').append(extent.right());
         }
         if (all) {
             sb.append('\t').append(Double.toString(score));

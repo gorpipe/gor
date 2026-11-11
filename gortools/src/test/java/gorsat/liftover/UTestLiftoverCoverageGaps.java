@@ -84,7 +84,7 @@ public class UTestLiftoverCoverageGaps {
     @Test
     public void annotateConfigFailOnDefaultsToEmpty() {
         LiftoverAnnotateConfig cfg = new LiftoverAnnotateConfig(LiftMode.SNP, 0, 1, -1, -1, -1,
-                LiftFixtures.NO_POLICY, 0.05, false, null);
+                LiftFixtures.NO_POLICY, 0.05, false, null, false);
         Assert.assertEquals(Set.of(), cfg.failOn());
     }
 
@@ -405,8 +405,8 @@ public class UTestLiftoverCoverageGaps {
     @Test
     public void annotateCloneOfAStepWithAnUpstreamStepFailsLoudly() {
         LiftoverAnnotateConfig cfg = new LiftoverAnnotateConfig(LiftMode.SNP, 0, 1, -1, -1, -1,
-                LiftFixtures.NO_POLICY, 0.05, false, Set.of());
-        RowHeader out = LiftoverAnnotateAnalysis.outgoingHeader("chrom\tpos\tx", cfg.mode(), "liftover_", false);
+                LiftFixtures.NO_POLICY, 0.05, false, Set.of(), false);
+        RowHeader out = LiftoverAnnotateAnalysis.outgoingHeader("chrom\tpos\tx", cfg.mode(), "liftover_", false, false);
         LiftoverAnnotateAnalysis step = new LiftoverAnnotateAnalysis(cfg, out, () -> LiftFixtures.ENGINE_CHAIN, null);
         new AnalysisSink().$bar(step);
         try {
