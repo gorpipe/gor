@@ -41,12 +41,16 @@ The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequen
    :ref:`LIFTOVER_ANNOTATE`. With any of them the status column reports the full set of liftover statuses (see
    `Status values`_). Calls without them are unchanged.
 
+.. versionadded:: 5.17.0
+
+   ``-aligned`` (with ``-var``) adds the aligned extent of each variant, see `Aligned extent`_.
+
 Usage
 =====
 
 .. code-block:: gor
 
-	gor ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | -bam ] [ -all ]
+	gor ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | -bam ] [ -all ] [ -aligned ]
 	    [ -build <build> ] [ -mapped <contigs> ] [ -passthrough <contigs> | none ] [ -failon <statuses> ]
 	    [ -tolerance <t> ]
 
@@ -71,6 +75,9 @@ Options
 | ``-all``         | Include all mappings, not just the one with best score (default).       |
 |                  | Cannot be combined with ``-mapped``, ``-passthrough``, ``-failon`` or   |
 |                  | ``-tolerance``.                                                         |
++------------------+-------------------------------------------------------------------------+
+| ``-aligned``     | Only valid with ``-var``. Adds ``<build>_alignedLeft`` and              |
+|                  | ``<build>_alignedRight``, see `Aligned extent`_.                        |
 +------------------+-------------------------------------------------------------------------+
 | ``-nogapfill``   | Do not fill equal gaps between the blocks of a chain: positions in them |
 |                  | stay ``unmapped``, as in 5.16 (see :ref:`LIFTOVER_ANNOTATE`).           |
@@ -112,8 +119,9 @@ Output columns
 
 The output row is the lifted location (``Chrom``, ``Pos`` and, for ``-seg`` and ``-bam``, the end column), the
 remaining input columns, the source location as ``<build>_<column>`` (for example ``hgold_Chrom`` and ``hgold_Pos``),
-``<build>_qStrand`` (``+`` or ``-``, empty when the row is not lifted) and ``<build>_liftoverStatus``, and with
-``-all`` ``<build>_score``. The rows are sorted on the lifted location.
+``<build>_qStrand`` (``+`` or ``-``, empty when the row is not lifted) and ``<build>_liftoverStatus``, with
+``-aligned`` ``<build>_alignedLeft`` and ``<build>_alignedRight``, and with ``-all`` ``<build>_score``. The rows are
+sorted on the lifted location.
 
 A row that is not lifted is placed at (source contig, 0), and for ``-seg`` and ``-bam`` with end 1, so it sorts first
 on its source contig.
@@ -135,6 +143,34 @@ is the one :ref:`LIFTOVER_ANNOTATE` reports with ``-overlap best`` and the same 
 location. ``passthrough`` rows keep their location. Rows with any other status are placed at (source contig, 0) as
 above. This includes ``-bam`` reads that are ``mapped_across_gap`` or ``size_changed``: their SEQ, QUAL and CIGAR
 would not fit the lifted span.
+
+Aligned extent
+==============
+
+With ``-var -aligned`` every row also gets ``<build>_alignedLeft`` and ``<build>_alignedRight``: the number of target
+bases left and right of the lifted position that are in the same gap-free alignment as the variant. The alignment is
+the chain block the variant lifts through, joined with the adjacent blocks of the same chain (same target contig,
+strand and score) that continue it: blocks that abut in both builds, or that have a filled gap between them, a gap of
+the same length in both builds, of at most 50 bases (the ``gor.liftover.gapfill.max`` property), with nothing else
+in it (such a gap counts as aligned). A gap of different lengths in the two builds (a build indel), an unfilled gap
+(longer than the limit, or any gap with ``-nogapfill``), or a block of another chain between them, ends it. Left
+and right are in target orientation: on a ``-`` strand lift the source bases after the variant are on the left. The
+lifted base itself is in neither count, and the other bases of a longer REF count on the right. A row that is not
+lifted through the chain (any status other than ``mapped``, including ``passthrough``) has 0 and 0.
+
+The extent says which bases of a reference window around the variant can be compared position by position between
+the two builds. A 21-base window compared position by position counts every base past a nearby 1 bp build indel as a
+mismatch, because the indel shifts one side of the window. Compare only the bases within the extent instead, for
+example ``min(alignedLeft,10)`` bases left and ``min(alignedRight,10)`` bases right of the variant in both builds:
+
+.. code-block:: gor
+
+   gor variants.gor | LIFTOVER hg19tohg38.gor -var -build hg19 -aligned
+   | CALC l min(hg19_alignedLeft,10) | CALC r min(hg19_alignedRight,10)
+   | CALC target_window refbases_with_build(#1,#2-l,#2+r,'ref/hg38')
+
+The matching source window is ``hg19_Pos-l .. hg19_Pos+r`` on a ``+`` lift, and the reverse complement of
+``hg19_Pos+len(REF)-1-r .. hg19_Pos+len(REF)-1+l`` on a ``-`` lift.
 
 Examples
 ========
