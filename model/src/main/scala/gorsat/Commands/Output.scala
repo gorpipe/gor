@@ -27,9 +27,11 @@ import org.gorpipe.gor.model.GorMeta
 abstract class Output extends Processor {
   var pipeFrom : Processor = _
   var name : String = _
-  val meta : GorMeta = new GorMeta()
+  private var meta : GorMeta = new GorMeta()
   def getName: String = name
   def getMeta: GorMeta = meta
+  /** Continue with an existing meta, e.g. when a file is reopened for append. */
+  def setMeta(m: GorMeta): Unit = meta = m
   def reportWantsNoMore(): Unit = {
     if (pipeFrom!=null && !wantsNoMore) pipeFrom.reportWantsNoMore()
     wantsNoMore = true

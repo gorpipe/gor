@@ -40,7 +40,7 @@ import java.util.Map;
 public class ReferenceBuild {
 
     private static final Logger log = LoggerFactory.getLogger(ReferenceBuild.class);
-    private String version = "generic";
+    private String version = GENERIC_VERSION;
     private String buildPath = "";
     private final Map<String, Integer> buildSize;
     private final Map<String, Integer> buildSplit;
@@ -50,6 +50,8 @@ public class ReferenceBuild {
     private final static String BUILDSIZE_KEY = "buildSizeFile";
     private final static String BUILDSPLIT_KEY = "buildSplitFile";
     private final static String CRAMREFERENCEPATH_KEY = "cramReferencePath";
+    private final static String BUILDVERSION_KEY = "buildVersion";
+    public final static String GENERIC_VERSION = "generic";
 
     public ReferenceBuild() {
         this.buildSize = ReferenceBuildDefaults.buildSizeGeneric();
@@ -70,6 +72,30 @@ public class ReferenceBuild {
 
     public String getVersion() {
         return version;
+    }
+
+    /**
+     * @return true if the build version identifies a real reference build (e.g. hg19, hg38).
+     */
+    public boolean isKnownVersion() {
+        return !StringUtil.isEmpty(version) && !GENERIC_VERSION.equals(version);
+    }
+
+    /**
+     * Infer the build version from the length of chromosome 1.
+     *
+     * @return hg18, hg19 or hg38, or an empty string if the build is not recognized.
+     */
+    public static String inferVersion(Map<String, Integer> buildSize) {
+        if (buildSize == null) return "";
+        Integer chr1 = buildSize.containsKey("chr1") ? buildSize.get("chr1") : buildSize.get("1");
+        if (chr1 == null) return "";
+        return switch (chr1) {
+            case 247249719 -> "hg18";
+            case 249250621 -> "hg19";
+            case 248956422 -> "hg38";
+            default -> "";
+        };
     }
 
     public String getBuildPath() {
@@ -103,7 +129,11 @@ public class ReferenceBuild {
             Map<String, Integer> buildSize = loadConfigMap(BUILDSIZE_KEY, session, configProperties, "GorConfig: Variable buildSizeFile not specified in the config file.");
             Map<String, Integer> buildSplit = loadConfigMap(BUILDSPLIT_KEY, session, configProperties, "GorConfig: Variable buildSplitFile not specified in the config file.");
             String cramReferencePath = loadPath(CRAMREFERENCEPATH_KEY, session, configProperties, "GorConfig: Variable cramReferencePath not specified in the config file.");
-            return new ReferenceBuild("",
+            String version = configProperties != null ? configProperties.getOrDefault(BUILDVERSION_KEY, "").trim() : "";
+            if (version.isEmpty()) {
+                version = inferVersion(buildSize);
+            }
+            return new ReferenceBuild(version,
                     buildPath,
                     buildSize == null ? ReferenceBuildDefaults.buildSizeGeneric() : buildSize,
                     buildSplit == null ? ReferenceBuildDefaults.buildSplitGeneric() : buildSplit,

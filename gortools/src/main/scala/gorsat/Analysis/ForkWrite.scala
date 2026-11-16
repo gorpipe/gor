@@ -95,6 +95,20 @@ Modes that do not work:
     This mode is not supported.
  */
 
+object ForkWrite {
+  /** True when a folder write (-d) names its own files, rather than using the given file name. */
+  def namesFilesInFolder(fileName: String, folder: String): Boolean = fileName.isEmpty || DataUtil.isGord(folder)
+
+  /** The ending of the files a folder write names itself. */
+  def folderFileEnding(folder: String, nor: Boolean): String = {
+    val folderEnding = FilenameUtils.getExtension(folder)
+    if (DataUtil.isGord(folder)) DataType.GORZ.suffix
+    else if (folderEnding.nonEmpty) "." + folderEnding
+    else if (nor) DataType.NOR.suffix
+    else DataType.GORZ.suffix
+  }
+}
+
 case class OutputOptions(remove: Boolean = false,
                             columnCompress: Boolean = false,
                             md5: Boolean = false,
@@ -114,8 +128,23 @@ case class OutputOptions(remove: Boolean = false,
                             linkFileMeta: String = "",
                             command: String = null,
                             infer: Boolean = false,
-                            maxseg: Boolean = false
-                           )
+                            maxseg: Boolean = false,
+                            // Reference build to record in the output meta (null when unknown).
+                            build: String = null,
+                            // User defined meta properties (WRITE -meta).
+                            meta: Map[String, String] = Map.empty,
+                            // Also write a .meta file for gor and vcf outputs (gorz/norz always get one).
+                            gorMetaFile: Boolean = false
+                           ) {
+  // Pre ENGKNOW-4236 signature, kept for Java callers (which can't use the default arguments).
+  def this(remove: Boolean, columnCompress: Boolean, md5: Boolean, md5File: Boolean, nor: Boolean, idx: GorIndexType,
+           forkTags: Array[String], dictTags: Array[String], prefix: Option[String], prefixFile: Option[String],
+           compressionLevel: Int, useFolder: Option[String], skipHeader: Boolean, writeMeta: Boolean, cardCol: String,
+           linkFile: String, linkFileMeta: String, command: String, infer: Boolean, maxseg: Boolean) =
+    this(remove, columnCompress, md5, md5File, nor, idx, forkTags, dictTags, prefix, prefixFile, compressionLevel,
+      useFolder, skipHeader, writeMeta, cardCol, linkFile, linkFileMeta, command, infer, maxseg,
+      null, Map.empty[String, String], false)
+}
 
 case class ForkWrite(forkCol: Int,
                      fullFileName: String,
@@ -161,7 +190,7 @@ case class ForkWrite(forkCol: Int,
   var singleFileHolder: FileHolder = FileHolder("")
   if (!useFork) forkMap += ("theOnlyFile" -> singleFileHolder)
   var openFiles = 0
-  val maxOpenFiles = 5000
+  var maxOpenFiles = 5000
   var maxBufferSize = 1000
   var counter = 0
   var somethingToWrite = false
@@ -191,11 +220,8 @@ case class ForkWrite(forkCol: Int,
     var inferredFileName: String = ""
     if(options.useFolder.nonEmpty) {
       val folder = options.useFolder.get
-      val fn = if (inFileName.isEmpty || DataUtil.isGord(folder)) {
-        val uuid = UUID.randomUUID().toString
-        val folderEnding = FilenameUtils.getExtension(folder)
-        val ending = if (folderEnding.nonEmpty) "." + folderEnding else (if (options.nor) DataType.NOR.suffix else DataType.GORZ.suffix)
-        s"$uuid${if(DataUtil.isGord(folder)) DataType.GORZ.suffix else ending}"
+      val fn = if (ForkWrite.namesFilesInFolder(inFileName, folder)) {
+        UUID.randomUUID().toString + ForkWrite.folderFileEnding(folder, options.nor)
       } else {
         inFileName
       }
@@ -247,7 +273,10 @@ case class ForkWrite(forkCol: Int,
     } else {
       true
     })
+    // On reopen keep the meta of the earlier part of the file, so its .meta covers all rows.
+    val earlierMeta = if (sh.out != null) sh.out.getMeta else null
     sh.out = createOutFile(name, skipHeader)
+    if (earlierMeta != null) sh.out.setMeta(earlierMeta)
     sh.out.setup()
     sh.fileOpen = true
     openFiles += 1
