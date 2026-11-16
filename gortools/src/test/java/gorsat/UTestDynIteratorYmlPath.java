@@ -22,6 +22,7 @@
 
 package gorsat;
 
+import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * ENGKNOW-4237: a nested (dynamic) source whose path merely contains ".yml", e.g. the bucketize temp table
@@ -40,6 +42,7 @@ import java.nio.file.Paths;
 public class UTestDynIteratorYmlPath {
 
     private static final String GENES = "../tests/data/gor/genes.gorz";
+    private static final String REPORTS = "../tests/data/reports";
 
     @Rule
     public TemporaryFolder workDir = new TemporaryFolder();
@@ -48,6 +51,7 @@ public class UTestDynIteratorYmlPath {
 
     @Before
     public void setupTest() {
+        System.setProperty("dialog.macrodir", Paths.get(REPORTS).toAbsolutePath().normalize().toString());
         expected = TestUtils.runGorPipe("gor " + GENES + " | top 10");
     }
 
@@ -75,6 +79,84 @@ public class UTestDynIteratorYmlPath {
         String file = copyGenesTo("a.Yml.gorz");
         String expectedChr2 = TestUtils.runGorPipe("gor -p chr2 " + GENES + " | top 10");
         Assert.assertEquals(expectedChr2, TestUtils.runGorPipe("gor -p chr2 <(gor " + file + ") | top 10"));
+    }
+
+    @Test
+    public void testNestedYmlSourceIsExpanded() {
+        String direct = TestUtils.runGorPipe("gor " + REPORTS + "/testmacro.yml()");
+        Assert.assertEquals(direct, TestUtils.runGorPipe("gor <(gor " + REPORTS + "/testmacro.yml())"));
+    }
+
+    @Test
+    public void testMergeNestedYmlSourceIsExpanded() {
+        // The merge right source is seeked, so it goes through DynamicRowSource.modifiedCommand with a position
+        int count = TestUtils.runGorPipeCount("gor " + REPORTS + "/test2.yml(top=7)");
+        Assert.assertEquals(2 * count,
+                TestUtils.runGorPipeCount("gor " + REPORTS + "/test2.yml(top=7) | merge <(gor " + REPORTS + "/test2.yml(top=7))"));
+    }
+
+    @Test
+    public void testNestedQuotedYmlSourceIsExpanded() {
+        String direct = TestUtils.runGorPipe("gor " + REPORTS + "/testmacro.yml()");
+        Assert.assertEquals(direct, TestUtils.runGorPipe("gor <(gor '" + REPORTS + "/testmacro.yml()')"));
+    }
+
+    @Test
+    public void testNestedBareYmlSourceIsExpanded() {
+        String direct = TestUtils.runGorPipe("gor " + REPORTS + "/testmacro.yml()");
+        Assert.assertEquals(direct, TestUtils.runGorPipe("gor <(gor " + REPORTS + "/testmacro.yml)"));
+    }
+
+    @Test
+    public void testSeekedNestedYmlSourceIsExpanded() {
+        // -p seeks the nested source, so the rendered yml query goes through modifiedCommand with a start selector
+        String rendered = "create xxx = gor ../tests/data/gor/dbsnp_test.gorz | calc semic ';' | top 100; gor [xxx] | top 50";
+        String expectedChr1 = TestUtils.runGorPipe("gor -p chr1 <(" + rendered + ")");
+        String result = TestUtils.runGorPipe("gor -p chr1 <(gor " + REPORTS + "/test2.yml(top=50))");
+        Assert.assertTrue(TestUtils.runGorPipeCount("gor -p chr1 <(gor " + REPORTS + "/test2.yml(top=50))") > 0);
+        Assert.assertEquals(expectedChr1, result);
+    }
+
+    @Test
+    public void testCyclicYmlReportsFailWithParsingError() throws IOException {
+        Path dir = workDir.getRoot().toPath();
+        Path a = dir.resolve("a.yml");
+        Path b = dir.resolve("b.yml");
+        Files.write(a, List.of("Test Report:", "    query: |", "        gor " + b + "()"));
+        Files.write(b, List.of("Test Report:", "    query: |", "        gor " + a + "()"));
+        try {
+            TestUtils.runGorPipe("gor -p chr1 <(gor " + a + "())");
+            Assert.fail("Cyclic yml reports should fail");
+        } catch (Throwable e) {
+            Throwable t = e;
+            while (t != null && !(t instanceof GorParsingException)) t = t.getCause();
+            Assert.assertNotNull("Expected GorParsingException, got " + e, t);
+            Assert.assertTrue(t.getMessage(), t.getMessage().toLowerCase().contains("cyclic"));
+        }
+    }
+
+    @Test
+    public void testSourceIndexesUseTokenPositions() {
+        // "x.yml" first appears inside the -s value, but the yml source token itself comes after the nested source
+        String step = "gor -s ax.ymlz <(gor g.gorz) x.yml";
+        DynIterator.SourceIndexes idx = DynIterator.sourceIndexes(step);
+        Assert.assertEquals(step.indexOf("<("), idx.nested());
+        Assert.assertEquals(step.lastIndexOf("x.yml"), idx.yml());
+
+        // Same for a function source whose text also appears earlier inside another token
+        step = "gor -s xreport(a.yml) report(a.yml)";
+        idx = DynIterator.sourceIndexes(step);
+        Assert.assertEquals(step.lastIndexOf("report(a.yml)"), idx.nested());
+
+        step = "gor /tmp/.dict.temp.bucketizing.YMLY9IF6.gord -s Special";
+        idx = DynIterator.sourceIndexes(step);
+        Assert.assertEquals(step.length(), idx.nested());
+        Assert.assertEquals(step.length(), idx.yml());
+
+        step = "gor x.yml(top=5)";
+        idx = DynIterator.sourceIndexes(step);
+        Assert.assertEquals(4, idx.yml());
+        Assert.assertEquals(step.length(), idx.nested());
     }
 
     @Test
