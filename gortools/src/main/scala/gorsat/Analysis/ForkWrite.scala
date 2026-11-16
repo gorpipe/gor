@@ -114,8 +114,23 @@ case class OutputOptions(remove: Boolean = false,
                             linkFileMeta: String = "",
                             command: String = null,
                             infer: Boolean = false,
-                            maxseg: Boolean = false
-                           )
+                            maxseg: Boolean = false,
+                            // Reference build to record in the output meta (null when unknown).
+                            build: String = null,
+                            // User defined meta properties (WRITE -meta).
+                            meta: Map[String, String] = Map.empty,
+                            // Also write a .meta file for gor and vcf outputs (gorz/norz always get one).
+                            gorMetaFile: Boolean = false
+                           ) {
+  // Pre ENGKNOW-4236 signature, kept for Java callers (which can't use the default arguments).
+  def this(remove: Boolean, columnCompress: Boolean, md5: Boolean, md5File: Boolean, nor: Boolean, idx: GorIndexType,
+           forkTags: Array[String], dictTags: Array[String], prefix: Option[String], prefixFile: Option[String],
+           compressionLevel: Int, useFolder: Option[String], skipHeader: Boolean, writeMeta: Boolean, cardCol: String,
+           linkFile: String, linkFileMeta: String, command: String, infer: Boolean, maxseg: Boolean) =
+    this(remove, columnCompress, md5, md5File, nor, idx, forkTags, dictTags, prefix, prefixFile, compressionLevel,
+      useFolder, skipHeader, writeMeta, cardCol, linkFile, linkFileMeta, command, infer, maxseg,
+      null, Map.empty[String, String], false)
+}
 
 case class ForkWrite(forkCol: Int,
                      fullFileName: String,

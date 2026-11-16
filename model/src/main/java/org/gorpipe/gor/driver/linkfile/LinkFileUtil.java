@@ -104,7 +104,9 @@ public class LinkFileUtil {
     }
 
     private static Pattern linkPattern = Pattern.compile(".* -link ([^\\s]*) ?.*", Pattern.CASE_INSENSITIVE);
-    private static Pattern linkMetaPattern = Pattern.compile(".* -linkMeta [\"']([^\\s]*)[\"'] ?.*", Pattern.CASE_INSENSITIVE);
+    // Quoted values may contain whitespace; unquoted values end at the first whitespace.
+    private static Pattern linkMetaPattern = Pattern.compile(
+            ".* -linkMeta (?:([\"'])(.*?)\\1|([^\\s\"']\\S*))(?:\\s.*)?", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     public static String extractLinkOptionData(String options) {
         Matcher matcher = linkPattern.matcher(options);
@@ -117,7 +119,7 @@ public class LinkFileUtil {
     public static String extractLinkMetaOptionData(String options) {
         Matcher matcher = linkMetaPattern.matcher(options);
         if (matcher.matches()) {
-            return matcher.group(1);
+            return matcher.group(2) != null ? matcher.group(2) : matcher.group(3);
         }
         return "";
     }
