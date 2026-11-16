@@ -167,7 +167,7 @@
 <p>The <code class="docutils literal notranslate"><span class="pre">-c</span></code> tells the command to use column store compression for the output.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | write &lt;file name&gt; [-<span class="no">f</span> forkCol] [-d] [-r] [-c] [-m] [-i type] [-link &lt;link&gt;] [-linkmeta &lt;m&gt;] [-meta &lt;m&gt;]
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | write &lt;file name&gt; [-<span class="no">f</span> forkCol] [-d] [-r] [-c] [-m] [-i type]
 </pre></div>
 </div>
 </div>
@@ -234,28 +234,10 @@ been used in a link file.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-linkmeta</span> <span class="pre">&lt;m&gt;</span></code></p></td>
 <td><p>Writes &lt;meta&gt; as meta data to the &lt;link&gt;.  &lt;meta&gt; is string for
-of comma separated key=value elements.  Quote &lt;m&gt; if values
-contain spaces, e.g. <code class="docutils literal notranslate"><span class="pre">-linkmeta</span> <span class="pre">'OWNER=Jane</span> <span class="pre">Doe'</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-meta</span> <span class="pre">&lt;m&gt;</span></code></p></td>
-<td><p>Adds &lt;m&gt; to the meta data of the written file(s).  &lt;m&gt; is a
-comma separated list of key=value elements, quoted if values
-contain spaces.  Keys are upper cased and may only contain
-letters, digits, ‘_’, ‘.’ and ‘-‘.  Keys GOR maintains itself
-(e.g. MD5, LINE_COUNT, COLUMNS) can not be set.  Valid with
-gor, gorz, norz and vcf output, not with <code class="docutils literal notranslate"><span class="pre">-noheader</span></code>.</p></td>
+of comma separated key=value elements.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="meta-data">
-<h2>Meta data<a class="headerlink" href="#meta-data" title="Permalink to this headline">¶</a></h2>
-<p>Files written as gorz or norz get a <code class="docutils literal notranslate"><span class="pre">.meta</span></code> file next to them, and so do gor and vcf files
-written by <a class="reference internal" href="#write"><span class="std std-ref">WRITE</span></a>.  When the reference build of the session is known, the meta of gor,
-gorz and vcf files records it as <code class="docutils literal notranslate"><span class="pre">##</span> <span class="pre">BUILD</span> <span class="pre">=</span> <span class="pre">&lt;build&gt;</span></code> and vcf files also get a
-<code class="docutils literal notranslate"><span class="pre">##reference=&lt;build&gt;</span></code> header line (not when the header comes from a <code class="docutils literal notranslate"><span class="pre">-prefix</span></code> file).
-The build is taken from <code class="docutils literal notranslate"><span class="pre">buildVersion</span></code> in the gor config file, or else inferred from the length of chr1 in <code class="docutils literal notranslate"><span class="pre">buildSizeFile</span></code> (hg18, hg19 or hg38).
-A <code class="docutils literal notranslate"><span class="pre">BUILD</span></code> given with <code class="docutils literal notranslate"><span class="pre">-meta</span></code> takes precedence.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
