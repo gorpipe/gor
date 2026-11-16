@@ -45,6 +45,13 @@ public class GorMeta extends BaseMeta {
         return getProperty(HEADER_QUERY_KEY);
     }
 
+    /**
+     * @return true once initMetaStats has been called, i.e. row stats are being collected.
+     */
+    public boolean hasMetaStats() {
+        return lineCount >= 0;
+    }
+
     public void initMetaStats(String cardCol, String header) {
         initMetaStats(cardCol, header, false, false);
     }

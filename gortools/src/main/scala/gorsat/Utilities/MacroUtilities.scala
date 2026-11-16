@@ -431,6 +431,13 @@ object MacroUtilities {
     isCommandWrite(lastCmd)
   }
 
+  /**
+   * The arguments of a write command, split quote safe so option values like -linkmeta 'a=b c' stay one argument.
+   */
+  def writeArguments(writeCommand: String): Array[String] = {
+    CommandParseUtilities.quoteSafeSplitNoValidation(writeCommand.trim.substring("write ".length), ' ').map(_.trim).filter(_.nonEmpty)
+  }
+
   def isCommandWrite(lastCommand: String): Boolean = {
     lastCommand.toLowerCase.startsWith("write ")
   }
@@ -473,8 +480,7 @@ object MacroUtilities {
     }
     val (writeFile, useFolder, hasForkWrite) = if (hasWrite) {
       val write = new Write
-      // Quote safe, so option values like -linkmeta 'a=b c' stay one argument.
-      val args = CommandParseUtilities.quoteSafeSplitNoValidation(lastCmd.substring("write ".length), ' ').map(_.trim).filter(_.nonEmpty)
+      val args = writeArguments(lastCmd)
       write.parseBaseOptions(context, write.validateArguments(args), args, false)
     } else {
       ("", Option.empty, false)

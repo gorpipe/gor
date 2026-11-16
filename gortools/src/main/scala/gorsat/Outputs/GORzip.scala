@@ -49,7 +49,8 @@ class GORzip(fileName: String, fileReader: FileReader, header: String = null, sk
   override def getName: String = fileName
 
   override def setup(): Unit = {
-    getMeta.initMetaStats(options.cardCol, header, options.infer, options.maxseg)
+    // A reopened (appended) file continues the stats of its earlier meta.
+    if (!getMeta.hasMetaStats) getMeta.initMetaStats(options.cardCol, header, options.infer, options.maxseg)
     if (schema != null) getMeta.setSchema(schema)
     if (options.command != null) getMeta.setQuery(options.command)
     if (header != null & !skipHeader) out.setHeader(header)

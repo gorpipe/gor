@@ -72,7 +72,8 @@ class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: 
 
   def setup(): Unit = {
     metaOptions.foreach { options =>
-      getMeta.initMetaStats(options.cardCol, metaHeader, options.infer, options.maxseg)
+      // A reopened (appended) file continues the stats of its earlier meta.
+      if (!getMeta.hasMetaStats) getMeta.initMetaStats(options.cardCol, metaHeader, options.infer, options.maxseg)
       if (options.command != null) getMeta.setQuery(options.command)
     }
     if (header != null & !skipHeader) {
@@ -138,6 +139,22 @@ object OutFile {
     prefix + "\n" + (if(header.startsWith("#")) header else "#"+header)
   }
 
+  /**
+   * Whether writing to `name` with `options` produces a .meta file (see driver).  User meta (-meta) can only be
+   * stored in outputs that do.  An appended file (-noheader) gets none, as its rows before this write are unknown.
+   */
+  def writesMetaFile(name: String, options: OutputOptions): Boolean = {
+    val nameUpper = name.toUpperCase
+    if (DataUtil.isGorz(nameUpper) || DataUtil.isNorz(nameUpper)) {
+      options.writeMeta
+    } else if (DataUtil.isTsv(nameUpper) || DataUtil.isNor(nameUpper) || DataUtil.isParquet(nameUpper) || options.nor) {
+      false
+    } else {
+      options.gorMetaFile && options.writeMeta && !options.skipHeader &&
+        (DataUtil.isGor(nameUpper) || DataUtil.isAnyVcf(name))
+    }
+  }
+
   /** Add a ##reference line for a known build, unless the prefix already has one. */
   private def withReferenceLine(prefix: String, build: Option[String]): String = build match {
     case Some(b) if !prefix.contains("##reference=") =>
@@ -191,8 +208,7 @@ object OutFile {
       } else if (options.nor) {
         new CmdFileOut(name, fileReader, header, skipHeader, append)
       } else {
-        val writeMetaFile = options.gorMetaFile && options.writeMeta && inheader != null &&
-          (DataUtil.isGor(nameUpper) || isVCF)
+        val writeMetaFile = inheader != null && writesMetaFile(name, options)
         new OutFile(name, fileReader, header, skipHeader, append, options.md5File, options.md5, options.idx, options.compressionLevel,
           if (writeMetaFile) Some(options) else None, inheader)
       }

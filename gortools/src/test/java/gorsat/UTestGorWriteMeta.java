@@ -22,7 +22,14 @@
 
 package gorsat;
 
+import gorsat.Analysis.ForkWrite;
+import gorsat.Analysis.OutputOptions;
+import gorsat.process.PipeInstance;
 import org.gorpipe.exceptions.GorParsingException;
+import org.gorpipe.gor.binsearch.GorIndexType;
+import org.gorpipe.gor.monitor.GorMonitor;
+import scala.Option;
+import java.util.zip.Deflater;
 import org.gorpipe.gor.driver.linkfile.LinkFile;
 import org.gorpipe.gor.driver.linkfile.LinkFileUtil;
 import org.gorpipe.gor.driver.providers.stream.sources.file.FileSource;
@@ -225,6 +232,105 @@ public class UTestGorWriteMeta {
     public void testMetaOnPgorFolderWrite() throws IOException {
         Files.copy(Paths.get("../tests/data/gor/dbsnp_test.gor"), workDirPath.resolve("dbsnp.gor"));
         run("pgor dbsnp.gor | write -meta 'A=x y' dbsnp2.gord", null);
+        List<Path> metas;
+        try (Stream<Path> s = Files.list(workDirPath.resolve("dbsnp2.gord"))) {
+            metas = s.filter(p -> p.toString().endsWith(".gorz.meta")).collect(Collectors.toList());
+        }
+        Assert.assertFalse(metas.isEmpty());
+        for (Path p : metas) {
+            Assert.assertEquals(p.toString(), "x y",
+                    GorMeta.createAndLoad(new DriverBackedFileReader(""), p.toString()).getProperty("A"));
+        }
+    }
+
+    @Test
+    public void testMetaNotSupportedForNorFolderWrite() {
+        Assert.assertThrows(GorParsingException.class,
+                () -> run("nor -h <(gorrow chr1,1,100) | write -d out -meta 'A=1'", null));
+    }
+
+    @Test
+    public void testMetaNotSupportedWithNoHeader() {
+        Assert.assertThrows(GorParsingException.class,
+                () -> run("gorrow chr1,1,100 | calc ID '.' | calc REF 'A' | calc ALT 'C' | select 1,2,ID,REF,ALT | write test.vcf -noheader -meta 'A=1'", null));
+    }
+
+    @Test
+    public void testNoHeaderVcfWritesNoMetaFile() {
+        run("gorrow chr1,1,100 | calc ID '.' | calc REF 'A' | calc ALT 'C' | select 1,2,ID,REF,ALT | write test.vcf -noheader", null);
+        Assert.assertFalse(Files.exists(workDirPath.resolve("test.vcf.meta")));
+    }
+
+    @Test
+    public void testMetaKeyMustBeSimpleName() {
+        Assert.assertThrows(GorParsingException.class,
+                () -> run("gorrow chr1,1,100 | write test.gorz -meta 'SRC:ID=42'", null));
+        Assert.assertThrows(GorParsingException.class,
+                () -> run("gorrow chr1,1,100 | write test.gorz -meta 'MY KEY=42'", null));
+        Assert.assertThrows(GorParsingException.class,
+                () -> run("gorrow chr1,1,100 | write test.gorz -meta '#A=42'", null));
+        run("gorrow chr1,1,100 | write test.gorz -meta 'src.id-1_x=42'", null);
+        Assert.assertEquals("42", meta("test.gorz").getProperty("SRC.ID-1_X"));
+    }
+
+    @Test
+    public void testMetaValueWithColonAndEqualsRoundTrips() {
+        run("gorrow chr1,1,100 | write test.gorz -meta 'URL=http://x/y?a=b'", null);
+        Assert.assertEquals("http://x/y?a=b", meta("test.gorz").getProperty("URL"));
+    }
+
+    @Test
+    public void testForkReopenKeepsMetaStats() {
+        for (String ending : List.of("gor", "gorz")) {
+            var options = new OutputOptions(false, false, false, false, false, GorIndexType.NONE,
+                    new String[0], new String[0], Option.empty(), Option.empty(), Deflater.BEST_SPEED,
+                    Option.empty(), false, true, null, "", "", null, false, false,
+                    "hg38", scala.collection.immutable.Map$.MODULE$.empty(), true);
+            try (PipeInstance pipe = TestUtils.createPipeInstance(true)) {
+                pipe.init("gorrows -p chr1:1-101 | calc f if(mod(pos,2)=0,'a','b')", new GorMonitor());
+                var forkWrite = new ForkWrite(2, workDirPath.resolve("x_#{fork}." + ending).toString(),
+                        pipe.getSession(), pipe.getHeader(), options);
+                // Force every row to close and reopen the fork files.
+                forkWrite.maxOpenFiles_$eq(1);
+                forkWrite.maxBufferSize_$eq(1);
+                pipe.lastStep().$bar(forkWrite);
+                while (pipe.hasNext()) {
+                    pipe.next();
+                }
+            }
+            var metaA = meta("x_a." + ending);
+            var metaB = meta("x_b." + ending);
+            Assert.assertEquals(ending, 50, metaA.getLineCount());
+            Assert.assertEquals(ending, 50, metaB.getLineCount());
+            Assert.assertEquals(ending, "chr1\t2\tchr1\t100", metaA.getProperty(GorMeta.HEADER_RANGE_KEY));
+            Assert.assertEquals(ending, "chr1\t1\tchr1\t99", metaB.getProperty(GorMeta.HEADER_RANGE_KEY));
+            Assert.assertEquals(ending, "hg38", metaA.getProperty(GorMeta.HEADER_BUILD_KEY));
+        }
+    }
+
+    @Test
+    public void testVcfStringPrefixGetsReferenceLine() throws IOException {
+        String config = writeConfig("hg38", HG38_CHR1, null);
+        String select = "gorrow chr1,1,100 | calc ID '.' | calc REF 'A' | calc ALT 'C' | select 1,2,ID,REF,ALT";
+        run(select + " | write -prefix '##fileformat=VCFv4.2' test.vcf", config);
+        List<String> lines = Files.readAllLines(workDirPath.resolve("test.vcf"));
+        Assert.assertEquals("##fileformat=VCFv4.2", lines.get(0));
+        Assert.assertEquals("##reference=hg38", lines.get(1));
+        Assert.assertTrue(lines.get(2).startsWith("#chrom"));
+
+        run(select + " | write -prefix '##fileformat=VCFv4.2\\n##reference=GRCh38' test2.vcf", config);
+        List<String> lines2 = Files.readAllLines(workDirPath.resolve("test2.vcf"));
+        Assert.assertEquals(1, lines2.stream().filter(l -> l.startsWith("##reference=")).count());
+        Assert.assertEquals("##reference=GRCh38", lines2.get(1));
+    }
+
+    @Test
+    public void testMetaAndLinkMetaWithSpacesOnPartgor() throws IOException {
+        Files.copy(Paths.get("../tests/data/gor/dbsnp_test.gor"), workDirPath.resolve("dbsnp.gor"));
+        Files.writeString(workDirPath.resolve("parts.gord"), "dbsnp.gor\tA\n");
+        run("partgor -dict parts.gord <(gor dbsnp.gor | calc t '#{tags}') | write -link dbsnp3.gord -linkmeta 'TEST1=a b' -meta 'A=x y' dbsnp2.gord", null);
+        var linkFile = LinkFile.load(new FileSource(workDirPath.resolve("dbsnp3.gord.link").toString()));
+        Assert.assertEquals("a b", linkFile.getMeta().getProperty("TEST1"));
         List<Path> metas;
         try (Stream<Path> s = Files.list(workDirPath.resolve("dbsnp2.gord"))) {
             metas = s.filter(p -> p.toString().endsWith(".gorz.meta")).collect(Collectors.toList());

@@ -24,9 +24,9 @@ package gorsat.Commands
 
 import java.util.zip.Deflater
 import gorsat.Analysis.{ForkWrite, OutputOptions}
+import gorsat.Outputs.OutFile
 import gorsat.Commands.CommandParseUtilities._
 import org.apache.commons.io.FilenameUtils
-import org.apache.commons.lang3.StringUtils
 import org.gorpipe.exceptions.{GorParsingException, GorResourceException}
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.driver.linkfile.LinkFileUtil
@@ -36,6 +36,8 @@ import org.gorpipe.gor.model.{BaseMeta, GorMeta}
 import org.gorpipe.gor.session.GorContext
 import org.gorpipe.gor.util.DataUtil
 import org.slf4j.{Logger, LoggerFactory}
+
+import scala.jdk.CollectionConverters._
 
 object Write {
     val log: Logger = LoggerFactory.getLogger(this.getClass)
@@ -47,21 +49,26 @@ object Write {
       BaseMeta.MAXSEG_SCHEMA_KEY, BaseMeta.HEADER_MD5_KEY, BaseMeta.HEADER_TAGS_KEY, BaseMeta.HEADER_COLUMNS_KEY,
       GorMeta.HEADER_QUERY_KEY, GorMeta.HEADER_RANGE_KEY, GorMeta.HEADER_CARDCOL_KEY)
 
+    // Keys must read back from a meta file unchanged (BaseMeta.parsePropertyLine splits on '=' and ':').
+    private val metaKeyPattern = "[A-Z0-9_.-]+".r
+
     /**
-     * Parse the -meta option value: comma separated key=value pairs, optionally quoted.
-     * Keys are upper cased.
+     * Parse the -meta option value: comma separated key=value pairs, optionally quoted (see BaseMeta.parseKeyValues).
+     * Keys are upper cased and limited to letters, digits, '_', '.' and '-'.
      */
     def parseMetaOption(option: String): Map[String, String] = {
-      quoteSafeSplit(StringUtils.strip(option, "\"'"), ',').map(_.trim).filter(_.nonEmpty).map { entry =>
-        val eq = entry.indexOf('=')
-        if (eq <= 0) {
-          throw new GorParsingException(s"Invalid -meta entry '$entry', expected key=value", "-meta")
+      BaseMeta.parseKeyValues(option).asScala.map { kv =>
+        val key = kv.getKey.toUpperCase
+        if (key.isEmpty || kv.getValue == null) {
+          throw new GorParsingException(s"Invalid -meta entry '${kv.getKey}', expected key=value", "-meta")
         }
-        val key = entry.substring(0, eq).trim.toUpperCase
+        if (!metaKeyPattern.matches(key)) {
+          throw new GorParsingException(s"Invalid -meta key '${kv.getKey}', use letters, digits, '_', '.' or '-'", "-meta")
+        }
         if (systemMetaKeys.contains(key)) {
           throw new GorParsingException(s"Meta key $key is maintained by GOR and can not be set with -meta", "-meta")
         }
-        key -> StringUtils.strip(entry.substring(eq + 1).trim, "\"'")
+        key -> kv.getValue
       }.toMap
     }
 }
@@ -183,12 +190,6 @@ class Write extends CommandInfo("WRITE",
 
     val nor = executeNor || (forkCol == 0 && remove)
     val meta = if (hasOption(args, "-meta")) Write.parseMetaOption(stringValueOfOption(args, "-meta")) else Map.empty[String, String]
-    // Only outputs that get a .meta file (see OutFile.driver) can carry -meta.
-    val hasMetaFile = useFolder.nonEmpty || DataUtil.isGorz(fileName) || DataUtil.isNorz(fileName) ||
-      (!nor && (DataUtil.isGor(fileName) || DataUtil.isAnyVcf(fileName)))
-    if (meta.nonEmpty && !hasMetaFile) {
-      throw new GorParsingException("Option -meta is only valid with gor, gorz, norz and vcf output", "-meta")
-    }
 
     val build = Option(context.getSession)
       .flatMap(s => Option(s.getProjectContext.getReferenceBuild))
@@ -196,36 +197,44 @@ class Write extends CommandInfo("WRITE",
       .map(_.getVersion)
       .orNull
 
+    val options = OutputOptions(
+      remove,
+      columnCompress,
+      true,
+      md5,
+      nor,
+      idx,
+      forkTagArray,
+      dictTagArray,
+      prefix,
+      prefixFile,
+      compressionLevel,
+      useFolder,
+      skipHeader,
+      cardCol = card,
+      linkFile = linkOpt,
+      linkFileMeta = linkMetaOpt,
+      command = argString,
+      infer = infer,
+      maxseg = maxseg,
+      build = build,
+      meta = meta,
+      gorMetaFile = true
+    )
+
+    // -meta can only be stored in outputs that get a .meta file.
+    if (meta.nonEmpty) {
+      val outputName = useFolder match {
+        case Some(folder) if ForkWrite.namesFilesInFolder(fileName, folder) => ForkWrite.folderFileEnding(folder, nor)
+        case _ => fileName
+      }
+      if (!OutFile.writesMetaFile(outputName, options)) {
+        throw new GorParsingException("Option -meta is only valid with gor, gorz, norz and vcf output (not with -noheader)", "-meta")
+      }
+    }
+
     CommandParsingResult(
-      ForkWrite(forkCol,
-        fileName,
-        context.getSession,
-        forcedInputHeader,
-        OutputOptions(
-          remove,
-          columnCompress,
-          true,
-          md5,
-          nor,
-          idx,
-          forkTagArray,
-          dictTagArray,
-          prefix,
-          prefixFile,
-          compressionLevel,
-          useFolder,
-          skipHeader,
-          cardCol = card,
-          linkFile = linkOpt,
-          linkFileMeta = linkMetaOpt,
-          command = argString,
-          infer = infer,
-          maxseg = maxseg,
-          build = build,
-          meta = meta,
-          gorMetaFile = true
-        )
-      ),
+      ForkWrite(forkCol, fileName, context.getSession, forcedInputHeader, options),
       forcedInputHeader
     )
   }

@@ -1,12 +1,11 @@
 package org.gorpipe.gor.driver.linkfile;
 
-import gorsat.Commands.CommandParseUtilities;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.gorpipe.exceptions.GorResourceException;
 import org.gorpipe.gor.driver.GorDriverConfig;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
+import org.gorpipe.gor.model.BaseMeta;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.util.Strings;
@@ -169,12 +168,12 @@ public class LinkFileUtil {
         var linkFileInfo = "";
 
         if (!Strings.isNullOrEmpty(optLinkFileMeta)) {
-            for (String s : CommandParseUtilities.quoteSafeSplit(StringUtils.strip(optLinkFileMeta, "\"\'"), ',')) {
-                var l = s.trim();
-                if (l.startsWith(LinkFileEntryV1.ENTRY_INFO_KEY)) {
-                    linkFileInfo = StringUtils.strip(l.substring(LinkFileEntryV1.ENTRY_INFO_KEY.length() + 1), "\"\'");
+            for (var kv : BaseMeta.parseKeyValues(optLinkFileMeta)) {
+                var value = kv.getValue() != null ? kv.getValue() : "";
+                if (kv.getKey().equals(LinkFileEntryV1.ENTRY_INFO_KEY)) {
+                    linkFileInfo = value;
                 } else {
-                    linkFileMeta += "## " + l + "\n";
+                    linkFileMeta += "## " + kv.getKey() + " = " + value + "\n";
                 }
             }
         }

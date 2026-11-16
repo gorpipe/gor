@@ -66,7 +66,7 @@ public class BaseScriptExecutionEngine {
 
     private Optional<Tuple<String,Boolean>> resolveCache(GorContext context, String lastCommand, ExecutionBlock queryBlock) {
         var write = new Write();
-        var args = lastCommand.substring("write ".length()).split(" ");
+        var args = MacroUtilities.writeArguments(lastCommand);
         var iargs = write.validateArguments(args);
         var options = write.parseBaseOptions(context, iargs, args, false);
         var outFile = options._1();
