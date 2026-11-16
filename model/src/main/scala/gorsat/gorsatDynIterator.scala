@@ -28,11 +28,10 @@ package gorsat
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
 import org.gorpipe.exceptions.{GorDataException, GorSystemException}
-import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.function.FunctionSources
 import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.{GorContext, GorSession}
-import org.gorpipe.gor.util.Util
+import org.gorpipe.gor.util.{DataUtil, Util}
 import org.gorpipe.model.gor.iterators.{LineIterator, TimedRowSource}
 import org.gorpipe.model.gor.{Pipes, RowObj}
 import org.gorpipe.util.Pair
@@ -163,6 +162,12 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     CommandParseUtilities.quoteSafeSplit(step, ' ').find(FunctionSources.isFunctionSource).map(step.indexOf).getOrElse(step.length)
   }
 
+  // Index of the first yml report source, e.g. file.yml or file.yml(args), in the step, or its length if there is none.
+  // Must match whole source tokens, a path that merely contains ".yml" (e.g. x.YMLY9IF6.gord) is not a yml source.
+  private def ymlSourceIndex(step : String) : Int = {
+    CommandParseUtilities.quoteSafeSplit(step, ' ').find(DataUtil.isYml).map(step.indexOf).getOrElse(step.length)
+  }
+
   def modifiedCommand(cmd : String, seekChr: String, seekPos : Int, endPos : Int, seekOnly : Boolean, getHeader : Boolean = false) : String = {
     var header = getHeader
     val creates = CommandParseUtilities.quoteSafeSplit(cmd,';').map( _.trim )
@@ -175,10 +180,12 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
       if (i == 0) {
         var inest = pipeSteps(0).indexOf("<(")
         if( inest == -1 ) inest = nestedSourceIndex(pipeSteps(0))
-        var iyml = pipeSteps(0).toLowerCase.indexOf(DataType.YML.suffix)
-        if( iyml == -1 ) iyml = pipeSteps(0).length
-        if( (iyml < inest) && drsGorPipeSession.getSystemContext.getReportBuilder != null ) {
-          pipeSteps(0) = modifiedCommand( drsGorPipeSession.getSystemContext.getReportBuilder.parse(pipeSteps(0)), seekChr, seekPos, endPos, seekOnly, header )
+        val iyml = ymlSourceIndex(pipeSteps(0))
+        val reportBuilder = drsGorPipeSession.getSystemContext.getReportBuilder
+        val parsed = if ((iyml < inest) && reportBuilder != null) reportBuilder.parse(pipeSteps(0)) else null
+        // Only recurse when the report builder expanded something, otherwise we would recurse forever
+        if (parsed != null && parsed != pipeSteps(0)) {
+          pipeSteps(0) = modifiedCommand(parsed, seekChr, seekPos, endPos, seekOnly, header)
           header = false
         } else pipeSteps(0) = addStartSelector(pipeSteps(0),seekChr,seekPos,endPos,seekOnly,buffsize,header,context.getSession)
       } else if (pipeSteps(i).toUpperCase.startsWith("MERGE")) {
