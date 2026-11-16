@@ -202,7 +202,8 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
   }
 
   /**
-    * @param expandedYml yml report steps already expanded on the way here, to detect reports that render each other
+    * @param expandedYml yml report steps already expanded on the way here (including through merge right sources),
+    *                    to detect reports that render each other
     */
   def modifiedCommand(cmd : String, seekChr: String, seekPos : Int, endPos : Int, seekOnly : Boolean, getHeader : Boolean = false,
                       expandedYml : List[String] = Nil) : String = {
@@ -233,10 +234,10 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
         val rightFile = inputArguments(1).trim
         if (FunctionSources.isFunctionSource(rightFile)) {
           val mergeCommand = CommandParseUtilities.parseNestedCommand(rightFile, context.getSession)
-          pipeSteps(i) = pipeSteps(i).replace(rightFile,"<("+modifiedCommand(mergeCommand,seekChr,seekPos,endPos,seekOnly)+")")
+          pipeSteps(i) = pipeSteps(i).replace(rightFile,"<("+modifiedCommand(mergeCommand,seekChr,seekPos,endPos,seekOnly,expandedYml = expandedYml)+")")
         } else if (CommandParseUtilities.isNestedCommand(rightFile)) {
           val mergeCommand = CommandParseUtilities.parseNestedCommandUntrimmed(rightFile)
-          pipeSteps(i) = pipeSteps(i).replace("<("+mergeCommand+")","<("+modifiedCommand(mergeCommand,seekChr,seekPos,endPos,seekOnly)+")")
+          pipeSteps(i) = pipeSteps(i).replace("<("+mergeCommand+")","<("+modifiedCommand(mergeCommand,seekChr,seekPos,endPos,seekOnly,expandedYml = expandedYml)+")")
         } else {
           val mergeCommand = rightFile
           pipeSteps(i) = pipeSteps(i).replace(mergeCommand,"<("+addStartSelector(mergeCommand,seekChr,seekPos,endPos,seekOnly,buffsize,header,context.getSession)+")")

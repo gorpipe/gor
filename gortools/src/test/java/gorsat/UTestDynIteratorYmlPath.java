@@ -23,6 +23,7 @@
 package gorsat;
 
 import org.gorpipe.exceptions.GorParsingException;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,11 +49,19 @@ public class UTestDynIteratorYmlPath {
     public TemporaryFolder workDir = new TemporaryFolder();
 
     private String expected;
+    private String oldMacroDir;
 
     @Before
     public void setupTest() {
+        oldMacroDir = System.getProperty("dialog.macrodir");
         System.setProperty("dialog.macrodir", Paths.get(REPORTS).toAbsolutePath().normalize().toString());
         expected = TestUtils.runGorPipe("gor " + GENES + " | top 10");
+    }
+
+    @After
+    public void tearDown() {
+        if (oldMacroDir == null) System.clearProperty("dialog.macrodir");
+        else System.setProperty("dialog.macrodir", oldMacroDir);
     }
 
     private String copyGenesTo(String relPath) throws IOException {
@@ -91,7 +100,7 @@ public class UTestDynIteratorYmlPath {
     public void testMergeNestedYmlSourceIsExpanded() {
         // The merge right source is seeked, so it goes through DynamicRowSource.modifiedCommand with a position
         int count = TestUtils.runGorPipeCount("gor " + REPORTS + "/test2.yml(top=7)");
-        Assert.assertEquals(2 * count,
+        Assert.assertEquals(2L * count,
                 TestUtils.runGorPipeCount("gor " + REPORTS + "/test2.yml(top=7) | merge <(gor " + REPORTS + "/test2.yml(top=7))"));
     }
 
@@ -124,8 +133,24 @@ public class UTestDynIteratorYmlPath {
         Path b = dir.resolve("b.yml");
         Files.write(a, List.of("Test Report:", "    query: |", "        gor " + b + "()"));
         Files.write(b, List.of("Test Report:", "    query: |", "        gor " + a + "()"));
+        assertCyclicYmlError("gor -p chr1 <(gor " + a + "())");
+    }
+
+    @Test
+    public void testCyclicYmlReportsThroughMergeFailWithParsingError() throws IOException {
+        // Each report merges in the other, so the cycle goes through the merge right source of modifiedCommand
+        Path dir = workDir.getRoot().toPath();
+        Path a = dir.resolve("a.yml");
+        Path b = dir.resolve("b.yml");
+        String genes = Paths.get(GENES).toAbsolutePath().normalize().toString();
+        Files.write(a, List.of("Test Report:", "    query: |", "        gor " + genes + " | merge <(gor " + b + "())"));
+        Files.write(b, List.of("Test Report:", "    query: |", "        gor " + genes + " | merge <(gor " + a + "())"));
+        assertCyclicYmlError("gor -p chr1 <(gor " + a + "())");
+    }
+
+    private static void assertCyclicYmlError(String query) {
         try {
-            TestUtils.runGorPipe("gor -p chr1 <(gor " + a + "())");
+            TestUtils.runGorPipe(query);
             Assert.fail("Cyclic yml reports should fail");
         } catch (Throwable e) {
             Throwable t = e;
@@ -163,6 +188,6 @@ public class UTestDynIteratorYmlPath {
     public void testMergeNestedSourceWithYmlInFileName() throws IOException {
         String file = copyGenesTo("b.yml.data.gorz");
         int count = TestUtils.runGorPipeCount("gor " + GENES + " | merge <(gor " + file + ")");
-        Assert.assertEquals(2 * TestUtils.runGorPipeCount("gor " + GENES), count);
+        Assert.assertEquals(2L * TestUtils.runGorPipeCount("gor " + GENES), count);
     }
 }
