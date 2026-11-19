@@ -24,7 +24,8 @@ package gorsat.process
 
 import com.sun.net.httpserver.{HttpExchange, HttpServer}
 import java.io.ByteArrayOutputStream
-import java.net.InetSocketAddress
+import java.net.{InetSocketAddress, URLDecoder}
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
 import org.gorpipe.gor.cli.render.ReportCommand
@@ -45,14 +46,17 @@ object GorTestServer {
     *
     * POST /query runs a GOR query and answers with what gorpipe writes to stdout.
     * POST /render renders a yml report, e.g. path/report.yml(arg='x'), and answers with what
-    * `gor render report` writes to stdout, so a client can skip starting a JVM per render.
+    * `gor render report` writes to stdout, so a client can skip starting a JVM per render. Its optional
+    * `root` parameter (/render?root=<dir>) is the directory the render runs from, as the CLI runs from its
+    * working directory: the report and any path it reads while rendering resolve against it. Without
+    * `root` they resolve against the server's own gorroot.
     */
   def create(port: Int, baseOptions: PipeOptions): HttpServer = {
     val server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0)
     server.createContext("/query", (exchange: HttpExchange) =>
       handlePost(exchange, query => executeQuery(query, baseOptions)))
     server.createContext("/render", (exchange: HttpExchange) =>
-      handlePost(exchange, report => renderReport(report, baseOptions)))
+      handlePost(exchange, report => renderReport(report, queryParameter(exchange, "root"), baseOptions)))
     server.start()
     val boundPort = server.getAddress.getPort
     System.err.println(s"GOR test server listening on port $boundPort")
@@ -60,11 +64,18 @@ object GorTestServer {
     server
   }
 
-  private def handlePost(exchange: HttpExchange, handler: String => (Int, String)): Unit = {
+  /**
+    * Answers a POST with the status and body `handler` returns for its request body. Every request gets an
+    * answer: a handler that throws is answered with 500 and the error, as a request that closes without one
+    * reads to a client like a server that went away.
+    */
+  private[process] def handlePost(exchange: HttpExchange, handler: String => (Int, String)): Unit = {
     try {
       if (exchange.getRequestMethod.equalsIgnoreCase("POST")) {
         val request = new String(exchange.getRequestBody.readAllBytes(), "UTF-8").trim
-        val (status, body) = handler(request)
+        val (status, body) =
+          try handler(request)
+          catch { case ex: Throwable => errorReply("Request", ex) }
         val bytes = body.getBytes("UTF-8")
         exchange.getResponseHeaders.set("Content-Type", "text/plain; charset=UTF-8")
         val responseLength = if (bytes.length == 0) -1L else bytes.length.toLong
@@ -82,42 +93,62 @@ object GorTestServer {
     }
   }
 
-  private def renderReport(report: String, baseOptions: PipeOptions): (Int, String) = {
-    if (!DataUtil.isYml(report)) return (400, "Input is not a yml report.")
+  /**
+    * Options for one request's session, taken from the server's own. Each request gets a fresh id, so it gets
+    * its own GorSessionCache instead of sharing key "-1" with every other request.
+    */
+  private def requestOptions(baseOptions: PipeOptions): PipeOptions = {
     val opts = new PipeOptions()
-    opts.gorRoot = baseOptions.gorRoot
-    opts.configFile = baseOptions.configFile
-    opts.aliasFile = baseOptions.aliasFile
-    opts.cacheDir = baseOptions.cacheDir
-    val session = new CLISessionFactory(opts, "").create()
-    try {
-      // `gor render report` prints the rendered report with println
-      (200, ReportCommand.renderReport(session, report, false) + "\n")
-    } catch {
-      case ge: GorException =>
-        val msg = ExceptionUtilities.gorExceptionToString(ge)
-        logger.error("Render failed: {}", msg)
-        (500, msg)
-      case ex: Throwable =>
-        val msg = Option(ex.getMessage).getOrElse(ex.getClass.getName)
-        logger.error("Render failed: {}", msg, ex)
-        (500, msg)
-    } finally {
-      session.close()
-    }
-  }
-
-  private def executeQuery(query: String, baseOptions: PipeOptions): (Int, String) = {
-    val opts = new PipeOptions()
-    opts.query = PipeOptions.cleanUpQueryAndSplit(query).mkString(";")
     opts.gorRoot = baseOptions.gorRoot
     opts.configFile = baseOptions.configFile
     opts.aliasFile = baseOptions.aliasFile
     opts.cacheDir = baseOptions.cacheDir
     opts.workers = baseOptions.workers
     opts.color = baseOptions.color
-    // Fresh id per request so each query gets its own GorSessionCache instead of sharing key "-1"
     opts.requestId = UUID.randomUUID().toString
+    opts
+  }
+
+  private def errorReply(what: String, ex: Throwable): (Int, String) = ex match {
+    case ge: GorException =>
+      val msg = ExceptionUtilities.gorExceptionToString(ge)
+      logger.error("{} failed: {}", what, msg)
+      (500, msg)
+    case _ =>
+      val msg = Option(ex.getMessage).getOrElse(ex.getClass.getName)
+      logger.error(s"$what failed: {}", msg, ex)
+      (500, msg)
+  }
+
+  /** The decoded value of query parameter `name` in the request URI, if it has one. */
+  private def queryParameter(exchange: HttpExchange, name: String): Option[String] =
+    Option(exchange.getRequestURI.getRawQuery).toSeq
+      .flatMap(_.split('&'))
+      .map(_.split("=", 2))
+      .collectFirst { case Array(key, value) if key == name => URLDecoder.decode(value, StandardCharsets.UTF_8) }
+
+  private def renderReport(report: String, root: Option[String], baseOptions: PipeOptions): (Int, String) = {
+    if (!DataUtil.isYml(report)) return (400, "Input is not a yml report.")
+    val opts = requestOptions(baseOptions)
+    root.foreach(dir => opts.gorRoot = dir)
+    try {
+      val session = new CLISessionFactory(opts, "").create()
+      try {
+        // `gor render report` prints the rendered report with println
+        (200, ReportCommand.renderReport(session, report, false) + "\n")
+      } finally {
+        session.close()
+      }
+    } catch {
+      case ex: Throwable => errorReply("Render", ex)
+    } finally {
+      GorSessionCacheManager.invalidateCache(opts.requestId)
+    }
+  }
+
+  private def executeQuery(query: String, baseOptions: PipeOptions): (Int, String) = {
+    val opts = requestOptions(baseOptions)
+    opts.query = PipeOptions.cleanUpQueryAndSplit(query).mkString(";")
 
     val out = new ByteArrayOutputStream()
     val engine = new CLIGorExecutionEngine(opts, null, null, out)
@@ -125,14 +156,7 @@ object GorTestServer {
       engine.execute()
       (200, out.toString("UTF-8"))
     } catch {
-      case ge: GorException =>
-        val msg = ExceptionUtilities.gorExceptionToString(ge)
-        logger.error("Query failed: {}", msg)
-        (500, msg)
-      case ex: Throwable =>
-        val msg = Option(ex.getMessage).getOrElse(ex.getClass.getName)
-        logger.error("Query failed: {}", msg, ex)
-        (500, msg)
+      case ex: Throwable => errorReply("Query", ex)
     }
   }
 }

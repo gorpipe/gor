@@ -27,16 +27,21 @@ import org.gorpipe.gor.cli.render.ReportCommand;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import picocli.CommandLine;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -45,6 +50,9 @@ import java.nio.file.Paths;
 public class UTestGorTestServer {
 
     private static final String REPORTS = Paths.get("../tests/data/reports").toAbsolutePath().normalize().toString();
+
+    @Rule
+    public TemporaryFolder workDir = new TemporaryFolder();
 
     private final HttpClient client = HttpClient.newHttpClient();
     private HttpServer server;
@@ -106,11 +114,57 @@ public class UTestGorTestServer {
         Assert.assertEquals(renderReportCli(spec), response.body());
     }
 
+    private static String rootParameter(String dir) {
+        return "/render?root=" + URLEncoder.encode(dir, StandardCharsets.UTF_8);
+    }
+
+    @Test
+    public void testRenderOfTheUrlArgumentFormMatchesRenderReportCommand() throws Exception {
+        String spec = REPORTS + "/test2.yml?top=7";
+        HttpResponse<String> response = post("/render", spec);
+        Assert.assertEquals(200, response.statusCode());
+        Assert.assertEquals(renderReportCli(spec), response.body());
+    }
+
+    @Test
+    public void testRenderWithARootResolvesARelativeReportAgainstIt() throws Exception {
+        HttpResponse<String> relative = post(rootParameter(REPORTS), "test2.yml(top=7)");
+        Assert.assertEquals(200, relative.statusCode());
+        Assert.assertEquals(post("/render", REPORTS + "/test2.yml(top=7)").body(), relative.body());
+    }
+
+    @Test
+    public void testRenderWithARootThatHasASpace() throws Exception {
+        Path root = workDir.newFolder("reports with space").toPath();
+        Files.copy(Paths.get(REPORTS, "test2.yml"), root.resolve("test2.yml"));
+        HttpResponse<String> response = post(rootParameter(root.toString()), "test2.yml(top=7)");
+        Assert.assertEquals(200, response.statusCode());
+        Assert.assertEquals(post("/render", REPORTS + "/test2.yml(top=7)").body(), response.body());
+    }
+
+    @Test
+    public void testRenderWithoutARootDoesNotFindARelativeReport() throws Exception {
+        // The server's own gorroot here is the working directory, which has no test2.yml.
+        Assert.assertEquals(500, post("/render", "test2.yml(top=7)").statusCode());
+    }
+
     @Test
     public void testRenderOfAMissingReportFails() throws Exception {
         HttpResponse<String> response = post("/render", REPORTS + "/does_not_exist.yml(top=1)");
         Assert.assertEquals(500, response.statusCode());
         Assert.assertFalse(response.body().isEmpty());
+    }
+
+    @Test
+    public void testAHandlerThatThrowsIsAnsweredWith500() throws Exception {
+        // Without an answer the client sees a dropped connection, and gdb-cla-queries' client then
+        // stops using the server for the rest of its run.
+        server.createContext("/throws", exchange -> GorTestServer$.MODULE$.handlePost(exchange, request -> {
+            throw new IllegalStateException("session could not be created");
+        }));
+        HttpResponse<String> response = post("/throws", "anything");
+        Assert.assertEquals(500, response.statusCode());
+        Assert.assertTrue(response.body().contains("session could not be created"));
     }
 
     @Test
