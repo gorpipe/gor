@@ -50,13 +50,17 @@ object GorTestServer {
     * `root` parameter (/render?root=<dir>) is the directory the render runs from, as the CLI runs from its
     * working directory: the report and any path it reads while rendering resolve against it. Without
     * `root` they resolve against the server's own gorroot.
+    *
+    * POST /query takes `root` too, and `config` (/query?root=<dir>&config=<file>): the query then runs as
+    * `gorpipe -gorroot <dir> -config <file>` would, so one server answers queries on any gorroot. Without
+    * them it uses the server's own gorroot and config.
     */
   def create(port: Int, baseOptions: PipeOptions): HttpServer = {
     val server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0)
     server.createContext("/query", (exchange: HttpExchange) =>
-      handlePost(exchange, query => executeQuery(query, baseOptions)))
+      handlePost(exchange, query => executeQuery(query, requestOptions(baseOptions, exchange))))
     server.createContext("/render", (exchange: HttpExchange) =>
-      handlePost(exchange, report => renderReport(report, queryParameter(exchange, "root"), baseOptions)))
+      handlePost(exchange, report => renderReport(report, requestOptions(baseOptions, exchange))))
     server.start()
     val boundPort = server.getAddress.getPort
     System.err.println(s"GOR test server listening on port $boundPort")
@@ -94,13 +98,14 @@ object GorTestServer {
   }
 
   /**
-    * Options for one request's session, taken from the server's own. Each request gets a fresh id, so it gets
-    * its own GorSessionCache instead of sharing key "-1" with every other request.
+    * Options for one request's session, taken from the server's own, with the gorroot and config file of the
+    * request's `root` and `config` parameters when it has them. Each request gets a fresh id, so it gets its
+    * own GorSessionCache instead of sharing key "-1" with every other request.
     */
-  private def requestOptions(baseOptions: PipeOptions): PipeOptions = {
+  private def requestOptions(baseOptions: PipeOptions, exchange: HttpExchange): PipeOptions = {
     val opts = new PipeOptions()
-    opts.gorRoot = baseOptions.gorRoot
-    opts.configFile = baseOptions.configFile
+    opts.gorRoot = queryParameter(exchange, "root").getOrElse(baseOptions.gorRoot)
+    opts.configFile = queryParameter(exchange, "config").getOrElse(baseOptions.configFile)
     opts.aliasFile = baseOptions.aliasFile
     opts.cacheDir = baseOptions.cacheDir
     opts.workers = baseOptions.workers
@@ -127,10 +132,8 @@ object GorTestServer {
       .map(_.split("=", 2))
       .collectFirst { case Array(key, value) if key == name => URLDecoder.decode(value, StandardCharsets.UTF_8) }
 
-  private def renderReport(report: String, root: Option[String], baseOptions: PipeOptions): (Int, String) = {
+  private def renderReport(report: String, opts: PipeOptions): (Int, String) = {
     if (!DataUtil.isYml(report)) return (400, "Input is not a yml report.")
-    val opts = requestOptions(baseOptions)
-    root.foreach(dir => opts.gorRoot = dir)
     try {
       val session = new CLISessionFactory(opts, "").create()
       try {
@@ -146,8 +149,7 @@ object GorTestServer {
     }
   }
 
-  private def executeQuery(query: String, baseOptions: PipeOptions): (Int, String) = {
-    val opts = requestOptions(baseOptions)
+  private def executeQuery(query: String, opts: PipeOptions): (Int, String) = {
     opts.query = PipeOptions.cleanUpQueryAndSplit(query).mkString(";")
 
     val out = new ByteArrayOutputStream()

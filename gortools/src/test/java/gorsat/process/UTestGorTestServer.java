@@ -98,6 +98,39 @@ public class UTestGorTestServer {
         Assert.assertEquals(3, response.body().split("\n").length);
     }
 
+    private static String encode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    @Test
+    public void testQueryWithARootReadsRelativeFilesFromIt() throws Exception {
+        Path root = workDir.newFolder("query root").toPath();
+        Files.writeString(root.resolve("data.tsv"), "#a\tb\n1\t2\n");
+        HttpResponse<String> response = post("/query?root=" + encode(root.toString()), "nor data.tsv");
+        Assert.assertEquals(200, response.statusCode());
+        Assert.assertEquals("#a\tb\n1\t2\n", response.body());
+        // The server's own gorroot, the working directory, has no data.tsv.
+        Assert.assertEquals(500, post("/query", "nor data.tsv").statusCode());
+    }
+
+    @Test
+    public void testQueryWithAConfigUsesItsReference() throws Exception {
+        Path root = workDir.newFolder("config_root").toPath();
+        Path refMini = Paths.get("../tests/data/ref_mini").toAbsolutePath().normalize();
+        Files.createDirectories(root.resolve("seq"));
+        // The reference is read in 10000-base buffers, so a shorter chromosome reads as N.
+        Files.writeString(root.resolve("seq/chr1.txt"), "GATTACA" + "N".repeat(20000));
+        Files.copy(refMini.resolve("buildsize.gor"), root.resolve("buildsize.gor"));
+        Files.copy(refMini.resolve("buildsplit.txt"), root.resolve("buildsplit.txt"));
+        Path config = root.resolve("my_config.txt");
+        Files.writeString(config, "buildPath\tseq\nbuildSizeFile\tbuildsize.gor\nbuildSplitFile\tbuildsplit.txt\n");
+
+        HttpResponse<String> response = post("/query?root=" + encode(root.toString()) + "&config=" + encode(config.toString()),
+                "gorrow chr1,3 | calc ref refbase(chrom,pos)");
+        Assert.assertEquals(200, response.statusCode());
+        Assert.assertTrue(response.body(), response.body().endsWith("chr1\t3\tT\n"));
+    }
+
     @Test
     public void testRenderMatchesRenderReportCommand() throws Exception {
         String spec = REPORTS + "/test2.yml(top=7)";
@@ -115,7 +148,7 @@ public class UTestGorTestServer {
     }
 
     private static String rootParameter(String dir) {
-        return "/render?root=" + URLEncoder.encode(dir, StandardCharsets.UTF_8);
+        return "/render?root=" + encode(dir);
     }
 
     @Test
