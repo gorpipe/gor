@@ -22,6 +22,13 @@
 
 package gorsat.process;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import org.gorpipe.gor.cli.render.ReportCommand;
 import org.junit.After;
@@ -30,6 +37,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import java.io.ByteArrayOutputStream;
@@ -75,6 +83,18 @@ public class UTestGorTestServer {
         HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl + path))
                 .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8)).build();
         return client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+    }
+
+    private HttpResponse<String> postForJson(String body) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl + "/query"))
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8)).build();
+        return client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+    }
+
+    private static JsonNode json(HttpResponse<String> response) throws Exception {
+        Assert.assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("application/json"));
+        return new ObjectMapper().readTree(response.body());
     }
 
     /** What `gor render report <spec>` writes to stdout. */
@@ -211,5 +231,87 @@ public class UTestGorTestServer {
         HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl + "/render")).GET().build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         Assert.assertEquals(405, response.statusCode());
+    }
+
+    @Test
+    public void testQueryJsonReplyOnSuccess() throws Exception {
+        HttpResponse<String> response = postForJson("norrows 2");
+        Assert.assertEquals(200, response.statusCode());
+        JsonNode reply = json(response);
+        Assert.assertEquals(0, reply.get("exitCode").asInt());
+        Assert.assertEquals(post("/query", "norrows 2").body(), reply.get("stdout").asText());
+        Assert.assertTrue(reply.has("stderr"));
+    }
+
+    @Test
+    public void testQueryJsonReplyOnFailure() throws Exception {
+        String query = "norrows 2 | calc x nosuchfunction(rownum)";
+        HttpResponse<String> plain = post("/query", query);
+        Assert.assertEquals(500, plain.statusCode());
+        Assert.assertFalse(plain.body().isEmpty());
+
+        HttpResponse<String> response = postForJson(query);
+        Assert.assertEquals(500, response.statusCode());
+        JsonNode reply = json(response);
+        Assert.assertEquals(GorTestServer.FailedQueryExitCode(), reply.get("exitCode").asInt());
+        // The header is written before the expression fails, as gorpipe writes it
+        Assert.assertEquals("#RowNum\tx\n", reply.get("stdout").asText());
+        // The error is logged to stderr as gorpipe logs it
+        Assert.assertTrue(reply.get("stderr").asText(), reply.get("stderr").asText().contains(plain.body()));
+    }
+
+    @Test
+    public void testQueryJsonReplyKeepsStdoutWrittenBeforeAFailure() throws Exception {
+        // More rows than the output buffer holds are written before the query fails
+        String query = "norrows 100000 | throwif rownum = 99999";
+        HttpResponse<String> response = postForJson(query);
+        Assert.assertEquals(500, response.statusCode());
+        JsonNode reply = json(response);
+        Assert.assertEquals(GorTestServer.FailedQueryExitCode(), reply.get("exitCode").asInt());
+        String stdout = reply.get("stdout").asText();
+        Assert.assertTrue(stdout.startsWith("#RowNum\n0\n1\n"));
+        Assert.assertTrue(stdout.contains("\n50000\n"));
+        Assert.assertTrue(reply.get("stderr").asText().contains("Gor throw on: rownum = 99999"));
+    }
+
+    @Test
+    public void testStderrHasConsoleLogWrittenPastSystemErr() throws Exception {
+        // gorpipe's console appender writes to the process's stderr through jansi, not System.err
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        Logger console = context.getLogger("console");
+        ByteArrayOutputStream processStderr = new ByteArrayOutputStream();
+        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+        encoder.setContext(context);
+        encoder.setPattern("%msg %X{console:loglabel}%n");
+        encoder.start();
+        ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
+        appender.setContext(context);
+        appender.setName("past-system-err");
+        appender.setTarget("System.err");
+        appender.setEncoder(encoder);
+        appender.start();
+        appender.setOutputStream(processStderr);
+        boolean additive = console.isAdditive();
+        console.setAdditive(false);
+        console.addAppender(appender);
+        try {
+            String query = "norrows 2 | calc x nosuchfunction(rownum)";
+            String error = post("/query", query).body();
+            JsonNode reply = json(postForJson(query));
+            Assert.assertEquals(error + " \n" + error + " \n", processStderr.toString(StandardCharsets.UTF_8));
+            Assert.assertEquals(error + " \n", reply.get("stderr").asText());
+        } finally {
+            console.detachAppender(appender);
+            console.setAdditive(additive);
+            appender.stop();
+        }
+    }
+
+    @Test
+    public void testFailuresDoNotLeakIntoTheNextQuery() throws Exception {
+        postForJson("norrows 2 | calc x nosuchfunction(rownum)");
+        JsonNode reply = json(postForJson("norrows 2"));
+        Assert.assertEquals(0, reply.get("exitCode").asInt());
+        Assert.assertEquals("", reply.get("stderr").asText());
     }
 }

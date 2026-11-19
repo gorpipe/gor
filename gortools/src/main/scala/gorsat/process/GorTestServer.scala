@@ -22,8 +22,14 @@
 
 package gorsat.process
 
+import ch.qos.logback.classic.LoggerContext
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.{AppenderBase, ConsoleAppender}
+import ch.qos.logback.core.encoder.Encoder
+import ch.qos.logback.core.joran.spi.ConsoleTarget
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.sun.net.httpserver.{HttpExchange, HttpServer}
-import java.io.ByteArrayOutputStream
+import java.io.{ByteArrayOutputStream, OutputStream, PrintStream}
 import java.net.{InetSocketAddress, URLDecoder}
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -32,11 +38,29 @@ import org.gorpipe.gor.cli.render.ReportCommand
 import org.gorpipe.gor.util.DataUtil
 import org.slf4j.LoggerFactory
 
+import scala.jdk.CollectionConverters._
+
 object GorTestServer {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
+  // The logger gorpipe reports a failed query with ("console." + GorPipe.getClass, named here so
+  // GorPipe is not initialized), so the error reaches stderr formatted the same way
+  private val consoleLogger = LoggerFactory.getLogger("console.class gorsat.process.GorPipe$")
+  private val jsonMapper = new ObjectMapper()
+
+  /** Exit status of a gorpipe process whose query failed (it calls System.exit(-1)). */
+  val FailedQueryExitCode = 255
+
+  /**
+    * What gorpipe would have given for a query: its exit status, what it wrote to stdout (also
+    * the part written before a failure) and what it wrote to stderr. `error` is the reply text
+    * for a failed query.
+    */
+  case class QueryResult(exitCode: Int, stdout: String, stderr: String, error: String = "")
 
   def start(port: Int, baseOptions: PipeOptions): Unit = {
+    // Errors read as gorpipe prints them, which shows no stack trace without -stacktrace
+    ExceptionUtilities.setShowStackTrace(baseOptions.showStackTrace)
     create(port, baseOptions)
     Thread.currentThread().join()
   }
@@ -44,7 +68,12 @@ object GorTestServer {
   /**
     * Starts the server on 127.0.0.1:port (0 picks a free port) and returns it without blocking.
     *
-    * POST /query runs a GOR query and answers with what gorpipe writes to stdout.
+    * POST /query runs a GOR query and answers with what gorpipe writes to stdout, or 500 and the
+    * error text when it fails. A request with `Accept: application/json` gets instead, both on
+    * success (200) and on failure (500), a JSON object with what a gorpipe process would have
+    * given: `exitCode` (0, or 255 for a failed query), `stdout` (on failure, what the query wrote
+    * before it failed) and `stderr` (what was written to stderr while the query ran, with the
+    * error reported as gorpipe reports it).
     * POST /render renders a yml report, e.g. path/report.yml(arg='x'), and answers with what
     * `gor render report` writes to stdout, so a client can skip starting a JVM per render. Its optional
     * `root` parameter (/render?root=<dir>) is the directory the render runs from, as the CLI runs from its
@@ -58,9 +87,9 @@ object GorTestServer {
   def create(port: Int, baseOptions: PipeOptions): HttpServer = {
     val server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0)
     server.createContext("/query", (exchange: HttpExchange) =>
-      handlePost(exchange, query => executeQuery(query, requestOptions(baseOptions, exchange))))
+      handlePost(exchange, query => answerQuery(query, requestOptions(baseOptions, exchange), wantsJson(exchange))))
     server.createContext("/render", (exchange: HttpExchange) =>
-      handlePost(exchange, report => renderReport(report, requestOptions(baseOptions, exchange))))
+      handlePost(exchange, report => textReply(renderReport(report, requestOptions(baseOptions, exchange)))))
     server.start()
     val boundPort = server.getAddress.getPort
     System.err.println(s"GOR test server listening on port $boundPort")
@@ -68,20 +97,46 @@ object GorTestServer {
     server
   }
 
+  private val TextContentType = "text/plain; charset=UTF-8"
+  private val JsonContentType = "application/json; charset=UTF-8"
+
+  private def wantsJson(exchange: HttpExchange): Boolean = {
+    val accept = exchange.getRequestHeaders.get("Accept")
+    accept != null && accept.stream().anyMatch(a => a.toLowerCase.contains("application/json"))
+  }
+
+  private def textReply(reply: (Int, String)): (Int, String, String) = (reply._1, reply._2, TextContentType)
+
+  private def answerQuery(query: String, opts: PipeOptions, json: Boolean): (Int, String, String) = {
+    val result = runQuery(query, opts)
+    val status = if (result.exitCode == 0) 200 else 500
+    if (json) {
+      val node = jsonMapper.createObjectNode()
+      node.put("exitCode", result.exitCode)
+      node.put("stdout", result.stdout)
+      node.put("stderr", result.stderr)
+      (status, jsonMapper.writeValueAsString(node), JsonContentType)
+    } else if (result.exitCode == 0) {
+      (status, result.stdout, TextContentType)
+    } else {
+      (status, result.error, TextContentType)
+    }
+  }
+
   /**
-    * Answers a POST with the status and body `handler` returns for its request body. Every request gets an
-    * answer: a handler that throws is answered with 500 and the error, as a request that closes without one
-    * reads to a client like a server that went away.
+    * Answers a POST with the status, body and content type `handler` returns for its request body. Every
+    * request gets an answer: a handler that throws is answered with 500 and the error, as a request that
+    * closes without one reads to a client like a server that went away.
     */
-  private[process] def handlePost(exchange: HttpExchange, handler: String => (Int, String)): Unit = {
+  private[process] def handlePost(exchange: HttpExchange, handler: String => (Int, String, String)): Unit = {
     try {
       if (exchange.getRequestMethod.equalsIgnoreCase("POST")) {
         val request = new String(exchange.getRequestBody.readAllBytes(), "UTF-8").trim
-        val (status, body) =
+        val (status, body, contentType) =
           try handler(request)
-          catch { case ex: Throwable => errorReply("Request", ex) }
+          catch { case ex: Throwable => textReply(errorReply("Request", ex)) }
         val bytes = body.getBytes("UTF-8")
-        exchange.getResponseHeaders.set("Content-Type", "text/plain; charset=UTF-8")
+        exchange.getResponseHeaders.set("Content-Type", contentType)
         val responseLength = if (bytes.length == 0) -1L else bytes.length.toLong
         exchange.sendResponseHeaders(status, responseLength)
         if (bytes.length > 0) {
@@ -149,16 +204,95 @@ object GorTestServer {
     }
   }
 
-  private def executeQuery(query: String, opts: PipeOptions): (Int, String) = {
+  /**
+    * Runs a query as gorpipe would, and keeps what gorpipe would have written to stderr: all that
+    * is written to System.err while it runs, and what logback's console appenders write to the
+    * process's stderr past System.err (with jansi, as gorpipe's console log does). That is where
+    * gorpipe's console log and the error of a failed query go. Queries run one at a time (the
+    * server has a single thread), so the capture holds only this query's output.
+    */
+  private[process] def runQuery(query: String, opts: PipeOptions): QueryResult = {
     opts.query = PipeOptions.cleanUpQueryAndSplit(query).mkString(";")
 
     val out = new ByteArrayOutputStream()
-    val engine = new CLIGorExecutionEngine(opts, null, null, out)
+    val err = new ByteArrayOutputStream()
+    val originalErr = System.err
+    val teeErr = new PrintStream(new TeeOutputStream(originalErr, err), true, StandardCharsets.UTF_8)
+    var failure: Option[Throwable] = None
+    val stopMirroring = mirrorConsoleAppenders(err)
+    System.setErr(teeErr)
     try {
-      engine.execute()
-      (200, out.toString("UTF-8"))
-    } catch {
-      case ex: Throwable => errorReply("Query", ex)
+      val engine = new CLIGorExecutionEngine(opts, null, null, out)
+      try {
+        engine.execute()
+      } catch {
+        // Reported as GorPipe.main reports them
+        case ge: GorException =>
+          failure = Some(ge)
+          consoleLogger.error(ExceptionUtilities.gorExceptionToString(ge))
+        case ex: Throwable =>
+          failure = Some(ex)
+          consoleLogger.error("Unexpected error, please report if you see this.\n" + ex.getMessage, ex)
+      }
+    } finally {
+      teeErr.flush()
+      System.setErr(originalErr)
+      stopMirroring()
     }
+    val stdout = out.toString(StandardCharsets.UTF_8)
+    val stderr = err.toString(StandardCharsets.UTF_8)
+    failure match {
+      case Some(ex) => QueryResult(FailedQueryExitCode, stdout, stderr, errorReply("Query", ex)._2)
+      case None => QueryResult(0, stdout, stderr)
+    }
+  }
+
+  /**
+    * Also writes to `capture` what each logback console appender writes to stderr without going
+    * through System.err, until the returned function is called. An appender whose stream is
+    * logback's System.err delegate is left out, as the System.err capture already has its output.
+    */
+  private def mirrorConsoleAppenders(capture: OutputStream): () => Unit = {
+    LoggerFactory.getILoggerFactory match {
+      case context: LoggerContext =>
+        val mirrors = for {
+          logger <- context.getLoggerList.asScala.toList
+          appender <- logger.iteratorForAppenders().asScala.toList
+          console <- appender match {
+            case c: ConsoleAppender[ILoggingEvent @unchecked] if c.isStarted &&
+              c.getTarget == ConsoleTarget.SystemErr.getName &&
+              (c.getOutputStream ne ConsoleTarget.SystemErr.getStream) => Some(c)
+            case _ => None
+          }
+        } yield {
+          val mirror = new MirrorAppender(console.getEncoder, capture)
+          mirror.setContext(context)
+          mirror.setName("gor-test-server-mirror-" + console.getName)
+          mirror.start()
+          logger.addAppender(mirror)
+          (logger, mirror)
+        }
+        () => mirrors.foreach { case (logger, mirror) =>
+          logger.detachAppender(mirror)
+          mirror.stop()
+        }
+      case _ => () => ()
+    }
+  }
+
+  /** Encodes events with another appender's encoder and writes them to `out`. */
+  private class MirrorAppender(encoder: Encoder[ILoggingEvent], out: OutputStream)
+    extends AppenderBase[ILoggingEvent] {
+    override def append(event: ILoggingEvent): Unit = out.write(encoder.encode(event))
+  }
+
+  /** Writes to both streams. */
+  private class TeeOutputStream(first: OutputStream, second: OutputStream) extends OutputStream {
+    override def write(b: Int): Unit = { first.write(b); second.write(b) }
+    override def write(b: Array[Byte], off: Int, len: Int): Unit = {
+      first.write(b, off, len)
+      second.write(b, off, len)
+    }
+    override def flush(): Unit = { first.flush(); second.flush() }
   }
 }
