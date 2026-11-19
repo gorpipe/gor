@@ -47,14 +47,26 @@ public class ReportCommand extends RenderOptions implements  Runnable{
                     new String[] {this.input});
             CLISessionFactory sessionFactory = new CLISessionFactory(options, "");
             GorSession session = sessionFactory.create();
-            String query = CommandParseUtilities.cleanupQuery(session.getSystemContext().getReportBuilder().parse(this.input));
-            renderQuery(session, query, this.pretty);
+            System.out.println(renderReport(session, this.input, this.pretty));
         } else {
             System.err.println("Input is not a yml report.");
         }
     }
 
+    /**
+     * Renders a yml report, e.g. {@code path/report.yml(arg='x')}, to its final executable form: what
+     * {@code gor render report} prints, without the trailing newline.
+     */
+    public static String renderReport(GorSession session, String report, boolean pretty) {
+        String query = CommandParseUtilities.cleanupQuery(session.getSystemContext().getReportBuilder().parse(report));
+        return renderQueryText(session, query, pretty);
+    }
+
     static void renderQuery(GorSession session, String query, boolean pretty) {
+        System.out.println(renderQueryText(session, query, pretty));
+    }
+
+    private static String renderQueryText(GorSession session, String query, boolean pretty) {
         String[] commands = CommandParseUtilities.quoteSafeSplitAndTrim(query, ';');
         Map<String,String> defines = MacroUtilities.extractAliases(commands);
         commands = MacroUtilities.applyAliases(commands, defines);
@@ -64,7 +76,7 @@ public class ReportCommand extends RenderOptions implements  Runnable{
             Map<String, String> aliases = AnalysisUtilities.loadAliases(session.getProjectContext().getGorAliasFile(), session, "gor_aliases.txt");
             finalQuery = MacroUtilities.replaceAllAliases(finalQuery, aliases);
         }
-        System.out.println(pretty ? CommandParseUtilities.cleanupQueryWithFormat(finalQuery) :
-                CommandParseUtilities.cleanupQuery(finalQuery));
+        return pretty ? CommandParseUtilities.cleanupQueryWithFormat(finalQuery) :
+                CommandParseUtilities.cleanupQuery(finalQuery);
     }
 }

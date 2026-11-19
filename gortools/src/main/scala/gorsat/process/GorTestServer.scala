@@ -27,6 +27,8 @@ import java.io.ByteArrayOutputStream
 import java.net.InetSocketAddress
 import java.util.UUID
 import org.gorpipe.exceptions.{ExceptionUtilities, GorException}
+import org.gorpipe.gor.cli.render.ReportCommand
+import org.gorpipe.gor.util.DataUtil
 import org.slf4j.LoggerFactory
 
 object GorTestServer {
@@ -34,35 +36,75 @@ object GorTestServer {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   def start(port: Int, baseOptions: PipeOptions): Unit = {
-    val server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0)
-
-    server.createContext("/query", (exchange: HttpExchange) => {
-      try {
-        if (exchange.getRequestMethod.equalsIgnoreCase("POST")) {
-          val query = new String(exchange.getRequestBody.readAllBytes(), "UTF-8").trim
-          val (status, body) = executeQuery(query, baseOptions)
-          val bytes = body.getBytes("UTF-8")
-          exchange.getResponseHeaders.set("Content-Type", "text/plain; charset=UTF-8")
-          val responseLength = if (bytes.length == 0) -1L else bytes.length.toLong
-          exchange.sendResponseHeaders(status, responseLength)
-          if (bytes.length > 0) {
-            val os = exchange.getResponseBody
-            os.write(bytes)
-            os.close()
-          }
-        } else {
-          exchange.sendResponseHeaders(405, -1)
-        }
-      } finally {
-        exchange.close()
-      }
-    })
-
-    server.start()
-    System.err.println(s"GOR test server listening on port $port")
-    logger.info(s"GOR test server started on port $port")
-
+    create(port, baseOptions)
     Thread.currentThread().join()
+  }
+
+  /**
+    * Starts the server on 127.0.0.1:port (0 picks a free port) and returns it without blocking.
+    *
+    * POST /query runs a GOR query and answers with what gorpipe writes to stdout.
+    * POST /render renders a yml report, e.g. path/report.yml(arg='x'), and answers with what
+    * `gor render report` writes to stdout, so a client can skip starting a JVM per render.
+    */
+  def create(port: Int, baseOptions: PipeOptions): HttpServer = {
+    val server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0)
+    server.createContext("/query", (exchange: HttpExchange) =>
+      handlePost(exchange, query => executeQuery(query, baseOptions)))
+    server.createContext("/render", (exchange: HttpExchange) =>
+      handlePost(exchange, report => renderReport(report, baseOptions)))
+    server.start()
+    val boundPort = server.getAddress.getPort
+    System.err.println(s"GOR test server listening on port $boundPort")
+    logger.info(s"GOR test server started on port $boundPort")
+    server
+  }
+
+  private def handlePost(exchange: HttpExchange, handler: String => (Int, String)): Unit = {
+    try {
+      if (exchange.getRequestMethod.equalsIgnoreCase("POST")) {
+        val request = new String(exchange.getRequestBody.readAllBytes(), "UTF-8").trim
+        val (status, body) = handler(request)
+        val bytes = body.getBytes("UTF-8")
+        exchange.getResponseHeaders.set("Content-Type", "text/plain; charset=UTF-8")
+        val responseLength = if (bytes.length == 0) -1L else bytes.length.toLong
+        exchange.sendResponseHeaders(status, responseLength)
+        if (bytes.length > 0) {
+          val os = exchange.getResponseBody
+          os.write(bytes)
+          os.close()
+        }
+      } else {
+        exchange.sendResponseHeaders(405, -1)
+      }
+    } finally {
+      exchange.close()
+    }
+  }
+
+  private def renderReport(report: String, baseOptions: PipeOptions): (Int, String) = {
+    if (!DataUtil.isYml(report)) return (400, "Input is not a yml report.")
+    val opts = new PipeOptions()
+    opts.gorRoot = baseOptions.gorRoot
+    opts.configFile = baseOptions.configFile
+    opts.aliasFile = baseOptions.aliasFile
+    opts.cacheDir = baseOptions.cacheDir
+    val session = new CLISessionFactory(opts, "").create()
+    try {
+      // `gor render report` prints the rendered report with println
+      (200, ReportCommand.renderReport(session, report, false) + "\n")
+    } catch {
+      case ge: GorException =>
+        val msg = ExceptionUtilities.gorExceptionToString(ge)
+        logger.error("Render failed: {}", msg)
+        (500, msg)
+      case ex: Throwable =>
+        val msg = Option(ex.getMessage).getOrElse(ex.getClass.getName)
+        logger.error("Render failed: {}", msg, ex)
+        (500, msg)
+    } finally {
+      session.close()
+    }
   }
 
   private def executeQuery(query: String, baseOptions: PipeOptions): (Int, String) = {

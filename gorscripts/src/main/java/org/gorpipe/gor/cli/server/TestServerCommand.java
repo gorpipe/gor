@@ -35,7 +35,7 @@ import picocli.CommandLine;
 import java.io.File;
 
 @CommandLine.Command(name = "test-server",
-        description = "Start an HTTP server that accepts GOR queries via POST /query",
+        description = "Start an HTTP server that runs GOR queries via POST /query and renders yml reports via POST /render",
         header = "Start a GOR test server")
 public class TestServerCommand extends HelpOptions implements Runnable {
 
