@@ -20,6 +20,7 @@ import org.gorpipe.util.Strings;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class BaseScriptExecutionEngine {
@@ -115,8 +116,29 @@ public class BaseScriptExecutionEngine {
         }
     }
 
+    /**
+     * Get a cached value, or compute it and cache it.  Unlike {@code computeIfAbsent}, no map lock
+     * is held while computing: the computation can be slow (dictionary loads) and can run parallel
+     * streams on the ForkJoin common pool, which processBlocks also uses.  Holding the bin lock
+     * there let the pool workers block on it and starve the computation (ENGKNOW-4267).  Two
+     * threads may compute the same key; the first stored value wins.
+     */
+    private static String getOrCompute(Map<String,String> map, String key, Supplier<String> compute) {
+        var value = map.get(key);
+        if (value != null) {
+            return value;
+        }
+        value = compute.get();
+        if (value == null) {
+            // Like computeIfAbsent: nothing is cached for a null value.
+            return null;
+        }
+        var existing = map.putIfAbsent(key, value);
+        return existing != null ? existing : value;
+    }
+
     public String fileFingerPrint(String fileName, GorSession gorPipeSession) {
-        return singleFileSignatureMap.computeIfAbsent(fileName, (k) -> {
+        return getOrCompute(singleFileSignatureMap, fileName, () -> {
             if (fileName.startsWith("#gordict#")) {
                 return getGorDictSignature(gorPipeSession, fileName);
             } else {
@@ -167,9 +189,9 @@ public class BaseScriptExecutionEngine {
                 // if gor.gorpipe.sideeffects.force_run is sett.
                 fileSignature = StringUtilities.createMD5(System.nanoTime() + fileListKey + signatureKey);
             } else {
-                fileSignature = fileSignatureMap.computeIfAbsent(
+                fileSignature = getOrCompute(fileSignatureMap,
                         fileListKey + signatureKey,
-                        (k) -> StringUtilities.createMD5(
+                        () -> StringUtilities.createMD5(
                                 usedFiles.stream().map(x -> fileFingerPrint(x, session)).collect(Collectors.joining(" ")) + signatureKey));
             }
         }

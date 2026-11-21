@@ -355,7 +355,10 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
             List<T> newRawLines =  new ArrayList<>();
             if (table.getFileReader().exists(table.getPath())) {
                 try (BufferedReader br = table.getFileReader().getReader(table.getPath())) {
-                  br.lines().parallel()
+                  // Sequential on purpose: callers can hold locks (synchronized loadLinesAndUpdateIndices,
+                  // signature map locks) while loading, and a parallel stream here waits on ForkJoin
+                  // common-pool workers that may be blocked on those same locks (ENGKNOW-4267).
+                  br.lines()
                         .map(l -> {
                             String line = l;
                             if (!line.isEmpty() && !line.startsWith("#")) {
@@ -364,7 +367,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
                             return null;
                         })
                         .filter(e -> e != null)
-                        .forEachOrdered(e -> newRawLines.add(e));
+                        .forEachOrdered(newRawLines::add);
                 }
             }
             return newRawLines;
