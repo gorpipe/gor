@@ -24,6 +24,7 @@ package gorsat.Commands;
 
 import gorsat.Analysis.SortGenome;
 import gorsat.Utilities.IteratorUtilities;
+import gorsat.liftover.AlleleFixConfig;
 import gorsat.liftover.ContigPolicy;
 import gorsat.liftover.FileChainSource;
 import gorsat.liftover.LiftoverArgs;
@@ -45,7 +46,8 @@ import java.util.Set;
 /**
  * LIFTOVER: moves rows to their lifted location on the target assembly and sorts the result. Every mode (-snp, -var,
  * -seg, -bam, -all) and nested-query chains run on the same engine as LIFTOVER_ANNOTATE (ENGKNOW-4117, N17).
- * -var -aligned adds the aligned extent of each row (ENGKNOW-4207).
+ * -var -aligned adds the aligned extent of each row (ENGKNOW-4207). -var -haplotype -srcseq -tgtseq rewrites the alleles
+ * of an indel next to a build difference as BCFtools +liftover does and adds the allele fix of each row (ENGKNOW-4224).
  */
 public class Liftover extends CommandInfo {
 
@@ -57,8 +59,8 @@ public class Liftover extends CommandInfo {
 
     public Liftover() {
         super("LIFTOVER",
-                new CommandArguments("-snp -seg -var -bam -all -aligned -nogapfill",
-                        "-ref -alt -build -mapped -passthrough -failon -tolerance",
+                new CommandArguments("-snp -seg -var -bam -all -aligned -nogapfill -haplotype",
+                        "-ref -alt -build -mapped -passthrough -failon -tolerance -srcseq -tgtseq",
                         1, 1, false),
                 new CommandOptions(true, false, false, true, true, false),
                 false);
@@ -119,6 +121,7 @@ public class Liftover extends CommandInfo {
             throw new GorParsingException("-aligned is only valid with -var", "-aligned", "");
         }
         boolean fillGaps = !CommandParseUtilities.hasOption(args, "-nogapfill");
+        AlleleFixConfig fix = alleleFix(context, args, mode, all);
 
         // -mapped, -passthrough, -failon and -tolerance parse as in LIFTOVER_ANNOTATE, and any of them gives the
         // full statuses
@@ -150,6 +153,9 @@ public class Liftover extends CommandInfo {
             names.add(build + "_alignedLeft");
             names.add(build + "_alignedRight");
         }
+        if (fix != null) {
+            names.add(build + "_alleleFix");
+        }
         if (all) {
             names.add(build + "_score");
         }
@@ -170,6 +176,9 @@ public class Liftover extends CommandInfo {
             types.add("I");
             types.add("I");
         }
+        if (fix != null) {
+            types.add("S");
+        }
         if (all) {
             types.add("D");
         }
@@ -187,13 +196,58 @@ public class Liftover extends CommandInfo {
         LiftoverRelocateAnalysis relocate = new LiftoverRelocateAnalysis(mode, all, cols,
                 new RowHeader(names.toArray(new String[0]), types.toArray(new String[0])),
                 () -> FileChainSource.cached(resolved, OverlapPolicy.BEST, fillGaps, context), fullStatus, policy,
-                failOn, tolerance, aligned);
+                failOn, tolerance, aligned, fix);
         relocate.setContext(context);
 
         SortGenome sort = new SortGenome(outHeader, context.getSession(),
                 Sort.parseSortColumns(new String[0], false, outHeader), 1);
         return new CommandParsingResult(relocate.$bar(sort), outHeader,
                 resolved.usedFiles().toArray(new String[0]), null);
+    }
+
+    /**
+     * -haplotype with its two reference sequences, -srcseq (the input's build) and -tgtseq (the chain's target build),
+     * or null without it. Both are required, and only with -var and without -all: the target is never taken from the
+     * project's default build, which may be either one.
+     */
+    private static AlleleFixConfig alleleFix(GorContext context, String[] args, RelocateMode mode, boolean all) {
+        LiftoverArgs.rejectRepeatedOptions(args, "-srcseq", "-tgtseq");
+        boolean haplotype = CommandParseUtilities.hasOption(args, "-haplotype");
+        boolean src = CommandParseUtilities.hasOption(args, "-srcseq");
+        boolean tgt = CommandParseUtilities.hasOption(args, "-tgtseq");
+        if (!haplotype) {
+            if (src || tgt) {
+                String option = src ? "-srcseq" : "-tgtseq";
+                throw new GorParsingException(option + " is only valid with -haplotype", option, "");
+            }
+            return null;
+        }
+        if (mode != RelocateMode.VAR) {
+            throw new GorParsingException("-haplotype is only valid with -var", "-haplotype", "");
+        }
+        if (all) {
+            throw new GorParsingException("-haplotype cannot be combined with -all", "-haplotype", "");
+        }
+        if (!src || !tgt) {
+            throw new GorParsingException("-haplotype requires -srcseq and -tgtseq, the source and target reference "
+                    + "sequences", "-haplotype", "");
+        }
+        String srcPath = referencePath(context, args, "-srcseq");
+        String tgtPath = referencePath(context, args, "-tgtseq");
+        return new AlleleFixConfig(() -> context.getSession().getProjectContext().createRefSeq(srcPath),
+                () -> context.getSession().getProjectContext().createRefSeq(tgtPath));
+    }
+
+    /**
+     * The reference sequence of option, which must exist: a missing build reads as all 'N', which would silently give
+     * every row ref_mismatch (or nothing to rewrite against).
+     */
+    private static String referencePath(GorContext context, String[] args, String option) {
+        String path = CommandParseUtilities.stringValueOfOption(args, option);
+        if (!context.getSession().getProjectContext().getFileReader().exists(path)) {
+            throw new GorParsingException(option + " reference sequence " + path + " does not exist", option, path);
+        }
+        return path;
     }
 
     private static int bamColumn(String[] inCols, String name, boolean required) {
