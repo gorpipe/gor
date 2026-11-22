@@ -119,23 +119,31 @@ public class BaseScriptExecutionEngine {
 
     /** A signature, computed or being computed by {@code owner}. */
     private static final class Signature {
-        final Thread owner = Thread.currentThread();
+        /** The computing thread; cleared when done so cached signatures do not keep it reachable. */
+        private volatile Thread owner = Thread.currentThread();
         private final CountDownLatch done = new CountDownLatch(1);
         private String value;
-        private boolean failed;
+        private boolean cached;
 
+        /** Publish the computed value to waiting threads. */
         void complete(String value) {
             this.value = value;
+            cached = true;
+            finish();
+        }
+
+        /** No value is cached (the computation failed or returned null); waiting threads retry. */
+        void abandon() {
+            finish();
+        }
+
+        private void finish() {
+            owner = null;
             done.countDown();
         }
 
-        void fail() {
-            failed = true;
-            done.countDown();
-        }
-
-        boolean isDone() {
-            return done.getCount() == 0;
+        boolean isComputing() {
+            return owner == Thread.currentThread();
         }
 
         /**
@@ -144,7 +152,7 @@ public class BaseScriptExecutionEngine {
          * pool throws RejectedExecutionException past 256 spares.  Like a thread blocked on a lock,
          * the wait is not interruptible; an interrupt is kept for the caller.
          *
-         * @return false if the computation failed
+         * @return false if no value was cached
          */
         boolean await() {
             boolean interrupted = false;
@@ -159,7 +167,7 @@ public class BaseScriptExecutionEngine {
             if (interrupted) {
                 Thread.currentThread().interrupt();
             }
-            return !failed;
+            return cached;
         }
     }
 
@@ -174,8 +182,9 @@ public class BaseScriptExecutionEngine {
      * value; other threads asking for the same key wait for it rather than repeating the work.
      * Waiting is safe because computing a signature never waits on pool tasks (dictionary loads
      * are sequential, see DictionaryEntries.loadLines).  If the computing thread asks for its own
-     * key again, it computes it again without waiting on itself.  If the computation fails, the key
-     * is unregistered and waiting threads try again themselves, as with computeIfAbsent.
+     * key again, it computes it again without waiting on itself.  If the computation fails or
+     * returns null, nothing is cached and waiting threads compute it themselves, as with
+     * computeIfAbsent.
      */
     private static String getOrCompute(Map<String,Signature> map, String key, Supplier<String> compute) {
         while (true) {
@@ -187,13 +196,13 @@ public class BaseScriptExecutionEngine {
                     return computeSignature(map, key, mine, compute);
                 }
             }
-            if (signature.owner == Thread.currentThread() && !signature.isDone()) {
+            if (signature.isComputing()) {
                 return compute.get();
             }
             if (signature.await()) {
                 return signature.value;
             }
-            // The computing thread failed and unregistered the key; try again.
+            // Nothing was cached and the key was unregistered; try again.
         }
     }
 
@@ -203,14 +212,15 @@ public class BaseScriptExecutionEngine {
             value = compute.get();
         } catch (Throwable e) {
             map.remove(key, mine);
-            mine.fail();
+            mine.abandon();
             throw e;
         }
         if (value == null) {
-            // Like computeIfAbsent: nothing is cached for a null value.
             map.remove(key, mine);
+            mine.abandon();
+        } else {
+            mine.complete(value);
         }
-        mine.complete(value);
         return value;
     }
 

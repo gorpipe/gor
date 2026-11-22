@@ -355,9 +355,12 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
             List<T> newRawLines =  new ArrayList<>();
             if (table.getFileReader().exists(table.getPath())) {
                 try (BufferedReader br = table.getFileReader().getReader(table.getPath())) {
-                  // Sequential on purpose: callers can hold locks (synchronized loadLinesAndUpdateIndices,
-                  // signature map locks) while loading, and a parallel stream here waits on ForkJoin
-                  // common-pool workers that may be blocked on those same locks (ENGKNOW-4267).
+                  // Sequential on purpose (ENGKNOW-4267); do not make this parallel.  Callers wait on
+                  // this load while other threads wait on them: synchronized loadLinesAndUpdateIndices,
+                  // and the per-key signature dedupe in BaseScriptExecutionEngine.getOrCompute, which
+                  // is only deadlock-free because computing a signature never waits on ForkJoin tasks.
+                  // A parallel stream here lets a waiting pool worker run other creates' tasks, which
+                  // can then wait on a signature this worker is computing.
                   br.lines()
                         .map(l -> {
                             String line = l;

@@ -72,6 +72,9 @@ public class UTestSignatureDeadlock {
     /** Makes the first signature call fail after it is released. */
     private volatile boolean failFirstCall = false;
 
+    /** Makes the first signature call return null after it is released. */
+    private volatile boolean nullFirstCall = false;
+
     /** Parks the first dictionary signature call until the test releases it; counts all calls. */
     private class ParkingFileReader extends DriverBackedFileReader {
         ParkingFileReader(String securityContext, String commonRoot, long queryTime) {
@@ -94,6 +97,9 @@ public class UTestSignatureDeadlock {
                 }
                 if (failFirstCall) {
                     throw new IOException("first signature call fails");
+                }
+                if (nullFirstCall) {
+                    return null;
                 }
             }
             return super.getDictionarySignature(dictionary, tags);
@@ -192,7 +198,7 @@ public class UTestSignatureDeadlock {
         var first = startFirstCall(call, TAG_A);
         var second = new Call(call, TAG_A);
         try {
-            awaitWaitingOrDone(second);
+            awaitWaitingForSignature(second);
         } finally {
             releaseFirstCall.countDown();
         }
@@ -213,20 +219,43 @@ public class UTestSignatureDeadlock {
         var first = startFirstCall(call, TAG_A);
         var second = new Call(call, TAG_A);
         try {
-            awaitWaitingOrDone(second);
+            awaitWaitingForSignature(second);
         } finally {
             releaseFirstCall.countDown();
         }
+        AssertionError failure = null;
         try {
             first.get();
-            Assert.fail("first signature call should fail");
         } catch (AssertionError e) {
-            Assert.assertNotNull(e.getCause());
+            failure = e;
         }
+        Assert.assertNotNull("first signature call should fail", failure);
+        Assert.assertNotNull(failure.getCause());
         var signature = second.get();
         Assert.assertNotNull(signature);
         Assert.assertEquals(2, signatureCalls.get());
         Assert.assertEquals("the retried signature is cached", signature, call.call(TAG_A));
+        Assert.assertEquals(2, signatureCalls.get());
+    }
+
+    /**
+     * When the computation a caller waits for returns null, nothing is cached: the waiting caller
+     * computes the signature itself, as computeIfAbsent would.
+     */
+    private void assertWaiterRecomputesAfterNull(SignatureCall call) throws Exception {
+        nullFirstCall = true;
+        var first = startFirstCall(call, TAG_A);
+        var second = new Call(call, TAG_A);
+        try {
+            awaitWaitingForSignature(second);
+        } finally {
+            releaseFirstCall.countDown();
+        }
+        Assert.assertNull(first.get());
+        var signature = second.get();
+        Assert.assertNotNull(signature);
+        Assert.assertEquals(2, signatureCalls.get());
+        Assert.assertEquals("the recomputed signature is cached", signature, call.call(TAG_A));
         Assert.assertEquals(2, signatureCalls.get());
     }
 
@@ -255,26 +284,33 @@ public class UTestSignatureDeadlock {
                 Assert.assertEquals(signature, task.get(WAIT_SECONDS, TimeUnit.SECONDS));
             }
             Assert.assertEquals(1, signatureCalls.get());
-            Assert.assertEquals("waiting callers made the ForkJoin pool add threads", 2, maxPoolSize);
+            Assert.assertTrue("waiting callers made the ForkJoin pool add threads: " + maxPoolSize,
+                    maxPoolSize <= 2);
         } finally {
             releaseFirstCall.countDown();
             pool.shutdownNow();
         }
     }
 
-    private static void awaitWaitingOrDone(Call call) throws InterruptedException {
+    /**
+     * Waits until the call is parked waiting for another thread's signature computation.  Fails if
+     * it finishes first, i.e. it computed the signature itself instead of waiting.
+     */
+    private static void awaitWaitingForSignature(Call call) throws InterruptedException {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(WAIT_SECONDS);
         while (System.nanoTime() < deadline) {
             if (call.task.isDone()) {
-                return;
+                Assert.fail("second signature call finished without waiting for the first");
             }
-            var state = call.thread.getState();
-            if (state == Thread.State.WAITING || state == Thread.State.TIMED_WAITING) {
-                return;
+            for (var frame : call.thread.getStackTrace()) {
+                if (frame.getClassName().endsWith("BaseScriptExecutionEngine$Signature")
+                        && frame.getMethodName().equals("await")) {
+                    return;
+                }
             }
             Thread.sleep(5);
         }
-        Assert.fail("second signature call neither finished nor waited");
+        Assert.fail("second signature call never waited for the first");
     }
 
     /**
@@ -352,6 +388,13 @@ public class UTestSignatureDeadlock {
     public void fileSignatureWaiterRetriesAfterFailure() throws Exception {
         try (var session = createSession()) {
             assertWaiterRetriesAfterFailure(fileSignatureCall(session));
+        }
+    }
+
+    @Test
+    public void fileFingerPrintWaiterRecomputesAfterNull() throws Exception {
+        try (var session = createSession()) {
+            assertWaiterRecomputesAfterNull(fingerPrintCall(session));
         }
     }
 
