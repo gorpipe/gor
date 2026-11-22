@@ -20,6 +20,7 @@ import org.gorpipe.util.Strings;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -27,8 +28,8 @@ public class BaseScriptExecutionEngine {
 
     Map<String,ExecutionBlock> executionBlocks = new ConcurrentHashMap<>();
     Map<String,String> aliases = new ConcurrentHashMap<>();
-    Map<String,String> fileSignatureMap = new ConcurrentHashMap<>();
-    Map<String,String> singleFileSignatureMap = new ConcurrentHashMap<>();
+    Map<String,Signature> fileSignatureMap = new ConcurrentHashMap<>();
+    Map<String,Signature> singleFileSignatureMap = new ConcurrentHashMap<>();
     VirtualFileManager virtualFileManager = new VirtualFileManager();
 
     public List<String> getUsedFiles(String commandToExecute, GorSession session) {
@@ -116,25 +117,101 @@ public class BaseScriptExecutionEngine {
         }
     }
 
+    /** A signature, computed or being computed by {@code owner}. */
+    private static final class Signature {
+        final Thread owner = Thread.currentThread();
+        private final CountDownLatch done = new CountDownLatch(1);
+        private String value;
+        private boolean failed;
+
+        void complete(String value) {
+            this.value = value;
+            done.countDown();
+        }
+
+        void fail() {
+            failed = true;
+            done.countDown();
+        }
+
+        boolean isDone() {
+            return done.getCount() == 0;
+        }
+
+        /**
+         * Wait for the owner to finish, without ForkJoinPool.managedBlock (as CompletableFuture.join
+         * uses): a pool worker blocked that way makes the pool add a spare thread, and the common
+         * pool throws RejectedExecutionException past 256 spares.  Like a thread blocked on a lock,
+         * the wait is not interruptible; an interrupt is kept for the caller.
+         *
+         * @return false if the computation failed
+         */
+        boolean await() {
+            boolean interrupted = false;
+            while (true) {
+                try {
+                    done.await();
+                    break;
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                }
+            }
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+            return !failed;
+        }
+    }
+
     /**
      * Get a cached value, or compute it and cache it.  Unlike {@code computeIfAbsent}, no map lock
-     * is held while computing: the computation can be slow (dictionary loads) and can run parallel
-     * streams on the ForkJoin common pool, which processBlocks also uses.  Holding the bin lock
-     * there let the pool workers block on it and starve the computation (ENGKNOW-4267).  Two
-     * threads may compute the same key; the first stored value wins.
+     * is held while computing (ENGKNOW-4267).  processBlocks computes signatures in a parallel
+     * stream on the ForkJoin common pool, and a waiting pool worker runs other creates' tasks.
+     * With the bin lock held during a slow computation (a dictionary load), such a task could need
+     * that same lock ("Recursive update") or one held by another waiting worker (deadlock).
+     *
+     * <p>Only registering the key happens under the map lock.  The registering thread computes the
+     * value; other threads asking for the same key wait for it rather than repeating the work.
+     * Waiting is safe because computing a signature never waits on pool tasks (dictionary loads
+     * are sequential, see DictionaryEntries.loadLines).  If the computing thread asks for its own
+     * key again, it computes it again without waiting on itself.  If the computation fails, the key
+     * is unregistered and waiting threads try again themselves, as with computeIfAbsent.
      */
-    private static String getOrCompute(Map<String,String> map, String key, Supplier<String> compute) {
-        var value = map.get(key);
-        if (value != null) {
-            return value;
+    private static String getOrCompute(Map<String,Signature> map, String key, Supplier<String> compute) {
+        while (true) {
+            var signature = map.get(key);
+            if (signature == null) {
+                var mine = new Signature();
+                signature = map.putIfAbsent(key, mine);
+                if (signature == null) {
+                    return computeSignature(map, key, mine, compute);
+                }
+            }
+            if (signature.owner == Thread.currentThread() && !signature.isDone()) {
+                return compute.get();
+            }
+            if (signature.await()) {
+                return signature.value;
+            }
+            // The computing thread failed and unregistered the key; try again.
         }
-        value = compute.get();
+    }
+
+    private static String computeSignature(Map<String,Signature> map, String key, Signature mine, Supplier<String> compute) {
+        String value;
+        try {
+            value = compute.get();
+        } catch (Throwable e) {
+            map.remove(key, mine);
+            mine.fail();
+            throw e;
+        }
         if (value == null) {
             // Like computeIfAbsent: nothing is cached for a null value.
-            return null;
+            map.remove(key, mine);
         }
-        var existing = map.putIfAbsent(key, value);
-        return existing != null ? existing : value;
+        mine.complete(value);
+        return value;
     }
 
     public String fileFingerPrint(String fileName, GorSession gorPipeSession) {
