@@ -24,7 +24,9 @@ package gorsat;
 
 import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.clients.LocalFileCacheClient;
+import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.gor.util.DataUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,6 +36,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -196,8 +199,49 @@ public class UTestLocalFileCacheTest {
         var fin02 = client.lookupFile("fin02gerprint2");
         Assert.assertNull(fin02);
 
-        // Test that the file no longer exists
-        var fin02File = new File(workDir.getRoot(), "fin02gerprint2");
-        Assert.assertFalse(fin02File.exists());
+        // The temp file is left in place: it may be another writer's in-flight output (ENGKNOW-4296)
+        var fin02File = new File(workDir.getRoot(), "test2/test2temptempfile.gor");
+        Assert.assertTrue(fin02File.exists());
+        Assert.assertNull(client.lookupFile("fin02gerprint2"));
+    }
+
+    /**
+     * Two creates with the same query text share a fingerprint.  The first one writes its result to a temp file
+     * next to the final cache file (<fingerprint>.<random>.temptempfile.gorz).  When the second one looks up the
+     * fingerprint it must not find, nor delete, that in-flight temp file (or its .meta), otherwise the first
+     * writer's temp -> final move fails with NoSuchFileException (ENGKNOW-4296).
+     */
+    @Test
+    public void testLookupDoesNotDeleteInFlightTempFile() throws IOException {
+        String fingerPrint = "test123";
+        LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString());
+        String finalPath = client.tempLocation(fingerPrint, ".gorz");
+        File tempFile = new File(DataUtil.toTempTempFile(finalPath));
+        File tempMetaFile = new File(DataUtil.toFile(tempFile.getPath(), DataType.META));
+        FileUtils.writeStringToFile(tempFile, "in flight", Charset.defaultCharset());
+        FileUtils.writeStringToFile(tempMetaFile, "## in flight", Charset.defaultCharset());
+
+        Assert.assertNull("An in-flight temp file is not a cache hit", client.lookupFile(fingerPrint));
+        Assert.assertTrue("In-flight temp file must not be deleted", tempFile.exists());
+        Assert.assertTrue("In-flight temp meta file must not be deleted", tempMetaFile.exists());
+    }
+
+    /**
+     * A lookup that ran while another writer's temp file existed must not leave that temp file in the in-memory
+     * cache: once the writer moves it into place, the next lookup finds the final file (ENGKNOW-4296).
+     */
+    @Test
+    public void testLookupFindsFinalFileAfterInFlightTempFileIsMoved() throws IOException {
+        String fingerPrint = "test123";
+        LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString());
+        String finalPath = client.tempLocation(fingerPrint, ".gorz");
+        File tempFile = new File(DataUtil.toTempTempFile(finalPath));
+        FileUtils.writeStringToFile(tempFile, "in flight", Charset.defaultCharset());
+
+        Assert.assertNull(client.lookupFile(fingerPrint));
+
+        Files.move(tempFile.toPath(), Paths.get(finalPath));
+
+        Assert.assertEquals(finalPath, client.lookupFile(fingerPrint));
     }
 }
