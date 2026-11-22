@@ -240,11 +240,12 @@ public class Liftover extends CommandInfo {
 
     /**
      * The reference sequence of option, which must exist: a missing build reads as all 'N', which would silently give
-     * every row ref_mismatch (or nothing to rewrite against).
+     * every row ref_mismatch (or nothing to rewrite against). Checked through the unsecured reader, the one
+     * RefSeqFromChromSeq reads the build's files through.
      */
     private static String referencePath(GorContext context, String[] args, String option) {
         String path = CommandParseUtilities.stringValueOfOption(args, option);
-        if (!context.getSession().getProjectContext().getFileReader().exists(path)) {
+        if (!context.getSession().getProjectContext().getFileReader().unsecure().exists(path)) {
             throw new GorParsingException(option + " reference sequence " + path + " does not exist", option, path);
         }
         return path;
