@@ -88,31 +88,47 @@ public class UTestScriptDuplicateCreates {
         }
     }
 
-    private GorContext createContext() throws IOException {
-        workDir.newFolder("result_cache");
-        String root = workDir.getRoot().getAbsolutePath();
-        return new GenericSessionFactory(root, "result_cache").create().getGorContext();
+    /** What a script run sent to the query handlers, and the files its creates resolved to. */
+    private static class ScriptRun {
+        final int executedCommands;
+        final Map<String, String> createdFiles;
+
+        ScriptRun(int executedCommands, Map<String, String> createdFiles) {
+            this.executedCommands = executedCommands;
+            this.createdFiles = createdFiles;
+        }
+    }
+
+    /** Runs the script in a fresh project root and cache, recording the commands that reach the query handlers. */
+    private ScriptRun runScript(String[] commands) throws IOException {
+        File root = workDir.newFolder();
+        Assert.assertTrue(new File(root, "result_cache").mkdir());
+        GorContext context = new GenericSessionFactory(root.getAbsolutePath(), "result_cache").create().getGorContext();
+        RecordingQueryHandler handler = new RecordingQueryHandler(new GeneralQueryHandler(context, false));
+        RecordingQueryHandler localHandler = new RecordingQueryHandler(new GeneralQueryHandler(context, false));
+        ScriptExecutionEngine engine = new ScriptExecutionEngine(handler, localHandler, context);
+        engine.execute(commands, true, false, "");
+        return new ScriptRun(handler.createNames.size() + localHandler.createNames.size(), engine.getCreatedFiles());
+    }
+
+    /** Runs the script with gorpipe in a fresh project root, so no create is served from an earlier run's cache. */
+    private String runGorPipeFresh(String script) throws IOException {
+        return TestUtils.runGorPipe(script, workDir.newFolder().getAbsolutePath(), false, null);
     }
 
     @Test
     public void duplicateCreatesRunOnce() throws IOException {
-        GorContext context = createContext();
-        RecordingQueryHandler handler = new RecordingQueryHandler(new GeneralQueryHandler(context, false));
-        RecordingQueryHandler localHandler = new RecordingQueryHandler(new GeneralQueryHandler(context, false));
-        ScriptExecutionEngine engine = new ScriptExecutionEngine(handler, localHandler, context);
-
-        String[] commands = {
+        ScriptRun run = runScript(new String[] {
                 "create #a# = gorrows -p chr1:1-100",
                 "create #b# = gorrows -p chr1:1-100",
                 "create #c# = gorrows -p chr1:1-50",
                 "create #d# = gorrows -p chr1:1-100",
                 "gor [#a#] [#b#] [#c#] [#d#]"
-        };
-        engine.execute(commands, true, false, "");
+        });
 
-        Assert.assertEquals("Each distinct create runs once", 2, handler.createNames.size() + localHandler.createNames.size());
+        Assert.assertEquals("Each distinct create runs once", 2, run.executedCommands);
 
-        Map<String, String> created = engine.getCreatedFiles();
+        Map<String, String> created = run.createdFiles;
         String a = created.get("[#a#]");
         Assert.assertNotNull("Created files: " + created, a);
         Assert.assertEquals("Duplicate creates share the result file", a, created.get("[#b#]"));
@@ -121,33 +137,20 @@ public class UTestScriptDuplicateCreates {
         Assert.assertNotEquals(a, created.get("[#c#]"));
     }
 
-    /** Runs the script and returns how many commands reached the query handlers. */
-    private int countExecutedCommands(String[] commands) throws IOException {
-        File root = workDir.newFolder();
-        Assert.assertTrue(new File(root, "result_cache").mkdir());
-        GorContext context = new GenericSessionFactory(root.getAbsolutePath(), "result_cache").create().getGorContext();
-        RecordingQueryHandler handler = new RecordingQueryHandler(new GeneralQueryHandler(context, false));
-        RecordingQueryHandler localHandler = new RecordingQueryHandler(new GeneralQueryHandler(context, false));
-        new ScriptExecutionEngine(handler, localHandler, context).execute(commands, true, false, "");
-        return handler.createNames.size() + localHandler.createNames.size();
-    }
-
     /** pgor expands a create into split queries plus a dictionary gather query; duplicates share them. */
     @Test
     public void duplicatePgorCreatesRunOnce() throws IOException {
         String genes = new File("../tests/data/gor/genes.gorz").getCanonicalPath();
         String pgor = "pgor -split 5 " + genes + " | group chrom -count";
-        String[] single = {"create #a# = " + pgor, "gor [#a#]"};
-        String[] duplicates = {"create #a# = " + pgor, "create #b# = " + pgor, "gor [#a#] [#b#]"};
 
-        int singleCount = countExecutedCommands(single);
+        int singleCount = runScript(new String[] {"create #a# = " + pgor, "gor [#a#]"}).executedCommands;
         Assert.assertTrue("pgor should expand into several commands, got " + singleCount, singleCount > 1);
-        Assert.assertEquals(singleCount, countExecutedCommands(duplicates));
+        Assert.assertEquals(singleCount,
+                runScript(new String[] {"create #a# = " + pgor, "create #b# = " + pgor, "gor [#a#] [#b#]"}).executedCommands);
 
-        String root = workDir.getRoot().getAbsolutePath();
-        String once = TestUtils.runGorPipe("create #a# = " + pgor + "; gor [#a#] | group genome -sum -ic allCount", root, false, null);
-        String twice = TestUtils.runGorPipe("create #a# = " + pgor + "; create #b# = " + pgor
-                + "; gor [#a#] [#b#] | group genome -sum -ic allCount", root, false, null);
+        String once = runGorPipeFresh("create #a# = " + pgor + "; gor [#a#] | group genome -sum -ic allCount");
+        String twice = runGorPipeFresh("create #a# = " + pgor + "; create #b# = " + pgor
+                + "; gor [#a#] [#b#] | group genome -sum -ic allCount");
         long onceSum = Long.parseLong(once.split("\n")[1].split("\t")[3]);
         long twiceSum = Long.parseLong(twice.split("\n")[1].split("\t")[3]);
         Assert.assertTrue(once, onceSum > 0);
@@ -155,8 +158,7 @@ public class UTestScriptDuplicateCreates {
     }
 
     @Test
-    public void duplicateCreatesGiveSameResultAsDistinct() {
-        String root = workDir.getRoot().getAbsolutePath();
+    public void duplicateCreatesGiveSameResultAsDistinct() throws IOException {
         String duplicates = "create #a# = gorrows -p chr1:1-100; "
                 + "create #b# = gorrows -p chr1:1-100; "
                 + "create #c# = gorrows -p chr1:1-50; "
@@ -165,8 +167,8 @@ public class UTestScriptDuplicateCreates {
         String distinct = duplicates.replace("create #b# = gorrows -p chr1:1-100;", "create #b# = gorrows -p chr1:1-100 | top 1000;");
         Assert.assertNotEquals(duplicates, distinct);
 
-        String expected = TestUtils.runGorPipe(distinct, root, false, null);
+        String expected = runGorPipeFresh(distinct);
         Assert.assertTrue(expected, expected.contains("\t247\n")); // 99 + 99 + 49 rows
-        Assert.assertEquals(expected, TestUtils.runGorPipe(duplicates, root, false, null));
+        Assert.assertEquals(expected, runGorPipeFresh(duplicates));
     }
 }

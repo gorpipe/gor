@@ -234,7 +234,9 @@ public class LocalFileCacheClient implements FileCache {
         String storageFolder = getCacheFolderFromFileName(fingerprint, false);
 
         File dir = new File(storageFolder);
-        FileFilter fileFilter = new WildcardFileFilter(fingerprint + "*");
+        // Cache entries are <fingerprint>.<ext>.  Match the dot so FileSource atomic-write temp files
+        // (<fingerprint>-temp-<random>.<ext>, still being written) are not found (ENGKNOW-4296).
+        FileFilter fileFilter = new WildcardFileFilter(fingerprint + ".*");
         File[] files = dir.listFiles(fileFilter);
         String foundFile = null;
         int tempFiles = 0;

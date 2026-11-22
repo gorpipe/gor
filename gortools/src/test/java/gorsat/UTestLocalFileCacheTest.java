@@ -26,6 +26,7 @@ import org.apache.commons.io.FileUtils;
 import org.gorpipe.gor.clients.LocalFileCacheClient;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.junit.Assert;
 import org.junit.Before;
@@ -37,6 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -224,6 +226,26 @@ public class UTestLocalFileCacheTest {
         Assert.assertNull("An in-flight temp file is not a cache hit", client.lookupFile(fingerPrint));
         Assert.assertTrue("In-flight temp file must not be deleted", tempFile.exists());
         Assert.assertTrue("In-flight temp meta file must not be deleted", tempMetaFile.exists());
+    }
+
+    /**
+     * Files written in place (e.g. dictionary results) go through FileSource's atomic write, which writes to
+     * <fingerprint>-temp-<random>.gord and renames on close.  That partial file must not be a cache hit
+     * (ENGKNOW-4296).
+     */
+    @Test
+    public void testLookupIgnoresInFlightAtomicWriteTempFile() throws IOException {
+        String fingerPrint = "test123";
+        LocalFileCacheClient client = new LocalFileCacheClient(fileReader, workDir.getRoot().toPath().toString());
+        Path finalPath = Paths.get(client.tempLocation(fingerPrint, ".gord"));
+        Path atomicTemp = PathUtils.getTempFilePath(finalPath);
+        Assert.assertTrue(atomicTemp.getFileName().toString().startsWith(fingerPrint + "-temp-"));
+        FileUtils.writeStringToFile(atomicTemp.toFile(), "partial", Charset.defaultCharset());
+
+        Assert.assertNull("An in-flight atomic-write temp file is not a cache hit", client.lookupFile(fingerPrint));
+
+        Files.move(atomicTemp, finalPath);
+        Assert.assertEquals(finalPath.toString(), client.lookupFile(fingerPrint));
     }
 
     /**
