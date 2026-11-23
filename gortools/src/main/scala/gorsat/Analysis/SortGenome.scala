@@ -34,7 +34,7 @@ import org.gorpipe.gor.session.GorSession
 
 case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.SortInfo], div: Int = 1) extends Analysis {
   var lines = 0
-  var batchSize: Int = System.getProperty("gor.sort.batchSize", "2000000").toInt / div
+  var batchSize: Int = System.getProperty("gor.sort.batchSize", "500000").toInt / div
   var maxBufferSize: Int = batchSize * 100
   var bufferSize = 0
   private var alreadySorted = true

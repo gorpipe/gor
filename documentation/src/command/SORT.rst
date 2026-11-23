@@ -13,6 +13,8 @@ Sorting is often performed as a pipestep after a columnsort, since it is during 
 
 The SORT command can be memory intensive. Note that the larger the binsize used, the more memory the sort requires. Using **SORT** in a nor query will give an error if ``binsize`` input parameter is used.
 
+``SORT genome`` holds at most ``gor.sort.batchSize`` rows (default 500000), or 100 times that many characters, in memory and spills the rest to temporary files that it merges at the end.
+
 Usage
 =====
 
