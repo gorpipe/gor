@@ -1,17 +1,27 @@
 package org.gorpipe.gor.cli.git;
 
 import gorsat.TestUtils;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
 public class UTestGitCommandExec {
+
+    // Variables that make git use another repository than the one in the working directory. Set when the tests run
+    // under a git hook or "git rebase --exec", for example.
+    private static final List<String> REPO_ENV_VARS = List.of(
+            "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY");
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -129,6 +139,29 @@ public class UTestGitCommandExec {
         assertTrue(res.contains("hello.txt"));
     }
 
+    @Test
+    public void testRepoSetupIgnoresInheritedGitDir() throws Exception {
+        // A GIT_DIR inherited from the parent process once made the setup write user.name=Test into, and commit to,
+        // the checkout the tests ran in.
+        Path other = temp.newFolder().toPath();
+        exec(other, "git", "init");
+        Map<String, String> env = new HashMap<>(System.getenv());
+        env.put("GIT_DIR", other.resolve(".git").toString());
+
+        Path repo = initRepo(env);
+
+        assertEquals("", gitConfig(other, "user.name"));
+        assertEquals("Test", gitConfig(repo, "user.name"));
+    }
+
+    private static String gitConfig(Path repo, String key) throws IOException, InterruptedException {
+        Process process = new ProcessBuilder("git", "config", "--file", repo.resolve(".git/config").toString(), key)
+                .redirectErrorStream(true).start();
+        String value = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+        process.waitFor();
+        return value;
+    }
+
     // ==================== Helpers ====================
 
     private String runGit(String cmd) throws Exception {
@@ -140,10 +173,18 @@ public class UTestGitCommandExec {
     }
 
     private Path initRepo() throws IOException, InterruptedException {
+        // The gor git command under test runs git with this process's environment, so with an inherited GIT_DIR it
+        // would add and commit to that repository instead of the temp one.
+        Assume.assumeTrue("Inherited " + REPO_ENV_VARS + " would point the gor git command at another repository",
+                REPO_ENV_VARS.stream().noneMatch(v -> System.getenv(v) != null));
+        return initRepo(System.getenv());
+    }
+
+    private Path initRepo(Map<String, String> inheritedEnv) throws IOException, InterruptedException {
         Path dir = temp.newFolder().toPath();
-        exec(dir, "git", "init");
-        exec(dir, "git", "config", "user.email", "test@example.com");
-        exec(dir, "git", "config", "user.name", "Test");
+        exec(dir, inheritedEnv, "git", "init");
+        exec(dir, inheritedEnv, "git", "config", "user.email", "test@example.com");
+        exec(dir, inheritedEnv, "git", "config", "user.name", "Test");
         return dir;
     }
 
@@ -156,6 +197,25 @@ public class UTestGitCommandExec {
     }
 
     private void exec(Path dir, String... cmd) throws IOException, InterruptedException {
-        new ProcessBuilder(cmd).directory(dir.toFile()).start().waitFor();
+        exec(dir, System.getenv(), cmd);
+    }
+
+    /**
+     * Run a git setup command in dir only: inherited GIT_* variables are dropped, so it can't write to another
+     * repository, and a failure fails the test instead of being ignored.
+     */
+    private static void exec(Path dir, Map<String, String> inheritedEnv, String... cmd)
+            throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder(cmd).directory(dir.toFile()).redirectErrorStream(true);
+        Map<String, String> env = pb.environment();
+        env.clear();
+        env.putAll(inheritedEnv);
+        env.keySet().removeIf(k -> k.startsWith("GIT_"));
+        Process process = pb.start();
+        String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new IOException(String.join(" ", cmd) + " failed with exit code " + exitCode + ": " + output);
+        }
     }
 }
