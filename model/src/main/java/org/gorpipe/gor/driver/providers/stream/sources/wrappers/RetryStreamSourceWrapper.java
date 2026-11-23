@@ -71,22 +71,22 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
 
     @Override
     public InputStream open() {
-        return retry.perform("open", () -> wrapStream(super.open(), 0, null));
+        return retry.perform("open", () -> wrapStream(super.open(), 0, null, false));
     }
 
     @Override
     public InputStream open(long start) {
-        return retry.perform("open", () -> wrapStream(super.open(start), start, null));
+        return retry.perform("open", () -> wrapStream(super.open(start), start, null, false));
     }
 
     @Override
     public InputStream open(long start, long minLength) {
-        return retry.perform("open", () -> wrapStream(super.open(start, minLength), start, minLength));
+        return retry.perform("open", () -> wrapStream(super.open(start, minLength), start, minLength, false));
     }
 
     @Override
     public InputStream openClosable() {
-        return retry.perform("open", () -> wrapStream(super.openClosable(), 0, null));
+        return retry.perform("open", () -> wrapStream(super.openClosable(), 0, null, true));
     }
 
     @Override
@@ -154,8 +154,8 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
         return retry.perform("walk", super::walk);
     }
 
-    private InputStream wrapStream(InputStream open, long start, Long length) {
-        return new RetryInputStream(open, start, length);
+    private InputStream wrapStream(InputStream open, long start, Long length, boolean closesSource) {
+        return new RetryInputStream(open, start, length, closesSource);
     }
 
     /**
@@ -170,12 +170,42 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
         private IOException lastFailure;
         // Set when a reopen found the source replaced; every later read fails with it.
         private GorSourceChangedException changed;
+        // Opened with openClosable(): closing the stream closes the source. A reopen swaps in a stream that doesn't,
+        // so close() then closes the source itself.
+        private final boolean closesSource;
+        private boolean reopened;
 
-        protected RetryInputStream(InputStream in, long start, Long length) {
+        protected RetryInputStream(InputStream in, long start, Long length, boolean closesSource) {
             super(in);
             this.start = start;
             this.length = length;
+            this.closesSource = closesSource;
             this.openIdentity = RetryStreamSourceWrapper.super.getReadIdentity();
+        }
+
+        @Override
+        public int read() throws IOException {
+            // Through the retrying read, so single-byte reads are retried and checked too.
+            byte[] b = new byte[1];
+            int n = read(b, 0, 1);
+            return n <= 0 ? -1 : b[0] & 0xff;
+        }
+
+        @Override
+        public int available() throws IOException {
+            checkNotChanged();
+            return super.available();
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } finally {
+                if (closesSource && reopened) {
+                    RetryStreamSourceWrapper.super.close();
+                }
+            }
         }
 
         @Override
@@ -216,6 +246,7 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
             StreamUtils.tryClose(in);
             // Close the underlying source stream (to clear any cached state)
             RetryStreamSourceWrapper.super.close();
+            reopened = true;
 
             long offset = start + getPosition();
             // Need to open it using the outer super class open (and be careful NOT to wrap it again)

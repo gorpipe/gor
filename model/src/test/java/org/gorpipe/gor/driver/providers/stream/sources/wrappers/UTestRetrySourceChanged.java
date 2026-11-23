@@ -239,9 +239,50 @@ public class UTestRetrySourceChanged {
         }
     }
 
+    @Test
+    public void closableStreamStillClosesTheFileAfterAReopen() throws IOException {
+        String content = lines(0, 200);
+        Path p = write("dict.gord", content);
+
+        // openClosable() is what FileReader.getInputStream uses: closing the stream must release the file, also
+        // after a retry swapped the underlying stream.
+        var source = new StreamSourceWithStale(p, 3, () -> { });
+        try (InputStream in = wrap(source).openClosable()) {
+            Assert.assertEquals(content, readAll(in));
+        }
+        Assert.assertEquals(1, source.failures.get());
+        Assert.assertFalse("the reopened file must be closed with the stream", source.isRafOpen());
+    }
+
+    @Test
+    public void otherReadsAfterSourceChangedFailTheSameWay() throws IOException {
+        Path p = write("dict.gord", lines(0, 200));
+        var source = new StreamSourceWithStale(p, 3, () -> replace(p, lines(50, 200)));
+        try (InputStream in = wrap(source).open()) {
+            Assert.assertThrows(GorSourceChangedException.class, () -> readAll(in));
+            Assert.assertThrows(GorSourceChangedException.class, in::read);
+            Assert.assertThrows(GorSourceChangedException.class, in::available);
+        }
+    }
+
+    @Test
+    public void siblingStreamOnTheSameSourceGetsSourceChanged() throws IOException {
+        Path p = write("dict.gord", lines(0, 200));
+        var source = new StreamSourceWithStale(p, 3, () -> replace(p, lines(50, 200)));
+        var wrapped = wrap(source);
+        try (InputStream first = wrapped.open(); InputStream second = wrapped.open()) {
+            var buf = new byte[256];
+            Assert.assertEquals(256, second.read(buf, 0, buf.length));
+            // The first stream hits the replace and closes the shared file.
+            Assert.assertThrows(GorSourceChangedException.class, () -> readAll(first));
+            // The second stream was reading the same replaced file: same error, not a NullPointerException.
+            Assert.assertThrows(GorSourceChangedException.class, () -> second.read(buf, 0, buf.length));
+        }
+    }
+
     /**
-     * A real {@link FileSource} whose streams throw "Stale file handle" once, on the {@code failOnRead}th read call
-     * across all streams of this source, after running {@code beforeFailure} (typically: replace the file).
+     * A real {@link FileSource} whose streams throw "Stale file handle" on the given read calls (counted across all
+     * streams of this source), running {@code beforeFailure} (typically: replace the file) before the first.
      */
     public static class StreamSourceWithStale extends FileSource {
         private final Set<Integer> failOnReads;
@@ -259,6 +300,10 @@ public class UTestRetrySourceChanged {
             super(path);
             this.failOnReads = Set.of(failOnReads);
             this.beforeFailure = beforeFailure;
+        }
+
+        boolean isRafOpen() {
+            return raf != null;
         }
 
         @Override
