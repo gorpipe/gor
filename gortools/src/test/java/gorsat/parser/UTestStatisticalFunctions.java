@@ -23,6 +23,7 @@
 package gorsat.parser;
 
 import gorsat.TestUtils;
+import org.gorpipe.exceptions.GorDataException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -76,6 +77,38 @@ public class UTestStatisticalFunctions {
         TestUtils.assertCalculated("invStudent(0.5,10)",0.6998121397488263);
         TestUtils.assertCalculated("invStudent(0.95,6)",0.06537400041241631);
         TestUtils.assertCalculated("invStudent(0.975,100)",0.031416552967902044);
+    }
+
+    // Bounded: without the range check colt's quantile search never converges for a
+    // probability outside [0,1], so the query hangs instead of failing (ENGKNOW-3776).
+    @Test(timeout = 30_000)
+    public void testInvStudentRejectsProbabilityAboveOne() {
+        assertInvStudentRejected("invStudent(1.5,10)");
+    }
+
+    @Test(timeout = 30_000)
+    public void testInvStudentRejectsNegativeProbability() {
+        assertInvStudentRejected("invStudent(-0.5,10)");
+    }
+
+    @Test(timeout = 30_000)
+    public void testInvStudentRejectsSampleSizeBelowOne() {
+        assertInvStudentRejected("invStudent(0.5,0)");
+    }
+
+    @Test
+    public void testInvStudentKeepsBoundaryOutcome() {
+        // alpha = 1 already returned 0.0; the range check must not reject it.
+        TestUtils.assertCalculated("invStudent(1.0,10)", 0.0);
+    }
+
+    private static void assertInvStudentRejected(String expression) {
+        try {
+            TestUtils.runGorPipe("gorrow chr1,1 | calc X " + expression);
+            Assert.fail("expected " + expression + " to be rejected");
+        } catch (GorDataException expected) {
+            Assert.assertTrue(expected.getMessage(), expected.getMessage().contains("INVSTUDENT"));
+        }
     }
 
     @Test

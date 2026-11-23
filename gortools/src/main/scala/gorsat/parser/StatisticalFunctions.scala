@@ -26,6 +26,7 @@ import cern.jet.stat.Probability
 import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{dFun, iFun}
 import org.apache.commons.math3.distribution.ChiSquaredDistribution
+import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.util.GChiSquared2by2
 
 object StatisticalFunctions {
@@ -123,7 +124,25 @@ object StatisticalFunctions {
 
   def studentTInverse(ex1: dFun, ex2: dFun): dFun = {
     cvp => {
-      Probability.studentTInverse(ex1(cvp), ex2(cvp).toInt)
+      val alpha = ex1(cvp)
+      val size = ex2(cvp).toInt
+      // Probability.studentTInverse takes a two-tailed significance level and
+      // searches for the matching quantile. For alpha > 1 that search never
+      // converges, so the query hangs and takes the worker thread with it; a
+      // negative alpha or a sample size below 1 fails with an unhelpful error.
+      // Reject these inputs with a clear message instead.
+      // The boundaries are left alone deliberately: alpha = 1 returns 0.0 and
+      // alpha = 0 raises colt's own IllegalArgumentException, so rejecting either
+      // would change a query that already had a defined outcome.
+      if (alpha < 0.0 || alpha > 1.0) {
+        throw new GorDataException(
+          s"INVSTUDENT: the probability must be between 0 and 1, but was $alpha")
+      }
+      if (size < 1) {
+        throw new GorDataException(
+          s"INVSTUDENT: the sample size must be at least 1, but was $size")
+      }
+      Probability.studentTInverse(alpha, size)
     }
   }
 
