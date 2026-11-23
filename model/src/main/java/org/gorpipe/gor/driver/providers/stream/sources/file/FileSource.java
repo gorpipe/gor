@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.util.stream.Stream;
 
@@ -50,6 +51,8 @@ public class FileSource implements StreamSource {
     private final SourceReference sourceReference;
     private final Path filePath;
     protected RandomAccessFile raf;
+    private Object readIdentity;  // Identity of the file raf was opened on, see getReadIdentity().
+    private boolean readIdentityTaken;
     private final boolean useAtomicWrite = System.getProperty("gor.filereader.atomicwrite", "true").equalsIgnoreCase("true");;
     private Path atomicTempFilePath;  // Set when we should write to a temp file.
 
@@ -137,7 +140,41 @@ public class FileSource implements StreamSource {
             } catch (FileNotFoundException e) {
                 throw new GorResourceException("Input source does not exist:" + getPath().toString(), getPath().toString(), e);
             }
+            readIdentity = null;
+            readIdentityTaken = false;
         }
+    }
+
+    /**
+     * What a resumed read must still find at the path: the file key (device + inode) where the platform has one,
+     * since a replace by move gives a new inode while an in-place append does not. Without a file key, size and
+     * modification time. Null when the attributes can't be read.
+     */
+    static Object readIdentity(Path path) {
+        try {
+            var attrs = Files.readAttributes(path, BasicFileAttributes.class);
+            return attrs.fileKey() != null
+                    ? attrs.fileKey()
+                    : new SizeAndTime(attrs.size(), attrs.lastModifiedTime().toMillis());
+        } catch (IOException | UnsupportedOperationException e) {
+            return null;
+        }
+    }
+
+    record SizeAndTime(long size, long lastModified) {}
+
+    /**
+     * Taken on first call after the file is opened, so only readers that track it (the retry wrapper, right after it
+     * opens a stream) pay the stat. The stat is by path: a move between the open and the stat would record the new
+     * file, which only matters if that tiny window is also followed by a stale handle.
+     */
+    @Override
+    public Object getReadIdentity() {
+        if (raf != null && !readIdentityTaken) {
+            readIdentity = readIdentity(filePath);
+            readIdentityTaken = true;
+        }
+        return readIdentity;
     }
 
     private void ensureOpenForWrite(boolean hasSeek)  {
@@ -355,6 +392,8 @@ public class FileSource implements StreamSource {
                 throw GorResourceException.fromIOException(e, getPath()).retry();
             } finally {
                 raf = null;
+                readIdentity = null;
+                readIdentityTaken = false;
             }
         }
 
@@ -401,14 +440,26 @@ public class FileSource implements StreamSource {
             this.closable = closable;
         }
 
+        /**
+         * The source's file, shared by its streams. Null once the source is closed (e.g. by another stream's retry):
+         * an IOException then, which the retry wrapper handles, rather than a NullPointerException.
+         */
+        private RandomAccessFile openRaf() throws IOException {
+            var file = raf;
+            if (file == null) {
+                throw new IOException("Stream closed: " + filePath);
+            }
+            return file;
+        }
+
         @Override
         public int read() throws IOException {
-            return raf.read();
+            return openRaf().read();
         }
 
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
-            return raf.read(b, off, len);
+            return openRaf().read(b, off, len);
         }
 
         @Override
@@ -420,12 +471,14 @@ public class FileSource implements StreamSource {
 
         @Override
         public int available() throws IOException {
-            return (int) Math.min(raf.length() - raf.getFilePointer(), Integer.MAX_VALUE);
+            var file = openRaf();
+            return (int) Math.min(file.length() - file.getFilePointer(), Integer.MAX_VALUE);
         }
 
         @Override
         public long skip(long n) throws IOException {
-            raf.seek(raf.getFilePointer() + n);
+            var file = openRaf();
+            file.seek(file.getFilePointer() + n);
             return n;
         }
 
@@ -437,7 +490,7 @@ public class FileSource implements StreamSource {
         @Override
         public synchronized void mark(int readLimit) {
             try {
-                this.mark = raf.getFilePointer();
+                this.mark = openRaf().getFilePointer();
             } catch (IOException e) {
                 throw GorResourceException.fromIOException(e, getPath());
             }
@@ -445,12 +498,12 @@ public class FileSource implements StreamSource {
 
         @Override
         public synchronized void reset() throws IOException {
-            raf.seek(mark);
+            openRaf().seek(mark);
         }
 
         @Override
         public int read(byte[] b) throws IOException {
-            return raf.read(b);
+            return openRaf().read(b);
         }
 
         @Override
