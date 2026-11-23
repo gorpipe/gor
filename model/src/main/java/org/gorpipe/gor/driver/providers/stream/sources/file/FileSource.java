@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.util.stream.Stream;
 
@@ -50,6 +51,7 @@ public class FileSource implements StreamSource {
     private final SourceReference sourceReference;
     private final Path filePath;
     protected RandomAccessFile raf;
+    private Object readIdentity;  // Identity of the file raf was opened on, see getReadIdentity().
     private final boolean useAtomicWrite = System.getProperty("gor.filereader.atomicwrite", "true").equalsIgnoreCase("true");;
     private Path atomicTempFilePath;  // Set when we should write to a temp file.
 
@@ -132,12 +134,61 @@ public class FileSource implements StreamSource {
                 rafOpenedStackTrace = new Error();
             }
 
-            try {
-                raf = new RandomAccessFile(filePath.toFile(), "r");
-            } catch (FileNotFoundException e) {
-                throw new GorResourceException("Input source does not exist:" + getPath().toString(), getPath().toString(), e);
+            // The identity is taken by path, so a move between the stat and the open would record the wrong file.
+            // Stat on both sides: if they agree, the file opened is the one recorded.
+            Object before = readIdentity(filePath);
+            for (int attempt = 1; ; attempt++) {
+                try {
+                    raf = new RandomAccessFile(filePath.toFile(), "r");
+                } catch (FileNotFoundException e) {
+                    throw new GorResourceException("Input source does not exist:" + getPath().toString(), getPath().toString(), e);
+                }
+                Object after = readIdentity(filePath);
+                if (before == null || after == null) {
+                    readIdentity = null;
+                    break;
+                }
+                if (before.equals(after)) {
+                    readIdentity = after;
+                    break;
+                }
+                if (attempt == 3) {
+                    // Still moving: unknown, but not "same as anything", so a resume at an offset fails safe.
+                    readIdentity = new Object();
+                    break;
+                }
+                try {
+                    raf.close();
+                } catch (IOException e) {
+                    // Reopening anyway.
+                }
+                raf = null;
+                before = after;
             }
         }
+    }
+
+    /**
+     * What a resumed read must still find at the path: the file key (device + inode) where the platform has one,
+     * since a replace by move gives a new inode while an in-place append does not. Without a file key, size and
+     * modification time. Null when the attributes can't be read.
+     */
+    static Object readIdentity(Path path) {
+        try {
+            var attrs = Files.readAttributes(path, BasicFileAttributes.class);
+            return attrs.fileKey() != null
+                    ? attrs.fileKey()
+                    : new SizeAndTime(attrs.size(), attrs.lastModifiedTime().toMillis());
+        } catch (IOException | UnsupportedOperationException e) {
+            return null;
+        }
+    }
+
+    record SizeAndTime(long size, long lastModified) {}
+
+    @Override
+    public Object getReadIdentity() {
+        return readIdentity;
     }
 
     private void ensureOpenForWrite(boolean hasSeek)  {
@@ -355,6 +406,7 @@ public class FileSource implements StreamSource {
                 throw GorResourceException.fromIOException(e, getPath()).retry();
             } finally {
                 raf = null;
+                readIdentity = null;
             }
         }
 

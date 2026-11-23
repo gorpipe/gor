@@ -44,6 +44,11 @@ public class WrappedStreamSource extends WrappedDataSource implements StreamSour
     }
 
     @Override
+    public Object getReadIdentity() {
+        return getWrapped().getReadIdentity();
+    }
+
+    @Override
     public InputStream open()  {
         return getWrapped().open();
     }

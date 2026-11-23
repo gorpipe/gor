@@ -656,6 +656,16 @@ public class GorOptions {
     }
 
     public static Set<String> readTagsFromFile(GorSession session, String filename) throws IOException {
+        try {
+            return readTags(session, filename);
+        } catch (GorSourceChangedException e) {
+            // Replaced while we read it (ENGKNOW-4312): read the new file from the start, once.
+            log.info("Tag file {} changed during read, reading it again", filename);
+            return readTags(session, filename);
+        }
+    }
+
+    private static Set<String> readTags(GorSession session, String filename) throws IOException {
         final boolean isNorFile = filename.toLowerCase().endsWith("nor");
         final Set<String> set = new LinkedHashSet<>();
         try (Stream<String> stream = session.getProjectContext().getFileReader().readFile(filename)) {

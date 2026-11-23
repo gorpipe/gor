@@ -23,11 +23,14 @@
 package org.gorpipe.gor.driver.providers.stream.sources.wrappers;
 
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSourceChangedException;
 import org.gorpipe.gor.driver.adapters.PositionAwareInputStream;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSourceMetadata;
 import org.gorpipe.gor.driver.utils.RetryHandlerBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +56,11 @@ import java.util.stream.Stream;
  * Created by villi on 29/08/15.
  */
 public class RetryStreamSourceWrapper extends WrappedStreamSource {
+
+    private static final Logger log = LoggerFactory.getLogger(RetryStreamSourceWrapper.class);
+
+    /** Set to false to resume a read into a replaced source (logged), as before ENGKNOW-4312. */
+    public static final String FAIL_ON_SOURCE_CHANGED_PROPERTY = "gor.retry.fail.on.source.changed";
 
     private final RetryHandlerBase retry;
 
@@ -157,19 +165,27 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
         // Holds the initial start/length values.
         private final long start;
         private final Long length;
+        // Identity of what the stream was opened on (null: not tracked by the source).
+        private Object openIdentity;
+        private IOException lastFailure;
+        // Set when a reopen found the source replaced; every later read fails with it.
+        private GorSourceChangedException changed;
 
         protected RetryInputStream(InputStream in, long start, Long length) {
             super(in);
             this.start = start;
             this.length = length;
+            this.openIdentity = RetryStreamSourceWrapper.super.getReadIdentity();
         }
 
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
+            checkNotChanged();
             return retry.perform("read", () -> {
                             try {
                                 return super.read(b, off, len);
                             } catch (IOException e) {
+                                lastFailure = e;
                                 throw GorResourceException.fromIOException(e, getPath()).retry();
                             }
                         }, this::reopen);
@@ -177,10 +193,12 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
 
         @Override
         public long skip(long n) throws IOException {
+            checkNotChanged();
             return retry.perform("skip", () -> {
                 try {
                     return super.skip(n);
                 } catch (IOException e) {
+                    lastFailure = e;
                     throw GorResourceException.fromIOException(e, getPath()).retry();
                 }
             }, this::reopen);
@@ -188,6 +206,10 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
 
         /**
          * NB: If reopening the stream fails - it is not retried.
+         * <p>
+         * Resuming at the offset reached is only correct when the path still names the object the stream was opened
+         * on. If it was replaced (ESTALE on NFS after a move over the file), the read fails with
+         * {@link GorSourceChangedException} instead of mixing the old prefix with the new content (ENGKNOW-4312).
          */
         private void reopen() {
             // Close the current stream
@@ -195,11 +217,35 @@ public class RetryStreamSourceWrapper extends WrappedStreamSource {
             // Close the underlying source stream (to clear any cached state)
             RetryStreamSourceWrapper.super.close();
 
+            long offset = start + getPosition();
             // Need to open it using the outer super class open (and be careful NOT to wrap it again)
             if (length == null) {
-                in = RetryStreamSourceWrapper.super.open(start + getPosition());
+                in = RetryStreamSourceWrapper.super.open(offset);
             } else {
-                in = RetryStreamSourceWrapper.super.open(start + getPosition(), length - getPosition());
+                in = RetryStreamSourceWrapper.super.open(offset, length - getPosition());
+            }
+
+            Object current = RetryStreamSourceWrapper.super.getReadIdentity();
+            if (offset > 0 && openIdentity != null && !openIdentity.equals(current)) {
+                String reason = current == null ? "identity unavailable after reopen" : "replaced";
+                if (Boolean.parseBoolean(System.getProperty(FAIL_ON_SOURCE_CHANGED_PROPERTY, "true"))) {
+                    log.warn("Source changed during read: {} offset={} ({}), not resuming", getPath(), offset, reason);
+                    // Leave the stream unusable: reading on would give the new content at the old offset.
+                    StreamUtils.tryClose(in);
+                    RetryStreamSourceWrapper.super.close();
+                    changed = new GorSourceChangedException(String.valueOf(getPath()), offset, lastFailure);
+                    throw changed;
+                }
+                log.warn("Source changed during read: {} offset={} ({}), resuming ({}=false)", getPath(), offset,
+                        reason, FAIL_ON_SOURCE_CHANGED_PROPERTY);
+            }
+            // Everything read from here on comes from what was just opened.
+            openIdentity = current;
+        }
+
+        private void checkNotChanged() {
+            if (changed != null) {
+                throw changed;
             }
         }
 

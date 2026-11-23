@@ -89,6 +89,17 @@ public interface StreamSource extends DataSource {
     StreamSourceMetadata getSourceMetadata();
 
     /**
+     * Identity of the object the source currently reads from, captured when it was opened for reading; compared
+     * with {@code equals}. A different value after a reopen means the path now names a different object (e.g. a
+     * file replaced by a move), so resuming a read at an offset would mix two objects.
+     *
+     * @return the identity, or null when the source does not track one (retries then resume without checking).
+     */
+    default Object getReadIdentity() {
+        return null;
+    }
+
+    /**
      * Copy between two stream sources.
      */
     default String copy(DataSource dest) {
