@@ -154,6 +154,33 @@ public class UTestGitCommandExec {
         assertEquals("Test", gitConfig(repo, "user.name"));
     }
 
+    @Test
+    public void testRepoSetupKeepsInheritedGitConfigGlobal() throws Exception {
+        // Runners and sandboxes set GIT_CONFIG_GLOBAL and friends to keep git away from the host's config (signing,
+        // hooks). Setup must keep them, like the gor git command under test does.
+        Path global = temp.newFile("gitconfig").toPath();
+        Files.writeString(global, "[init]\n\tdefaultBranch = from-global-config\n");
+        Map<String, String> env = new HashMap<>(System.getenv());
+        env.put("GIT_CONFIG_GLOBAL", global.toString());
+
+        Path repo = initRepo(env);
+
+        assertEquals("ref: refs/heads/from-global-config", Files.readString(repo.resolve(".git/HEAD")).trim());
+    }
+
+    @Test
+    public void testRepoSetupIgnoresInheritedGitConfig() throws Exception {
+        // git config writes to the file GIT_CONFIG names instead of the repository's config.
+        Path other = temp.newFile("other-config").toPath();
+        Map<String, String> env = new HashMap<>(System.getenv());
+        env.put("GIT_CONFIG", other.toString());
+
+        Path repo = initRepo(env);
+
+        assertEquals("", Files.readString(other));
+        assertEquals("Test", gitConfig(repo, "user.name"));
+    }
+
     private static String gitConfig(Path repo, String key) throws IOException, InterruptedException {
         Process process = new ProcessBuilder("git", "config", "--file", repo.resolve(".git/config").toString(), key)
                 .redirectErrorStream(true).start();
@@ -201,8 +228,9 @@ public class UTestGitCommandExec {
     }
 
     /**
-     * Run a git setup command in dir only: inherited GIT_* variables are dropped, so it can't write to another
-     * repository, and a failure fails the test instead of being ignored.
+     * Run a git setup command in dir only: inherited variables that point git at another repository or config file
+     * are dropped, so it can't write there, and a failure fails the test instead of being ignored. Other GIT_*
+     * variables (GIT_CONFIG_GLOBAL, GIT_CONFIG_NOSYSTEM, ...) are kept, as the gor git command under test keeps them.
      */
     private static void exec(Path dir, Map<String, String> inheritedEnv, String... cmd)
             throws IOException, InterruptedException {
@@ -210,7 +238,8 @@ public class UTestGitCommandExec {
         Map<String, String> env = pb.environment();
         env.clear();
         env.putAll(inheritedEnv);
-        env.keySet().removeIf(k -> k.startsWith("GIT_"));
+        REPO_ENV_VARS.forEach(env::remove);
+        env.remove("GIT_CONFIG");
         Process process = pb.start();
         String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         int exitCode = process.waitFor();
