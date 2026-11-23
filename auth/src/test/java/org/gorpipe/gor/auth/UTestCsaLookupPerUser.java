@@ -13,7 +13,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.SocketTimeoutException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -247,14 +249,100 @@ public class UTestCsaLookupPerUser {
 
     @Test
     public void userUnknownToCsaIsCachedForCacheLifetime() throws Exception {
-        // CSA answering "no such user" is an answer, not a failure: don't ask again every minute.
-        doThrow(new IOException("Not Found")).when(csa).getUserByEmail(EMAIL);
+        // CSA answering "no such user" is an answer, not a failure: don't ask again every minute. A 404 reaches us
+        // as HttpURLConnection's FileNotFoundException, wrapped by HttpJsonServiceClient.readInput.
+        doThrow(new IOException("Not Found: ", new FileNotFoundException("http://csa/api/users/by_email/" + EMAIL)))
+                .when(csa).getUserByEmail(EMAIL);
 
         GorAuthInfo cached = new PlatformJWTAuth(config, csa)
                 .getCsaAuthInfo(new PlatformGorAuthCache(), PROJECT, EMAIL, "", List.of("prj:test-proj:query"));
 
         Assert.assertEquals(5, cached.getProjectId());
         Assert.assertEquals(Long.MAX_VALUE, cached.getExpiration());
+    }
+
+    @Test
+    public void csaErrorAfterProjectResolvedIsCachedForOneMinute() throws Exception {
+        // The project resolves, then the user lookup fails with an error that is not a timeout (5xx, 401, refused):
+        // don't share the missing user id for the cache lifetime.
+        doThrow(new IOException("Internal Server Error: ", new IOException("Server returned HTTP response code: 500")))
+                .when(csa).getUserByEmail(EMAIL);
+
+        long before = System.currentTimeMillis();
+        GorAuthInfo cached = new PlatformJWTAuth(config, csa)
+                .getCsaAuthInfo(new PlatformGorAuthCache(), PROJECT, EMAIL, "", List.of("prj:test-proj:query"));
+
+        Assert.assertEquals(5, cached.getProjectId());
+        Assert.assertTrue(cached.getExpiration() <= System.currentTimeMillis() + 60_000);
+        Assert.assertTrue(cached.getExpiration() >= before + 60_000);
+    }
+
+    @Test
+    public void lookupWithoutCsaIsCachedForCacheLifetime() throws Exception {
+        // Nothing to retry when CSA is not consulted, so the entry should not expire every minute.
+        doReturn("NONE").when(config).updateAuthInfoPolicy();
+
+        GorAuthInfo cached = new PlatformJWTAuth(config, csa)
+                .getCsaAuthInfo(new PlatformGorAuthCache(), PROJECT, EMAIL, "", List.of());
+
+        Assert.assertEquals(Long.MAX_VALUE, cached.getExpiration());
+        verifyNoInteractions(csa);
+    }
+
+    @Test
+    public void platformDoesNotPinFailedCsaLookupToSessionKey() throws Exception {
+        // The CSA entry is kept for 1 min so the lookup is retried. A session-key entry with the token's expiration
+        // would be found first and hide that retry for as long as the token lives.
+        doThrow(new SocketTimeoutException("Read timed out")).when(csa).getProject(PROJECT);
+        GorAuthFactory factory = factory("PLATFORM");
+        String key = sessionKey(sign(token().withClaim("email", EMAIL)));
+
+        Assert.assertTrue(factory.getGorAuthInfo(key).getProjectId() <= 0);
+
+        Assert.assertNull(sessionCache(factory.getGorAuth(key)).get(key));
+    }
+
+    @Test
+    public void platformCachesSessionKeyWhenCsaResolves() throws Exception {
+        GorAuthFactory factory = factory("PLATFORM");
+        String key = sessionKey(sign(token().withClaim("email", EMAIL)));
+
+        factory.getGorAuthInfo(key);
+
+        Assert.assertNotNull(sessionCache(factory.getGorAuth(key)).get(key));
+    }
+
+    @Test
+    public void platformCachesSessionKeyWhenCsaIsNotConsulted() throws Exception {
+        doReturn("NONE").when(config).updateAuthInfoPolicy();
+        GorAuthFactory factory = factory("PLATFORM");
+        String key = sessionKey(sign(token().withClaim("email", EMAIL)));
+
+        factory.getGorAuthInfo(key);
+
+        Assert.assertNotNull(sessionCache(factory.getGorAuth(key)).get(key));
+    }
+
+    @Test
+    public void factoryGivesCsaServiceToAuthBuiltBeforeAnyCsaRequest() throws Exception {
+        // One GorAuth per policy lives as long as the factory, so a PLATFORM auth built before the first CSA request
+        // must not be left with no CSA service.
+        doReturn(new String[]{"PLATFORM", "CSA"}).when(config).securityPolicies();
+        GorAuthFactory factory = new GorAuthFactory(() -> csa, config);
+
+        GorAuth platform = factory.getGorAuth(sessionKey(sign(token().withClaim("email", EMAIL))));
+
+        Assert.assertSame(csa, platform.csaApiService);
+    }
+
+    @Test
+    public void factoryDoesNotResolveCsaServiceWhenCsaIsNotAPolicy() throws Exception {
+        doReturn(new String[]{"PLATFORM", "PLAIN"}).when(config).securityPolicies();
+        GorAuthFactory factory = new GorAuthFactory(() -> csa, config);
+
+        GorAuth platform = factory.getGorAuth(sessionKey(sign(token().withClaim("email", EMAIL))));
+
+        Assert.assertNull(platform.csaApiService);
     }
 
     @Test
@@ -270,6 +358,12 @@ public class UTestCsaLookupPerUser {
     }
 
     // --- helpers ---
+
+    private static PlatformGorAuthCache sessionCache(GorAuth auth) throws ReflectiveOperationException {
+        Field field = PlatformAuth.class.getDeclaredField("gorAuthInfoCache");
+        field.setAccessible(true);
+        return (PlatformGorAuthCache) field.get(auth);
+    }
 
     private GorAuthFactory factory(String policy) {
         doReturn(new String[]{policy}).when(config).securityPolicies();

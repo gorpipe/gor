@@ -87,7 +87,11 @@ public class PlatformAuth extends GorAuth {
                         Strings.isNullOrEmpty(userId) ? csaAuthInfo.getUserId() : userId,
                         userRoles.isEmpty() ? csaAuthInfo.getUserRoles() : userRoles,
                         csaAuthInfo.getOrganizationId(), expiration);
-                gorAuthInfoCache.add(securityKey, gorAuthInfo, expiration);
+                // Not when the CSA entry is kept for less time than the token (a failed lookup, asked again in 1
+                // min): this entry is checked first, and would hide that retry for as long as the token lives.
+                if (csaAuthInfo.getExpiration() >= expiration) {
+                    gorAuthInfoCache.add(securityKey, gorAuthInfo, expiration);
+                }
             } catch (Exception e) {
                 throw new GorSystemException(e);
             }

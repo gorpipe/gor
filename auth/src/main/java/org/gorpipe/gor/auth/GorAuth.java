@@ -91,18 +91,27 @@ public abstract class GorAuth implements AutoCloseable {
      */
 
     public GorAuthInfo updateGorAuthInfo(GorAuthInfo info) {
+        CsaApiUtils.CsaLookup lookup = lookupWithCsa(info);
+        return lookup != null ? lookup.info() : info;
+    }
+
+    /**
+     * @return the CSA lookup for info, or null when CSA is not consulted (no CSA service, or the update policy is not
+     * CSA). A lookup that throws (a timeout) gives info unchanged, marked incomplete.
+     */
+    private CsaApiUtils.CsaLookup lookupWithCsa(GorAuthInfo info) {
         if (csaApiService == null) {
             log.warn("Csa Api Service was null, therefore not updating gor auth info");
-            return info;
+            return null;
         } else if (!config.updateAuthInfoPolicy().equals(SecurityPolicy.CSA.name())) {
             log.debug("Update auth info policy was not CSA, therefore not updating gor auth info");
-            return info;
+            return null;
         } else {
             try {
-                return CsaApiUtils.updateWithCsaApi(csaApiService, info);
+                return CsaApiUtils.lookupWithCsaApi(csaApiService, info);
             } catch (Exception e) {
                 log.warn("Could not update gor auth info from CSA because of an error.", e);
-                return info;
+                return new CsaApiUtils.CsaLookup(info, false);
             }
         }
     }
@@ -113,9 +122,9 @@ public abstract class GorAuth implements AutoCloseable {
      * for the same user does not cost CSA calls. Only CSA data is cached; callers take roles, expiration and
      * validity from the token.
      * <p>
-     * Kept for the cache's lifetime when CSA resolved the project, otherwise (CSA unknown, down or timed out) for
-     * 1 min. A timeout ends the whole lookup (see {@link CsaApiUtils#updateWithCsaApi}), so a project that resolved
-     * before a user lookup timed out is not kept either.
+     * Kept for 1 min when CSA was asked and failed any lookup (timeout or error) or does not know the project, so it
+     * is asked again soon. Otherwise (CSA answered everything, or is not consulted) kept for the cache's lifetime.
+     * The entry's expiration says which: {@link Long#MAX_VALUE} for the cache's lifetime.
      */
     protected GorAuthInfo getCsaAuthInfo(PlatformGorAuthCache cache, String project, String username, String userId,
                                          List<String> tokenRoles) {
@@ -127,8 +136,11 @@ public abstract class GorAuth implements AutoCloseable {
         String cacheId = (askUser ? "U" : "-") + (askRoles ? "R" : "-") + ":" + project + ":" + username;
         GorAuthInfo cached = cache.get(cacheId);
         if (cached == null) {
-            GorAuthInfo csa = updateGorAuthInfo(new GeneralAuthInfo(0, project, username, userId, tokenRoles, 0, Long.MAX_VALUE));
-            long cacheExpiration = csa.getProjectId() > 0 ? Long.MAX_VALUE : System.currentTimeMillis() + 60000;
+            GorAuthInfo request = new GeneralAuthInfo(0, project, username, userId, tokenRoles, 0, Long.MAX_VALUE);
+            CsaApiUtils.CsaLookup lookup = lookupWithCsa(request);
+            GorAuthInfo csa = lookup != null ? lookup.info() : request;
+            boolean askAgainSoon = lookup != null && (!lookup.complete() || csa.getProjectId() <= 0);
+            long cacheExpiration = askAgainSoon ? System.currentTimeMillis() + 60000 : Long.MAX_VALUE;
             cached = new GeneralAuthInfo(csa.getProjectId(), project, username, askUser ? csa.getUserId() : "",
                     askRoles ? csa.getUserRoles() : List.of(), csa.getOrganizationId(), cacheExpiration);
             cache.add(cacheId, cached, cacheExpiration);

@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -42,6 +43,7 @@ public class GorAuthFactory {
     private final AuthConfig config;
     private List<String> policesCache;
     private CsaApiService csaApiService;
+    private final Supplier<CsaApiService> csaApiServiceSupplier;
     private OAuthHandler oAuthHandler;
 
     public GorAuthFactory(AuthConfig config) {
@@ -49,8 +51,21 @@ public class GorAuthFactory {
     }
 
     public GorAuthFactory(AuthConfig config, CsaApiService csaApiService) {
+        this(config, csaApiService, () -> CsaSecurityModule.get().apiService());
+    }
+
+    /**
+     * For tests: resolve the CSA service from the given supplier instead of {@link CsaSecurityModule}.
+     */
+    GorAuthFactory(Supplier<CsaApiService> csaApiServiceSupplier, AuthConfig config) {
+        this(config, null, csaApiServiceSupplier);
+    }
+
+    private GorAuthFactory(AuthConfig config, CsaApiService csaApiService,
+                           Supplier<CsaApiService> csaApiServiceSupplier) {
         this.config = config;
         this.csaApiService = csaApiService;
+        this.csaApiServiceSupplier = csaApiServiceSupplier;
         if (!Strings.isNullOrEmpty(config.publicAuthorizationKey())) {
             this.oAuthHandler = new OAuthHandler(config.publicAuthorizationKey());
         }
@@ -154,22 +169,32 @@ public class GorAuthFactory {
         if (SecurityPolicy.NONE.toString().equalsIgnoreCase(policy)) {
             return getNoAuth();
         } else if (SecurityPolicy.CSA.toString().equalsIgnoreCase(policy)) {
-            if (csaApiService == null) {
-                csaApiService = CsaSecurityModule.get().apiService();
-            }
-            return new CsaAuth(config, csaApiService);
+            return new CsaAuth(config, csaApiService());
         } else if (SecurityPolicy.PLATFORM.toString().equalsIgnoreCase(policy)) {
             if (oAuthHandler == null) {
                 throw new GorSystemException("Error: OAuthHandler not initialized for setting up PlatformAuth", null);
             }
-            return new PlatformAuth(config, csaApiService, oAuthHandler);
+            return new PlatformAuth(config, csaApiService(), oAuthHandler);
         } else if (SecurityPolicy.JWT.toString().equalsIgnoreCase(policy)) {
-            return new PlatformJWTAuth(config, csaApiService);
+            return new PlatformJWTAuth(config, csaApiService());
         } else if (SecurityPolicy.PLAIN.toString().equalsIgnoreCase(policy)) {
-            return new PlainAuth(config, csaApiService);
+            return new PlainAuth(config, csaApiService());
         } else {
             throw new GorSystemException("Error: Unknown security policy " + policy, null);
         }
+    }
+
+    /**
+     * The CSA service for a new GorAuth. Each GorAuth lives as long as this factory, so resolve the service before
+     * building the first one, whatever its policy, not only on the first CSA request. Resolved only when CSA is a
+     * configured policy, as before.
+     */
+    private synchronized CsaApiService csaApiService() {
+        if (csaApiService == null
+                && getAndValidatePolices().stream().anyMatch(SecurityPolicy.CSA.toString()::equalsIgnoreCase)) {
+            csaApiService = csaApiServiceSupplier.get();
+        }
+        return csaApiService;
     }
 
     private String inferPolicyFromSessionKey(String sessionKey) {
