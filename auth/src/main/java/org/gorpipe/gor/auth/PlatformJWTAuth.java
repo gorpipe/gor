@@ -45,28 +45,18 @@ public class PlatformJWTAuth extends GorAuth {
 
         long expiration = jwt.getExpirationTime();
         String username = getUsername(jwt);
-        String cacheId = project + ":" + username;
         List<String> roles = getUserRoles(jwt);
 
-        // We cache a basic gorauthtoken with all the lookups, then we always add the roles.
-        GorAuthInfo cachedGorAuthInfo = gorAuthInfoCache.get(cacheId);
-        if (cachedGorAuthInfo == null) {
-            try {
-                // Pass the token roles in so CSA isn't asked for roles that would be replaced by them anyway.
-                GorAuthInfo csaGorAuthInfo = updateGorAuthInfo(new GeneralAuthInfo(0, project, username, "", roles, 0, Long.MAX_VALUE));
-                // If we got project id we keep this for ever, otherwise just 1 min.  The cache expires entries by
-                // the expiration of the stored auth info, so it must carry the 1 min too.
-                long cacheExpiration = csaGorAuthInfo.getProjectId() > 0 ? Long.MAX_VALUE : System.currentTimeMillis() + 60000;
-                cachedGorAuthInfo = new GeneralAuthInfo(csaGorAuthInfo.getProjectId(), project, username, csaGorAuthInfo.getUserId(),
-                        csaGorAuthInfo.getUserRoles(), csaGorAuthInfo.getOrganizationId(), cacheExpiration);
-                gorAuthInfoCache.add(cacheId, cachedGorAuthInfo, cacheExpiration);
-            } catch (Exception e) {
-                throw new GorSystemException(e);
-            }
+        GorAuthInfo csaAuthInfo;
+        try {
+            // Pass the token roles in so CSA isn't asked for roles that would be replaced by them anyway.
+            csaAuthInfo = getCsaAuthInfo(gorAuthInfoCache, project, username, "", roles);
+        } catch (Exception e) {
+            throw new GorSystemException(e);
         }
 
-        return new GeneralAuthInfo(cachedGorAuthInfo.getProjectId(), project, username, cachedGorAuthInfo.getUserId(),
-                roles, cachedGorAuthInfo.getOrganizationId(), expiration);
+        return new GeneralAuthInfo(csaAuthInfo.getProjectId(), project, username, csaAuthInfo.getUserId(),
+                roles, csaAuthInfo.getOrganizationId(), expiration);
     }
 
     private String getUsername(JsonWebToken jwt) {

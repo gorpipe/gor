@@ -4,6 +4,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.base.Strings;
 import jakarta.json.JsonString;
 import org.gorpipe.gor.auth.utils.CsaApiUtils;
+import org.gorpipe.gor.auth.utils.PlatformGorAuthCache;
 import org.gorpipe.security.cred.CsaApiService;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.gorpipe.exceptions.GorSystemException;
@@ -104,6 +105,35 @@ public abstract class GorAuth implements AutoCloseable {
                 return info;
             }
         }
+    }
+
+    /**
+     * Get the CSA-derived info (project id, organization id, and user id and roles when the token lacks them) for
+     * the user in the project, from the cache or from CSA. Cached per (project, user), not per token, so a new token
+     * for the same user does not cost CSA calls. Only CSA data is cached; callers take roles, expiration and
+     * validity from the token.
+     * <p>
+     * Kept for the cache's lifetime when CSA resolved the project, otherwise (CSA unknown, down or timed out) for
+     * 1 min. A timeout ends the whole lookup (see {@link CsaApiUtils#updateWithCsaApi}), so a project that resolved
+     * before a user lookup timed out is not kept either.
+     */
+    protected GorAuthInfo getCsaAuthInfo(PlatformGorAuthCache cache, String project, String username, String userId,
+                                         List<String> tokenRoles) {
+        // CSA is asked for the user only when the token has no user id, and for roles only when it also has no
+        // roles. Cache those cases apart, so no token gets data CSA was not asked for on its behalf.
+        boolean askUser = Strings.isNullOrEmpty(userId) && org.gorpipe.util.Strings.isEmail(username);
+        boolean askRoles = askUser && tokenRoles.isEmpty();
+        // Fixed-width prefix, so no username can collide with another user's key.
+        String cacheId = (askUser ? "U" : "-") + (askRoles ? "R" : "-") + ":" + project + ":" + username;
+        GorAuthInfo cached = cache.get(cacheId);
+        if (cached == null) {
+            GorAuthInfo csa = updateGorAuthInfo(new GeneralAuthInfo(0, project, username, userId, tokenRoles, 0, Long.MAX_VALUE));
+            long cacheExpiration = csa.getProjectId() > 0 ? Long.MAX_VALUE : System.currentTimeMillis() + 60000;
+            cached = new GeneralAuthInfo(csa.getProjectId(), project, username, askUser ? csa.getUserId() : "",
+                    askRoles ? csa.getUserRoles() : List.of(), csa.getOrganizationId(), cacheExpiration);
+            cache.add(cacheId, cached, cacheExpiration);
+        }
+        return cached;
     }
 
     /**

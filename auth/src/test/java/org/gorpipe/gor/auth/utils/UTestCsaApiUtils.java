@@ -8,6 +8,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.SocketTimeoutException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -59,6 +61,23 @@ public class UTestCsaApiUtils {
 
         Assert.assertEquals("10", info.getUserId());
         Assert.assertEquals(List.of("researcher"), info.getUserRoles());
+    }
+
+    @Test
+    public void timeoutStopsTheUpdate() throws IOException {
+        String user = "user@email.com";
+        doThrow(new SocketTimeoutException("Read timed out")).when(csaApiService).getUserByEmail(user);
+
+        Assert.assertThrows(UncheckedIOException.class, () -> CsaApiUtils.updateWithCsaApi(csaApiService, authInfo(user)));
+        verify(csaApiService, never()).getUserRoleList(anyString(), anyString());
+    }
+
+    @Test
+    public void getProjectMapReturnsNullOnTimeout() throws IOException {
+        // Public, and used outside GOR (gdb-gor-services QueryServiceCache), so it keeps returning null on failure.
+        doThrow(new SocketTimeoutException("Read timed out")).when(csaApiService).getProject(PROJECT);
+
+        Assert.assertNull(CsaApiUtils.getProjectMap(csaApiService, PROJECT));
     }
 
     private static GorAuthInfo authInfo(String username) {

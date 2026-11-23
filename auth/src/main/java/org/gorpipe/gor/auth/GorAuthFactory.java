@@ -3,9 +3,6 @@ package org.gorpipe.gor.auth;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.gorpipe.gor.auth.utils.OAuthHandler;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.gorpipe.exceptions.GorException;
@@ -26,8 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -37,8 +33,12 @@ import java.util.stream.Collectors;
 public class GorAuthFactory {
 
     private final static Logger log = LoggerFactory.getLogger(GorAuthFactory.class);
+    // The policy is now inferred on every call, not once per session key, so don't build a mapper each time.
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private final Cache<String, GorAuth> authCache;
+    // One GorAuth per security policy. Each keeps its own caches (per session key, or per project and user), so
+    // keying this by session key would only start every new token with empty caches.
+    private final Map<String, GorAuth> authByPolicy = new ConcurrentHashMap<>();
     private final AuthConfig config;
     private List<String> policesCache;
     private CsaApiService csaApiService;
@@ -50,8 +50,6 @@ public class GorAuthFactory {
 
     public GorAuthFactory(AuthConfig config, CsaApiService csaApiService) {
         this.config = config;
-        this.authCache = CacheBuilder.newBuilder().concurrencyLevel(4)
-                .expireAfterWrite(2, TimeUnit.HOURS).build();
         this.csaApiService = csaApiService;
         if (!Strings.isNullOrEmpty(config.publicAuthorizationKey())) {
             this.oAuthHandler = new OAuthHandler(config.publicAuthorizationKey());
@@ -113,9 +111,9 @@ public class GorAuthFactory {
     public GorAuth getGorAuth(String sessionKey) {
         try {
             final String cacheSessionKey = Strings.isNullOrEmpty(sessionKey) ? "NO_SESSION" : sessionKey;
-            return authCache.get(cacheSessionKey, () -> getGorAuthFromPolicy(getPolicyFromSessionKey(cacheSessionKey)));
-        }  catch (UncheckedExecutionException | ExecutionException e) {
-            throw new GorSystemException("Error getting gorauth from sessionKey!", e.getCause());
+            return authByPolicy.computeIfAbsent(getPolicyFromSessionKey(cacheSessionKey), this::getGorAuthFromPolicy);
+        } catch (RuntimeException e) {
+            throw new GorSystemException("Error getting gorauth from sessionKey!", e);
         }
     }
 
@@ -128,9 +126,8 @@ public class GorAuthFactory {
     }
 
     public void closeAll() {
-        authCache.asMap().values().stream().distinct().forEach(GorAuth::close);
-
-        authCache.invalidateAll();
+        authByPolicy.values().forEach(GorAuth::close);
+        authByPolicy.clear();
     }
 
     private String getPolicyFromSessionKey(String sessionKey) {
@@ -183,9 +180,8 @@ public class GorAuthFactory {
         } else {
             Map<String, Object> sessionMap;
 
-            ObjectMapper objectMapper = new ObjectMapper();
             try {
-                sessionMap = objectMapper.readValue(sessionKey.getBytes(), new TypeReference<HashMap<String,Object>>(){});
+                sessionMap = OBJECT_MAPPER.readValue(sessionKey.getBytes(), new TypeReference<HashMap<String,Object>>(){});
                 if (sessionMap.containsKey("security-policy")) {
                     // Covers PLATFORM, PLAIN
                     policy = sessionMap.get("security-policy").toString();

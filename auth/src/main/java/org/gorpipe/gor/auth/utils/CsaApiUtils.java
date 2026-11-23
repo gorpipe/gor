@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,6 +21,9 @@ public class CsaApiUtils {
 
     /**
      * Add ids from CSA API to the given gor auth, but only if missing and if found.
+     * <p>
+     * A failed lookup is logged and skipped, except a timeout, which ends the update with an
+     * {@link UncheckedIOException}.
      *
      * @param info
      * @return a new auth object with the db id appended.
@@ -32,7 +37,7 @@ public class CsaApiUtils {
         List<String> userRoles = new ArrayList<>(info.getUserRoles());
 
         if (projectId < 1 && !Strings.isNullOrEmpty(project)) {
-            Map<String, Object> projectMap = getProjectMap(csaApiService, project);
+            Map<String, Object> projectMap = getProjectMapOrStopOnTimeout(csaApiService, project);
             projectId = updateProjectId(projectId, projectMap);
             organizationId = updateOrganizationId(projectId, projectMap);
         }
@@ -69,9 +74,21 @@ public class CsaApiUtils {
     }
 
     public static Map<String, Object> getProjectMap(CsaApiService csaApiService, String project) {
+        try {
+            return getProjectMapOrStopOnTimeout(csaApiService, project);
+        } catch (UncheckedIOException e) {
+            log.warn("Unable to get project from CSA API", e);
+            return null;
+        }
+    }
+
+    private static Map<String, Object> getProjectMapOrStopOnTimeout(CsaApiService csaApiService, String project) {
         Map<String, Object> projectMap = null;
         try {
             projectMap = csaApiService != null ? csaApiService.getProject(project) : null;
+        } catch (SocketTimeoutException e) {
+            // Stop here: CSA is slow, and the next lookup would wait another full timeout.
+            throw new UncheckedIOException(e);
         } catch (IOException e) {
             log.warn("Unable to get project from CSA API", e);
         }
@@ -82,6 +99,9 @@ public class CsaApiUtils {
         Map<String, Object> userMap = null;
         try {
             userMap = csaApiService != null ? csaApiService.getUserByEmail(userEmail) : null;
+        } catch (SocketTimeoutException e) {
+            // Stop here: CSA is slow, and the next lookup would wait another full timeout.
+            throw new UncheckedIOException(e);
         } catch (IOException e) {
             log.warn("Unable to get user id from CSA API", e);
         }
@@ -92,6 +112,9 @@ public class CsaApiUtils {
         List userRoleList = null;
         try {
             userRoleList = csaApiService != null ? csaApiService.getUserRoleList(project, userEmail) : null;
+        } catch (SocketTimeoutException e) {
+            // Stop here: CSA is slow, and the next lookup would wait another full timeout.
+            throw new UncheckedIOException(e);
         } catch (IOException e) {
             log.warn("Unable to get user roles from CSA API", e);
         }
