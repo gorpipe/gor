@@ -289,22 +289,28 @@ class ScriptExecutionEngine(queryHandler: GorParallelQueryHandler,
     if (executionCommands != null && !executionCommands.isEmpty) {
       val activeQueryHandler = if (CommandParseUtilities.isDictionaryQuery(executionCommands.head.query)) localQueryHandler else queryHandler
 
+      // Creates with identical query text get the same signature and target the same cache file. Run each such
+      // query once and share its result: run concurrently, the writers race on the cache file (ENGKNOW-4296).
+      val commandKey = (x: ExecutionCommand) => (x.signature, x.query, x.cacheFile)
+      val uniqueCommands = executionCommands.distinctBy(commandKey)
+
       val cacheFiles = activeQueryHandler.executeBatch(
-        executionCommands.map(x => x.signature),
-        executionCommands.map(x => x.query),
-        executionCommands.map(x => x.createName),
-        executionCommands.map(x => x.cacheFile),
+        uniqueCommands.map(x => x.signature),
+        uniqueCommands.map(x => x.query),
+        uniqueCommands.map(x => x.createName),
+        uniqueCommands.map(x => x.cacheFile),
         context.getSession.getSystemContext.getMonitor).toList
 
-      if (executionCommands.length != cacheFiles.length) {
+      if (uniqueCommands.length != cacheFiles.length) {
         throw new GorSystemException(String.format("Number of cache/result files (%d) does not match number of queries (%d)",
-          cacheFiles.length, executionCommands.length), null)
+          cacheFiles.length, uniqueCommands.length), null)
       }
 
-      executionCommands.map(x => x.createName).zip(cacheFiles).foreach(x => {
-        virtualFileManager.add(x._1)
-        virtualFileManager.updateCreatedFile(x._1, x._2)
-        executionBlocks.remove(x._1)
+      val cacheFileByKey = uniqueCommands.map(commandKey).zip(cacheFiles).toMap
+      executionCommands.foreach(x => {
+        virtualFileManager.add(x.createName)
+        virtualFileManager.updateCreatedFile(x.createName, cacheFileByKey(commandKey(x)))
+        executionBlocks.remove(x.createName)
       })
 
       if (ScriptExecutionEngine.log.isDebugEnabled) {
