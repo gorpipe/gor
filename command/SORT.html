@@ -163,6 +163,7 @@
 <p>The <strong>SORT</strong> command sorts the rows based on the position in cases where the GOR condition has been violated. The SORT command takes one attribute, the binsize, which specifies (in a number of basepairs) the maximum deviation in the order of the stream. If no binsize is provided, or if the provided binsize is illegal, a binsize of 1 is used.</p>
 <p>Sorting is often performed as a pipestep after a columnsort, since it is during a columnsort that the genomic order most often will be violated.</p>
 <p>The SORT command can be memory intensive. Note that the larger the binsize used, the more memory the sort requires. Using <strong>SORT</strong> in a nor query will give an error if <code class="docutils literal notranslate"><span class="pre">binsize</span></code> input parameter is used.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SORT</span> <span class="pre">genome</span></code> holds at most <code class="docutils literal notranslate"><span class="pre">gor.sort.batchSize</span></code> rows (default 500000), or 100 times that many characters, in memory and spills the rest to temporary files that it merges at the end.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | <span class="nb">SORT</span> binsize [-c cols[:r|:n|:rn]]
