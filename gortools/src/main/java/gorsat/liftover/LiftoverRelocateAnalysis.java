@@ -228,12 +228,9 @@ public class LiftoverRelocateAnalysis extends Analysis {
         if (LiftEngine.MAPPED.equals(p.status()) || LiftEngine.PASSTHROUGH.equals(p.status())) {
             LiftEngine.Extent extent = aligned ? LiftEngine.alignedExtent(v, pos, refLen) : LiftEngine.Extent.NONE;
             AlleleFix.Result f = fix != null && v.index() != null ? alleleFix(v.index(), r, pos) : NO_FIX;
-            if (AlleleFix.REWRITTEN.equals(f.fix()) && !policy.allowsTarget(f.chrom())) {
-                // the anchors lifted onto a contig -mapped does not accept: keep the plain lift
-                f = AlleleFix.Result.of(AlleleFix.UNRESOLVED);
-            }
             if (AlleleFix.REWRITTEN.equals(f.fix())) {
-                emit(r, f.chrom(), f.pos(), 0, p.strand(), p.status(), 0.0, null, extent, f);
+                // the strand of the chain the alleles were lifted through, which sets their orientation
+                emit(r, f.chrom(), f.pos(), 0, f.strand(), p.status(), 0.0, null, extent, f);
             } else {
                 emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null, extent, f);
             }
@@ -249,7 +246,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
             tgtSeq = fix.target().get();
         }
         return AlleleFix.rewrite(ci, r.chr, pos, r.colAsString(cols.ref()).toString(),
-                r.colAsString(cols.alt()).toString(), srcSeq::getBases, tgtSeq::getBases);
+                r.colAsString(cols.alt()).toString(), srcSeq::getBases, tgtSeq::getBases, policy);
     }
 
     /** -seg is the GOR half-open [start, end), -bam the 1-based inclusive [Pos, End] (N12, N15). */

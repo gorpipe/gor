@@ -46,8 +46,9 @@ public final class AlleleFix {
     /** The longest allele extension into a repeat; a longer one (e.g. an N run) is unresolved. */
     static final int MAX_EXTENSION = 10_000;
     /**
-     * The largest pad realignment (cells of one Needleman-Wunsch matrix, about 2000 x 2000 bases); a larger one, which
-     * only very long indels next to a build indel need, is unresolved rather than risking the heap.
+     * The largest pad realignment (cells of the Needleman-Wunsch trace-back, about 2000 x 2000 bases, 3 bytes each);
+     * a larger one, which only very long indels next to a build indel need, is unresolved rather than risking the
+     * heap.
      */
     static final long MAX_NW_CELLS = 4_000_000L;
 
@@ -57,10 +58,13 @@ public final class AlleleFix {
         String get(String chrom, int start1, int end1);
     }
 
-    /** The outcome: the fix and, for {@link #REWRITTEN}, the target location and alleles; otherwise nulls and 0. */
-    public record Result(String fix, String chrom, int pos, String ref, String alt) {
+    /**
+     * The outcome: the fix and, for {@link #REWRITTEN}, the target location, the strand of the chain the alleles were
+     * lifted through ("+" or "-") and the alleles in target orientation; otherwise nulls and 0.
+     */
+    public record Result(String fix, String chrom, int pos, String strand, String ref, String alt) {
         static Result of(String fix) {
-            return new Result(fix, null, 0, null, null);
+            return new Result(fix, null, 0, null, null, null);
         }
     }
 
@@ -69,10 +73,10 @@ public final class AlleleFix {
 
     /**
      * The allele fix of the -var row chrom:pos ref&gt;alt, which the plain lift mapped through ci. src and tgt read the
-     * source and the target reference.
+     * source and the target reference. A rewrite onto a contig the policy does not accept as a target is unresolved.
      */
     public static Result rewrite(ContigIndex ci, String chrom, int pos, String ref, String alt, Bases src,
-                                 Bases tgt) {
+                                 Bases tgt, ContigPolicy policy) {
         String r = ref.toUpperCase(Locale.ROOT);
         String a = alt.toUpperCase(Locale.ROOT);
         if (r.length() == a.length()) {
@@ -86,7 +90,7 @@ public final class AlleleFix {
             return Result.of(REF_MISMATCH);
         }
         try {
-            return new Rewrite(ci, chrom, pos - 1, r, a, s, tgt).run();
+            return new Rewrite(ci, pos - 1, r, a, s, tgt, policy).run();
         } catch (Unresolved e) {
             return Result.of(UNRESOLVED);
         }
@@ -160,15 +164,17 @@ public final class AlleleFix {
         private final ContigIndex ci;
         private final Seq src;
         private final Bases tgtBases;
+        private final ContigPolicy policy;
         /** 0-based position of the first allele base (BCFtools rec->pos). */
         private int pos0;
         private StringBuilder ref;
         private StringBuilder alt;
 
-        Rewrite(ContigIndex ci, String chrom, int pos0, String ref, String alt, Seq src, Bases tgt) {
+        Rewrite(ContigIndex ci, int pos0, String ref, String alt, Seq src, Bases tgt, ContigPolicy policy) {
             this.ci = ci;
             this.src = src;
             this.tgtBases = tgt;
+            this.policy = policy;
             this.pos0 = pos0;
             this.ref = new StringBuilder(ref);
             this.alt = new StringBuilder(alt);
@@ -184,6 +190,10 @@ public final class AlleleFix {
             if (span.npad() == 0 && span.sameRun() && span.dst3() - span.dst5() == srcPos3 - srcPos5) {
                 // the extended alleles lie in one gap-free alignment: no build indel to carry
                 return Result.of(NONE);
+            }
+            if (!policy.allowsTarget(span.chrom())) {
+                // the anchors lifted onto a contig -mapped does not accept: keep the plain lift
+                throw new Unresolved();
             }
             int npad = span.npad();
             String pad = "";
@@ -232,7 +242,8 @@ public final class AlleleFix {
             if (!isLeftAligned(three)) {
                 p0 = leftAlign(three, p0, tgt);
             }
-            return new Result(REWRITTEN, span.chrom(), p0 + 1, three[0].toString(), three[2].toString());
+            return new Result(REWRITTEN, span.chrom(), p0 + 1, span.minus() ? "-" : "+", three[0].toString(),
+                    three[2].toString());
         }
 
         // ---- source extension (extend_alleles) ----
@@ -309,16 +320,23 @@ public final class AlleleFix {
             alt.append(p);
         }
 
-        /** The mirror of {@link #padFromRight}: prepends the reference before REF. */
+        /**
+         * The mirror of {@link #padFromRight}: prepends the reference before REF. At the contig start it stops after
+         * base 1, where BCFtools would read before the sequence.
+         */
         private void padFromLeft(String l, int sLen, int d) {
             int k = 0;
             while (true) {
+                if (pos0 - k < 1) {
+                    k--;
+                    break;
+                }
                 char r = src.at(pos0 - k);
                 char s = k < d ? l.charAt(l.length() - sLen - 1 - k) : src.at(pos0 - (k - d));
                 if (r != s) {
                     break;
                 }
-                if (++k > MAX_EXTENSION || pos0 - k < 1) {
+                if (++k > MAX_EXTENSION) {
                     throw new Unresolved();
                 }
             }
@@ -347,6 +365,20 @@ public final class AlleleFix {
             return ci.qChrom(i).equals(ci.qChrom(j)) && ci.minus(i) == ci.minus(j) && ci.score(i) == ci.score(j);
         }
 
+        /**
+         * Block b continues the chain of block a (a before b in the source): the same chain fields, and b after a in
+         * both builds. A chain file carries no chain id, so the order tells two chains with equal fields apart.
+         */
+        private boolean followsInChain(int a, int b) {
+            if (a == b) {
+                return true;
+            }
+            if (!sameChain(a, b) || ci.tStart(b) < ci.tEnd(a)) {
+                return false;
+            }
+            return ci.minus(a) ? ci.qStart(a) >= qEnd(b) : ci.qStart(b) >= qEnd(a);
+        }
+
         /** The 0-based half-open target end of block i. */
         private int qEnd(int i) {
             return ci.qStart(i) + ci.tEnd(i) - ci.tStart(i);
@@ -359,29 +391,29 @@ public final class AlleleFix {
             return gt == gq && gt >= 0 && gt <= MAX_SNP_GAP;
         }
 
-        /** The real block of chain i just before it in tStart order that ends at or before its start, or -1. */
+        /** The real block of the chain of real block i just before it in tStart order, or -1. */
         private int prevReal(int i) {
             for (int j = Math.min(i, ci.size()) - 1; j >= 0; j--) {
                 if (ci.tStart(i) - ci.tStart(j) > 10 * MAX_INDEL_INC + ci.tEnd(j) - ci.tStart(j)) {
                     return -1;
                 }
-                if (sameChain(i, j) && ci.tEnd(j) <= ci.tStart(i)) {
+                if (followsInChain(j, i)) {
                     return j;
                 }
             }
             return -1;
         }
 
-        /** The real block of chain i just after it in tStart order that starts at or after its end, or -1. */
+        /** The real block of the chain of real block i just after it in tStart order, or -1. */
         private int nextReal(int i) {
-            for (int j = ci.isGap(i) ? 0 : i + 1; j < ci.size(); j++) {
+            for (int j = i + 1; j < ci.size(); j++) {
                 if (ci.tStart(j) < ci.tEnd(i)) {
                     continue;
                 }
                 if (ci.tStart(j) - ci.tEnd(i) > 10 * MAX_INDEL_INC) {
                     return -1;
                 }
-                if (sameChain(i, j)) {
+                if (followsInChain(i, j)) {
                     return j;
                 }
             }
@@ -472,7 +504,7 @@ public final class AlleleFix {
                     pos3 = minus ? pos5 - npad : pos5 + len + npad;
                 }
             } else {
-                if (!sameChain(a5.block(), a3.block()) || !a5.chrom().equals(a3.chrom())
+                if (!followsInChain(a5.block(), a3.block()) || !a5.chrom().equals(a3.chrom())
                         || a5.minus() != a3.minus()) {
                     throw new Unresolved();
                 }
@@ -539,53 +571,57 @@ public final class AlleleFix {
             int b = -4;
             int o = -6;
             int e = -1;
-            int[][] sc = new int[3][n * m];
+            // the scores of the previous and the current row only; the trace-back keeps every cell
+            int[][][] sc = new int[2][3][m];
             byte[][] bt = new byte[3][n * m];
-            sc[M][0] = 0;
-            sc[D][0] = NEG;
-            sc[I][0] = NEG;
+            sc[0][M][0] = 0;
+            sc[0][D][0] = NEG;
+            sc[0][I][0] = NEG;
             for (int j = 1; j < m; j++) {
-                sc[M][j] = NEG;
-                sc[D][j] = NEG;
-                sc[I][j] = o + e * j;
+                sc[0][M][j] = NEG;
+                sc[0][D][j] = NEG;
+                sc[0][I][j] = o + e * j;
                 bt[I][j] = I;
             }
             int[] v = new int[3];
             for (int i = 1; i < n; i++) {
-                sc[M][i * m] = NEG;
-                sc[D][i * m] = o + e * i;
+                int[][] up = sc[(i - 1) & 1];
+                int[][] row = sc[i & 1];
+                row[M][0] = NEG;
+                row[D][0] = o + e * i;
                 bt[D][i * m] = D;
-                sc[I][i * m] = NEG;
+                row[I][0] = NEG;
                 for (int j = 1; j < m; j++) {
                     int cell = i * m + j;
-                    v[M] = sc[M][cell - m - 1];
-                    v[D] = sc[D][cell - m - 1];
-                    v[I] = sc[I][cell - m - 1];
+                    v[M] = up[M][j - 1];
+                    v[D] = up[D][j - 1];
+                    v[I] = up[I][j - 1];
                     int ind = maxInd(v);
                     char x = s.charAt(i - 1);
                     char y = t.charAt(j - 1);
-                    sc[M][cell] = (x == y || x == 'N' || y == 'N' ? a : b) + v[ind];
+                    row[M][j] = (x == y || x == 'N' || y == 'N' ? a : b) + v[ind];
                     bt[M][cell] = (byte) ind;
 
-                    v[M] = o + sc[M][cell - m];
-                    v[D] = sc[D][cell - m];
-                    v[I] = o + sc[I][cell - m];
+                    v[M] = o + up[M][j];
+                    v[D] = up[D][j];
+                    v[I] = o + up[I][j];
                     ind = maxInd(v);
-                    sc[D][cell] = e + v[ind];
+                    row[D][j] = e + v[ind];
                     bt[D][cell] = (byte) ind;
 
-                    v[M] = o + sc[M][cell - 1];
-                    v[D] = o + sc[D][cell - 1];
-                    v[I] = sc[I][cell - 1];
+                    v[M] = o + row[M][j - 1];
+                    v[D] = o + row[D][j - 1];
+                    v[I] = row[I][j - 1];
                     ind = maxInd(v);
-                    sc[I][cell] = e + v[ind];
+                    row[I][j] = e + v[ind];
                     bt[I][cell] = (byte) ind;
                 }
             }
+            int[][] last = sc[(n - 1) & 1];
+            v[M] = last[M][m - 1];
+            v[D] = last[D][m - 1];
+            v[I] = last[I][m - 1];
             int cell = m * n - 1;
-            v[M] = sc[M][cell];
-            v[D] = sc[D][cell];
-            v[I] = sc[I][cell];
             int ind = maxInd(v);
             int ret = v[ind];
             int k = n + m - 2;

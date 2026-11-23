@@ -31,10 +31,10 @@ public class UTestGorLiftoverHaplotype {
 
     private static final String CHAIN_HEADER = "Chrom\ttStart\ttEnd\tqChrom\tqStart\tqEnd\tqStrand\tqScore\n";
 
-    static final String SOURCE = "AATAATGTTTCTAAAATGAGATTCACAACATACTTTTCAAAAACACATCTACAGGAGTTATACAGGTACTATTGAATAGC"
+    public static final String SOURCE = "AATAATGTTTCTAAAATGAGATTCACAACATACTTTTCAAAAACACATCTACAGGAGTTATACAGGTACTATTGAATAGC"
             + "CACGTTATAATCAGGTTTTATTGTTTATGTTACCTCTCTGTCTAGCTGAGATGATGTTGTGGTGATCACGCCTGTAGTTGGATGCATAGAAAATAGGGTGGG"
             + "TGATGGTGGCACCTGCCCA";
-    static final String TARGET = SOURCE.substring(0, 101) + "TAA" + SOURCE.substring(101);
+    public static final String TARGET = SOURCE.substring(0, 101) + "TAA" + SOURCE.substring(101);
 
     private static String srcSeq;
     private static String tgtSeq;

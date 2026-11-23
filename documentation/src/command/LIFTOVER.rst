@@ -223,7 +223,9 @@ ALT, is dropped. ``<build>_alleleFix`` says what happened to the row:
 +------------------+-----------------------------------------------------------------------------------------------+
 
 Only indels the plain lift maps are rewritten. A difference of bases (not length) between the builds in the window is
-not a build indel and gives ``none``. With ``-aligned`` the aligned extent is the plain lift's.
+not a build indel and gives ``none``. A rewritten row's ``<build>_qStrand`` is the strand of the chain its alleles
+were lifted through. With ``-aligned`` the aligned extent is the plain lift's. Unlike BCFtools, which reads before the
+sequence there, the allele extension stops at the first base of a contig.
 
 .. code-block:: gor
 
