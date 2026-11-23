@@ -9,6 +9,7 @@ import gorsat.process.GorPipeMacros;
 import gorsat.process.GorPrePipe;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
@@ -16,15 +17,24 @@ import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.Tuple;
 import org.gorpipe.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class BaseScriptExecutionEngine {
+
+    private static final Logger log = LoggerFactory.getLogger(BaseScriptExecutionEngine.class);
+
+    /** How long to wait for another thread's signature computation before computing it uncached. */
+    static final String SIGNATURE_WAIT_TIMEOUT_PROPERTY = "gor.script.signature.wait.timeout.ms";
+    private static final long DEFAULT_SIGNATURE_WAIT_TIMEOUT_MS = 60_000;
 
     Map<String,ExecutionBlock> executionBlocks = new ConcurrentHashMap<>();
     Map<String,String> aliases = new ConcurrentHashMap<>();
@@ -149,23 +159,25 @@ public class BaseScriptExecutionEngine {
         /**
          * Wait for the owner to finish, without ForkJoinPool.managedBlock (as CompletableFuture.join
          * uses): a pool worker blocked that way makes the pool add a spare thread, and the common
-         * pool throws RejectedExecutionException past 256 spares.  Like a thread blocked on a lock,
-         * the wait is not interruptible; an interrupt is kept for the caller.
+         * pool throws RejectedExecutionException past 256 spares.
          *
-         * @return false if no value was cached
+         * <p>The wait is bounded.  Waiting is only deadlock-free while computing a signature never
+         * waits on ForkJoin tasks; if a file reader ever does, two workers can each wait for a
+         * signature the other is computing.  The timeout breaks such a cycle, and an interrupt
+         * ends the wait so a cancelled query can get out.
+         *
+         * @return true if a value was cached, false if not (the key was unregistered), or null if
+         *         the wait timed out
+         * @throws GorSystemException if the thread is interrupted while waiting
          */
-        boolean await() {
-            boolean interrupted = false;
-            while (true) {
-                try {
-                    done.await();
-                    break;
-                } catch (InterruptedException e) {
-                    interrupted = true;
+        Boolean await(long timeoutMs) {
+            try {
+                if (!done.await(timeoutMs, TimeUnit.MILLISECONDS)) {
+                    return null;
                 }
-            }
-            if (interrupted) {
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                throw new GorSystemException("Interrupted while waiting for a file signature", e);
             }
             return cached;
         }
@@ -181,10 +193,11 @@ public class BaseScriptExecutionEngine {
      * <p>Only registering the key happens under the map lock.  The registering thread computes the
      * value; other threads asking for the same key wait for it rather than repeating the work.
      * Waiting is safe because computing a signature never waits on pool tasks (dictionary loads
-     * are sequential, see DictionaryEntries.loadLines).  If the computing thread asks for its own
-     * key again, it computes it again without waiting on itself.  If the computation fails or
-     * returns null, nothing is cached and waiting threads compute it themselves, as with
-     * computeIfAbsent.
+     * are sequential, see DictionaryEntries.loadLines).  As a safeguard, a wait longer than
+     * {@value #SIGNATURE_WAIT_TIMEOUT_PROPERTY} (default 60 s) is logged and the value computed
+     * without caching it.  If the computing thread asks for its own key again, it computes it
+     * again without waiting on itself.  If the computation fails or returns null, nothing is
+     * cached and waiting threads compute it themselves, as with computeIfAbsent.
      */
     private static String getOrCompute(Map<String,Signature> map, String key, Supplier<String> compute) {
         while (true) {
@@ -199,7 +212,16 @@ public class BaseScriptExecutionEngine {
             if (signature.isComputing()) {
                 return compute.get();
             }
-            if (signature.await()) {
+            long timeoutMs = Long.getLong(SIGNATURE_WAIT_TIMEOUT_PROPERTY, DEFAULT_SIGNATURE_WAIT_TIMEOUT_MS);
+            var cached = signature.await(timeoutMs);
+            if (cached == null) {
+                // The key is not logged: it holds dictionary tags, which can be sample ids.
+                var owner = signature.owner;
+                log.warn("Waited {} ms for thread {} to compute a file signature; computing it without "
+                        + "caching (ENGKNOW-4267)", timeoutMs, owner != null ? owner.getName() : "(finished)");
+                return compute.get();
+            }
+            if (cached) {
                 return signature.value;
             }
             // Nothing was cached and the key was unregistered; try again.
