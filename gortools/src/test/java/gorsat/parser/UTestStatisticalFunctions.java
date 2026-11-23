@@ -79,21 +79,39 @@ public class UTestStatisticalFunctions {
         TestUtils.assertCalculated("invStudent(0.975,100)",0.031416552967902044);
     }
 
-    // Bounded: without the range check colt's quantile search never converges for a
-    // probability outside [0,1], so the query hangs instead of failing (ENGKNOW-3776).
+    // Bounded: without the range check colt's quantile search never converges for
+    // alpha > 1 when df <= 200, so the query hangs instead of failing (ENGKNOW-3776).
     @Test(timeout = 30_000)
     public void testInvStudentRejectsProbabilityAboveOne() {
-        assertInvStudentRejected("invStudent(1.5,10)");
+        assertInvStudentRejected("invStudent(1.5,10)", "1.5");
     }
 
-    @Test(timeout = 30_000)
+    @Test
+    public void testInvStudentRejectsProbabilityAboveOneForLargeDf() {
+        // For df > 200 colt returns early with a meaningless value instead of hanging;
+        // the valid range must not depend on df.
+        assertInvStudentRejected("invStudent(1.5,300)", "1.5");
+    }
+
+    @Test
     public void testInvStudentRejectsNegativeProbability() {
-        assertInvStudentRejected("invStudent(-0.5,10)");
+        assertInvStudentRejected("invStudent(-0.5,10)", "-0.5");
     }
 
-    @Test(timeout = 30_000)
-    public void testInvStudentRejectsSampleSizeBelowOne() {
-        assertInvStudentRejected("invStudent(0.5,0)");
+    @Test
+    public void testInvStudentRejectsZeroProbability() {
+        assertInvStudentRejected("invStudent(0,10)", "0.0");
+    }
+
+    @Test
+    public void testInvStudentRejectsDegreesOfFreedomBelowOne() {
+        assertInvStudentRejected("invStudent(0.5,0)", "0.0");
+    }
+
+    @Test
+    public void testInvStudentReportsTheDegreesOfFreedomAsGiven() {
+        // The message must show the input, not the value truncated to an int.
+        assertInvStudentRejected("invStudent(0.5,0.9)", "0.9");
     }
 
     @Test
@@ -102,12 +120,14 @@ public class UTestStatisticalFunctions {
         TestUtils.assertCalculated("invStudent(1.0,10)", 0.0);
     }
 
-    private static void assertInvStudentRejected(String expression) {
+    private static void assertInvStudentRejected(String expression, String reportedValue) {
         try {
             TestUtils.runGorPipe("gorrow chr1,1 | calc X " + expression);
             Assert.fail("expected " + expression + " to be rejected");
         } catch (GorDataException expected) {
-            Assert.assertTrue(expected.getMessage(), expected.getMessage().contains("INVSTUDENT"));
+            String message = expected.getMessage();
+            Assert.assertTrue(message, message.contains("INVSTUDENT"));
+            Assert.assertTrue(message, message.contains("was " + reportedValue));
         }
     }
 
