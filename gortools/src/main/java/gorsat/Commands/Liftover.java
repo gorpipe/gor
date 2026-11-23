@@ -47,7 +47,8 @@ import java.util.Set;
  * LIFTOVER: moves rows to their lifted location on the target assembly and sorts the result. Every mode (-snp, -var,
  * -seg, -bam, -all) and nested-query chains run on the same engine as LIFTOVER_ANNOTATE (ENGKNOW-4117, N17).
  * -var -aligned adds the aligned extent of each row (ENGKNOW-4207). -var -haplotype -srcseq -tgtseq rewrites the alleles
- * of an indel next to a build difference as BCFtools +liftover does and adds the allele fix of each row (ENGKNOW-4224).
+ * of an indel next to a build difference as BCFtools +liftover does and adds the allele fix of each row (ENGKNOW-4224);
+ * with -pad it also lifts, the BCFtools way, the rows a plain lift leaves unmapped (ENGKNOW-4226).
  */
 public class Liftover extends CommandInfo {
 
@@ -59,7 +60,7 @@ public class Liftover extends CommandInfo {
 
     public Liftover() {
         super("LIFTOVER",
-                new CommandArguments("-snp -seg -var -bam -all -aligned -nogapfill -haplotype",
+                new CommandArguments("-snp -seg -var -bam -all -aligned -nogapfill -haplotype -pad",
                         "-ref -alt -build -mapped -passthrough -failon -tolerance -srcseq -tgtseq",
                         1, 1, false),
                 new CommandOptions(true, false, false, true, true, false),
@@ -208,16 +209,18 @@ public class Liftover extends CommandInfo {
     /**
      * -haplotype with its two reference sequences, -srcseq (the input's build) and -tgtseq (the chain's target build),
      * or null without it. Both are required, and only with -var and without -all: the target is never taken from the
-     * project's default build, which may be either one.
+     * project's default build, which may be either one. -pad (ENGKNOW-4226) also lifts the rows the plain lift leaves
+     * unmapped.
      */
     private static AlleleFixConfig alleleFix(GorContext context, String[] args, RelocateMode mode, boolean all) {
         LiftoverArgs.rejectRepeatedOptions(args, "-srcseq", "-tgtseq");
         boolean haplotype = CommandParseUtilities.hasOption(args, "-haplotype");
         boolean src = CommandParseUtilities.hasOption(args, "-srcseq");
         boolean tgt = CommandParseUtilities.hasOption(args, "-tgtseq");
+        boolean pad = CommandParseUtilities.hasOption(args, "-pad");
         if (!haplotype) {
-            if (src || tgt) {
-                String option = src ? "-srcseq" : "-tgtseq";
+            if (src || tgt || pad) {
+                String option = pad ? "-pad" : src ? "-srcseq" : "-tgtseq";
                 throw new GorParsingException(option + " is only valid with -haplotype", option, "");
             }
             return null;
@@ -228,6 +231,10 @@ public class Liftover extends CommandInfo {
         if (all) {
             throw new GorParsingException("-haplotype cannot be combined with -all", "-haplotype", "");
         }
+        if (pad && CommandParseUtilities.hasOption(args, "-nogapfill")) {
+            // BCFtools lifts through the 1-base equal gaps that -nogapfill leaves out, and -pad lifts as BCFtools does
+            throw new GorParsingException("-pad cannot be combined with -nogapfill", "-pad", "");
+        }
         if (!src || !tgt) {
             throw new GorParsingException("-haplotype requires -srcseq and -tgtseq, the source and target reference "
                     + "sequences", "-haplotype", "");
@@ -235,7 +242,7 @@ public class Liftover extends CommandInfo {
         String srcPath = referencePath(context, args, "-srcseq");
         String tgtPath = referencePath(context, args, "-tgtseq");
         return new AlleleFixConfig(() -> context.getSession().getProjectContext().createRefSeq(srcPath),
-                () -> context.getSession().getProjectContext().createRefSeq(tgtPath));
+                () -> context.getSession().getProjectContext().createRefSeq(tgtPath), pad);
     }
 
     /**

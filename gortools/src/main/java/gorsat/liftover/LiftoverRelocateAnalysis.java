@@ -40,6 +40,9 @@ import java.util.function.Supplier;
  * With -var -haplotype (ENGKNOW-4224) each row also carries its allele fix ({@link AlleleFix}), last: a mapped indel
  * next to a build difference is moved to the location and alleles BCFtools +liftover gives it (rewritten), and every
  * other row keeps the plain lift (none, swap, ref_mismatch or unresolved). The aligned extent stays the plain lift's.
+ * With -pad as well (ENGKNOW-4226) a row the plain lift leaves unmapped is lifted as BCFtools lifts it
+ * ({@link AlleleFix#liftUnmapped}): mapped, at BCFtools' location, with the fix rewritten, swap (the source alleles;
+ * the target carries ALT) or none, and aligned extent 0 and 0; a row BCFtools rejects stays unmapped with its fix.
  */
 public class LiftoverRelocateAnalysis extends Analysis {
 
@@ -234,17 +237,37 @@ public class LiftoverRelocateAnalysis extends Analysis {
             } else {
                 emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null, extent, f);
             }
+        } else if (fix != null && fix.pad() && LiftEngine.UNMAPPED.equals(p.status())) {
+            // -pad (ENGKNOW-4226): lifted the BCFtools way, with no aligned extent of its own
+            AlleleFix.Result f = unmappedFix(chrom, r, pos);
+            if (f.placed()) {
+                emit(r, f.chrom(), f.pos(), 0, f.strand(), LiftEngine.MAPPED, 0.0, null, LiftEngine.Extent.NONE, f);
+            } else {
+                emitUnplaced(r, reportedStatus(p.status()), f);
+            }
         } else {
             emitUnplaced(r, reportedStatus(p.status()));
         }
     }
 
-    /** The allele fix of a mapped -var row, opening the reference sequences on first use. */
-    private AlleleFix.Result alleleFix(ContigIndex ci, Row r, int pos) {
+    /** The -pad lift of a -var row the plain lift left unmapped. */
+    private AlleleFix.Result unmappedFix(String chrom, Row r, int pos) {
+        openReferences();
+        return AlleleFix.liftUnmapped(lazyChain.get().contig(chrom), chrom, pos,
+                r.colAsString(cols.ref()).toString(), r.colAsString(cols.alt()).toString(), srcSeq::getBases,
+                tgtSeq::getBases, policy);
+    }
+
+    private void openReferences() {
         if (srcSeq == null) {
             srcSeq = fix.source().get();
             tgtSeq = fix.target().get();
         }
+    }
+
+    /** The allele fix of a mapped -var row, opening the reference sequences on first use. */
+    private AlleleFix.Result alleleFix(ContigIndex ci, Row r, int pos) {
+        openReferences();
         return AlleleFix.rewrite(ci, r.chr, pos, r.colAsString(cols.ref()).toString(),
                 r.colAsString(cols.alt()).toString(), srcSeq::getBases, tgtSeq::getBases, policy);
     }
@@ -380,8 +403,13 @@ public class LiftoverRelocateAnalysis extends Analysis {
 
     /** A row that does not map: placed at (source chrom, 0[, 1]), strand '', bam MPOS 0 (R18), -all score 0.0. */
     private void emitUnplaced(Row r, String status) {
+        emitUnplaced(r, status, NO_FIX);
+    }
+
+    /** As above, with the allele fix of a -pad lift that did not place the row. */
+    private void emitUnplaced(Row r, String status, AlleleFix.Result f) {
         emit(r, r.chr, 0, 1, "", status, 0.0, mode == RelocateMode.BAM ? unplacedMate(r) : null,
-                LiftEngine.Extent.NONE);
+                LiftEngine.Extent.NONE, f);
     }
 
     private static final AlleleFix.Result NO_FIX = AlleleFix.Result.of(AlleleFix.NONE);
@@ -394,7 +422,8 @@ public class LiftoverRelocateAnalysis extends Analysis {
     /**
      * Emits tChrom, a[, b], the input columns after the location (rewritten on the - strand), the source location,
      * strand and status, the aligned extent under -aligned, the allele fix under -haplotype and the score under -all.
-     * mpos replaces the -bam MPOS column; a rewritten fix replaces REF and ALT, already in target orientation.
+     * mpos replaces the -bam MPOS column; a placed fix (rewritten, or a -pad lift) replaces REF and ALT, already in
+     * target orientation.
      */
     private void emit(Row r, String tChrom, int a, int b, String strand, String status, double score, String mpos,
                       LiftEngine.Extent extent, AlleleFix.Result f) {
@@ -410,11 +439,11 @@ public class LiftoverRelocateAnalysis extends Analysis {
         if (span) {
             sb.append('\t').append(b);
         }
-        boolean rewritten = AlleleFix.REWRITTEN.equals(f.fix());
+        boolean placed = f.placed();
         for (int k = span ? 3 : 2; k < n; k++) {
-            if (rewritten && k == cols.ref()) {
+            if (placed && k == cols.ref()) {
                 sb.append('\t').append(f.ref());
-            } else if (rewritten && k == cols.alt()) {
+            } else if (placed && k == cols.alt()) {
                 sb.append('\t').append(f.alt());
             } else {
                 sb.append('\t').append(inputColumn(r, k, minus, mpos));

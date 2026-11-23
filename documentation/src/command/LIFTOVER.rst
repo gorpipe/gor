@@ -48,7 +48,8 @@ The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequen
 .. versionadded:: 5.18.0
 
    ``-haplotype`` (with ``-var``) rewrites the alleles of an indel next to a build indel as BCFtools ``+liftover`` does,
-   see `Allele fix`_.
+   see `Allele fix`_. ``-pad`` (with ``-haplotype``) also lifts the variants a plain lift leaves unmapped, see
+   `Unmapped variants`_.
 
 Usage
 =====
@@ -56,7 +57,7 @@ Usage
 .. code-block:: gor
 
 	gor ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | -bam ] [ -all ] [ -aligned ]
-	    [ -haplotype -srcseq <source build> -tgtseq <target build> ]
+	    [ -haplotype [ -pad ] -srcseq <source build> -tgtseq <target build> ]
 	    [ -build <build> ] [ -mapped <contigs> ] [ -passthrough <contigs> | none ] [ -failon <statuses> ]
 	    [ -tolerance <t> ]
 
@@ -91,6 +92,9 @@ Options
 | ``-haplotype``   | Only valid with ``-var``, not with ``-all``. Rewrites the alleles of an |
 |                  | indel next to a build indel and adds ``<build>_alleleFix``, see         |
 |                  | `Allele fix`_. Requires ``-srcseq`` and ``-tgtseq``.                    |
++------------------+-------------------------------------------------------------------------+
+| ``-pad``         | Only valid with ``-haplotype``. Also lifts the variants a plain lift    |
+|                  | leaves unmapped, as BCFtools does, see `Unmapped variants`_.            |
 +------------------+-------------------------------------------------------------------------+
 | ``-srcseq path`` | With ``-haplotype``: the reference sequence (chromSeq) of the input's   |
 |                  | build, for example ``config/chromSeqhg19``.                             |
@@ -204,7 +208,8 @@ representation BCFtools ``+liftover`` (checked against 1.25, with its default ``
 4. the alleles are left aligned with the new REF, the source REF and the ALT, unless they already are.
 
 The row then carries the new REF and the ALT, at the new position; the source REF, which BCFtools keeps as a second
-ALT, is dropped. ``<build>_alleleFix`` says what happened to the row:
+ALT, is dropped. ``<build>_alleleFix`` says what happened to a row the plain lift maps (for the rows it leaves
+unmapped, under ``-pad``, see `Unmapped variants`_):
 
 +------------------+-----------------------------------------------------------------------------------------------+
 | ``rewritten``    | The alleles and position were rewritten across a build indel (BCFtools ``SWAP=-1``).          |
@@ -222,7 +227,7 @@ ALT, is dropped. ``<build>_alleleFix`` says what happened to the row:
 |                  | a very long pad realignment, or no target sequence. Not rewritten.                            |
 +------------------+-----------------------------------------------------------------------------------------------+
 
-Only indels the plain lift maps are rewritten. A difference of bases (not length) between the builds in the window is
+Of the rows the plain lift maps, only indels are rewritten. A difference of bases (not length) between the builds in the window is
 not a build indel and gives ``none``. A rewritten row's ``<build>_qStrand`` is the strand of the chain its alleles
 were lifted through. With ``-aligned`` the aligned extent is the plain lift's. Unlike BCFtools, which reads before the
 sequence there, the allele extension stops at the first base of a contig.
@@ -234,6 +239,35 @@ sequence there, the allele extension stops at the first base of a contig.
 
 For example hg19 chr18:28666525 A>AT, next to three bases hg38 has and hg19 does not, lifts to
 chr18:31086560 TTAA>TT with ``hg19_alleleFix`` ``rewritten``, where a plain lift gives chr18:31086559 A>AT.
+
+Unmapped variants
+-----------------
+
+A plain ``-var`` lift maps a variant only when one chain block holds its whole REF. A deletion whose deleted bases are
+a gap the target build does not have, or a variant whose base lies in a chain gap, is ``unmapped``, though BCFtools
+``+liftover`` lifts many of them. With ``-haplotype -pad`` such a variant (an indel, an MNV or a SNV) is lifted as
+BCFtools 1.24 lifts it: the alleles are extended (a SNV by a base on each side), the first and the last base are
+lifted, an anchor in a gap is padded to the next block, and the target reference over the span decides the alleles.
+The row is then ``mapped`` at BCFtools' position, and ``<build>_alleleFix`` says how:
+
++------------------+-----------------------------------------------------------------------------------------------+
+| ``swap``         | The target reference is the ALT (BCFtools ``SWAP=1``). The row carries the source REF and ALT |
+|                  | at that position, in target orientation, so the swap can be checked and made downstream.      |
++------------------+-----------------------------------------------------------------------------------------------+
+| ``rewritten``    | The target reference is neither allele (BCFtools ``SWAP=-1``): the new REF and the ALT.       |
++------------------+-----------------------------------------------------------------------------------------------+
+| ``none``         | The target reference is the REF: the REF and ALT at BCFtools' position.                       |
++------------------+-----------------------------------------------------------------------------------------------+
+
+A variant that is not placed stays ``unmapped``, with ``unresolved`` when BCFtools would reject it (neither anchor
+lifts, the anchors lift to different chains or too far apart), when an anchor lies where two blocks tie, or for the
+reasons a rewrite is (more than one ALT, a symbolic allele, a contig ``-mapped`` does not accept, a very long pad
+realignment, no sequence), and with ``ref_mismatch`` when its REF is not the ``-srcseq`` reference. A lifted row's
+aligned extent (``-aligned``) is 0 and 0. Rows the plain lift maps are not changed by ``-pad``, which cannot be
+combined with ``-nogapfill``.
+
+For example hg38 chr11:72139110 CTA>C, whose TA hg19 does not have, lifts to hg19 chr11:71850156 CTA>C with
+``hg38_alleleFix`` ``swap``: hg19 carries the ALT there.
 
 Examples
 ========
