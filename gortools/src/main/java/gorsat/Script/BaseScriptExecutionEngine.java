@@ -9,6 +9,7 @@ import gorsat.process.GorPipeMacros;
 import gorsat.process.GorPrePipe;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.driver.meta.DataType;
 import org.gorpipe.gor.session.GorContext;
 import org.gorpipe.gor.session.GorSession;
@@ -16,18 +17,29 @@ import org.gorpipe.gor.table.util.PathUtils;
 import org.gorpipe.gor.util.DataUtil;
 import org.gorpipe.gor.util.Tuple;
 import org.gorpipe.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class BaseScriptExecutionEngine {
 
+    private static final Logger log = LoggerFactory.getLogger(BaseScriptExecutionEngine.class);
+
+    /** How long to wait for another thread's signature computation before computing it uncached. */
+    static final String SIGNATURE_WAIT_TIMEOUT_PROPERTY = "gor.script.signature.wait.timeout.ms";
+    private static final long DEFAULT_SIGNATURE_WAIT_TIMEOUT_MS = 60_000;
+
     Map<String,ExecutionBlock> executionBlocks = new ConcurrentHashMap<>();
     Map<String,String> aliases = new ConcurrentHashMap<>();
-    Map<String,String> fileSignatureMap = new ConcurrentHashMap<>();
-    Map<String,String> singleFileSignatureMap = new ConcurrentHashMap<>();
+    Map<String,Signature> fileSignatureMap = new ConcurrentHashMap<>();
+    Map<String,Signature> singleFileSignatureMap = new ConcurrentHashMap<>();
     VirtualFileManager virtualFileManager = new VirtualFileManager();
 
     public List<String> getUsedFiles(String commandToExecute, GorSession session) {
@@ -115,8 +127,127 @@ public class BaseScriptExecutionEngine {
         }
     }
 
+    /** A signature, computed or being computed by {@code owner}. */
+    private static final class Signature {
+        /** The computing thread; cleared when done so cached signatures do not keep it reachable. */
+        private volatile Thread owner = Thread.currentThread();
+        private final CountDownLatch done = new CountDownLatch(1);
+        private String value;
+        private boolean cached;
+
+        /** Publish the computed value to waiting threads. */
+        void complete(String value) {
+            this.value = value;
+            cached = true;
+            finish();
+        }
+
+        /** No value is cached (the computation failed or returned null); waiting threads retry. */
+        void abandon() {
+            finish();
+        }
+
+        private void finish() {
+            owner = null;
+            done.countDown();
+        }
+
+        boolean isComputing() {
+            return owner == Thread.currentThread();
+        }
+
+        /**
+         * Wait for the owner to finish, without ForkJoinPool.managedBlock (as CompletableFuture.join
+         * uses): a pool worker blocked that way makes the pool add a spare thread, and the common
+         * pool throws RejectedExecutionException past 256 spares.
+         *
+         * <p>The wait is bounded.  Waiting is only deadlock-free while computing a signature never
+         * waits on ForkJoin tasks; if a file reader ever does, two workers can each wait for a
+         * signature the other is computing.  The timeout breaks such a cycle, and an interrupt
+         * ends the wait so a cancelled query can get out.
+         *
+         * @return true if a value was cached, false if not (the key was unregistered), or null if
+         *         the wait timed out
+         * @throws GorSystemException if the thread is interrupted while waiting
+         */
+        Boolean await(long timeoutMs) {
+            try {
+                if (!done.await(timeoutMs, TimeUnit.MILLISECONDS)) {
+                    return null;
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new GorSystemException("Interrupted while waiting for a file signature", e);
+            }
+            return cached;
+        }
+    }
+
+    /**
+     * Get a cached value, or compute it and cache it.  Unlike {@code computeIfAbsent}, no map lock
+     * is held while computing (ENGKNOW-4267).  processBlocks computes signatures in a parallel
+     * stream on the ForkJoin common pool, and a waiting pool worker runs other creates' tasks.
+     * With the bin lock held during a slow computation (a dictionary load), such a task could need
+     * that same lock ("Recursive update") or one held by another waiting worker (deadlock).
+     *
+     * <p>Only registering the key happens under the map lock.  The registering thread computes the
+     * value; other threads asking for the same key wait for it rather than repeating the work.
+     * Waiting is safe because computing a signature never waits on pool tasks (dictionary loads
+     * are sequential, see DictionaryEntries.loadLines).  As a safeguard, a wait longer than
+     * {@value #SIGNATURE_WAIT_TIMEOUT_PROPERTY} (default 60 s) is logged and the value computed
+     * without caching it.  If the computing thread asks for its own key again, it computes it
+     * again without waiting on itself.  If the computation fails or returns null, nothing is
+     * cached and waiting threads compute it themselves, as with computeIfAbsent.
+     */
+    private static String getOrCompute(Map<String,Signature> map, String key, Supplier<String> compute) {
+        while (true) {
+            var signature = map.get(key);
+            if (signature == null) {
+                var mine = new Signature();
+                signature = map.putIfAbsent(key, mine);
+                if (signature == null) {
+                    return computeSignature(map, key, mine, compute);
+                }
+            }
+            if (signature.isComputing()) {
+                return compute.get();
+            }
+            long timeoutMs = Long.getLong(SIGNATURE_WAIT_TIMEOUT_PROPERTY, DEFAULT_SIGNATURE_WAIT_TIMEOUT_MS);
+            var cached = signature.await(timeoutMs);
+            if (cached == null) {
+                // The key is not logged: it holds dictionary tags, which can be sample ids.
+                var owner = signature.owner;
+                log.warn("Waited {} ms for thread {} to compute a file signature; computing it without "
+                        + "caching (ENGKNOW-4267)", timeoutMs, owner != null ? owner.getName() : "(finished)");
+                return compute.get();
+            }
+            if (cached) {
+                return signature.value;
+            }
+            // Nothing was cached and the key was unregistered; try again.
+        }
+    }
+
+    private static String computeSignature(Map<String,Signature> map, String key, Signature mine, Supplier<String> compute) {
+        String value;
+        try {
+            value = compute.get();
+        } catch (Throwable e) {
+            map.remove(key, mine);
+            mine.abandon();
+            throw e;
+        }
+        if (value == null) {
+            map.remove(key, mine);
+            mine.abandon();
+        } else {
+            mine.complete(value);
+        }
+        return value;
+    }
+
     public String fileFingerPrint(String fileName, GorSession gorPipeSession) {
-        return singleFileSignatureMap.computeIfAbsent(fileName, (k) -> {
+        return getOrCompute(singleFileSignatureMap, fileName, () -> {
             if (fileName.startsWith("#gordict#")) {
                 return getGorDictSignature(gorPipeSession, fileName);
             } else {
@@ -167,9 +298,9 @@ public class BaseScriptExecutionEngine {
                 // if gor.gorpipe.sideeffects.force_run is sett.
                 fileSignature = StringUtilities.createMD5(System.nanoTime() + fileListKey + signatureKey);
             } else {
-                fileSignature = fileSignatureMap.computeIfAbsent(
+                fileSignature = getOrCompute(fileSignatureMap,
                         fileListKey + signatureKey,
-                        (k) -> StringUtilities.createMD5(
+                        () -> StringUtilities.createMD5(
                                 usedFiles.stream().map(x -> fileFingerPrint(x, session)).collect(Collectors.joining(" ")) + signatureKey));
             }
         }
