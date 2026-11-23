@@ -5,6 +5,7 @@ import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import org.gorpipe.gor.auth.utils.OAuthHandler;
 import org.gorpipe.gor.auth.utils.PlatformGorAuthCache;
 import org.gorpipe.security.cred.CsaApiService;
@@ -25,6 +26,7 @@ public class PlatformAuth extends GorAuth {
     private final static Logger auditLog = LoggerFactory.getLogger("audit." + PlatformAuth.class.getName());
 
     private PlatformGorAuthCache gorAuthInfoCache;
+    private PlatformGorAuthCache csaAuthInfoCache;
 
     private static final String REALM_ACCESS = "realm_access";
     private static final String ROLES = "roles";
@@ -41,6 +43,7 @@ public class PlatformAuth extends GorAuth {
         this.objectMapper = new ObjectMapper();
         this.userKey = config.getPlatformUserKey();
         this.gorAuthInfoCache = new PlatformGorAuthCache();
+        this.csaAuthInfoCache = new PlatformGorAuthCache();
         this.oAuthHandler = oAuthHandler;
         this.useRolesFromToken = config.userRolesFromToken();
     }
@@ -79,8 +82,16 @@ public class PlatformAuth extends GorAuth {
                 long expiration = getExpiration(jwt);
                 String userId = getSub(jwt);
                 List<String> userRoles = getUserRoles(jwt);
-                gorAuthInfo = updateGorAuthInfo(new GeneralAuthInfo(0, project, username, userId, userRoles, 0, expiration));
-                gorAuthInfoCache.add(securityKey, gorAuthInfo, expiration);
+                GorAuthInfo csaAuthInfo = getCsaAuthInfo(csaAuthInfoCache, project, username, userId, userRoles);
+                gorAuthInfo = new GeneralAuthInfo(csaAuthInfo.getProjectId(), project, username,
+                        Strings.isNullOrEmpty(userId) ? csaAuthInfo.getUserId() : userId,
+                        userRoles.isEmpty() ? csaAuthInfo.getUserRoles() : userRoles,
+                        csaAuthInfo.getOrganizationId(), expiration);
+                // Not when the CSA entry is kept for less time than the token (a failed lookup, asked again in 1
+                // min): this entry is checked first, and would hide that retry for as long as the token lives.
+                if (csaAuthInfo.getExpiration() >= expiration) {
+                    gorAuthInfoCache.add(securityKey, gorAuthInfo, expiration);
+                }
             } catch (Exception e) {
                 throw new GorSystemException(e);
             }

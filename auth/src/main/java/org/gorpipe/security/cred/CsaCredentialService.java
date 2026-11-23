@@ -97,13 +97,7 @@ public class CsaCredentialService extends CsaBaseService {
             parms = parms + String.format("&find[lookup_key]=%s", lookupKey);
         }
 
-        Map<String, Object> result = null;
-        try {
-            result = jsonGet("auth/v1/credentials.json?" + parms);
-        } catch (IOException ioe) {
-            // Retry once with new Auth.
-            result = initializeAndRetry("auth/v1/credentials.json?" + parms);
-        }
+        Map<String, Object> result = jsonGetWithRetry("auth/v1/credentials.json?" + parms);
 
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> list = (List<Map<String, Object>>) result.get("credentials");

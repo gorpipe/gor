@@ -49,13 +49,6 @@ public class CsaApiService extends CsaBaseService {
     }
 
     private Map<String, Object> getApiResults(String path) throws IOException {
-        Map<String, Object> result;
-        try {
-            result = jsonGet(path);
-        } catch (IOException ioe) {
-            // Retry once with new Auth.
-            result = initializeAndRetry(path);
-        }
-        return result;
+        return jsonGetWithRetry(path);
     }
 }
