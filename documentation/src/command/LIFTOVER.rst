@@ -227,10 +227,10 @@ unmapped, under ``-pad``, see `Unmapped variants`_):
 |                  | a very long pad realignment, or no target sequence. Not rewritten.                            |
 +------------------+-----------------------------------------------------------------------------------------------+
 
-Of the rows the plain lift maps, only indels are rewritten. A difference of bases (not length) between the builds in the window is
-not a build indel and gives ``none``. A rewritten row's ``<build>_qStrand`` is the strand of the chain its alleles
-were lifted through. With ``-aligned`` the aligned extent is the plain lift's. Unlike BCFtools, which reads before the
-sequence there, the allele extension stops at the first base of a contig.
+Of the rows the plain lift maps, only indels are rewritten. A difference of bases (not length) between the builds in
+the window is not a build indel and gives ``none``. A rewritten row's ``<build>_qStrand`` is the strand of the chain
+its alleles were lifted through. With ``-aligned`` the aligned extent is the plain lift's. Unlike BCFtools, which
+reads before the sequence there, the allele extension stops at the first base of a contig.
 
 .. code-block:: gor
 
