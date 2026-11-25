@@ -346,6 +346,10 @@ case class ForkWrite(forkCol: Int,
       }
     })
 
+    // Failed before any row, e.g. the query failed to build: write no empty file and no link, so an existing output
+    // and its link are left as they were (ENGKNOW-4294).
+    if (isInErrorState && !somethingToWrite) return
+
     val isInsideGordFolder = DataUtil.isGord(PathUtils.getParent(fullFileName))
 
     if (options.useFolder.isEmpty && !somethingToWrite && !useFork && !isInsideGordFolder) {

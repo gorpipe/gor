@@ -284,15 +284,21 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
     val inputSourceCommand: String = prepareInputSource(argString, gorString, useStdin)
     val inputHeader: String = preparePipeStep(argString, gorString, forcedInputHeader, inputSourceCommand)
 
-    if (inputHeader == null || inputHeader.isEmpty) {
-      throw new GorResourceException("Input source contains no header", theInputSource.getSourceName)
+    try {
+      if (inputHeader == null || inputHeader.isEmpty) {
+        throw new GorResourceException("Input source contains no header", theInputSource.getSourceName)
+      }
+
+      val types = theInputSource.getTypes
+      val rowHeader = if (types!=null) RowHeader(inputHeader, types) else RowHeader(inputHeader)
+      thePipeStep.setRowHeader(rowHeader)
+
+      theIterator = new BatchedPipeStepIteratorAdaptor(theInputSource, thePipeStep, combinedHeader, brsConfig)
+    } catch {
+      case e: Throwable =>
+        closePartialPipeline(e)
+        throw e
     }
-
-    val types = theInputSource.getTypes
-    val rowHeader = if (types!=null) RowHeader(inputHeader, types) else RowHeader(inputHeader)
-    thePipeStep.setRowHeader(rowHeader)
-
-    theIterator = new BatchedPipeStepIteratorAdaptor(theInputSource, thePipeStep, combinedHeader, brsConfig)
 
     theInputSource
   }
@@ -369,25 +375,45 @@ class PipeInstance(context: GorContext, outputValidateOrder: Boolean = false) ex
       if (!isNorContext && outputValidateOrder) {
         thePipeStep = thePipeStep | CheckOrder("Output")
       }
+
+      thePipeStep = PipeInstance.injectTypeInferral(thePipeStep)
+
+      // Add timeout monitor
+      thePipeStep = thePipeStep | TimeoutMonitor()
+
+      // Add cancel monitor
+      if (context.getSession.getSystemContext.getMonitor != null) {
+        thePipeStep = CancelMonitor(context.getSession.getSystemContext.getMonitor) | thePipeStep | CancelMonitor(context.getSession.getSystemContext.getMonitor)
+      }
     } catch {
       case e: Throwable =>
-        if (theInputSource != null) {
-          theInputSource.close()
-        }
+        closePartialPipeline(e)
         throw e
     }
 
-    thePipeStep = PipeInstance.injectTypeInferral(thePipeStep)
-
-    // Add timeout monitor
-    thePipeStep = thePipeStep | TimeoutMonitor()
-
-    // Add cancel monitor
-    if (context.getSession.getSystemContext.getMonitor != null) {
-      thePipeStep = CancelMonitor(context.getSession.getSystemContext.getMonitor) | thePipeStep | CancelMonitor(context.getSession.getSystemContext.getMonitor)
-    }
-
     inputHeader
+  }
+
+  /**
+   * Closes what a pipeline that failed to build has opened: the input source, and the steps built so far, which may
+   * hold files of their own (a JOIN's right-hand source, say). Closing only the input source left those open until
+   * the GC finalizer closed them (ENGKNOW-4294). The steps are finished in error state, as on a failed run.
+   */
+  private def closePartialPipeline(e: Throwable): Unit = {
+    if (thePipeStep != null) {
+      try {
+        thePipeStep.securedFinish(e)
+      } catch {
+        case t: Throwable => if (t ne e) e.addSuppressed(t)
+      }
+    }
+    if (theInputSource != null) {
+      try {
+        theInputSource.close()
+      } catch {
+        case t: Throwable => if (t ne e) e.addSuppressed(t)
+      }
+    }
   }
 
   def prepareInputSource(argString: String, gorString: String, useStdin: Boolean): String = {
