@@ -111,8 +111,9 @@ public final class AlleleFix {
             return Result.of(UNRESOLVED);
         }
         Seq s = new Seq(src, chrom);
-        if (!s.range(pos, pos + r.length() - 1).equals(r)) {
-            return Result.of(REF_MISMATCH);
+        String mismatch = sourceMismatch(s, pos, r);
+        if (mismatch != null) {
+            return Result.of(mismatch);
         }
         LiftEngine.PointResult plainLift = LiftEngine.liftVarAt(() -> contig -> ci, chrom, pos, r.length(),
                 policy).point();
@@ -143,10 +144,9 @@ public final class AlleleFix {
             return Result.of(UNRESOLVED);
         }
         Seq s = new Seq(src, chrom);
-        String bases = s.range(pos, pos + r.length() - 1);
-        if (!bases.equals(r)) {
-            // no source sequence here (a contig -srcseq does not have) is not a REF that disagrees with it
-            return Result.of(bases.chars().allMatch(c -> c == 'N') ? UNRESOLVED : REF_MISMATCH);
+        String mismatch = sourceMismatch(s, pos, r);
+        if (mismatch != null) {
+            return Result.of(mismatch);
         }
         try {
             // no plain lift to keep: runUnmapped places the row whatever the target reference turns out to be
@@ -154,6 +154,18 @@ public final class AlleleFix {
         } catch (Unresolved e) {
             return Result.of(UNRESOLVED);
         }
+    }
+
+    /**
+     * Null when ref is the source reference at pos; otherwise {@link #REF_MISMATCH}, or {@link #UNRESOLVED} when there
+     * is no source sequence there (a contig -srcseq does not have), which is not a REF that disagrees with it.
+     */
+    private static String sourceMismatch(Seq s, int pos, String ref) {
+        String bases = s.range(pos, pos + ref.length() - 1);
+        if (bases.equals(ref)) {
+            return null;
+        }
+        return bases.chars().allMatch(c -> c == 'N') ? UNRESOLVED : REF_MISMATCH;
     }
 
     private static boolean plainBases(String s) {
@@ -324,6 +336,13 @@ public final class AlleleFix {
             int p0 = l.dst5() - 1 + found.shift();
             if (!isLeftAligned(out)) {
                 p0 = leftAlign(out, p0, l.tgt());
+            }
+            for (StringBuilder a : out) {
+                if (a.indexOf("N") >= 0) {
+                    // the target has no sequence there (an N run, or past the end of the contig, which reads N): a
+                    // row the plain lift did not place is not placed onto bases the target does not have
+                    throw new Unresolved();
+                }
             }
             String strand = span.minus() ? "-" : "+";
             if (swap < 0) {

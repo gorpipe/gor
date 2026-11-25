@@ -25,6 +25,7 @@ package gorsat.Commands;
 import gorsat.Analysis.SortGenome;
 import gorsat.Utilities.IteratorUtilities;
 import gorsat.liftover.AlleleFixConfig;
+import gorsat.liftover.ContigIndexBuilder;
 import gorsat.liftover.ContigPolicy;
 import gorsat.liftover.FileChainSource;
 import gorsat.liftover.LiftoverArgs;
@@ -234,6 +235,11 @@ public class Liftover extends CommandInfo {
         if (pad && CommandParseUtilities.hasOption(args, "-nogapfill")) {
             // BCFtools lifts through the 1-base equal gaps that -nogapfill leaves out, and -pad lifts as BCFtools does
             throw new GorParsingException("-pad cannot be combined with -nogapfill", "-pad", "");
+        }
+        if (pad && ContigIndexBuilder.maxGapFillProperty() == 0) {
+            // the same index as -nogapfill, set by the Java property instead
+            throw new GorParsingException("-pad cannot be combined with " + ContigIndexBuilder.MAX_GAP_FILL_PROPERTY
+                    + "=0, which fills no gaps (as -nogapfill)", "-pad", "");
         }
         if (!src || !tgt) {
             throw new GorParsingException("-haplotype requires -srcseq and -tgtseq, the source and target reference "

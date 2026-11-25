@@ -1,5 +1,6 @@
 package gorsat;
 
+import gorsat.liftover.ContigIndexBuilder;
 import org.gorpipe.exceptions.GorException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -96,6 +97,10 @@ public class UTestGorLiftoverPad {
     private static World ins38;
     private static World ins19;
     private static World gap3;
+    private static World contigEnd;
+    private static World tie;
+    private static World noSource;
+    private static World otherContig;
 
     /** One fixture: the source and target chromSeq builds, the chain and the input rows. */
     private record World(String src, String tgt, String srcSeq, String tgtSeq, String chain, String variants) {
@@ -167,6 +172,29 @@ public class UTestGorLiftoverPad {
                         + "chr1\t100\tA\tAT\trev_ins\n"
                         + "chr1\t102\tT\tG\tedge\n"
                         + "chr1\t103\tA\tG\tmid\n");
+        // the target ends right after the C: the deletion's padded span runs past the end of the target contig, where
+        // the reference reads N
+        contigEnd = world("contig_end", SWAP_DEL_SRC, SWAP_DEL_SRC.substring(0, 151),
+                "chr1\t0\t151\tchr1\t0\t151\t+\t1000\n",
+                "chr1\t151\tCTA\tC\tcontig_end\n");
+        // the first block is also aligned elsewhere with the same score: the deletion's 5' anchor ties
+        tie = world("tie", SWAP_DEL_SRC, SWAP_DEL_TGT,
+                "chr1\t0\t151\tchr1\t0\t151\t+\t1000\n"
+                        + "chr1\t0\t151\tchr1\t150\t301\t+\t1000\n"
+                        + "chr1\t153\t303\tchr1\t151\t301\t+\t1000\n",
+                "chr1\t151\tCTA\tC\ttie\n");
+        // the variants are on chr2, which the -srcseq build does not have
+        noSource = world("no_source", SWAP_DEL_SRC, SWAP_DEL_TGT,
+                "chr2\t0\t151\tchr1\t0\t151\t+\t1000\n"
+                        + "chr2\t153\t303\tchr1\t151\t301\t+\t1000\n",
+                "chr2\t50\tCA\tC\tplain_mapped\n"
+                        + "chr2\t151\tCTA\tC\tunmapped\n");
+        // the swap_del world lifted onto chr2
+        otherContig = world("other_contig", SWAP_DEL_SRC, SWAP_DEL_TGT,
+                "chr1\t0\t151\tchr2\t0\t151\t+\t1000\n"
+                        + "chr1\t153\t303\tchr2\t151\t301\t+\t1000\n",
+                "chr1\t151\tCTA\tC\tswap_del\n");
+        Files.writeString(Path.of(otherContig.tgtSeq(), "chr2.txt"), SWAP_DEL_TGT, StandardCharsets.US_ASCII);
     }
 
     private static World world(String name, String src, String tgt, String blocks, String rows) throws IOException {
@@ -375,6 +403,51 @@ public class UTestGorLiftoverPad {
         // the SNVs in the gap are unmapped under -haplotype alone
         Assert.assertTrue(without, row(without, "edge").contains("\tunmapped"));
         Assert.assertTrue(without, row(without, "mid").contains("\tunmapped"));
+    }
+
+    @Test
+    public void aSpanPastTheEndOfTheTargetContigStaysUnmapped() {
+        // the target reads N past its end: no lift onto bases the target does not have
+        String end = row(pad(contigEnd), "contig_end");
+        Assert.assertTrue(end, end.endsWith("\tunmapped\tunresolved"));
+    }
+
+    @Test
+    public void anAnchorThatTiesBetweenBlocksStaysUnmapped() {
+        Assert.assertTrue(row(pad(tie), "tie").endsWith("\tunmapped\tunresolved"));
+    }
+
+    @Test
+    public void aContigTheSourceSequenceDoesNotHaveIsUnresolved() {
+        // no source sequence to check REF against: unresolved, whether or not the plain lift maps the row
+        String result = pad(noSource);
+        Assert.assertTrue(result, row(result, "plain_mapped").endsWith("\tmapped\tunresolved"));
+        Assert.assertTrue(result, row(result, "unmapped").endsWith("\tunmapped\tunresolved"));
+        Assert.assertTrue(row(haplotype(noSource), "plain_mapped").endsWith("\tmapped\tunresolved"));
+    }
+
+    @Test
+    public void aTargetContigMappedDoesNotAcceptStaysUnmapped() {
+        Assert.assertEquals("chr2\t151\tCTA\tC\tswap_del\tchr1\t151\t+\tmapped\tswap",
+                row(pad(otherContig), "swap_del"));
+        String refused = liftover(otherContig, "-mapped chr1 -haplotype -pad -srcseq " + otherContig.srcSeq()
+                + " -tgtseq " + otherContig.tgtSeq());
+        Assert.assertTrue(refused, row(refused, "swap_del").endsWith("\tunmapped\tunresolved"));
+    }
+
+    @Test
+    public void noGapFillByPropertyIsRejectedToo() {
+        String old = System.setProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY, "0");
+        try {
+            assertFails("gor " + swapDel.variants() + " | liftover " + swapDel.chain() + " -var -haplotype -pad"
+                    + " -srcseq " + swapDel.srcSeq() + " -tgtseq " + swapDel.tgtSeq(), "cannot be combined with");
+        } finally {
+            if (old == null) {
+                System.clearProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY);
+            } else {
+                System.setProperty(ContigIndexBuilder.MAX_GAP_FILL_PROPERTY, old);
+            }
+        }
     }
 
     @Test

@@ -45,7 +45,7 @@ The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequen
 
    ``-aligned`` (with ``-var``) adds the aligned extent of each variant, see `Aligned extent`_.
 
-.. versionadded:: 5.18.0
+.. versionadded:: 5.19.0
 
    ``-haplotype`` (with ``-var``) rewrites the alleles of an indel next to a build indel as BCFtools ``+liftover`` does,
    see `Allele fix`_. ``-pad`` (with ``-haplotype``) also lifts the variants a plain lift leaves unmapped, see
@@ -198,7 +198,7 @@ Allele fix
 A plain ``-var`` lift moves a variant to its lifted position and keeps its alleles. When the target build has an
 indel (a chain gap) right next to an indel, the same alleles there describe another haplotype: the target reference
 plus the variant is not the source reference plus the variant. With ``-var -haplotype`` such a row gets the
-representation BCFtools ``+liftover`` (checked against 1.25, with its default ``--max-indel-inc 250`` and
+representation BCFtools ``+liftover`` (checked against 1.24, with its default ``--max-indel-inc 250`` and
 ``--max-snp-gap 1``) gives it:
 
 1. the alleles are extended in the source build until the indel is unambiguous (over its repeat);
@@ -227,7 +227,8 @@ unmapped, under ``-pad``, see `Unmapped variants`_):
 | ``unresolved``   | A rewrite was needed but could not be made: several ALTs (when one is an indel), a symbolic   |
 |                  | allele (also one as long as REF), anchors                                                     |
 |                  | that lift to different chains or too far apart, a target contig ``-mapped`` does not accept,  |
-|                  | a very long pad realignment, or no target sequence. Not rewritten.                            |
+|                  | a very long pad realignment, no source sequence (a contig ``-srcseq`` does not have), or no   |
+|                  | target sequence. Not rewritten.                                                               |
 +------------------+-----------------------------------------------------------------------------------------------+
 
 Of the rows the plain lift maps, only indels are rewritten. A difference of bases (not length) between the builds in
@@ -267,11 +268,12 @@ The row is then ``mapped`` at BCFtools' position, and ``<build>_alleleFix`` says
 +------------------+-----------------------------------------------------------------------------------------------+
 
 A variant that is not placed stays ``unmapped``, with ``unresolved`` when BCFtools would reject it (neither anchor
-lifts, the anchors lift to different chains or too far apart), when an anchor lies where two blocks tie, or for the
+lifts, the anchors lift to different chains or too far apart), when an anchor lies where two blocks tie, when the
+lifted alleles would hold an N (an N run in the target, or a span past the end of the target contig), or for the
 reasons a rewrite is (more than one ALT, a symbolic allele, a contig ``-mapped`` does not accept, a very long pad
 realignment, no sequence), and with ``ref_mismatch`` when its REF is not the ``-srcseq`` reference. A lifted row's
 aligned extent (``-aligned``) is 0 and 0. Rows the plain lift maps are not changed by ``-pad``, which cannot be
-combined with ``-nogapfill``.
+combined with ``-nogapfill`` (nor with the Java property ``gor.liftover.gapfill.max=0``, which does the same).
 
 For example hg38 chr11:72139110 CTA>C, whose TA hg19 does not have, lifts to hg19 chr11:71850156 CTA>C with
 ``hg38_alleleFix`` ``swap``: hg19 carries the ALT there.
