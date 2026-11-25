@@ -3,6 +3,8 @@ package org.gorpipe.compat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -120,9 +122,37 @@ public final class CaseLint {
         }
     }
 
+    /**
+     * Every declared input must be reachable from the query: named by the query
+     * itself, or by the inline content of an input that is reachable. The second
+     * route is how a dictionary works: the query names the .gord, and the .gord
+     * names its part files.
+     */
     private static void checkInputsReferenced(CompatCase c, List<String> violations) {
+        Set<CompatInput> reached = new HashSet<>();
+        List<String> texts = new ArrayList<>();
+        texts.add(c.query);
+        boolean grew = true;
+        while (grew) {
+            grew = false;
+            for (CompatInput in : c.inputs) {
+                if (reached.contains(in)) {
+                    continue;
+                }
+                for (String text : texts) {
+                    if (text.contains(in.path)) {
+                        reached.add(in);
+                        if (in.content != null) {
+                            texts.add(in.content);
+                        }
+                        grew = true;
+                        break;
+                    }
+                }
+            }
+        }
         for (CompatInput in : c.inputs) {
-            if (!c.query.contains(in.path)) {
+            if (!reached.contains(in)) {
                 violations.add("[" + c.id + "] declares the input '" + in.path
                         + "' which the query never references");
             }

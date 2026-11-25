@@ -5,12 +5,36 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 public class UTestCompatExecutor {
 
     @Rule
     public TemporaryFolder tmp = new TemporaryFolder();
+
+    @Test
+    public void createMaterialisesIntoTheCaseRootNotTheSharedTempDir() throws IOException {
+        // CREATE and PGOR write their intermediate results to the cache directory,
+        // which the engine defaults to java.io.tmpdir. Shared across cases and runs,
+        // a case could then be served a result produced by another case or by an
+        // earlier engine build. The executor must keep it inside the case root.
+        Path root = tmp.getRoot().toPath();
+        Files.writeString(root.resolve("in.gor"), "Chrom\tPos\nchr1\t100\nchr2\t200\n");
+        CompatResult result = CompatExecutor.run(
+                "create ##a## = gor in.gor | top 1; gor [##a##]", root);
+
+        Assert.assertFalse(result.errorMessage, result.failed());
+        Assert.assertEquals(1, result.rows.size());
+        Path cache = root.resolve(CompatExecutor.CACHE_DIR);
+        Assert.assertTrue("no cache directory under the case root", Files.isDirectory(cache));
+        try (Stream<Path> files = Files.walk(cache)) {
+            Assert.assertTrue("CREATE wrote nothing under the case root",
+                    files.anyMatch(Files::isRegularFile));
+        }
+    }
 
     @Test
     public void runsNorQueryAndSerialisesOutput() {

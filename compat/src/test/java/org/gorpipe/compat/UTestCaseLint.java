@@ -94,6 +94,37 @@ public class UTestCaseLint {
     }
 
     @Test
+    public void inputNamedOnlyByADictionaryIsReferenced() {
+        // A .gord names its part files; the query names only the dictionary. The
+        // parts are still used, so declaring them is not an orphan.
+        CompatCase x = c("dict.a.parts", "gor ${ROOT}/vars.gord");
+        x.inputs.add(input("vars.gord", "a.gor\tP1\n"));
+        x.inputs.add(input("a.gor", "Chrom\tPos\nchr1\t1\n"));
+
+        List<String> v = CaseLint.check(Collections.singletonList(x));
+        Assert.assertTrue(v.toString(), v.isEmpty());
+    }
+
+    @Test
+    public void inputNamedOnlyByAnOrphanIsStillAViolation() {
+        // Reachability starts at the query: a file named only by an unused input
+        // is as unused as the input that names it.
+        CompatCase x = c("dict.a.orphans", "norrows 1");
+        x.inputs.add(input("vars.gord", "a.gor\tP1\n"));
+        x.inputs.add(input("a.gor", "Chrom\tPos\nchr1\t1\n"));
+
+        List<String> v = CaseLint.check(Collections.singletonList(x));
+        Assert.assertEquals(v.toString(), 2, v.size());
+    }
+
+    private static CompatInput input(String path, String content) {
+        CompatInput in = new CompatInput();
+        in.path = path;
+        in.content = content;
+        return in;
+    }
+
+    @Test
     public void specCaseWithoutCitationIsAViolation() {
         CompatCase x = c("cmd.a.nocite", "norrows 1");
         x.cites.clear();

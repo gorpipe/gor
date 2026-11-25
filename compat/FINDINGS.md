@@ -153,6 +153,7 @@ like an improvement and break callers silently.
 | Doubles print in full to `10^7` then switch to scientific notation, and below `10^-3`; `4/2` prints as `2.0`, so comparing against the text `2` fails | `cmd.calc.a_double_at_ten_million_switches_to_scientific_notation`, `cmd.calc.exact_division_still_produces_a_double` |
 | Without a reference build, every chromosome is assumed **250,000,000** long | `cmd.group.chromosome_length_falls_back_to_a_default` |
 | Aggregate columns appear in a fixed order — `min, max, avg, sum` — regardless of the order the flags were written | `cmd.group.aggregate_columns_are_named_and_ordered_by_the_engine` |
+| `NOR` over a nested GOR stream puts the row's own chromosome in `ChromNOR` (`chr1`), where `NORROWS` and file sources give `chrN` | `nested.nor_reads_a_nested_gor_stream` |
 
 ### 2.10 `CSVSEL -hide` blacklists values, not tags
 
@@ -170,6 +171,97 @@ Reported every run by the documentation cross-check, listed in
 single gap the suite measures. Phantom flags — documented but not registered —
 are at zero after the GTLD and JOIN/VARJOIN fixes.
 
+
+### 2.12 CREATE references are case-sensitive, but the documentation's example is not
+
+`materializedViews.rst` creates `##GWASsubset##` and reads it back as
+`[##gwassubset##]`, twice. The engine rejects that:
+
+```
+create ##Sub## = gor a.gor | top 1; gor [##sub##]
+->  No reference to virtual file: [##sub##]
+```
+
+So the documented example does not run. Either the documentation is wrong, or
+references were meant to be case-insensitive the way DEF macro names are (which
+`script.def.macro_name_is_case_insensitive` confirms they are). A decision for
+someone; until then the engine's answer is pinned.
+
+Case: `script.create.reference_is_case_sensitive_despite_the_docs`.
+
+### 2.13 TOP inside a nested right source restarts at every seek
+
+```
+gor a.gor | join -snpsnp -r <(gor a.gor | select 1,2 | top 2 | calc tag 'x')
+```
+
+From the start, the nested stream is `chr1:100, chr1:300`, yet `chr2:50` also
+matches. ROWNUM in the same position numbers `chr2:50` as 1 rather than 3. Both are
+consistent with the nested query restarting wherever JOIN seeks it; that mechanism
+is inferred from the output, not read from the code. Either way, the right source
+is not the relation the query appears to describe: it depends on where it was
+seeked. `nestedStreams.rst` presents seekability as the advantage of nested streams
+and says nothing about row-limiting or order-dependent steps inside them. TOP and
+ROWNUM are measured; other order-dependent steps are likely affected but untested.
+
+Cases: `nested.top_in_a_seekable_right_source_restarts_at_each_seek`,
+`nested.rownum_in_a_seekable_right_source_restarts_at_each_seek`. The ordinary nested
+JOIN is pinned separately by `nested.join_reads_a_nested_right_source`.
+
+### 2.14 A dictionary with aliases adds a `Source` column without `-s`
+
+`GOR.rst` describes a source column only under `-s`. Reading a `.gord` whose entries
+carry an alias appends one named `Source`, holding each file's alias, with or
+without `-s`; `-s name` renames it. A one-column `.gord` (files, no aliases) adds
+no column. The engine names a default for it
+(`DictionaryTableMeta.DEFAULT_SOURCE_COLUMN`), which suggests it is intended, but
+where it is switched on was not traced. Either way, a query written from the
+documentation gets a column it did not expect.
+
+Cases: `dict.combines_its_files_in_genomic_order`, `dict.f_selects_files_by_tag`,
+`dict.ff_reads_tags_from_a_file`, `dict.ff_accepts_a_nested_query`,
+`dict.fs_tolerates_an_unknown_tag`.
+
+### 2.15 PGOR inside a nested query is refused with a misleading message
+
+`PGOR.rst` says PGOR cannot be used within nested queries, and it is refused, but
+the message treats `pgor` as a file name:
+
+```
+gor <(pgor a.gor)  ->  Input source does not exist: pgor
+```
+
+Same family as 1.6: the rejection is right, the message sends the user the wrong way.
+
+Case: `pgor.is_rejected_inside_a_nested_query`.
+
+### 2.16 `PGOR -split` cuts chromosomes under GROUP, giving wrong counts
+
+`PGOR.rst`: *"If any of the commands GROUP, GRANNO, RANK, or SORT are present in the
+query using binsize other than 1 base, only whole chromosomes (contigs) are used,
+avoiding boundary effect issues arising from partition of query range."* With
+`-split`, that does not hold:
+
+```
+pgor -split 100000000 a.gor | group chrom -count     (three chr1 rows, 100 / 150M / 220M)
+
+Chrom  bpStart  bpStop     allCount
+chr1   0        250000000  1
+chr1   0        250000000  1
+chr1   0        250000000  1
+```
+
+Each partition aggregates its own rows and the partitions are concatenated, so a
+per-chromosome count comes back as one row per partition. The documented
+behaviour would give a single `chr1` row counting 3. The query does not fail, and
+the output is well-formed: it looks right. Not measured without `-split`, where the
+default comes from the build split configuration:
+`pgor.distributive_aggregate_matches_gor` agrees with GOR, but its `chr1` rows are
+200 bases apart, so it cannot show whether the default partitioning cuts a
+chromosome.
+
+Case: `pgor.split_cuts_a_chromosome_even_under_group`.
+
 ---
 
 ## 3. Not reached, and why
@@ -183,7 +275,8 @@ Not defects. Recorded so nobody re-derives the reason.
 | `PLINKREGRESSION` | Shells out to the external `plink2` binary |
 | `CMD`, `SQL`, `GORSQL`, `NORSQL`, `EXEC` and the input sources of the same names | Shell out or need a live database |
 | `WRITE`, `BINARYWRITE`, `TEE`, `TSVAPPEND` | Write outside the result stream; the output is not the row set |
-| `PARTGOR`, `PARALLEL` | Need a dictionary table with `#{tags}`, or a nested gorpipe command |
+| `PARTGOR`, `PARALLEL` | Need a dictionary table with `#{tags}`, or a nested gorpipe command. Dictionaries are now covered (`dict.*`), so PARTGOR is reachable next; PARALLEL still needs its parts query |
+| `-nf`, bucketed dictionaries | `-nf` only differs from `-f` when one file holds several tags, which needs a bucketed dictionary fixture |
 | 12 input-source flags | Read as strings with no documented argument name — a value would be a guess. Listed in `inventory/gaps.txt` |
 | `SIGNATURE -timeres`, `KING -sym` | Clock-derived and order-unstable respectively; excluded by name, their commands otherwise covered |
 | 24 functions | Report the clock, machine, JVM or build identity; screened by `CaseLint` |

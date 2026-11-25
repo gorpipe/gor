@@ -1,0 +1,117 @@
+- id: nested.merge_reads_a_nested_right_source
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "MERGE takes a nested stream as its right source and the result is genomically ordered"
+  cites: ["documentation/src/nestedStreams.rst"]
+  query: "gor ${ROOT}/a.gor | merge <(gor ${ROOT}/b.gor)"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+    - path: "b.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	150	P2	T	C\nchr2	60	P2	A	T\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt
+    chr1	100	P1	A	G
+    chr1	150	P2	T	C
+    chr1	300	P1	C	T
+    chr2	50	P1	G	A
+    chr2	60	P2	A	T
+
+- id: nested.join_reads_a_nested_right_source
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "JOIN takes a nested stream as its right source; -r drops the right source's position columns"
+  cites: ["documentation/src/nestedStreams.rst", "documentation/src/command/JOIN.rst"]
+  query: "gor ${ROOT}/a.gor | join -snpsnp -r <(gor ${ROOT}/a.gor | where Chrom = 'chr1' | select 1,2 | calc tag 'x')"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt	tag
+    chr1	100	P1	A	G	x
+    chr1	300	P1	C	T	x
+
+- id: nested.top_in_a_seekable_right_source_restarts_at_each_seek
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "From the start, <(... | top 2) is chr1:100 and chr1:300, yet chr2:50 also matches: TOP inside a seekable nested right source does not limit it to two rows overall. The result is consistent with the nested query restarting at each seek. Pinned as the engine behaves; see FINDINGS 2.13"
+  cites: ["documentation/src/nestedStreams.rst"]
+  query: "gor ${ROOT}/a.gor | join -snpsnp -r <(gor ${ROOT}/a.gor | select 1,2 | top 2 | calc tag 'x')"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt	tag
+    chr1	100	P1	A	G	x
+    chr1	300	P1	C	T	x
+    chr2	50	P1	G	A	x
+
+- id: nested.rownum_in_a_seekable_right_source_restarts_at_each_seek
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "ROWNUM in a nested JOIN right source numbers chr2:50 as 1 rather than 3, so it too restarts where the JOIN seeks. Same behaviour as TOP; see FINDINGS 2.13"
+  cites: ["documentation/src/nestedStreams.rst"]
+  query: "gor ${ROOT}/a.gor | join -snpsnp -r <(gor ${ROOT}/a.gor | select 1,2 | rownum)"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt	rownum
+    chr1	100	P1	A	G	1
+    chr1	300	P1	C	T	2
+    chr2	50	P1	G	A	1
+
+- id: nested.range_restricts_a_whole_nested_stream
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "With -p on a nested stream, the range applies to everything inside it, the MERGE right source included"
+  cites: ["documentation/src/nestedStreams.rst"]
+  query: "gor -p chr1 <(gor ${ROOT}/a.gor | merge ${ROOT}/b.gor)"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+    - path: "b.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	150	P2	T	C\nchr2	60	P2	A	T\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt
+    chr1	100	P1	A	G
+    chr1	150	P2	T	C
+    chr1	300	P1	C	T
+
+- id: nested.range_does_not_reach_a_plain_merge_right_source
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "nestedStreams.rst: a position defined on the left source does not apply to a MERGE right source, so all of b.gor comes back"
+  cites: ["documentation/src/nestedStreams.rst"]
+  query: "gor -p chr1 ${ROOT}/a.gor | merge ${ROOT}/b.gor"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+    - path: "b.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	150	P2	T	C\nchr2	60	P2	A	T\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt
+    chr1	100	P1	A	G
+    chr1	150	P2	T	C
+    chr1	300	P1	C	T
+    chr2	60	P2	A	T
+
+- id: nested.nor_reads_a_nested_gor_stream
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "NOR reads a nested GOR stream (nestedStreams.rst), carrying its columns after the NOR position columns. The documentation does not say what those hold: here ChromNOR carries the row's own chromosome, not the chrN that NORROWS and file sources give. Pinned as the engine behaves"
+  cites: ["documentation/src/nestedStreams.rst", "documentation/src/command/NOR.rst"]
+  query: "nor <(gor ${ROOT}/a.gor | top 1)"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    ChromNOR	PosNOR	Chrom	Pos	PN	Ref	Alt
+    chr1	0	chr1	100	P1	A	G

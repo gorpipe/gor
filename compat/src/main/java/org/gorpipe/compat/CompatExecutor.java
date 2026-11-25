@@ -5,6 +5,9 @@ import gorsat.process.PipeInstance;
 import gorsat.process.PipeOptions;
 import org.gorpipe.gor.session.GorContext;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +27,9 @@ public final class CompatExecutor {
         PipeInstance.initialize();
     }
 
+    /** Directory under the case root that receives CREATE and PGOR results. */
+    static final String CACHE_DIR = "result_cache";
+
     private CompatExecutor() {
     }
 
@@ -32,9 +38,22 @@ public final class CompatExecutor {
     }
 
     public static CompatResult run(String query, Path projectRoot, Path configFile) {
+        String root = projectRoot.toAbsolutePath().toString();
+        // CREATE and PGOR materialise intermediate results into the cache directory,
+        // which otherwise defaults to java.io.tmpdir: shared by every case and every
+        // run. Keeping it inside the case's own root means a case can never be
+        // served a result another case or an earlier engine build produced.
+        Path cachePath = projectRoot.resolve(CACHE_DIR);
+        try {
+            // The engine refuses a -cachedir that does not exist.
+            Files.createDirectories(cachePath);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        String cacheDir = cachePath.toAbsolutePath().toString();
         String[] args = configFile == null
-                ? new String[]{query, "-gorroot", projectRoot.toAbsolutePath().toString()}
-                : new String[]{query, "-gorroot", projectRoot.toAbsolutePath().toString(),
+                ? new String[]{query, "-gorroot", root, "-cachedir", cacheDir}
+                : new String[]{query, "-gorroot", root, "-cachedir", cacheDir,
                                "-config", configFile.toAbsolutePath().toString()};
 
         try {

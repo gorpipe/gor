@@ -1,0 +1,158 @@
+- id: dict.combines_its_files_in_genomic_order
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "Reading a dictionary combines the files it lists and returns a genomically ordered result set. The documentation describes a source column only under -s, yet one named Source, holding each file's alias, is appended even without it when the entries carry aliases. Pinned as the engine behaves; see FINDINGS 2.14"
+  cites: ["documentation/src/basicGORqueries.rst"]
+  query: "gor ${ROOT}/vars.gord"
+  inputs:
+    - path: "vars.gord"
+      content: "a.gor	P1\nb.gor	P2\n"
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+    - path: "b.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	150	P2	T	C\nchr2	60	P2	A	T\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt	Source
+    chr1	100	P1	A	G	P1
+    chr1	150	P2	T	C	P2
+    chr1	300	P1	C	T	P1
+    chr2	50	P1	G	A	P1
+    chr2	60	P2	A	T	P2
+
+- id: dict.f_selects_files_by_tag
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "-f filters a dictionary's files on their tags. The Source column is the one described in FINDINGS 2.14."
+  cites: ["documentation/src/command/GOR.rst"]
+  query: "gor -f P2 ${ROOT}/vars.gord"
+  inputs:
+    - path: "vars.gord"
+      content: "a.gor	P1\nb.gor	P2\n"
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+    - path: "b.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	150	P2	T	C\nchr2	60	P2	A	T\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt	Source
+    chr1	150	P2	T	C	P2
+    chr2	60	P2	A	T	P2
+
+- id: dict.ff_reads_tags_from_a_file
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "-ff reads the filter tags from a file. The Source column is the one described in FINDINGS 2.14."
+  cites: ["documentation/src/command/GOR.rst"]
+  query: "gor -ff ${ROOT}/tags.txt ${ROOT}/vars.gord"
+  inputs:
+    - path: "vars.gord"
+      content: "a.gor	P1\nb.gor	P2\n"
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+    - path: "b.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	150	P2	T	C\nchr2	60	P2	A	T\n"
+    - path: "tags.txt"
+      content: "P2\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt	Source
+    chr1	150	P2	T	C	P2
+    chr2	60	P2	A	T	P2
+
+- id: dict.ff_accepts_a_nested_query
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "-ff also accepts a nested query for the tags. The Source column is the one described in FINDINGS 2.14."
+  cites: ["documentation/src/command/GOR.rst"]
+  query: "gor -ff <(nor ${ROOT}/tags.tsv | select PN) ${ROOT}/vars.gord"
+  inputs:
+    - path: "vars.gord"
+      content: "a.gor	P1\nb.gor	P2\n"
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+    - path: "b.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	150	P2	T	C\nchr2	60	P2	A	T\n"
+    - path: "tags.tsv"
+      content: "#PN	X\nP2	q\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt	Source
+    chr1	150	P2	T	C	P2
+    chr2	60	P2	A	T	P2
+
+- id: dict.unknown_tag_is_rejected
+  tier: spec
+  mode: error
+  source: docs
+  behavior: "-fs is documented as letting filter tags be absent from the dictionary, so without it an unknown tag is an error"
+  cites: ["documentation/src/command/GOR.rst"]
+  query: "gor -f P9 ${ROOT}/vars.gord"
+  inputs:
+    - path: "vars.gord"
+      content: "a.gor	P1\nb.gor	P2\n"
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+    - path: "b.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	150	P2	T	C\nchr2	60	P2	A	T\n"
+  errorContains: "are not in dictionary P9"
+
+- id: dict.fs_tolerates_an_unknown_tag
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "With -fs a filter tag absent from the dictionary is ignored and the known tags still select their files. The Source column is the one described in FINDINGS 2.14."
+  cites: ["documentation/src/command/GOR.rst"]
+  query: "gor -fs -f P2,P9 ${ROOT}/vars.gord"
+  inputs:
+    - path: "vars.gord"
+      content: "a.gor	P1\nb.gor	P2\n"
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+    - path: "b.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	150	P2	T	C\nchr2	60	P2	A	T\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt	Source
+    chr1	150	P2	T	C	P2
+    chr2	60	P2	A	T	P2
+
+- id: dict.s_names_the_source_column
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "-s name adds a column of that name holding the dictionary alias of the file each row came from"
+  cites: ["documentation/src/command/GOR.rst"]
+  query: "gor -s Who ${ROOT}/vars.gord"
+  inputs:
+    - path: "vars.gord"
+      content: "a.gor	P1\nb.gor	P2\n"
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+    - path: "b.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	150	P2	T	C\nchr2	60	P2	A	T\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt	Who
+    chr1	100	P1	A	G	P1
+    chr1	150	P2	T	C	P2
+    chr1	300	P1	C	T	P1
+    chr2	50	P1	G	A	P1
+    chr2	60	P2	A	T	P2
+
+- id: dict.nor_asdict_shows_the_entries
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "nor -asdict shows the dictionary's own entries rather than the data, as columns col1 and col2"
+  cites: ["documentation/src/basicGORqueries.rst"]
+  query: "nor -asdict ${ROOT}/vars.gord"
+  inputs:
+    - path: "vars.gord"
+      content: "a.gor	P1\nb.gor	P2\n"
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+    - path: "b.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	150	P2	T	C\nchr2	60	P2	A	T\n"
+  expected: |
+    ChromNOR	PosNOR	col1	col2
+    chrN	0	a.gor	P1
+    chrN	0	b.gor	P2

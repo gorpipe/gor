@@ -1,0 +1,73 @@
+- id: pgor.returns_the_same_rows_as_gor
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "PGOR is syntactic sugar for a partitioned CREATE; for a plain read it returns the same rows as GOR"
+  cites: ["documentation/src/command/PGOR.rst"]
+  query: "pgor ${ROOT}/a.gor"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt
+    chr1	100	P1	A	G
+    chr1	300	P1	C	T
+    chr2	50	P1	G	A
+
+- id: pgor.distributive_aggregate_matches_gor
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "parallelGOR.rst presents pgor ... | GROUP chrom -count as the parallel form of the same query, so for a distributive aggregate the counts match the serial query. The rows here sit close together; FINDINGS 2.16 shows the guarantee failing once rows straddle a -split boundary"
+  cites: ["documentation/src/parallelGOR.rst", "documentation/src/command/PGOR.rst"]
+  query: "pgor ${ROOT}/a.gor | group chrom -count"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	bpStart	bpStop	allCount
+    chr1	0	250000000	2
+    chr2	0	250000000	1
+
+- id: pgor.split_cuts_a_chromosome_even_under_group
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "PGOR.rst says that with GROUP present at a bin size other than one base, PGOR uses whole chromosomes, which would give one chr1 row counting 3. With -split 100000000 the three chr1 rows fall in three partitions and the engine returns three chr1 rows counting 1 each, so the documented guarantee does not hold and the aggregate is wrong. Pinned as the engine behaves; see FINDINGS 2.16"
+  cites: ["documentation/src/command/PGOR.rst"]
+  query: "pgor -split 100000000 ${ROOT}/a.gor | group chrom -count"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN\nchr1	100	P1\nchr1	150000000	P1\nchr1	220000000	P1\n"
+  expected: |
+    Chrom	bpStart	bpStop	allCount
+    chr1	0	250000000	1
+    chr1	0	250000000	1
+    chr1	0	250000000	1
+
+- id: pgor.create_form_reads_back_the_partitions
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "The documented create #t# = pgor ...; gor [#t#] form reads back the combined partitions"
+  cites: ["documentation/src/command/PGOR.rst"]
+  query: "create #t# = pgor ${ROOT}/a.gor | group chrom -count; gor [#t#]"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	bpStart	bpStop	allCount
+    chr1	0	250000000	2
+    chr2	0	250000000	1
+
+- id: pgor.is_rejected_inside_a_nested_query
+  tier: spec
+  mode: error
+  source: docs
+  behavior: "PGOR.rst: the PGOR statement cannot be used within nested queries. It is refused, but the message treats pgor as a file name rather than saying so; see FINDINGS 2.15"
+  cites: ["documentation/src/command/PGOR.rst"]
+  query: "gor <(pgor ${ROOT}/a.gor)"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  errorContains: "Input source does not exist: pgor"

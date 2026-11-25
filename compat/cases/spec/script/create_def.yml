@@ -1,0 +1,141 @@
+- id: script.create.reference_reads_the_materialised_table
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "A CREATE statement materialises a query; referring to its name in square brackets reads that result"
+  cites: ["documentation/src/command/CREATE.rst", "documentation/src/materializedViews.rst"]
+  query: "create ##x## = gor ${ROOT}/a.gor | where Pos > 100; gor [##x##]"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt
+    chr1	300	P1	C	T
+
+- id: script.create.one_table_can_be_referenced_twice
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "A virtual relation is reusable: referencing it twice in one query reads the same rows twice"
+  cites: ["documentation/src/materializedViews.rst"]
+  query: "create ##x## = gor ${ROOT}/a.gor | top 1; gor [##x##] | merge [##x##]"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt
+    chr1	100	P1	A	G
+    chr1	100	P1	A	G
+
+- id: script.create.reference_is_case_sensitive_despite_the_docs
+  tier: spec
+  mode: error
+  source: review
+  behavior: "materializedViews.rst creates ##GWASsubset## and reads it back as [##gwassubset##], implying references are not case-sensitive. The engine treats them as case-sensitive and rejects the query. Pinned as the engine behaves; see FINDINGS 2.12"
+  cites: ["documentation/src/materializedViews.rst"]
+  query: "create ##Sub## = gor ${ROOT}/a.gor | top 1; gor [##sub##]"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  errorContains: "No reference to virtual file: [##sub##]"
+
+- id: script.create.one_create_can_read_another
+  tier: spec
+  mode: exact
+  source: review
+  behavior: "CREATE accepts any valid GOR query, including one that reads an earlier CREATE"
+  cites: ["documentation/src/command/CREATE.rst"]
+  query: "create ##x## = gor ${ROOT}/a.gor | where Chrom = 'chr1'; create ##y## = gor [##x##] | top 1; gor [##y##]"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt
+    chr1	100	P1	A	G
+
+- id: script.def.aliases_a_path
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "DEF defines an alias for a path that the query then uses in its place"
+  cites: ["documentation/src/command/DEF.rst"]
+  query: "def ##in## = ${ROOT}/a.gor; gor ##in## | top 1"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt
+    chr1	100	P1	A	G
+
+- id: script.def.parameterised_macro_substitutes_its_arguments
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "A DEF with $1,$2 is a parameterised macro; materializedViews.rst's prefixes(A,B) example prefixes two columns, and PREFIX joins prefix and name with an underscore (A_pos in the same page)"
+  cites: ["documentation/src/materializedViews.rst"]
+  query: "def prefixes($1,$2) = PREFIX #4 $1 | PREFIX #5 $2; gor ${ROOT}/a.gor | top 1 | prefixes(A,B)"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	A_Ref	B_Alt
+    chr1	100	P1	A	G
+
+- id: script.def.macro_name_is_case_insensitive
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "materializedViews.rst: macro names are case insensitive"
+  cites: ["documentation/src/materializedViews.rst"]
+  query: "def pick($1) = TOP $1; gor ${ROOT}/a.gor | PICK(2)"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt
+    chr1	100	P1	A	G
+    chr1	300	P1	C	T
+
+- id: script.def.hash_delimited_name_is_substituted_inside_quotes
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "A macro name that starts and ends with # is substituted without restriction, including inside quoted strings"
+  cites: ["documentation/src/materializedViews.rst"]
+  query: "def #who# = P1; gor ${ROOT}/a.gor | where PN = '#who#'"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt
+    chr1	100	P1	A	G
+    chr1	300	P1	C	T
+    chr2	50	P1	G	A
+
+- id: script.def.plain_name_is_not_substituted_inside_a_word
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "A macro name without # is replaced only where it stands between non-word characters, so 'val' inside 'value' is left alone"
+  cites: ["documentation/src/materializedViews.rst"]
+  query: "def val = P1; gor ${ROOT}/a.gor | top 1 | calc x 'value' | select 1,2,x"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	x
+    chr1	100	value
+
+- id: script.def.expansion_is_iterative
+  tier: spec
+  mode: exact
+  source: docs
+  behavior: "Substitution is iterative: a macro whose body names a second macro is expanded until none remain"
+  cites: ["documentation/src/materializedViews.rst"]
+  query: "def ##a## = ##b##; def ##b## = ${ROOT}/a.gor; gor ##a## | top 1"
+  inputs:
+    - path: "a.gor"
+      content: "Chrom	Pos	PN	Ref	Alt\nchr1	100	P1	A	G\nchr1	300	P1	C	T\nchr2	50	P1	G	A\n"
+  expected: |
+    Chrom	Pos	PN	Ref	Alt
+    chr1	100	P1	A	G
