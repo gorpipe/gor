@@ -212,7 +212,9 @@ ALT, is dropped. ``<build>_alleleFix`` says what happened to a row the plain lif
 unmapped, under ``-pad``, see `Unmapped variants`_):
 
 +------------------+-----------------------------------------------------------------------------------------------+
-| ``rewritten``    | The alleles and position were rewritten across a build indel (BCFtools ``SWAP=-1``).          |
+| ``rewritten``    | The alleles and position were rewritten across a build indel (BCFtools ``SWAP=-1``), or the   |
+|                  | span crossed a gap and keeps the source REF but BCFtools places it elsewhere than the plain   |
+|                  | lift (left aligned over the span).                                                            |
 +------------------+-----------------------------------------------------------------------------------------------+
 | ``none``         | No build indel next to the variant, or not an indel (SNVs and MNVs keep the plain lift), or   |
 |                  | the row is not lifted. The plain lift stands.                                                 |
@@ -222,15 +224,20 @@ unmapped, under ``-pad``, see `Unmapped variants`_):
 | ``ref_mismatch`` | An indel whose REF is not the ``-srcseq`` reference at the variant. Not rewritten. (SNV and   |
 |                  | MNV REFs are not checked: they get ``none``.)                                                 |
 +------------------+-----------------------------------------------------------------------------------------------+
-| ``unresolved``   | A rewrite was needed but could not be made: more than one ALT, a symbolic allele, anchors     |
+| ``unresolved``   | A rewrite was needed but could not be made: several ALTs (when one is an indel), a symbolic   |
+|                  | allele (also one as long as REF), anchors                                                     |
 |                  | that lift to different chains or too far apart, a target contig ``-mapped`` does not accept,  |
 |                  | a very long pad realignment, or no target sequence. Not rewritten.                            |
 +------------------+-----------------------------------------------------------------------------------------------+
 
 Of the rows the plain lift maps, only indels are rewritten. A difference of bases (not length) between the builds in
 the window is not a build indel and gives ``none``. A rewritten row's ``<build>_qStrand`` is the strand of the chain
-its alleles were lifted through. With ``-aligned`` the aligned extent is the plain lift's. Unlike BCFtools, which
-reads before the sequence there, the allele extension stops at the first base of a contig.
+its alleles were lifted through. With ``-aligned`` the aligned extent is the plain lift's. ``-nogapfill`` does not
+change the rewrite: a 1-base equal gap lifts by offset either way, as BCFtools merges it.
+
+Two places differ from BCFtools on purpose: the allele extension stops at the first base of a contig (BCFtools reads
+before the sequence there), and when a padded anchor does not lift on a ``-`` chain, it is placed by the mirror of the
+``+`` arithmetic (BCFtools' ``-`` formula leaves out the allele length, which can write a target base as an insertion).
 
 .. code-block:: gor
 
