@@ -88,8 +88,10 @@ public class LocalFileCacheClient implements FileCache {
             var filename = cache.get(fingerprint, () -> findFileFromFingerPrint(fingerprint));
 
             if (DataUtil.isTempTempFile(filename)) {
-                // this is housekeeping we should not be finding temp files in the cache
-                fileReader.delete(filename);
+                // A temp file is never a cache hit.  Do not delete it: it may be the in-flight output of another
+                // create with the same fingerprint, and deleting it breaks that writer's temp -> final move
+                // (ENGKNOW-4296).  Drop it from the in-memory cache so a later lookup finds the final file.
+                cache.invalidate(fingerprint);
                 return null;
             }
 
@@ -232,12 +234,21 @@ public class LocalFileCacheClient implements FileCache {
         String storageFolder = getCacheFolderFromFileName(fingerprint, false);
 
         File dir = new File(storageFolder);
-        FileFilter fileFilter = new WildcardFileFilter(fingerprint + "*");
+        // Cache entries are <fingerprint>.<ext>.  Match the dot so FileSource atomic-write temp files
+        // (<fingerprint>-temp-<random>.<ext>, still being written) are not found (ENGKNOW-4296).
+        FileFilter fileFilter = new WildcardFileFilter(fingerprint + ".*");
         File[] files = dir.listFiles(fileFilter);
         String foundFile = null;
+        int tempFiles = 0;
 
         if (files != null && files.length > 0) {
             for (File file : files) {
+                // Skip temp files: they are partial output of a create still running (ENGKNOW-4296).
+                if (DataUtil.isTempTempFile(file.getName())) {
+                    tempFiles++;
+                    continue;
+                }
+
                 // We should touch all the files for this fingerprint
                 if (foundFile != null) continue;
 
@@ -252,7 +263,7 @@ public class LocalFileCacheClient implements FileCache {
                 }
             }
 
-            if (foundFile == null) {
+            if (foundFile == null && tempFiles < files.length) {
                 log.warn("Found more than one file for fingerprint {} and none of them is a valid data file.", fingerprint);
             }
         }

@@ -13,6 +13,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
+          fetch-depth: 0
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -30,6 +31,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
+          fetch-depth: 0
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -61,6 +63,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
+          fetch-depth: 0
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -92,6 +95,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
+          fetch-depth: 0
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -141,29 +145,20 @@ jobs:
           check_name: Junit Tests - Summary
           files: '**/TEST-*.xml'
 
+  # The version is derived from git tags by the gradle git-versioning plugin (see CONTRIBUTING.md#release),
+  # so main publishes <latest tag>-SNAPSHOT and a vX.Y.Z tag publishes X.Y.Z.
   publishSnapshot:
     if: ${{ github.ref == 'refs/heads/main' }}
     needs: [test, slowTest, integrationTest]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: 17
-          cache: 'gradle'
-      - name: Publish release package
-        run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)-SNAPSHOT
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  publishVersion:
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-    needs: [test, slowTest, integrationTest]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+          # Full history, the gradle git-versioning plugin derives the version from tags.
+          fetch-depth: 0
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -171,6 +166,36 @@ jobs:
           java-version: 17
           cache: 'gradle'
       - name: Publish snapshot package
-        run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub -Pversion=$(cat VERSION)
+        run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publishVersion:
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    needs: [test, slowTest, integrationTest]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history, the gradle git-versioning plugin derives the version from tags.
+          fetch-depth: 0
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'gradle'
+      - name: Check version matches tag
+        run: |
+          version=$(./gradlew -q printVersion | tail -1)
+          if [ "$version" != "${GITHUB_REF_NAME#v}" ]; then
+            echo "::error::Gradle version '$version' does not match tag '$GITHUB_REF_NAME'"
+            exit 1
+          fi
+      - name: Publish release package
+        run: ./gradlew publish -x test -x slowTest -x integrationTest -Pinclude.documentation -PpublishToGithub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

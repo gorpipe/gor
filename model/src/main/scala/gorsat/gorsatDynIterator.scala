@@ -27,11 +27,11 @@
 package gorsat
 
 import gorsat.Commands.{CommandArguments, CommandParseUtilities}
-import org.gorpipe.exceptions.{GorDataException, GorSystemException}
-import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.exceptions.{GorDataException, GorParsingException, GorSystemException}
+import org.gorpipe.gor.function.FunctionSources
 import org.gorpipe.gor.model.{GenomicIterator, Row}
 import org.gorpipe.gor.session.{GorContext, GorSession}
-import org.gorpipe.gor.util.Util
+import org.gorpipe.gor.util.{DataUtil, Util}
 import org.gorpipe.model.gor.iterators.{LineIterator, TimedRowSource}
 import org.gorpipe.model.gor.{Pipes, RowObj}
 import org.gorpipe.util.Pair
@@ -43,6 +43,36 @@ object DynIterator {
 import gorsatGorIterator._
 
 val numNonArgs = 1
+// Max nesting of yml reports that render other yml reports in a dynamic source
+val MAX_YML_EXPANSION_DEPTH = 32
+
+/**
+  * Positions in a source step of the first nested source, <(query) or a function source such as report(file.yml),
+  * and of the first yml report source, e.g. file.yml, file.yml(args) or file.yml::Report. Each is the length of the
+  * step if there is none. Positions are those of whole tokens, a path that merely contains ".yml" (e.g. the bucketize
+  * temp table x.YMLY9IF6.gord) or a token whose text appears earlier inside another token is not mistaken for a source.
+  */
+case class SourceIndexes(nested: Int, yml: Int)
+
+def sourceIndexes(step : String) : SourceIndexes = {
+  var nested = step.length
+  var yml = step.length
+  var from = 0
+  for (token <- CommandParseUtilities.quoteSafeSplit(step, ' ')) {
+    // Tokens come in order, so search from the end of the previous one to get this token's own position
+    val pos = step.indexOf(token, from)
+    if (pos >= 0) {
+      from = pos + token.length
+      val t = token.trim
+      if (t.nonEmpty) {
+        if (nested == step.length && (t.startsWith("<(") || FunctionSources.isFunctionSource(t))) nested = pos
+        if (yml == step.length && DataUtil.isYml(t)) yml = pos
+      }
+    }
+  }
+  SourceIndexes(nested, yml)
+}
+
 var createGorIterator : GorContext => gorsatGorIterator = _
 
 def addStartSelector(cmd : String, seekChr : String, seekPos : Int, endPos : Int, seekOnly : Boolean, bufsize : Int, isHeader : Boolean, session : GorSession) : String = {
@@ -157,7 +187,26 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
 
   override def isBuffered: Boolean = true
 
-  def modifiedCommand(cmd : String, seekChr: String, seekPos : Int, endPos : Int, seekOnly : Boolean, getHeader : Boolean = false) : String = {
+  // True if the report builder expanded the step. The report builder drops a leading gor/nor and normalizes whitespace
+  // even when there is nothing to expand, so compare the tokens without the input command.
+  private def isReportExpanded(step : String, parsed : String) : Boolean = {
+    val parsedStep = normalizedStep(parsed)
+    parsedStep != normalizedStep(step) && parsedStep != normalizedStep(step.trim, dropInput = true)
+  }
+
+  // The step's tokens joined by single spaces, optionally without a leading gor/nor input command
+  private def normalizedStep(step : String, dropInput : Boolean = false) : String = {
+    val tokens = CommandParseUtilities.quoteSafeSplit(step.trim, ' ').map(_.trim).filter(_.nonEmpty)
+    val dropped = if (dropInput && tokens.nonEmpty && Set("GOR", "NOR").contains(tokens(0).toUpperCase)) tokens.drop(1) else tokens
+    dropped.mkString(" ")
+  }
+
+  /**
+    * @param expandedYml yml report steps already expanded on the way here (including through merge right sources),
+    *                    to detect reports that render each other
+    */
+  def modifiedCommand(cmd : String, seekChr: String, seekPos : Int, endPos : Int, seekOnly : Boolean, getHeader : Boolean = false,
+                      expandedYml : List[String] = Nil) : String = {
     var header = getHeader
     val creates = CommandParseUtilities.quoteSafeSplit(cmd,';').map( _.trim )
     val prefix = creates.slice(0,creates.length-1).mkString(";")
@@ -167,21 +216,28 @@ class DynamicRowSource(iteratorCommand : String, context: GorContext, fixHeader 
     val buffsize = if(getBufferSize == Pipes.rowsToProcessBuffer ) -1 else getBufferSize
     while (i < pipeSteps.length) {
       if (i == 0) {
-        var inest = pipeSteps(0).indexOf("<(")
-        if( inest == -1 ) inest = pipeSteps(0).length
-        var iyml = pipeSteps(0).toLowerCase.indexOf(DataType.YML.suffix)
-        if( iyml == -1 ) iyml = pipeSteps(0).length
-        if( (iyml < inest) && drsGorPipeSession.getSystemContext.getReportBuilder != null ) {
-          pipeSteps(0) = modifiedCommand( drsGorPipeSession.getSystemContext.getReportBuilder.parse(pipeSteps(0)), seekChr, seekPos, endPos, seekOnly, header )
+        val idx = sourceIndexes(pipeSteps(0))
+        val reportBuilder = drsGorPipeSession.getSystemContext.getReportBuilder
+        val parsed = if ((idx.yml < idx.nested) && reportBuilder != null) reportBuilder.parse(pipeSteps(0)) else null
+        // Only recurse when the report builder expanded something, otherwise we would recurse forever
+        if (parsed != null && isReportExpanded(pipeSteps(0), parsed)) {
+          val step = normalizedStep(pipeSteps(0))
+          if (expandedYml.contains(step) || expandedYml.length >= MAX_YML_EXPANSION_DEPTH) {
+            throw new GorParsingException("Cyclic or too deeply nested yml reports: " + (step :: expandedYml).reverse.mkString(" -> "))
+          }
+          pipeSteps(0) = modifiedCommand(parsed, seekChr, seekPos, endPos, seekOnly, header, step :: expandedYml)
           header = false
         } else pipeSteps(0) = addStartSelector(pipeSteps(0),seekChr,seekPos,endPos,seekOnly,buffsize,header,context.getSession)
       } else if (pipeSteps(i).toUpperCase.startsWith("MERGE")) {
         val args = CommandParseUtilities.quoteSafeSplitAndTrim(pipeSteps(i),' ')
         val (inputArguments, _) = CommandParseUtilities.validateCommandArguments(args, CommandArguments("-u -s -i","-e",numNonArgs))
         val rightFile = inputArguments(1).trim
-        if (CommandParseUtilities.isNestedCommand(rightFile)) {
+        if (FunctionSources.isFunctionSource(rightFile)) {
+          val mergeCommand = CommandParseUtilities.parseNestedCommand(rightFile, context.getSession)
+          pipeSteps(i) = pipeSteps(i).replace(rightFile,"<("+modifiedCommand(mergeCommand,seekChr,seekPos,endPos,seekOnly,expandedYml = expandedYml)+")")
+        } else if (CommandParseUtilities.isNestedCommand(rightFile)) {
           val mergeCommand = CommandParseUtilities.parseNestedCommandUntrimmed(rightFile)
-          pipeSteps(i) = pipeSteps(i).replace("<("+mergeCommand+")","<("+modifiedCommand(mergeCommand,seekChr,seekPos,endPos,seekOnly)+")")
+          pipeSteps(i) = pipeSteps(i).replace("<("+mergeCommand+")","<("+modifiedCommand(mergeCommand,seekChr,seekPos,endPos,seekOnly,expandedYml = expandedYml)+")")
         } else {
           val mergeCommand = rightFile
           pipeSteps(i) = pipeSteps(i).replace(mergeCommand,"<("+addStartSelector(mergeCommand,seekChr,seekPos,endPos,seekOnly,buffsize,header,context.getSession)+")")

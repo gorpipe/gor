@@ -140,6 +140,9 @@ Commands
    * - :ref:`LIFTOVER`
      - Converts GOR data from one reference genome build to another.
      - GOR
+   * - :ref:`LIFTOVER_ANNOTATE`
+     - Annotates rows with their lifted-over coordinates and a liftover status, without moving them.
+     - GOR/NOR
    * - :ref:`LOG`
      - Specifies how often to log rows when monitoring the progress of a running query.
      - GOR/NOR
@@ -295,6 +298,9 @@ Commands
      - GOR
    * - :ref:`VARNORM`
      - Normalises the variation data in a gor stream to the left or the right.
+     - GOR
+   * - :ref:`VARNORM_WITH_BUILD`
+     - Normalises the variation data against a given reference build instead of the project default.
      - GOR
    * - :ref:`VERIFYCOLTYPE`
      - Ensures that the values in each row match their column type.

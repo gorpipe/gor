@@ -52,6 +52,27 @@ public class BaseMeta {
     }
 
     /**
+     * Parse a meta option value (WRITE -meta, -linkmeta): comma separated key=value pairs, optionally quoted as a
+     * whole.  A value may be quoted to hold commas.  Keys and values are trimmed and values stripped of quotes.
+     *
+     * @param option the option value.
+     * @return the pairs in order; the value is null for an entry without '='.
+     */
+    public static List<Map.Entry<String, String>> parseKeyValues(String option) {
+        List<Map.Entry<String, String>> result = new ArrayList<>();
+        if (option == null) return result;
+        for (String entry : gorsat.Commands.CommandParseUtilities.quoteSafeSplit(StringUtils.strip(option, "\"'"), ',')) {
+            String e = entry.trim();
+            if (e.isEmpty()) continue;
+            int eq = e.indexOf('=');
+            String key = (eq < 0 ? e : e.substring(0, eq)).trim();
+            String value = eq < 0 ? null : StringUtils.strip(e.substring(eq + 1).trim(), "\"'");
+            result.add(new AbstractMap.SimpleEntry<>(key, value));
+        }
+        return result;
+    }
+
+    /**
      * Get header property.
      *
      * @param key name of the property.

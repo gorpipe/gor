@@ -27,6 +27,7 @@ import scala.Unit;
 
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class encapsulates a general execution in parallel of the pgor command when a
@@ -37,11 +38,21 @@ public class ParallelExecutor {
     private Throwable firstException;
     private final Thread[] threads;
     private final Function0<Unit>[] commands;
+    private final AtomicBoolean cancelled;
 
     public ParallelExecutor(int workers, Function0<Unit>[] commands) {
+        this(workers, commands, new AtomicBoolean(false));
+    }
+
+    /**
+     * @param cancelled set when any command fails, before the other workers are interrupted. Commands can check
+     *                  it to avoid committing partial results, since the interrupt flag alone is easily lost.
+     */
+    public ParallelExecutor(int workers, Function0<Unit>[] commands, AtomicBoolean cancelled) {
         this.commands = commands;
         this.threads = new Thread[workers];
         this.firstException = null;
+        this.cancelled = cancelled;
     }
 
     @SuppressWarnings("squid:S00112") // We need to handle Throwable here, sorry
@@ -50,7 +61,7 @@ public class ParallelExecutor {
         for( int i = 0; i < threads.length; i++ ) {
             Thread t = new Thread(() -> {
                 Function0<Unit> func = clq.poll();
-                while( func != null ) {
+                while( func != null && !cancelled.get() ) {
                     func.apply();
                     func = clq.poll();
                 }
@@ -70,6 +81,7 @@ public class ParallelExecutor {
     private synchronized void parallelExcecuteUncaughtExceptionHandler(Thread thread, Throwable throwable) {
         if (firstException == null) {
             firstException = throwable;
+            cancelled.set(true);
             for (Thread t : threads) {
                 if (t != thread) {
                     t.interrupt();

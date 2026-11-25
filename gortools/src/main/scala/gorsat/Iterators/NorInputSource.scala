@@ -34,7 +34,12 @@ import java.util.zip.GZIPInputStream
 import scala.collection.mutable
 import scala.io.StdIn
 
-class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolean, forceReadHeader: Boolean, maxWalkDepth: Int, followLinks: Boolean, showModificationDate: Boolean, ignoreEmptyLines: Boolean) extends GenomicIteratorBase {
+/**
+ * @param defaultHeader tab separated column names (without ChromNOR/PosNOR) to use when the input has no
+ *                      non-empty lines, e.g. an empty dictionary. When set, empty lines are skipped. If null,
+ *                      an empty input has no header.
+ */
+class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolean, forceReadHeader: Boolean, maxWalkDepth: Int, followLinks: Boolean, showModificationDate: Boolean, ignoreEmptyLines: Boolean, defaultHeader: String = null) extends GenomicIteratorBase {
 
   var myHasNext: Boolean = false
   var myNext: String = _
@@ -43,6 +48,11 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
   var myHeader: String = _
   var myHeaderLength = 0
   private val useCSV: Boolean = DataUtil.isAnyCsv(fileName)
+  private val skipEmptyLines: Boolean = ignoreEmptyLines || defaultHeader != null
+
+  // For Java callers, which cannot use the default argument.
+  def this(fileName: String, fileReader: FileReader, readStdin: Boolean, forceReadHeader: Boolean, maxWalkDepth: Int, followLinks: Boolean, showModificationDate: Boolean, ignoreEmptyLines: Boolean) =
+    this(fileName, fileReader, readStdin, forceReadHeader, maxWalkDepth, followLinks, showModificationDate, ignoreEmptyLines, null)
   val filter: String => Boolean = (s: String) => !s.startsWith("##")
 
 
@@ -70,7 +80,7 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
     if (myNext != null) myHasNext = true else myHasNext = false
     mustReCheck = false
 
-    if (ignoreEmptyLines) {
+    if (skipEmptyLines) {
       while (myNext != null && myNext.isEmpty && myHasNext) {
         mustReCheck = true
         hasNext
@@ -108,6 +118,14 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
     if (norRowSource != null) norRowSource.close()
   }
 
+  private def readFirstLine(): String = {
+    var line = if (norRowIterator.hasNext) norRowIterator.next() else null
+    while (defaultHeader != null && line != null && line.isEmpty) {
+      line = if (norRowIterator.hasNext) norRowIterator.next() else null
+    }
+    line
+  }
+
   private def createNewHeader(): String = {
     val builder = new mutable.StringBuilder()
 
@@ -125,11 +143,15 @@ class NorInputSource(fileName: String, fileReader: FileReader, readStdin: Boolea
 
   override def getHeader: String = {
     if (haveReadHeader) return myHeader
-    myHeader = if (readStdin) StdIn.readLine() else if (norRowIterator.hasNext) norRowIterator.next() else null
+    myHeader = if (readStdin) StdIn.readLine() else readFirstLine()
     if (myHeader == null) {
       myHasNext = false
       mustReCheck = false
-      return ""
+      if (defaultHeader == null) return ""
+      myHeader = "ChromNOR\tPosNOR\t" + defaultHeader
+      haveReadHeader = true
+      myHeaderLength = myHeader.split("\t").length
+      return myHeader
     }
     if (useCSV) myHeader = myHeader.replace(',', '\t')
     if (myHeader.startsWith("#") || myHeader.startsWith("ChromNOR") || forceReadHeader) {

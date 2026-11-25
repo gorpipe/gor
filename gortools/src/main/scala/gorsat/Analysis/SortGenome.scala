@@ -34,7 +34,7 @@ import org.gorpipe.gor.session.GorSession
 
 case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.SortInfo], div: Int = 1) extends Analysis {
   var lines = 0
-  var batchSize: Int = System.getProperty("gor.sort.batchSize", "2000000").toInt / div
+  var batchSize: Int = System.getProperty("gor.sort.batchSize", "500000").toInt / div
   var maxBufferSize: Int = batchSize * 100
   var bufferSize = 0
   private var alreadySorted = true
@@ -65,6 +65,26 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
     lines = 0
     bufferSize = 0
     alreadySorted = true
+  }
+
+  /**
+    * Drops buffered rows and deletes spilled files without emitting anything.
+    */
+  def discard(): Unit = {
+    deleteSpillFiles()
+    reinit()
+  }
+
+  private def deleteSpillFiles(): Unit = {
+    ordFileList.foreach(x => {
+      try {
+        val f = new java.io.File(x)
+        f.delete
+      } catch {
+        case _: Exception =>
+          // Do nothing
+      }
+    })
   }
 
   private def flushToDisk(): Unit = {
@@ -125,15 +145,7 @@ case class SortGenome(header: String, session: GorSession, sortInfo: Array[Row.S
               // Do nothing
           }
         }
-        ordFileList.foreach(x => {
-          try {
-            val f = new java.io.File(x)
-            f.delete
-          } catch {
-            case _: Exception =>
-              // Do nothing
-          }
-        })
+        deleteSpillFiles()
       }
     } else {
       ensureSorted()

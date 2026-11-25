@@ -148,6 +148,7 @@ public class UTestGorTabix {
             if(Files.exists(p)) Files.delete(p);
             if(Files.exists(gp)) Files.delete(gp);
             if(Files.exists(gpi)) Files.delete(gpi);
+            Files.deleteIfExists(Paths.get(gp + ".meta"));
         }
     }
 
@@ -178,6 +179,7 @@ public class UTestGorTabix {
             if(Files.exists(p)) Files.delete(p);
             if(Files.exists(gp)) Files.delete(gp);
             if(Files.exists(gpi)) Files.delete(gpi);
+            Files.deleteIfExists(Paths.get(gp + ".meta"));
         }
     }
 
@@ -207,6 +209,7 @@ public class UTestGorTabix {
             if(Files.exists(p)) Files.delete(p);
             if(Files.exists(gp)) Files.delete(gp);
             if(Files.exists(gpi)) Files.delete(gpi);
+            Files.deleteIfExists(Paths.get(gp + ".meta"));
         }
     }
 
@@ -238,6 +241,8 @@ public class UTestGorTabix {
             if(Files.exists(gp2)) Files.delete(gp2);
             if(Files.exists(gpi1)) Files.delete(gpi1);
             if(Files.exists(gpi2)) Files.delete(gpi2);
+            Files.deleteIfExists(Paths.get(gp1 + ".meta"));
+            Files.deleteIfExists(Paths.get(gp2 + ".meta"));
         }
     }
 
@@ -268,6 +273,7 @@ public class UTestGorTabix {
             if(Files.exists(p)) Files.delete(p);
             if(Files.exists(gp)) Files.delete(gp);
             if(Files.exists(gpi)) Files.delete(gpi);
+            Files.deleteIfExists(Paths.get(gp + ".meta"));
         }
     }
 }

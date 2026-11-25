@@ -5,6 +5,7 @@ import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import org.gorpipe.gor.auth.utils.OAuthHandler;
 import org.gorpipe.gor.auth.utils.PlatformGorAuthCache;
 import org.gorpipe.security.cred.CsaApiService;
@@ -12,7 +13,9 @@ import org.gorpipe.exceptions.GorSystemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static net.logstash.logback.argument.StructuredArguments.value;
 
@@ -23,6 +26,7 @@ public class PlatformAuth extends GorAuth {
     private final static Logger auditLog = LoggerFactory.getLogger("audit." + PlatformAuth.class.getName());
 
     private PlatformGorAuthCache gorAuthInfoCache;
+    private PlatformGorAuthCache csaAuthInfoCache;
 
     private static final String REALM_ACCESS = "realm_access";
     private static final String ROLES = "roles";
@@ -39,6 +43,7 @@ public class PlatformAuth extends GorAuth {
         this.objectMapper = new ObjectMapper();
         this.userKey = config.getPlatformUserKey();
         this.gorAuthInfoCache = new PlatformGorAuthCache();
+        this.csaAuthInfoCache = new PlatformGorAuthCache();
         this.oAuthHandler = oAuthHandler;
         this.useRolesFromToken = config.userRolesFromToken();
     }
@@ -77,8 +82,16 @@ public class PlatformAuth extends GorAuth {
                 long expiration = getExpiration(jwt);
                 String userId = getSub(jwt);
                 List<String> userRoles = getUserRoles(jwt);
-                gorAuthInfo = updateGorAuthInfo(new GeneralAuthInfo(0, project, username, userId, userRoles, 0, expiration));
-                gorAuthInfoCache.add(securityKey, gorAuthInfo, expiration);
+                GorAuthInfo csaAuthInfo = getCsaAuthInfo(csaAuthInfoCache, project, username, userId, userRoles);
+                gorAuthInfo = new GeneralAuthInfo(csaAuthInfo.getProjectId(), project, username,
+                        Strings.isNullOrEmpty(userId) ? csaAuthInfo.getUserId() : userId,
+                        userRoles.isEmpty() ? csaAuthInfo.getUserRoles() : userRoles,
+                        csaAuthInfo.getOrganizationId(), expiration);
+                // Not when the CSA entry is kept for less time than the token (a failed lookup, asked again in 1
+                // min): this entry is checked first, and would hide that retry for as long as the token lives.
+                if (csaAuthInfo.getExpiration() >= expiration) {
+                    gorAuthInfoCache.add(securityKey, gorAuthInfo, expiration);
+                }
             } catch (Exception e) {
                 throw new GorSystemException(e);
             }
@@ -92,8 +105,7 @@ public class PlatformAuth extends GorAuth {
     }
 
     private String getUsername(DecodedJWT jwt) {
-        Claim claim = jwt.getClaim(userKey);
-        return claim != null ? claim.asString() : null;
+        return resolveUsername(userKey, jwt);
     }
 
     private long getExpiration(DecodedJWT jwt) {
@@ -101,7 +113,11 @@ public class PlatformAuth extends GorAuth {
     }
 
     private List<String> getUserRoles(DecodedJWT jwt) {
-        return (List<String>)jwt.getClaim(REALM_ACCESS).asMap().get(ROLES);
+        Map<String, Object> realmAccess = jwt.getClaim(REALM_ACCESS).asMap();
+        if (realmAccess == null || realmAccess.get(ROLES) == null) {
+            return Collections.emptyList();
+        }
+        return (List<String>) realmAccess.get(ROLES);
     }
 
     /**
@@ -122,7 +138,7 @@ public class PlatformAuth extends GorAuth {
             return oAuthHandler.verifyAccessToken(accessToken);
         } catch (SignatureVerificationException e) {
             DecodedJWT jwtDecoded = oAuthHandler.decodeToken(accessToken);
-            String username = jwtDecoded.getClaim(userKey).asString();
+            String username = getUsername(jwtDecoded);
             String message = "ERROR: Unable to verify the signature of the access token";
             log.error(message, e);
             auditLog.info(message,
@@ -133,7 +149,7 @@ public class PlatformAuth extends GorAuth {
             return null;
         } catch (TokenExpiredException e) {
             DecodedJWT jwtDecoded = oAuthHandler.decodeToken(accessToken);
-            String username = jwtDecoded.getClaim(userKey).asString();
+            String username = getUsername(jwtDecoded);
             log.error(e.getMessage(), e);
             auditLog.info(e.getMessage(),
                     value("username", username),

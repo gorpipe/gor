@@ -36,10 +36,10 @@ class GORLexer(RegexLexer):
             (r'\b(IF|-len|str|int|float|listfilter)\b', Keyword),                                   #Render key words blue
             (r'\b(BAMFLAG|BASES|BUCKETSPLIT|CALC|CIGARSEGS|CMD|COLNUM|COLSPLIT|COLUMNREORDER|COLUMNSORT|CSVCC|'
              r'CSVSEL|DAGMAP|DISTLOC|GAVA|GOR|GORROW|GRANNO|GREP|GROUP|HIDE|INSET|'
-             r'JOIN|LEFTJOIN|LEFTWHERE|LIFTOVER|LOG|MAP|MERGE|MULTIMAP|NOR|PARTGOR|PEDPIVOT|PGOR|PILEUP|'
+             r'JOIN|LEFTJOIN|LEFTWHERE|LIFTOVER_ANNOTATE|LIFTOVER_LEGACY|LIFTOVER|LOG|MAP|MERGE|MULTIMAP|NOR|PARTGOR|PEDPIVOT|PGOR|PILEUP|'
              r'PIVOT|PREFIX|RANK|RENAME|REPLACE|ROWNUM|SED|SEGPROJ|SEGSPAN|SELECT|SEQ|SKIP|'
              r'SORT|SPLIT|SQL|TEE|THROWIF|TOP|TRYCALC|TRYHIDE|TRYSELECT|TRYWHERE|UNPIVOT|UNTIL|'
-             r'VARIANTS|VARJOIN|VARMERGE|VARNORM|VERIFYORDER|WAIT|WHERE|WRITE)\b', Name.Builtin),        #Render commands purple
+             r'VARIANTS|VARJOIN|VARMERGE|VARNORM_WITH_BUILD|VARNORM|VERIFYORDER|WAIT|WHERE|WRITE)\b', Name.Builtin),        #Render commands purple
             (r'\b(p|snpseg|segsnp|snpsnp|f|count|max|min|avg|gc|ic)\b', Name.Constant),             #Render attributes teal
             (r'\b(AND|IF|NOT)\b', Name.Entity),                                                         #Render attributes pink
             (r'\b(Gene_Symbol|gene_symbol|Chrom|POS|pos|call|reference|allele|alt|'

@@ -21,6 +21,28 @@ public abstract class RetryHandlerBase {
 
     public abstract void perform(ActionVoid action, ActionVoid preRetryOp);
 
+    public static final String UNKNOWN_OPERATION = "unknown";
+
+    public <T> T perform(String operation, Action<T> action) {
+        return perform(operation, action, null);
+    }
+
+    public void perform(String operation, ActionVoid action) {
+        perform(operation, action, null);
+    }
+
+    /**
+     * Like {@link #perform(Action, ActionVoid)}, labelled with the operation being retried (for logs
+     * and metrics). Handlers that do not report operations fall back to the unlabelled variant.
+     */
+    public <T> T perform(String operation, Action<T> action, ActionVoid preRetryOp) {
+        return perform(action, preRetryOp);
+    }
+
+    public void perform(String operation, ActionVoid action, ActionVoid preRetryOp) {
+        perform(action, preRetryOp);
+    }
+
     public interface Action<T> {
         T perform();
     }

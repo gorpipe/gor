@@ -35,7 +35,7 @@ import gorsat.Utilities.{AnalysisUtilities, MacroUtilities}
 import gorsat.process.{GorJavaUtilities, ParallelExecutor}
 import org.apache.commons.io.FilenameUtils
 import org.gorpipe.client.FileCache
-import org.gorpipe.exceptions.{GorException, GorSystemException, GorUserException}
+import org.gorpipe.exceptions.{GorCancelledException, GorException, GorSystemException, GorUserException}
 import org.gorpipe.gor.binsearch.GorIndexType
 import org.gorpipe.gor.driver.meta.DataType
 import org.gorpipe.gor.model.{DriverBackedFileReader, FileReader, GorMeta, GorOptions, GorParallelQueryHandler}
@@ -48,6 +48,8 @@ import org.gorpipe.gor.util.DataUtil
 import org.slf4j.LoggerFactory
 
 import java.util.Optional
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.function.BooleanSupplier
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParallelQueryHandler {
@@ -67,7 +69,8 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     (linkCacheFilePath, extension)
   }
 
-  def runAndStoreLinkFileInCache(nested: GorContext, writeLocationPath: String, fileCache: FileCache, useMd5: Boolean): String = {
+  def runAndStoreLinkFileInCache(nested: GorContext, writeLocationPath: String, fileCache: FileCache, useMd5: Boolean,
+                                 isCancelled: BooleanSupplier = GeneralQueryHandler.NotCancelled): String = {
     val startTime = System.currentTimeMillis
     val fileReader = nested.getSession.getProjectContext.getFileReader
     val commandToExecute = nested.getCommand
@@ -76,7 +79,7 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     val noDict = commandToExecute.toLowerCase.contains(" -nodict ")
     val writeGord = isGord && !noDict
     var cacheRes = writeLocationPath
-    val resultFileName = runCommand(nested, commandToExecute, if (isGord) writeLocationPath else null, useMd5, theTheDict = true)
+    val resultFileName = runCommand(nested, commandToExecute, if (isGord) writeLocationPath else null, useMd5, theTheDict = true, isCancelled)
     val isCacheDir = fileReader.resolveUrl(writeLocationPath,true).isDirectory()
 
     if(fileCache != null && (!isCacheDir || writeGord)) {
@@ -89,12 +92,13 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     cacheRes
   }
 
-  def runAndStoreInCache(nested: GorContext, fileCache: FileCache, useMd5: Boolean): String = {
+  def runAndStoreInCache(nested: GorContext, fileCache: FileCache, useMd5: Boolean,
+                         isCancelled: BooleanSupplier = GeneralQueryHandler.NotCancelled): String = {
     val startTime = System.currentTimeMillis
     val commandToExecute = nested.getCommand
     val commandSignature = nested.getSignature
     var cacheFile = findCacheFile(commandSignature, commandToExecute, header, fileCache, AnalysisUtilities.theCacheDirectory(context.getSession))
-    val resultFileName = runCommand(nested, commandToExecute, cacheFile, useMd5, theTheDict = false)
+    val resultFileName = runCommand(nested, commandToExecute, cacheFile, useMd5, theTheDict = false, isCancelled)
     if (fileCache != null) {
       val extension = CommandParseUtilities.getExtensionForQuery(commandToExecute, header)
       val overheadTime = findOverheadTime(commandToExecute)
@@ -135,6 +139,9 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
     val fileReader = context.getSession.getProjectContext.getFileReader
     var commandList: List[() => Unit] = Nil
     val useMd5 = System.getProperty("gor.caching.md5.enabled", "false").toBoolean
+    // Set by ParallelExecutor when any part fails, so the other parts never commit partial output (ENGKNOW-3979)
+    val cancelled = new AtomicBoolean(false)
+    val isCancelled: BooleanSupplier = () => cancelled.get()
 
     for (i <- commandSignatures.indices) {
       val executeFunction = block2Function {
@@ -149,9 +156,9 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
           fileNames(i) = if (cacheFile == null || !fileReader.exists(cacheFile)) {
             val writeLocationPath = cacheFiles(i)
             if (writeLocationPath != null) {
-              runAndStoreLinkFileInCache(nested, writeLocationPath, fileCache, useMd5)
+              runAndStoreLinkFileInCache(nested, writeLocationPath, fileCache, useMd5, isCancelled)
             } else {
-              runAndStoreInCache(nested, fileCache, useMd5)
+              runAndStoreInCache(nested, fileCache, useMd5, isCancelled)
             }
           } else {
             generateDictionaryFile(commandToExecute, fileReader, useMd5, cacheFile)
@@ -168,13 +175,13 @@ class GeneralQueryHandler(context: GorContext, header: Boolean) extends GorParal
       commandList ::= executeFunction
     }
 
-    if (commandList != Nil) parallelExecution(commandList.reverse.toArray)
+    if (commandList != Nil) parallelExecution(commandList.reverse.toArray, cancelled)
     fileNames
   }
 
 
-  def parallelExecution(commands: Array[() => Unit]): Unit = {
-    val pe = new ParallelExecutor(context.getSession.getSystemContext.getWorkers, commands)
+  def parallelExecution(commands: Array[() => Unit], cancelled: AtomicBoolean = new AtomicBoolean(false)): Unit = {
+    val pe = new ParallelExecutor(context.getSession.getSystemContext.getWorkers, commands, cancelled)
     try
       pe.parallelExecute()
     catch {
@@ -210,24 +217,50 @@ object GeneralQueryHandler {
       CommandParseUtilities.getExtensionForQuery(commandToExecute, header))
   }
 
-  def runCommand(context: GorContext, commandToExecute: String, outfile: String, useMd5: Boolean, theTheDict: Boolean): String = {
+  private val NotCancelled: BooleanSupplier = () => false
+
+  /**
+    * True if the output must not be committed: the run was cancelled (e.g. a sibling parallel part failed) or the
+    * thread was interrupted. A cancelled source may end early without an exception, so its output is partial.
+    */
+  private def mustNotCommit(isCancelled: BooleanSupplier): Boolean =
+    isCancelled.getAsBoolean || Thread.currentThread().isInterrupted
+
+  def runCommand(context: GorContext, commandToExecute: String, outfile: String, useMd5: Boolean, theTheDict: Boolean,
+                 isCancelled: BooleanSupplier = NotCancelled): String = {
     context.start(outfile)
     // We are using absolute paths here
     val fileReader = context.getSession.getProjectContext.getSystemFileReader
     val result = if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_PART) || commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY_FOLDER_PART)) {
-      writeOutGorDictionaryPart(commandToExecute, fileReader, outfile, theTheDict)
+      checkDictionaryCommit(writeOutGorDictionaryPart(commandToExecute, fileReader, outfile, theTheDict), fileReader, commandToExecute, isCancelled)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.GOR_DICTIONARY)) {
-      writeOutGorDictionary(commandToExecute, fileReader, outfile, theTheDict)
+      checkDictionaryCommit(writeOutGorDictionary(commandToExecute, fileReader, outfile, theTheDict), fileReader, commandToExecute, isCancelled)
     } else if (commandToExecute.toUpperCase().startsWith(CommandParseUtilities.NOR_DICTIONARY)) {
-      writeOutNorDictionaryPart(commandToExecute, fileReader, outfile)
+      checkDictionaryCommit(writeOutNorDictionaryPart(commandToExecute, fileReader, outfile), fileReader, commandToExecute, isCancelled)
     } else {
-      runCommandInternal(context, commandToExecute, outfile, useMd5)
+      runCommandInternal(context, commandToExecute, outfile, useMd5, isCancelled)
     }
     context.end()
     result
   }
 
-  private def runCommandInternal(context: GorContext, commandToExecute: String, outfile: String, useMd5: Boolean): String = {
+  /**
+    * Dictionaries are written in place, so on cancel remove a possibly partial dictionary file to keep it from
+    * being picked up from the cache (ENGKNOW-3979).
+    */
+  private def checkDictionaryCommit(outfile: String, fileReader: FileReader, commandToExecute: String, isCancelled: BooleanSupplier): String = {
+    if (mustNotCommit(isCancelled)) {
+      try {
+        if (outfile != null && fileReader.exists(outfile) && !fileReader.isDirectory(outfile)) fileReader.delete(outfile)
+      } catch {
+        case _: Exception => /* do nothing */
+      }
+      throw new GorCancelledException(s"Query cancelled, result not stored: $commandToExecute", null)
+    }
+    outfile
+  }
+
+  private def runCommandInternal(context: GorContext, commandToExecute: String, outfile: String, useMd5: Boolean, isCancelled: BooleanSupplier): String = {
     val theSource = new DynamicRowSource(commandToExecute, context)
     val theHeader = theSource.getHeader
 
@@ -292,6 +325,12 @@ object GeneralQueryHandler {
             newName = PathUtils.resolve(projectRoot,newName)
           }
         }
+      }
+
+      // A cancelled run (e.g. a sibling parallel part failed) may have ended its source early without an
+      // exception. Never commit that partial output to the cache; the catch below removes the temp file (ENGKNOW-3979).
+      if (mustNotCommit(isCancelled)) {
+        throw new GorCancelledException(s"Query cancelled, result not stored: $commandToExecute", null)
       }
 
       if(oldName!=null && fileReader.exists(oldName) && !oldName.equals(newName)) {

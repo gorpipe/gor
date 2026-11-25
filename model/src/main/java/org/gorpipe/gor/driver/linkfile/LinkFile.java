@@ -12,6 +12,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import org.gorpipe.base.config.PropsHelper;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSourceChangedException;
 import org.gorpipe.gor.driver.meta.SourceReference;
 import org.gorpipe.gor.driver.providers.stream.StreamUtils;
 import org.gorpipe.gor.driver.providers.stream.sources.StreamSource;
@@ -517,6 +518,16 @@ public abstract class LinkFile {
     }
 
     private static String readLimitedLinkContent(StreamSource source) {
+        try {
+            return readLimitedLinkContentOnce(source);
+        } catch (GorSourceChangedException e) {
+            // Link files are rewritten by appendEntry and GC; replaced while we read it (ENGKNOW-4312), read it again.
+            log.info("Link file {} changed during read, reading it again", source.getFullPath());
+            return readLimitedLinkContentOnce(source);
+        }
+    }
+
+    private static String readLimitedLinkContentOnce(StreamSource source) {
         try (InputStream is = source.open()) {
             var content =  StreamUtils.readString(is, 2 * LINK_FILE_MAX_SIZE);
             if (content.length() > 2 * LINK_FILE_MAX_SIZE) {

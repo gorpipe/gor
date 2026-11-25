@@ -105,7 +105,7 @@ object GenomeFunctions {
     var refSeq: RefSeq  = null
     cvp => {
       if (refSeq == null) {
-        refSeq = owner.context.getSession.getProjectContext.createRefSeq(ex4(cvp))
+        refSeq = owner.createBuildRefSeq(ex4(cvp))
       }
       refSeq.getBases(ex1(cvp), ex2(cvp), ex3(cvp))
     }

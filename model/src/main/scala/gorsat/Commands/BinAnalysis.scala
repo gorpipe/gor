@@ -34,6 +34,8 @@ abstract class BinAnalysis(rowHandler: RowHandler, binAggregator: BinAggregator)
   }
 
   override def finish(): Unit = {
-    binAggregator.finalFlush()
+    // An upstream step has failed, the buffered bins are partial and must not be emitted.
+    if (isInErrorState) binAggregator.discard()
+    else binAggregator.finalFlush()
   }
 }

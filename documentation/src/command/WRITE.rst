@@ -22,7 +22,7 @@ Usage
 
 .. code-block:: gor
 
-	gor ... | write <file name> [-f forkCol] [-d] [-r] [-c] [-m] [-i type]
+	gor ... | write <file name> [-f forkCol] [-d] [-r] [-c] [-m] [-i type] [-link <link>] [-linkmeta <m>] [-meta <m>]
 
 Options
 =======
@@ -67,8 +67,26 @@ Options
 |                   | been used in a link file.                                       |
 +-------------------+-----------------------------------------------------------------+
 | ``-linkmeta <m>`` | Writes <meta> as meta data to the <link>.  <meta> is string for |
-|                   | of comma separated key=value elements.                          |
+|                   | of comma separated key=value elements.  Quote <m> if values     |
+|                   | contain spaces, e.g. ``-linkmeta 'OWNER=Jane Doe'``.            |
 +-------------------+-----------------------------------------------------------------+
+| ``-meta <m>``     | Adds <m> to the meta data of the written file(s).  <m> is a     |
+|                   | comma separated list of key=value elements, quoted if values    |
+|                   | contain spaces.  Keys are upper cased and may only contain      |
+|                   | letters, digits, '_', '.' and '-'.  Keys GOR maintains itself   |
+|                   | (e.g. MD5, LINE_COUNT, COLUMNS) can not be set.  Valid with     |
+|                   | gor, gorz, norz and vcf output, not with ``-noheader``.         |
++-------------------+-----------------------------------------------------------------+
+
+Meta data
+=========
+
+Files written as gorz or norz get a ``.meta`` file next to them, and so do gor and vcf files
+written by :ref:`WRITE`.  When the reference build of the session is known, the meta of gor,
+gorz and vcf files records it as ``## BUILD = <build>`` and vcf files also get a
+``##reference=<build>`` header line (not when the header comes from a ``-prefix`` file).
+The build is taken from ``buildVersion`` in the gor config file, or else inferred from the length of chr1 in ``buildSizeFile`` (hg18, hg19 or hg38).
+A ``BUILD`` given with ``-meta`` takes precedence.
 
 Examples
 ========

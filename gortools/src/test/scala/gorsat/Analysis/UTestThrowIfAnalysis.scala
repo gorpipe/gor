@@ -73,4 +73,28 @@ class UTestThrowIfAnalysis extends AnyFlatSpec {
     assert(thrown.getMessage == "Gor throw on: A=='ABC'")
     assert(thrown.isFullRetry() == true)
   }
+
+  it should "use custom message when message is given" in {
+    val sink = AnalysisSink()
+    val header = "chrom\tpos\tA"
+    val pipe = ThrowIfAnalysis(context, executeNor = false, "A=='ABC'", header, message = "custom failure") | sink
+    pipe.setRowHeader(RowHeader(header, List("S", "I", "S").toArray))
+
+    val thrown = intercept[GorDataException](pipe.process(RowObj("chr1\t1\tABC")))
+    assert(thrown.getMessage == "custom failure")
+    assert(thrown.getHeader == header)
+    assert(thrown.getRow == "chr1\t1\tABC")
+  }
+
+  it should "combine custom message and retriable" in {
+    val sink = AnalysisSink()
+    val header = "chrom\tpos\tA"
+    val pipe = ThrowIfAnalysis(context, executeNor = false, "A=='ABC'", header, isRetriable = true,
+      message = "custom failure") | sink
+    pipe.setRowHeader(RowHeader(header, List("S", "I", "S").toArray))
+
+    val thrown = intercept[GorDataException](pipe.process(RowObj("chr1\t1\tABC")))
+    assert(thrown.getMessage == "custom failure")
+    assert(thrown.isFullRetry())
+  }
 }

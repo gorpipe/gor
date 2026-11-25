@@ -157,8 +157,8 @@ make publish-local
 
 ## Versioning
 
-- Version stored in `VERSION` file at repo root
+- No version file: version is derived from `vX.Y.Z` git tags by the gradle git-versioning plugin (`build.gradle`)
 - Semantic versioning: `<major>.<minor>.<patch>`
-- Development versions use `-SNAPSHOT` suffix
-- Releases: `make release-milestone-from-master MILESTONE=X.Y.Z`
+- Tag checkout builds `X.Y.Z`, anything else builds `<latest tag>-SNAPSHOT`; print with `make gitversion`, override with `-Pversion=...`
+- Releases: create a `vX.Y.Z` release/tag on `main` on GitHub, see CONTRIBUTING.md#release
 - Dependency versions managed in `versions.properties` (refreshVersions plugin); update with `./gradlew refreshVersions`

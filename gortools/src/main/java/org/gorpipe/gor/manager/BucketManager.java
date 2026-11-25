@@ -620,7 +620,12 @@ public class BucketManager<T extends DictionaryEntry> {
 
             for (String candTempFile : candStream.collect(Collectors.toList())) {
                 if (candTempFile.contains(prefix)) {
-                    table.getFileReader().delete(candTempFile);
+                    // Temp tables have both a file (the dictionary copy) and a metadata folder, so must handle both.
+                    if (table.getFileReader().isDirectory(candTempFile)) {
+                        table.getFileReader().deleteDirectory(candTempFile);
+                    } else {
+                        table.getFileReader().delete(candTempFile);
+                    }
                 }
             }
         } catch (IOException ioe) {

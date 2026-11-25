@@ -23,6 +23,7 @@
 package gorsat;
 
 import gorsat.Commands.Analysis;
+import org.gorpipe.exceptions.GorCancelledException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.GenomicIterator;
@@ -218,8 +219,9 @@ public class BatchedPipeStepIteratorAdaptor extends GenomicIteratorBase implemen
             }
             return ret;
         } catch (InterruptedException e) {
+            // Must not look like end of stream: callers would treat the truncated output as complete (ENGKNOW-3979).
             Thread.currentThread().interrupt();
-            return false;
+            throw new GorCancelledException("Query interrupted", e);
         }
     }
 

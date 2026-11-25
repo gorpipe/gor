@@ -22,11 +22,22 @@
 
 package gorsat;
 
+import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorParsingException;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 
 public class UTestParallel {
+
+    @Rule
+    public TemporaryFolder workDir = new TemporaryFolder();
 
     @Test
     public void testNorParallelQuery() {
@@ -78,5 +89,33 @@ public class UTestParallel {
     public void testGorParallelQueryExceedingLimit() {
         String query = "create pnlist = norrows 100 -offset 100 | calc pn 'PN_'+rownum  | signature -timeres 1; parallel -parts [pnlist] -limit 10 <(gorrows -p chr1:0-#{col:rownum} | calc pn '#{col:pn}')";
         TestUtils.runGorPipeCount(query);
+    }
+
+    /**
+     * ENGKNOW-3979: when one part of a parallel create fails, a sibling part that is still running gets
+     * interrupted. Its partial (header-only) output must not be committed to the result cache, otherwise
+     * a rerun after the failure is fixed reuses the empty part and silently drops its rows.
+     */
+    @Test
+    public void testFailedPartDoesNotLeaveSiblingPartInCache() throws IOException {
+        Path root = workDir.getRoot().toPath();
+        Path cacheDir = Files.createDirectory(root.resolve("result_cache"));
+        Path failingPart = root.resolve("a.gor");
+        Files.writeString(failingPart, "chrom\tpos\tval\tdelay\nchr1\t1\tbad\t0\n");
+        Files.writeString(root.resolve("b.gor"),
+                "chrom\tpos\tval\tdelay\nchr2\t1\tok\t500\nchr2\t2\tok\t500\nchr2\t3\tok\t500\n");
+        Files.writeString(root.resolve("parts.tsv"), "#name\na\nb\n");
+
+        String query = "create xx = parallel -parts parts.tsv <(gor #{col:name}.gor | calc s sleep(delay) | throwif val = 'bad'); gor [xx]";
+
+        Assert.assertThrows(GorException.class,
+                () -> TestUtils.runGorPipe(query, root.toString(), cacheDir.toString(), false, null, null));
+
+        Files.writeString(failingPart, "chrom\tpos\tval\tdelay\nchr1\t1\tok\t0\n");
+        Files.setLastModifiedTime(failingPart, FileTime.fromMillis(System.currentTimeMillis() + 10000));
+
+        String result = TestUtils.runGorPipe(query, root.toString(), cacheDir.toString(), false, null, null);
+        Assert.assertEquals("All rows from all parts expected on rerun, got:\n" + result,
+                5, result.split("\n").length);
     }
 }

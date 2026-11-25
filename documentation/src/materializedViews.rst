@@ -136,3 +136,27 @@ or for a more concrete example:
    gorpipe " gor ./nextcode/data_man/queries/report_builders/genes/pathways_to_genes.yml
    (format=line_per_gene,pathways=REACTOME||Interleukin-1_processing,running_time=1,long_running_query=No,
    ref_path=/mnt/csa/volumes/ref01/ref/versions/hg19/HG19-85-5-4) "
+
+.. _reportFunctionSource:
+
+The report function source
+--------------------------
+Report builders can also be read with the ``report`` function source, which takes the .yml file, or a url to it, as its
+first argument followed by the report arguments:
+
+.. code-block:: gor
+
+   gor report(/<path>/<to>/<report_builder.yml>, arg1=val1, arg2='val 2')
+   nor report(template://<organization>/<category>/<name>/latest.yml, arg1=val1)
+
+An argument without a value selects the query entry to render from the .yml file and ``<report_builder.yml>::<ReportName>``
+selects a report by name, e.g. ``report(lib.yml::MyReport, mystep, top=10)``.
+
+The rendered query is read as a :ref:`nested stream<nestedStreams>`, so ``report(...)`` can be used wherever a nested
+query, ``<(...)``, can be used, e.g. as the input of :ref:`GOR`, NOR and PGOR or as the right source of :ref:`JOIN` and
+:ref:`MERGE`:
+
+.. code-block:: gor
+
+   gor left_source.gor | JOIN -snpsnp report(right_source.yml, top=10)
+

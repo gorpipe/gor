@@ -102,8 +102,11 @@ public class CsaAuth extends GorAuth {
             log.debug("Removing gor auth info from cache, key: {}, cause: {}", k, c);
         };
 
+        // expireAfterWrite caps how long a session in steady use goes without a CSA re-check (a revoked session or
+        // changed role). GorAuthFactory used to give this cap by dropping each session's CsaAuth after 2 hours.
         return Caffeine.newBuilder().removalListener(removalNotifier)
-                .expireAfterAccess(timeoutInSeconds, TimeUnit.SECONDS).build();
+                .expireAfterAccess(timeoutInSeconds, TimeUnit.SECONDS)
+                .expireAfterWrite(2, TimeUnit.HOURS).build();
     }
 
     private void validateAppSession(String sessionKey, Map<String, Object> appSessionMap) {

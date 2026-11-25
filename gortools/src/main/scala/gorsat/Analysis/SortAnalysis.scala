@@ -49,6 +49,10 @@ case class SortState(sortStep: SortGenome) extends BinState {
     sortStep.finish()
     sortStep.reinit()
   }
+
+  override def close(): Unit = {
+    sortStep.discard()
+  }
 }
 
 case class SortFactory(header: String, session: GorSession, sortInfo: Array[SortInfo], div: Int) extends BinFactory {

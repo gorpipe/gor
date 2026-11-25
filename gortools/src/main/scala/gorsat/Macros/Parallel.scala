@@ -53,7 +53,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
                                           skipCache: Boolean): MacroParsingResult = {
 
     val cmdToModify = if (CommandParseUtilities.isNestedCommand(inputArguments(0))) {
-      CommandParseUtilities.parseNestedCommand(inputArguments(0))
+      CommandParseUtilities.parseNestedCommand(inputArguments(0), context.getSession)
     } else {
       throw new GorParsingException(s"Parallel requires a nested query as input. Current input is: ${inputArguments(0)}")
     }
@@ -63,7 +63,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
     }
 
     val taskExecutionLimit = CommandParseUtilities.intValueOfOptionWithDefault(options, "-limit", 10000 )
-    val parallelQuery = CommandParseUtilities.parseNestedCommand(inputArguments.head)
+    val parallelQuery = CommandParseUtilities.parseNestedCommand(inputArguments.head, context.getSession)
     val inputSource1 = SourceProvider(CommandParseUtilities.stringValueOfOption(options, "-parts"), context, executeNor = true, isNor = false)
     val partsSource = inputSource1.source
     val header = inputSource1.header
@@ -162,7 +162,7 @@ class Parallel extends MacroInfo("PARALLEL", CommandArguments("-gordfolder", "-p
         }
 
         var summaryCommand = "GOR"
-        val nestedQuery = CommandParseUtilities.parseNestedCommand(inputs.head)
+        val nestedQuery = CommandParseUtilities.parseNestedCommand(inputs.head, context.getSession)
         val firstCommand = CommandParseUtilities.getFirstCommand(nestedQuery)
         if (GorInputSources.isNorCommand(firstCommand)) summaryCommand = "NOR"
 

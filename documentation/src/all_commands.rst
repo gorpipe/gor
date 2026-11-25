@@ -55,6 +55,7 @@
    command/LEFTJOIN
    command/LEFTWHERE
    command/LIFTOVER
+   command/LIFTOVER_ANNOTATE
    command/MAP
    command/MERGE
    command/META
@@ -107,6 +108,7 @@
    command/VARJOIN
    command/VARMERGE
    command/VARNORM
+   command/VARNORM_WITH_BUILD
    command/VERIFYCOLTYPE
    command/VERIFYORDER
    command/VERIFYVARIANT

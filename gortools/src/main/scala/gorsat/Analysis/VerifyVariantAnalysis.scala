@@ -45,4 +45,8 @@ case class VerifyVariantAnalysis(session: GorSession, refColumn: Int, altColumn:
     }
     super.process(r)
   }
+
+  override def finish(): Unit = {
+    refSeqProvider.close()
+  }
 }

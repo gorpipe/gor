@@ -21,14 +21,32 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
 
     protected Random rand = new Random();
 
+    @Override
     public <T> T perform(Action<T> action, ActionVoid preRetryOp) {
+        return perform(UNKNOWN_OPERATION, action, preRetryOp);
+    }
+
+    @Override
+    public void perform(ActionVoid action, ActionVoid preRetryOp) {
+        perform(UNKNOWN_OPERATION, action, preRetryOp);
+    }
+
+    @Override
+    public void perform(String operation, ActionVoid action, ActionVoid preRetryOp) {
+        perform(operation, () -> {
+            action.perform();
+            return null;
+        }, preRetryOp);
+    }
+
+    @Override
+    public <T> T perform(String operation, Action<T> action, ActionVoid preRetryOp) {
         assert initialDuration <= totalDuration;
 
         int tries = 0;
         long accumulatedDuration = 0;
 
-        Throwable lastException = null;
-        while (accumulatedDuration <= totalDuration) {
+        while (true) {
             try {
                 return action.perform();
             } catch (GorRetryException e) {
@@ -36,10 +54,30 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 checkIfShouldRetryException(e);
 
                 tries++;
-                lastException = e;
-                accumulatedDuration += sleep(e, tries, initialDuration);
 
-                log.warn("Retrying gor action after " + accumulatedDuration + "ms, retry " + tries, e);
+                // Give up once the attempt cap is reached, rather than sleeping for an attempt that
+                // will never be made (ENGKNOW-3723).
+                if (tries >= maxAttempts()) {
+                    onGiveUp(operation, e, tries, accumulatedDuration);
+                    throw new GorSystemException(
+                            String.format("Giving up after %s milliseconds and %d retries", accumulatedDuration, tries - 1),
+                            e);
+                }
+
+                long sleepMs = Math.max(calculateDuration(tries, initialDuration), retryAfterMillis(e));
+
+                // Give up before a sleep that would exceed the budget, rather than sleeping and then
+                // giving up without another attempt.
+                if (accumulatedDuration + sleepMs > totalDuration) {
+                    onGiveUp(operation, e, tries, accumulatedDuration);
+                    throw new GorSystemException(
+                            String.format("Giving up after %s milliseconds and %d retries", accumulatedDuration, tries - 1),
+                            e);
+                }
+
+                onRetry(operation, e, tries, sleepMs);
+                threadSleep(sleepMs, tries, e);
+                accumulatedDuration += sleepMs;
 
                 if (preRetryOp != null) {
                     preRetryOp.perform();
@@ -49,47 +87,21 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
                 throw e;
             }
         }
-
-        throw new GorSystemException(
-            String.format("Giving up after %s milliseconds and %d retries", accumulatedDuration, tries),
-            lastException
-        );
     }
 
-    public void perform(ActionVoid action, ActionVoid preRetryOp) {
-        assert initialDuration <= totalDuration;
+    /** Wait the server asked for (e.g. an HTTP Retry-After header), in ms; 0 when none. */
+    protected long retryAfterMillis(GorException e) {
+        return 0;
+    }
 
-        int tries = 0;
-        long accumulatedDuration = 0;
+    /** Called before sleeping for a retry. One line, no stack trace: retries are frequent and recover. */
+    protected void onRetry(String operation, GorException e, int attempt, long sleepMs) {
+        log.warn("Retry attempt={} op={} sleepMs={}: {}", attempt, operation, sleepMs, e.getMessage());
+    }
 
-        Throwable lastException = null;
-        while (accumulatedDuration <= totalDuration) {
-            try {
-                action.perform();
-                return;
-            } catch (GorRetryException e) {
-                if (!e.isRetry()) throw e;
-                checkIfShouldRetryException(e);
-
-                tries++;
-                lastException = e;
-                accumulatedDuration += sleep(e, tries, initialDuration);
-
-                log.warn("Retrying gor action after " + accumulatedDuration + "ms, retry " + tries, e);
-
-                if (preRetryOp != null) {
-                    preRetryOp.perform();
-                }
-            } catch (Exception e) {
-                log.warn("Non-retryable exception caught, will not retry.", e);
-                throw e;
-            }
-        }
-
-        throw new GorSystemException(
-                String.format("Giving up after %s milliseconds and %d retries", accumulatedDuration, tries),
-                lastException
-        );
+    /** Called once when the retry budget is exhausted. Logs the full exception. */
+    protected void onGiveUp(String operation, GorException e, int attempts, long totalSleepMs) {
+        log.warn("Giving up op={} after {} attempts and {}ms of retry sleep", operation, attempts, totalSleepMs, e);
     }
 
     /**
@@ -100,15 +112,16 @@ public abstract class RetryHandlerWithFixedWait extends RetryHandlerBase {
      */
     protected abstract void checkIfShouldRetryException(GorException e) throws GorException;
 
-    private long sleep(GorException e, int tries, long initialDuration) {
-        var sleepMs = calculateDuration(tries, initialDuration);
-        log.warn("Try number " + tries + " failed. Waiting for " + sleepMs + "ms before retrying.", e);
-        threadSleep(sleepMs, tries, e);
-        return sleepMs;
-    }
-
     protected long calculateDuration(int tries, long initialDuration) {
         // we allow randomness of the initial delay of up to 10%
         return (long)((initialDuration * (0.9 + 0.1 * rand.nextDouble())) * Math.pow(tries, 2));
+    }
+
+    /**
+     * Maximum number of attempts (first try + retries) before giving up, regardless of the sleep
+     * budget. Unbounded by default; only handlers that opt in (e.g. {@code S3RetryHandler}) cap this.
+     */
+    protected int maxAttempts() {
+        return Integer.MAX_VALUE;
     }
 }

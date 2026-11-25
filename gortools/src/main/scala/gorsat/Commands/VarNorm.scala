@@ -32,6 +32,12 @@ class VarNorm extends CommandInfo("VARNORM",
   CommandOptions(gorCommand = true, verifyCommand = true))
 {
   override def processArguments(context: GorContext, argString: String, iargs: Array[String], args: Array[String], executeNor: Boolean, forcedInputHeader: String): CommandParsingResult = {
+    VarNorm.parse(context, iargs(0), iargs(1), args, executeNor, forcedInputHeader, None)
+  }
+}
+
+object VarNorm {
+  def parse(context: GorContext, refColArg: String, alleleColArg: String, args: Array[String], executeNor: Boolean, forcedInputHeader: String, refSeqPath: Option[String]): CommandParsingResult = {
     var refCol = -1
     var alleleCol = -1
     var seg = false
@@ -48,12 +54,12 @@ class VarNorm extends CommandInfo("VARNORM",
     if (hasOption(args, "-right")) leftNormalize = false
     var mergeSpan = intValueOfOptionWithDefaultWithRangeCheck(args, "-span", 1000, 0)
     if (mergeSpan > 1000000) { throw new GorParsingException("Span cannot exceed 1Mb!  This leads to slow execution and heave memory. Consider eliminating problematic variants.") }
-    refCol = columnFromHeader(iargs(0), forcedInputHeader, executeNor)
-    alleleCol = columnFromHeader(iargs(1), forcedInputHeader, executeNor)
+    refCol = columnFromHeader(refColArg, forcedInputHeader, executeNor)
+    alleleCol = columnFromHeader(alleleColArg, forcedInputHeader, executeNor)
     if (refCol < 0 || alleleCol < 0) {
       throw new GorParsingException(s"Error in columns - specify the 2 columns for the reference ($refCol) and the alternative ($alleleCol) allele: ")
     }
 
-    CommandParsingResult(VarNormAnalysis(refCol, alleleCol, vcfForm, seg, forcedInputHeader, leftNormalize, mergeSpan, context.getSession) | SortAnalysis(forcedInputHeader, context.getSession, 1.max(mergeSpan)), forcedInputHeader)
+    CommandParsingResult(VarNormAnalysis(refCol, alleleCol, vcfForm, seg, forcedInputHeader, leftNormalize, mergeSpan, context.getSession, refSeqPath) | SortAnalysis(forcedInputHeader, context.getSession, 1.max(mergeSpan)), forcedInputHeader)
   }
 }

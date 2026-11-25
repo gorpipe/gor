@@ -32,7 +32,8 @@ import htsjdk.tribble.util.LittleEndianOutputStream
 import htsjdk.variant.vcf.VCFCodec
 import org.gorpipe.exceptions.GorResourceException
 import org.gorpipe.gor.binsearch.GorIndexType
-import org.gorpipe.gor.model.{FileReader, Row}
+import org.gorpipe.gor.driver.meta.DataType
+import org.gorpipe.gor.model.{FileReader, GorMeta, Row}
 import org.gorpipe.gor.util.DataUtil
 
 import java.io._
@@ -45,8 +46,11 @@ import java.util.zip.Deflater
   * @param skipHeader Whether the header should be written or not.
   * @param append Whether we should write the output to the beginning or end of the file.
   * @param md5 Whether the md5 sum of the file's content should be written to a side file or not.
+  * @param metaOptions When set, meta stats are collected and a .meta file is written next to the output.
+  * @param metaHeader  The column header used for the meta stats.
   */
-class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: Boolean = false, append: Boolean = false, md5File: Boolean, md5: Boolean, idx: GorIndexType, compressionLevel: Int) extends Output {
+class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: Boolean = false, append: Boolean = false, md5File: Boolean, md5: Boolean, idx: GorIndexType, compressionLevel: Int,
+              metaOptions: Option[OutputOptions] = None, metaHeader: String = null) extends Output {
   val finalFileOutputStream: OutputStream = fileReader.getOutputStream(name, append)
   private val interceptingFileOutputStream: OutputStream =
     if (md5) {
@@ -67,6 +71,11 @@ class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: 
   override def getName: String = name
 
   def setup(): Unit = {
+    metaOptions.foreach { options =>
+      // A reopened (appended) file continues the stats of its earlier meta.
+      if (!getMeta.hasMetaStats) getMeta.initMetaStats(options.cardCol, metaHeader, options.infer, options.maxseg)
+      if (options.command != null) getMeta.setQuery(options.command)
+    }
     if (header != null & !skipHeader) {
       if (!header.startsWith("#")) {
         out.write("#")
@@ -76,6 +85,7 @@ class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: 
   }
 
   def process(r: Row): Unit = {
+    if (metaOptions.isDefined) getMeta.updateMetaStats(r)
     out.write(r.toString)
     out.write('\n')
   }
@@ -88,6 +98,15 @@ class OutFile(name: String, fileReader: FileReader, header: String, skipHeader: 
         stream.md5()
       case _ => null
     })
+
+    if (metaOptions.isDefined) {
+      val metaout = fileReader.getOutputStream(DataUtil.toFile(name, DataType.META))
+      try {
+        metaout.write(getMeta.formatHeader().getBytes())
+      } finally {
+        metaout.close()
+      }
+    }
 
     if(idx == GorIndexType.TABIX) {
       val bcis = new BlockCompressedInputStream(fileReader.getInputStream(name))
@@ -120,6 +139,29 @@ object OutFile {
     prefix + "\n" + (if(header.startsWith("#")) header else "#"+header)
   }
 
+  /**
+   * Whether writing to `name` with `options` produces a .meta file (see driver).  User meta (-meta) can only be
+   * stored in outputs that do.  An appended file (-noheader) gets none, as its rows before this write are unknown.
+   */
+  def writesMetaFile(name: String, options: OutputOptions): Boolean = {
+    val nameUpper = name.toUpperCase
+    if (DataUtil.isGorz(nameUpper) || DataUtil.isNorz(nameUpper)) {
+      options.writeMeta
+    } else if (DataUtil.isTsv(nameUpper) || DataUtil.isNor(nameUpper) || DataUtil.isParquet(nameUpper) || options.nor) {
+      false
+    } else {
+      options.gorMetaFile && options.writeMeta && !options.skipHeader &&
+        (DataUtil.isGor(nameUpper) || DataUtil.isAnyVcf(name))
+    }
+  }
+
+  /** Add a ##reference line for a known build, unless the prefix already has one. */
+  private def withReferenceLine(prefix: String, build: Option[String]): String = build match {
+    case Some(b) if !prefix.contains("##reference=") =>
+      prefix + (if (prefix.endsWith("\n")) "" else "\n") + "##reference=" + b
+    case _ => prefix
+  }
+
   def driver(name: String, fileReader: FileReader, inheader: RowHeader, skipHeader: Boolean, options: OutputOptions): Output = {
     driver(name, fileReader, inheader.toString, skipHeader, options, inheader.columnTypes)
   }
@@ -131,16 +173,19 @@ object OutFile {
   def driver(name: String, fileReader: FileReader, inheader: String, skipHeader: Boolean, options: OutputOptions, schema: Array[String]): Output = {
     val nameUpper = name.toUpperCase
     val isVCF = DataUtil.isAnyVcf(name)
+    val isGenomic = !options.nor && !DataUtil.isNorz(nameUpper) && !DataUtil.isNor(nameUpper) &&
+      !DataUtil.isTsv(nameUpper) && !DataUtil.isParquet(nameUpper)
+    val build = if (isGenomic) Option(options.build) else None
     var append = skipHeader
     val header = if(options.prefix.isDefined) {
       val pref = options.prefix.get
       if(isVCF) {
-        vcfHeader(pref, inheader)
+        vcfHeader(withReferenceLine(pref, build), inheader)
       } else {
         pref + inheader
       }
     } else if(options.prefixFile.isEmpty && isVCF) {
-      vcfHeader("##fileformat=VCFv4.2", inheader)
+      vcfHeader(withReferenceLine("##fileformat=VCFv4.2", build), inheader)
     } else {
       append = append || {
         options.prefixFile match {
@@ -163,11 +208,16 @@ object OutFile {
       } else if (options.nor) {
         new CmdFileOut(name, fileReader, header, skipHeader, append)
       } else {
-        new OutFile(name, fileReader, header, skipHeader, append, options.md5File, options.md5, options.idx, options.compressionLevel)
+        val writeMetaFile = inheader != null && writesMetaFile(name, options)
+        new OutFile(name, fileReader, header, skipHeader, append, options.md5File, options.md5, options.idx, options.compressionLevel,
+          if (writeMetaFile) Some(options) else None, inheader)
       }
       if (options.dictTags != null && options.dictTags.length > 0) {
         out.getMeta.setTags(options.dictTags.mkString(","))
       }
+      // The session build first, so a BUILD given with -meta wins.
+      build.foreach(b => out.getMeta.setProperty(GorMeta.HEADER_BUILD_KEY, b))
+      options.meta.foreach { case (k, v) => out.getMeta.setProperty(k, v) }
       out
     } catch {
       case e: FileNotFoundException => throw new GorResourceException(s"Can't write to file", name, e)

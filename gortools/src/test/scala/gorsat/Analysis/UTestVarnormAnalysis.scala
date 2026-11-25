@@ -599,6 +599,29 @@ class UTestVarnormAnalysis extends AnyFunSuite with MockitoSugar with BeforeAndA
     assert(runVarNorm(input) == input)
   }
 
+  test("refSeqPath - reference comes from the given build, not the project default") {
+    clearInvocations(mockProjectContext)
+    val buildRefSeq = mock[RefSeq]
+    when(mockProjectContext.createRefSeq("other/chromSeq")).thenReturn(buildRefSeq)
+    // Default build has no repeat, the given build has CCC at 1004-1006.
+    when(mockRefSeq.getBase(eqTo("chr1"), anyInt())).thenReturn('G')
+    doAnswer(invocation => "AAACCCT".charAt(invocation.getArgument[Int](1) - 1001))
+      .when(buildRefSeq).getBase(eqTo("chr1"), anyInt())
+    doAnswer(invocation => "AAACCCT".substring(invocation.getArgument[Int](1) - 1001, invocation.getArgument[Int](2) - 1000))
+      .when(buildRefSeq).getBases(eqTo("chr1"), anyInt(), anyInt())
+
+    val out = new ListBuffer[Row]
+    new GenericGorRunner().run(
+      RowListIterator(List(RowObj("chr1\t1005\tCC\tC"))),
+      VarNormAnalysis(refCol, alleleCol, vcfForm = true, seg = false, header, leftnormalize = true, 1000, mockSession,
+        refSeqPath = Some("other/chromSeq")) | ToList(out)
+    )
+
+    assert(out.toList == List(RowObj("chr1\t1003\tAC\tA")))
+    verify(mockProjectContext, never()).createRefSeq()
+    verify(buildRefSeq).close()
+  }
+
   test("Right-then-left normalization round-trip is idempotent on dbsnp data") {
     // Applying right-norm then left-norm must produce variants that are gtshare-equivalent
     // at every step. Any failure here means normalization is not producing a canonical form.

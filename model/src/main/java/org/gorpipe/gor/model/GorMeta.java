@@ -11,6 +11,7 @@ public class GorMeta extends BaseMeta {
     public static final String HEADER_QUERY_KEY = "QUERY";
     public static final String HEADER_RANGE_KEY = "RANGE";
     public static final String HEADER_CARDCOL_KEY = "CARDCOL";
+    public static final String HEADER_BUILD_KEY = "BUILD";
 
     public static GorMeta createAndLoad(FileReader fileReader, String metaPath) {
         GorMeta meta = new GorMeta();
@@ -42,6 +43,13 @@ public class GorMeta extends BaseMeta {
 
     public String getQuery() {
         return getProperty(HEADER_QUERY_KEY);
+    }
+
+    /**
+     * @return true once initMetaStats has been called, i.e. row stats are being collected.
+     */
+    public boolean hasMetaStats() {
+        return lineCount >= 0;
     }
 
     public void initMetaStats(String cardCol, String header) {

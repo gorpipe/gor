@@ -28,8 +28,11 @@ import gorsat.process.PipeInstance
 import org.gorpipe.exceptions.GorParsingException
 import org.gorpipe.gor.session.GorContext
 
-
-class Liftover extends CommandInfo("LIFTOVER",
+/**
+ * LIFTOVER_LEGACY: the LIFTOVER command as it was before ENGKNOW-4117, which expands into a join query. It is kept
+ * only to compare results with the new LIFTOVER and will be removed.
+ */
+class LiftoverLegacy extends CommandInfo("LIFTOVER_LEGACY",
   CommandArguments("-snp -seg -var -bam -all", "-ref -alt -build", 1, 1),
   CommandOptions(gorCommand = true, verifyCommand = true, cancelCommand = true))
 {

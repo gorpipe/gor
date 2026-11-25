@@ -30,6 +30,7 @@ import com.google.common.collect.Multimap;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.exceptions.GorException;
 import org.gorpipe.exceptions.GorResourceException;
+import org.gorpipe.exceptions.GorSourceChangedException;
 import org.gorpipe.exceptions.GorSystemException;
 import org.gorpipe.gor.model.FileReader;
 import org.gorpipe.gor.table.util.PathUtils;
@@ -327,6 +328,18 @@ public class Dictionary {
      * @return Cache object with all important info about the dictionary.
      */
     private static Dictionary processDictionary(String path, FileReader fileReader, String uniqueId, String commonRoot, boolean useCache) {
+        try {
+            return readDictionary(path, fileReader, uniqueId, commonRoot, useCache);
+        } catch (GorSourceChangedException e) {
+            // The dictionary was replaced while we read it (ENGKNOW-4312). Read the new one from the start, once. The
+            // signature taken before the read belongs to the old file, so don't record it: with an empty signature
+            // the cache entry is replaced on the next lookup.
+            log.info("Dictionary {} changed during read, reading it again", path);
+            return readDictionary(path, fileReader, "", commonRoot, useCache);
+        }
+    }
+
+    private static Dictionary readDictionary(String path, FileReader fileReader, String uniqueId, String commonRoot, boolean useCache) {
         final List<Set<String>> bucketTagsList = new ArrayList<>();
         final List<String> resetBucketNames = new ArrayList<>();
         final IntArray bucketTotalCounts = new IntArray();

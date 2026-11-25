@@ -30,6 +30,7 @@ import org.gorpipe.gor.session.GorSessionCache;
 import org.gorpipe.gor.session.ProjectContext;
 import org.gorpipe.gor.session.SystemContext;
 import org.gorpipe.gor.model.DriverBackedFileReader;
+import org.gorpipe.model.gor.iterators.RefSeqFactory;
 import org.gorpipe.model.gor.iterators.RefSeqRotatingFactory;
 
 import java.util.UUID;
@@ -39,8 +40,16 @@ import java.util.UUID;
  */
 public class AnalysisTestSessionFactory extends GorSessionFactory {
 
-    AnalysisTestSessionFactory() {
+    private final RefSeqFactory refSeqFactory;
+    private final String configFile;
 
+    AnalysisTestSessionFactory() {
+        this(new RefSeqRotatingFactory(), "");
+    }
+
+    AnalysisTestSessionFactory(RefSeqFactory refSeqFactory, String configFile) {
+        this.refSeqFactory = refSeqFactory;
+        this.configFile = configFile;
     }
 
     @Override
@@ -50,7 +59,6 @@ public class AnalysisTestSessionFactory extends GorSessionFactory {
         GorSession session = new GorSession(requestId);
 
         String root = "";
-        String configFile = "";
         var fileReader = new DriverBackedFileReader("", root);
         ProjectContext.Builder projectContextBuilder = new ProjectContext.Builder();
         projectContextBuilder
@@ -61,7 +69,7 @@ public class AnalysisTestSessionFactory extends GorSessionFactory {
                 .setFileCache(new LocalFileCacheClient(fileReader, ProjectContext.DEFAULT_CACHE_DIR))
                 .setQueryHandler(new GeneralQueryHandler(session.getGorContext(), false))
                 .setQueryEvaluator(new SessionBasedQueryEvaluator(session))
-                .setRefSeqFactory(new RefSeqRotatingFactory());
+                .setRefSeqFactory(refSeqFactory);
 
         SystemContext.Builder systemContextBuilder = new SystemContext.Builder();
         systemContextBuilder

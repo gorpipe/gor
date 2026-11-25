@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
@@ -33,6 +34,7 @@ abstract class CsaBaseService extends HttpJsonServiceClient {
         super();
         this.config = config;
         this.authConfig = authConfig;
+        setTimeouts(config.getConnectTimeoutMs(), config.getReadTimeoutMs());
     }
 
     //todo retry initialization in preemptive fashion
@@ -56,6 +58,21 @@ abstract class CsaBaseService extends HttpJsonServiceClient {
                 log.warn("CSA Credentialservice not active");
             }
             initializedAuth = true;
+        }
+    }
+
+    /**
+     * Get the path, retrying once with new auth on failure. A timeout is not retried: CSA is slow, not
+     * misconfigured, and a retry would pin the caller for another full timeout.
+     */
+    Map<String, Object> jsonGetWithRetry(String path) throws IOException {
+        initAuth();
+        try {
+            return jsonGet(path);
+        } catch (SocketTimeoutException e) {
+            throw e;
+        } catch (IOException ioe) {
+            return initializeAndRetry(path);
         }
     }
 

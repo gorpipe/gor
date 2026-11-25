@@ -61,7 +61,7 @@ class Gor() extends InputSourceInfo("GOR", CommandArguments(Gor.options.mkString
     if (CommandParseUtilities.isNestedCommand(inputFile)) {
       // Nested source, e.g. used by PGOR
       try {
-        var iteratorCommand = CommandParseUtilities.parseNestedCommand(inputFile)
+        var iteratorCommand = CommandParseUtilities.parseNestedCommand(inputFile, context.getSession)
 
         val partSplit = intValueOfOptionWithDefaultWithRangeCheck(args, "-parts", 1, 1)
 

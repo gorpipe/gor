@@ -39,7 +39,6 @@ buildscript {
 
 plugins {
     id 'idea'
-    id "org.ajoberstar.grgit"
     id "kr.motd.sphinx" apply false
 
     // Plugins not applied everywhere.
@@ -58,13 +57,63 @@ plugins {
     id("net.razvan.jacoco-to-cobertura") version "1.1.2"
 
     // TODO: Add   classpath "gradle.plugin.com.gitlab.stfs.gradle.dependencygraph:gradle-dependency-graph-plugin:latest.release"
+
+    id 'me.qoomon.git-versioning'
 }
 
 apply plugin: "com.gitlab.stfs.gradle.dependency-graph-plugin"
 
+// Version is derived from git tags (vX.Y.Z), see CONTRIBUTING.md#release.
+// Tag checkout -> X.Y.Z, anything else -> <latest tag>-SNAPSHOT.  Override with -Pversion=...
+try {
+    gitVersioning.apply {
+        // https://github.com/qoomon/gradle-git-versioning-plugin
+        refs {
+            // Only tag checkouts (detached HEAD, as in the CI tag builds) get the release version, branch builds
+            // are always snapshots, so re-running a main build after the release is tagged never publishes X.Y.Z.
+            considerTagsOnBranches = false
+
+            tag('v(?<version>\\d+\\.\\d+\\.\\d+)') {
+                version = '${ref.version}'
+            }
+
+            branch('.+') {
+                describeTagPattern = ~'v(?<version>\\d+\\.\\d+\\.\\d+)'
+                version = '${describe.tag.version}-SNAPSHOT'
+            }
+        }
+
+        // Fallback, e.g. detached HEAD that is not on a tag.
+        rev {
+            describeTagPattern = ~'v(?<version>\\d+\\.\\d+\\.\\d+)'
+            version = '${describe.tag.version}-SNAPSHOT'
+        }
+    }
+} catch (Exception e) {
+    // E.g. a shallow clone without tags, CI checkouts must use fetch-depth: 0.
+    logger.warn("WARNING: Could not derive version from git tags, using 0.0.0-SNAPSHOT: ${e.message}")
+    allprojects {
+        version = '0.0.0-SNAPSHOT'
+    }
+}
+
+// The git versioning plugin overrides project.version, so re-apply an explicit -Pversion.
+def explicitVersion = gradle.startParameter.projectProperties['version']
+if (explicitVersion) {
+    allprojects { version = explicitVersion }
+}
+
+tasks.register('printVersion') {
+    description = 'Prints the project version (derived from git tags).'
+    def projectVersion = project.version
+    doLast {
+        println projectVersion
+    }
+}
+
 ext {
     // Get the git SHA to use in manifests. Do this on top level to avoid executing many times in subprojects.
-    gitSHA = grgit.head().id
+    gitSHA = ['git', 'rev-parse', 'HEAD'].execute(null, rootDir).text.trim() ?: 'unknown'
 }
 
 gradleLint {
