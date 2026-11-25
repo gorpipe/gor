@@ -193,9 +193,14 @@ gaps section of <a class="reference internal" href="LIFTOVER_ANNOTATE.html#lifto
 <div class="versionadded">
 <p><span class="versionmodified added">New in version 5.17.0: </span><code class="docutils literal notranslate"><span class="pre">-aligned</span></code> (with <code class="docutils literal notranslate"><span class="pre">-var</span></code>) adds the aligned extent of each variant, see <a class="reference internal" href="#aligned-extent">Aligned extent</a>.</p>
 </div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 5.18.0: </span><code class="docutils literal notranslate"><span class="pre">-haplotype</span></code> (with <code class="docutils literal notranslate"><span class="pre">-var</span></code>) rewrites the alleles of an indel next to a build indel as BCFtools <code class="docutils literal notranslate"><span class="pre">+liftover</span></code> does,
+see <a class="reference internal" href="#allele-fix">Allele fix</a>.</p>
+</div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | -bam ] [ -all ] [ -aligned ]
+    [ -haplotype -srcseq &lt;source build&gt; -tgtseq &lt;target build&gt; ]
     [ -build &lt;build&gt; ] [ -mapped &lt;contigs&gt; ] [ -passthrough &lt;contigs&gt; | none ] [ -failon &lt;statuses&gt; ]
     [ -tolerance &lt;t&gt; ]
 </pre></div>
@@ -242,6 +247,19 @@ Cannot be combined with <code class="docutils literal notranslate"><span class="
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-nogapfill</span></code></p></td>
 <td><p>Do not fill equal gaps between the blocks of a chain: positions in them
 stay <code class="docutils literal notranslate"><span class="pre">unmapped</span></code>, as in 5.16 (see <a class="reference internal" href="LIFTOVER_ANNOTATE.html#liftover-annotate"><span class="std std-ref">LIFTOVER_ANNOTATE</span></a>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-haplotype</span></code></p></td>
+<td><p>Only valid with <code class="docutils literal notranslate"><span class="pre">-var</span></code>, not with <code class="docutils literal notranslate"><span class="pre">-all</span></code>. Rewrites the alleles of an
+indel next to a build indel and adds <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alleleFix</span></code>, see
+<a class="reference internal" href="#allele-fix">Allele fix</a>. Requires <code class="docutils literal notranslate"><span class="pre">-srcseq</span></code> and <code class="docutils literal notranslate"><span class="pre">-tgtseq</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-srcseq</span> <span class="pre">path</span></code></p></td>
+<td><p>With <code class="docutils literal notranslate"><span class="pre">-haplotype</span></code>: the reference sequence (chromSeq) of the input’s
+build, for example <code class="docutils literal notranslate"><span class="pre">config/chromSeqhg19</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-tgtseq</span> <span class="pre">path</span></code></p></td>
+<td><p>With <code class="docutils literal notranslate"><span class="pre">-haplotype</span></code>: the reference sequence (chromSeq) of the chain’s
+target build, for example <code class="docutils literal notranslate"><span class="pre">config/chromSeqhg38</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -290,8 +308,8 @@ added columns are set by <code class="docutils literal notranslate"><span class=
 <p>The output row is the lifted location (<code class="docutils literal notranslate"><span class="pre">Chrom</span></code>, <code class="docutils literal notranslate"><span class="pre">Pos</span></code> and, for <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-bam</span></code>, the end column), the
 remaining input columns, the source location as <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_&lt;column&gt;</span></code> (for example <code class="docutils literal notranslate"><span class="pre">hgold_Chrom</span></code> and <code class="docutils literal notranslate"><span class="pre">hgold_Pos</span></code>),
 <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_qStrand</span></code> (<code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">-</span></code>, empty when the row is not lifted) and <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_liftoverStatus</span></code>, with
-<code class="docutils literal notranslate"><span class="pre">-aligned</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alignedLeft</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alignedRight</span></code>, and with <code class="docutils literal notranslate"><span class="pre">-all</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_score</span></code>. The rows are
-sorted on the lifted location.</p>
+<code class="docutils literal notranslate"><span class="pre">-aligned</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alignedLeft</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alignedRight</span></code>, with <code class="docutils literal notranslate"><span class="pre">-haplotype</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alleleFix</span></code>, and with
+<code class="docutils literal notranslate"><span class="pre">-all</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_score</span></code>. The rows are sorted on the lifted location.</p>
 <p>A row that is not lifted is placed at (source contig, 0), and for <code class="docutils literal notranslate"><span class="pre">-seg</span></code> and <code class="docutils literal notranslate"><span class="pre">-bam</span></code> with end 1, so it sorts first
 on its source contig.</p>
 </div>
@@ -334,6 +352,66 @@ example <code class="docutils literal notranslate"><span class="pre">min(aligned
 </div>
 <p>The matching source window is <code class="docutils literal notranslate"><span class="pre">hg19_Pos-l</span> <span class="pre">..</span> <span class="pre">hg19_Pos+r</span></code> on a <code class="docutils literal notranslate"><span class="pre">+</span></code> lift, and the reverse complement of
 <code class="docutils literal notranslate"><span class="pre">hg19_Pos+len(REF)-1-r</span> <span class="pre">..</span> <span class="pre">hg19_Pos+len(REF)-1+l</span></code> on a <code class="docutils literal notranslate"><span class="pre">-</span></code> lift.</p>
+</div>
+<div class="section" id="allele-fix">
+<h2>Allele fix<a class="headerlink" href="#allele-fix" title="Permalink to this headline">¶</a></h2>
+<p>A plain <code class="docutils literal notranslate"><span class="pre">-var</span></code> lift moves a variant to its lifted position and keeps its alleles. When the target build has an
+indel (a chain gap) right next to an indel, the same alleles there describe another haplotype: the target reference
+plus the variant is not the source reference plus the variant. With <code class="docutils literal notranslate"><span class="pre">-var</span> <span class="pre">-haplotype</span></code> such a row gets the
+representation BCFtools <code class="docutils literal notranslate"><span class="pre">+liftover</span></code> (checked against 1.25, with its default <code class="docutils literal notranslate"><span class="pre">--max-indel-inc</span> <span class="pre">250</span></code> and
+<code class="docutils literal notranslate"><span class="pre">--max-snp-gap</span> <span class="pre">1</span></code>) gives it:</p>
+<ol class="arabic simple">
+<li><p>the alleles are extended in the source build until the indel is unambiguous (over its repeat);</p></li>
+<li><p>the first and the last base of the extended REF are lifted; when one of them is in a chain gap, the alleles are
+padded to the next block of the chain and the pad is realigned against the target;</p></li>
+<li><p>the target reference over the lifted span becomes the new REF;</p></li>
+<li><p>the alleles are left aligned with the new REF, the source REF and the ALT, unless they already are.</p></li>
+</ol>
+<p>The row then carries the new REF and the ALT, at the new position; the source REF, which BCFtools keeps as a second
+ALT, is dropped. <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_alleleFix</span></code> says what happened to the row:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 84%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rewritten</span></code></p></td>
+<td><p>The alleles and position were rewritten across a build indel (BCFtools <code class="docutils literal notranslate"><span class="pre">SWAP=-1</span></code>), or the
+span crossed a gap and keeps the source REF but BCFtools places it elsewhere than the plain
+lift (left aligned over the span).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
+<td><p>No build indel next to the variant, or not an indel (SNVs and MNVs keep the plain lift), or
+the row is not lifted. The plain lift stands.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">swap</span></code></p></td>
+<td><p>The target reference over the span is the ALT (BCFtools <code class="docutils literal notranslate"><span class="pre">SWAP=1</span></code>). Not rewritten.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ref_mismatch</span></code></p></td>
+<td><p>An indel whose REF is not the <code class="docutils literal notranslate"><span class="pre">-srcseq</span></code> reference at the variant. Not rewritten. (SNV and
+MNV REFs are not checked: they get <code class="docutils literal notranslate"><span class="pre">none</span></code>.)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">unresolved</span></code></p></td>
+<td><p>A rewrite was needed but could not be made: several ALTs (when one is an indel), a symbolic
+allele (also one as long as REF), anchors
+that lift to different chains or too far apart, a target contig <code class="docutils literal notranslate"><span class="pre">-mapped</span></code> does not accept,
+a very long pad realignment, or no target sequence. Not rewritten.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Only indels the plain lift maps are rewritten. A difference of bases (not length) between the builds in the window is
+not a build indel and gives <code class="docutils literal notranslate"><span class="pre">none</span></code>. A rewritten row’s <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;_qStrand</span></code> is the strand of the chain its alleles
+were lifted through. With <code class="docutils literal notranslate"><span class="pre">-aligned</span></code> the aligned extent is the plain lift’s. <code class="docutils literal notranslate"><span class="pre">-nogapfill</span></code> does not change the
+rewrite: a 1-base equal gap lifts by offset either way, as BCFtools merges it.</p>
+<p>Two places differ from BCFtools on purpose: the allele extension stops at the first base of a contig (BCFtools reads
+before the sequence there), and when a padded anchor does not lift on a <code class="docutils literal notranslate"><span class="pre">-</span></code> chain, it is placed by the mirror of the
+<code class="docutils literal notranslate"><span class="pre">+</span></code> arithmetic (BCFtools’ <code class="docutils literal notranslate"><span class="pre">-</span></code> formula leaves out the allele length, which can write a target base as an insertion).</p>
+<div class="highlight-gor notranslate"><div class="highlight"><pre><span></span><span class="nd">gor</span> variants.gor | <span class="nb">LIFTOVER</span> hg19tohg38.gor -var -build hg19 -haplotype
+    -srcseq config/chromSeqhg19 -tgtseq config/chromSeqhg38
+</pre></div>
+</div>
+<p>For example hg19 chr18:28666525 A&gt;AT, next to three bases hg38 has and hg19 does not, lifts to
+chr18:31086560 TTAA&gt;TT with <code class="docutils literal notranslate"><span class="pre">hg19_alleleFix</span></code> <code class="docutils literal notranslate"><span class="pre">rewritten</span></code>, where a plain lift gives chr18:31086559 A&gt;AT.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>

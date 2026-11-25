@@ -45,12 +45,18 @@ The LIFTOVER command must know the nature of the data, e.g. variants, BAM sequen
 
    ``-aligned`` (with ``-var``) adds the aligned extent of each variant, see `Aligned extent`_.
 
+.. versionadded:: 5.18.0
+
+   ``-haplotype`` (with ``-var``) rewrites the alleles of an indel next to a build indel as BCFtools ``+liftover`` does,
+   see `Allele fix`_.
+
 Usage
 =====
 
 .. code-block:: gor
 
 	gor ... | liftover config/liftover/hg18tohg19.gor [ -snp | -seg | -var | -bam ] [ -all ] [ -aligned ]
+	    [ -haplotype -srcseq <source build> -tgtseq <target build> ]
 	    [ -build <build> ] [ -mapped <contigs> ] [ -passthrough <contigs> | none ] [ -failon <statuses> ]
 	    [ -tolerance <t> ]
 
@@ -81,6 +87,16 @@ Options
 +------------------+-------------------------------------------------------------------------+
 | ``-nogapfill``   | Do not fill equal gaps between the blocks of a chain: positions in them |
 |                  | stay ``unmapped``, as in 5.16 (see :ref:`LIFTOVER_ANNOTATE`).           |
++------------------+-------------------------------------------------------------------------+
+| ``-haplotype``   | Only valid with ``-var``, not with ``-all``. Rewrites the alleles of an |
+|                  | indel next to a build indel and adds ``<build>_alleleFix``, see         |
+|                  | `Allele fix`_. Requires ``-srcseq`` and ``-tgtseq``.                    |
++------------------+-------------------------------------------------------------------------+
+| ``-srcseq path`` | With ``-haplotype``: the reference sequence (chromSeq) of the input's   |
+|                  | build, for example ``config/chromSeqhg19``.                             |
++------------------+-------------------------------------------------------------------------+
+| ``-tgtseq path`` | With ``-haplotype``: the reference sequence (chromSeq) of the chain's   |
+|                  | target build, for example ``config/chromSeqhg38``.                      |
 +------------------+-------------------------------------------------------------------------+
 
 Contig policy and failures (as in :ref:`LIFTOVER_ANNOTATE`):
@@ -120,8 +136,8 @@ Output columns
 The output row is the lifted location (``Chrom``, ``Pos`` and, for ``-seg`` and ``-bam``, the end column), the
 remaining input columns, the source location as ``<build>_<column>`` (for example ``hgold_Chrom`` and ``hgold_Pos``),
 ``<build>_qStrand`` (``+`` or ``-``, empty when the row is not lifted) and ``<build>_liftoverStatus``, with
-``-aligned`` ``<build>_alignedLeft`` and ``<build>_alignedRight``, and with ``-all`` ``<build>_score``. The rows are
-sorted on the lifted location.
+``-aligned`` ``<build>_alignedLeft`` and ``<build>_alignedRight``, with ``-haplotype`` ``<build>_alleleFix``, and with
+``-all`` ``<build>_score``. The rows are sorted on the lifted location.
 
 A row that is not lifted is placed at (source contig, 0), and for ``-seg`` and ``-bam`` with end 1, so it sorts first
 on its source contig.
@@ -171,6 +187,60 @@ example ``min(alignedLeft,10)`` bases left and ``min(alignedRight,10)`` bases ri
 
 The matching source window is ``hg19_Pos-l .. hg19_Pos+r`` on a ``+`` lift, and the reverse complement of
 ``hg19_Pos+len(REF)-1-r .. hg19_Pos+len(REF)-1+l`` on a ``-`` lift.
+
+Allele fix
+==========
+
+A plain ``-var`` lift moves a variant to its lifted position and keeps its alleles. When the target build has an
+indel (a chain gap) right next to an indel, the same alleles there describe another haplotype: the target reference
+plus the variant is not the source reference plus the variant. With ``-var -haplotype`` such a row gets the
+representation BCFtools ``+liftover`` (checked against 1.25, with its default ``--max-indel-inc 250`` and
+``--max-snp-gap 1``) gives it:
+
+1. the alleles are extended in the source build until the indel is unambiguous (over its repeat);
+2. the first and the last base of the extended REF are lifted; when one of them is in a chain gap, the alleles are
+   padded to the next block of the chain and the pad is realigned against the target;
+3. the target reference over the lifted span becomes the new REF;
+4. the alleles are left aligned with the new REF, the source REF and the ALT, unless they already are.
+
+The row then carries the new REF and the ALT, at the new position; the source REF, which BCFtools keeps as a second
+ALT, is dropped. ``<build>_alleleFix`` says what happened to the row:
+
++------------------+-----------------------------------------------------------------------------------------------+
+| ``rewritten``    | The alleles and position were rewritten across a build indel (BCFtools ``SWAP=-1``), or the   |
+|                  | span crossed a gap and keeps the source REF but BCFtools places it elsewhere than the plain   |
+|                  | lift (left aligned over the span).                                                            |
++------------------+-----------------------------------------------------------------------------------------------+
+| ``none``         | No build indel next to the variant, or not an indel (SNVs and MNVs keep the plain lift), or   |
+|                  | the row is not lifted. The plain lift stands.                                                 |
++------------------+-----------------------------------------------------------------------------------------------+
+| ``swap``         | The target reference over the span is the ALT (BCFtools ``SWAP=1``). Not rewritten.           |
++------------------+-----------------------------------------------------------------------------------------------+
+| ``ref_mismatch`` | An indel whose REF is not the ``-srcseq`` reference at the variant. Not rewritten. (SNV and   |
+|                  | MNV REFs are not checked: they get ``none``.)                                                 |
++------------------+-----------------------------------------------------------------------------------------------+
+| ``unresolved``   | A rewrite was needed but could not be made: several ALTs (when one is an indel), a symbolic   |
+|                  | allele (also one as long as REF), anchors                                                     |
+|                  | that lift to different chains or too far apart, a target contig ``-mapped`` does not accept,  |
+|                  | a very long pad realignment, or no target sequence. Not rewritten.                            |
++------------------+-----------------------------------------------------------------------------------------------+
+
+Only indels the plain lift maps are rewritten. A difference of bases (not length) between the builds in the window is
+not a build indel and gives ``none``. A rewritten row's ``<build>_qStrand`` is the strand of the chain its alleles
+were lifted through. With ``-aligned`` the aligned extent is the plain lift's. ``-nogapfill`` does not change the
+rewrite: a 1-base equal gap lifts by offset either way, as BCFtools merges it.
+
+Two places differ from BCFtools on purpose: the allele extension stops at the first base of a contig (BCFtools reads
+before the sequence there), and when a padded anchor does not lift on a ``-`` chain, it is placed by the mirror of the
+``+`` arithmetic (BCFtools' ``-`` formula leaves out the allele length, which can write a target base as an insertion).
+
+.. code-block:: gor
+
+   gor variants.gor | LIFTOVER hg19tohg38.gor -var -build hg19 -haplotype
+       -srcseq config/chromSeqhg19 -tgtseq config/chromSeqhg38
+
+For example hg19 chr18:28666525 A>AT, next to three bases hg38 has and hg19 does not, lifts to
+chr18:31086560 TTAA>TT with ``hg19_alleleFix`` ``rewritten``, where a plain lift gives chr18:31086559 A>AT.
 
 Examples
 ========
