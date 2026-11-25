@@ -240,7 +240,7 @@ public class UTestAlleleFix {
     @Test
     public void aClonedStepRewritesAndClosesItsOwnReferences() {
         AtomicInteger closed = new AtomicInteger();
-        AlleleFixConfig fix = new AlleleFixConfig(() -> refSeq(SOURCE, closed), () -> refSeq(TARGET, closed));
+        AlleleFixConfig fix = new AlleleFixConfig(() -> refSeq(SOURCE, closed), () -> refSeq(TARGET, closed), false);
         RowHeader in = RowHeader.apply("Chrom\tPos\tRef\tAlt", new String[]{"S", "I", "S", "S"});
         RowHeader out = RowHeader.apply("Chrom\tPos\tRef\tAlt\thg_Chrom\thg_Pos\thg_qStrand\thg_liftoverStatus"
                 + "\thg_alleleFix", new String[]{"S", "I", "S", "S", "S", "I", "S", "S", "S"});

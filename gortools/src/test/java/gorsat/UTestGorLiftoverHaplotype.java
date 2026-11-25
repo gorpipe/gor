@@ -21,7 +21,7 @@ import java.util.Arrays;
  * where hg38 carries three bases (TAA) the hg19 chain gap skips after base 101: source [0,101) maps to target [0,101)
  * and source [101,201) to target [104,204). ClinVar 1227234 (hg19 chr18:28666525 A&gt;AT) is base 100 here and ClinVar
  * 1968261 (chr18:28666526 T&gt;TATGA) base 101. A plain lift keeps their alleles at target base 100 and 101, which on
- * hg38 is another haplotype. Every expected row below is the one BCFtools 1.25 +liftover writes for the same fasta and
+ * hg38 is another haplotype. Every expected row below is the one BCFtools 1.24 +liftover writes for the same fasta and
  * chain (its new REF and the source ALT; the source REF, which it keeps as a second ALT, is dropped).
  */
 public class UTestGorLiftoverHaplotype {

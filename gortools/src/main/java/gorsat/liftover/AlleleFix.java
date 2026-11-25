@@ -23,20 +23,30 @@ import java.util.Locale;
  * ({@code is_left_aligned}, {@code trim_right}, {@code trim_left}, {@code shift_left}).</li>
  * </ol>
  * The rewritten row carries the new REF and the ALT; the source REF, which BCFtools keeps as a second ALT, is
- * dropped. Only indels (REF and ALT of different length, single ALT, plain bases) whose extended span crosses a chain
- * gap are rewritten; everything else keeps the plain lift.
+ * dropped. Of the rows the plain lift maps ({@link #rewrite}), only indels (REF and ALT of different length, single
+ * ALT, plain bases) whose extended span crosses a chain gap are rewritten; everything else keeps the plain lift. Rows
+ * the plain lift leaves unmapped are lifted by {@link #liftUnmapped} (-pad, ENGKNOW-4226).
  */
 public final class AlleleFix {
 
-    /** No build difference in the indel's window, or not an indel: the plain lift stands. */
+    /**
+     * {@link #rewrite}: no build difference in the indel's window, or not an indel; the plain lift stands.
+     * {@link #liftUnmapped}: the target reference is the REF, placed at BCFtools' position.
+     */
     public static final String NONE = "none";
     /** The alleles were rewritten across a build difference. */
     public static final String REWRITTEN = "rewritten";
-    /** The target reference over the window is the ALT (BCFtools SWAP=1); the alleles are not rewritten. */
+    /**
+     * The target reference over the window is the ALT (BCFtools SWAP=1): {@link #rewrite} keeps the plain lift,
+     * {@link #liftUnmapped} places the source alleles at BCFtools' position.
+     */
     public static final String SWAP = "swap";
-    /** REF is not the source reference at the variant; the alleles are not rewritten. */
+    /** REF is not the source reference at the variant; the alleles are not rewritten (or the row not placed). */
     public static final String REF_MISMATCH = "ref_mismatch";
-    /** A rewrite was needed but could not be made (BCFtools would reject the row); the plain lift stands. */
+    /**
+     * A rewrite was needed but could not be made (BCFtools would reject the row, or the anchors tie between blocks):
+     * {@link #rewrite} keeps the plain lift, {@link #liftUnmapped} leaves the row unmapped.
+     */
     public static final String UNRESOLVED = "unresolved";
 
     /** BCFtools --max-indel-inc: how far an indel's anchors may move or be padded. */
@@ -59,12 +69,18 @@ public final class AlleleFix {
     }
 
     /**
-     * The outcome: the fix and, for {@link #REWRITTEN}, the target location, the strand of the chain the alleles were
-     * lifted through ("+" or "-") and the alleles in target orientation; otherwise nulls and 0.
+     * The outcome: the fix and, for {@link #REWRITTEN} and for a row {@link #liftUnmapped} placed, the target
+     * location, the strand of the chain the alleles were lifted through ("+" or "-") and the alleles in target
+     * orientation; otherwise nulls and 0.
      */
     public record Result(String fix, String chrom, int pos, String strand, String ref, String alt) {
         static Result of(String fix) {
             return new Result(fix, null, 0, null, null, null);
+        }
+
+        /** The row has a target location and alleles of its own (rather than the plain lift's). */
+        public boolean placed() {
+            return chrom != null;
         }
     }
 
@@ -95,8 +111,9 @@ public final class AlleleFix {
             return Result.of(UNRESOLVED);
         }
         Seq s = new Seq(src, chrom);
-        if (!s.range(pos, pos + r.length() - 1).equals(r)) {
-            return Result.of(REF_MISMATCH);
+        String mismatch = sourceMismatch(s, pos, r);
+        if (mismatch != null) {
+            return Result.of(mismatch);
         }
         LiftEngine.PointResult plainLift = LiftEngine.liftVarAt(() -> contig -> ci, chrom, pos, r.length(),
                 policy).point();
@@ -105,6 +122,50 @@ public final class AlleleFix {
         } catch (Unresolved e) {
             return Result.of(UNRESOLVED);
         }
+    }
+
+    /**
+     * LIFTOVER -var -haplotype -pad (ENGKNOW-4226): lifts the -var row chrom:pos ref&gt;alt, which the plain lift left
+     * unmapped because its REF span runs into a chain gap or lies in one, as BCFtools +liftover lifts any row whose
+     * base it cannot lift on its own (an indel, an MNV, or a "difficult" SNP): extend the alleles, lift the first and
+     * last base, pad an anchor in a gap to the next block, read the target reference over the span, and left-align.
+     * <p>
+     * A placed result carries the target location and alleles: {@link #REWRITTEN} (the target reference is neither
+     * allele, BCFtools SWAP=-1: the new REF and the ALT), {@link #SWAP} (the target reference is the ALT, BCFtools
+     * SWAP=1: the source REF and ALT, so a caller can check and turn them round) or {@link #NONE} (the target
+     * reference is the REF). The row stays unmapped when BCFtools would reject it ({@link #UNRESOLVED}), or REF is not
+     * the source reference ({@link #REF_MISMATCH}).
+     */
+    public static Result liftUnmapped(ContigIndex ci, String chrom, int pos, String ref, String alt, Bases src,
+                                      Bases tgt, ContigPolicy policy) {
+        String r = ref.toUpperCase(Locale.ROOT);
+        String a = alt.toUpperCase(Locale.ROOT);
+        if (!plainBases(r) || !plainBases(a)) {
+            return Result.of(UNRESOLVED);
+        }
+        Seq s = new Seq(src, chrom);
+        String mismatch = sourceMismatch(s, pos, r);
+        if (mismatch != null) {
+            return Result.of(mismatch);
+        }
+        try {
+            // no plain lift to keep: runUnmapped places the row whatever the target reference turns out to be
+            return new Rewrite(ci, pos - 1, r, a, s, tgt, policy, null).runUnmapped(r.length() == 1 && a.length() == 1);
+        } catch (Unresolved e) {
+            return Result.of(UNRESOLVED);
+        }
+    }
+
+    /**
+     * Null when ref is the source reference at pos; otherwise {@link #REF_MISMATCH}, or {@link #UNRESOLVED} when there
+     * is no source sequence there (a contig -srcseq does not have), which is not a REF that disagrees with it.
+     */
+    private static String sourceMismatch(Seq s, int pos, String ref) {
+        String bases = s.range(pos, pos + ref.length() - 1);
+        if (bases.equals(ref)) {
+            return null;
+        }
+        return bases.chars().allMatch(c -> c == 'N') ? UNRESOLVED : REF_MISMATCH;
     }
 
     private static boolean plainBases(String s) {
@@ -180,6 +241,8 @@ public final class AlleleFix {
         private final LiftEngine.PointResult plainLift;
         /** 0-based position of the first allele base (BCFtools rec->pos). */
         private int pos0;
+        /** -pad: an anchor two overlapping blocks tie on makes the row unresolved rather than padded. */
+        private boolean tiesUnresolved;
         private StringBuilder ref;
         private StringBuilder alt;
 
@@ -208,6 +271,99 @@ public final class AlleleFix {
                 // the extended alleles lie in one gap-free alignment: no build indel to carry
                 return Result.of(NONE);
             }
+            Lifted l = read(span, srcPos5, srcPos3);
+            int dst5 = l.dst5();
+            Seq tgt = l.tgt();
+            String tref = l.tref();
+            StringBuilder[] als = {new StringBuilder(l.r0()), new StringBuilder(l.a0())};
+            int swap = findReference(als, tref, false).swap();
+            String strand = span.minus() ? "-" : "+";
+            if (swap == 0) {
+                // The target reference over the span carries the source REF: BCFtools writes the record at the span
+                // (left aligned), which across a gap can be another position than the plain lift's.
+                StringBuilder[] two = {als[0], als[1]};
+                int p0 = dst5 - 1;
+                if (!isLeftAligned(two)) {
+                    p0 = leftAlign(two, p0, tgt);
+                }
+                boolean plainMinus = "-".equals(plainLift.strand());
+                if (LiftEngine.MAPPED.equals(plainLift.status()) && plainLift.chrom().equals(span.chrom())
+                        && plainLift.pos() == p0 + 1
+                        && two[0].toString().equals(plainMinus ? revcomp(srcRef) : srcRef)
+                        && two[1].toString().equals(plainMinus ? revcomp(srcAlt) : srcAlt)) {
+                    return Result.of(NONE);
+                }
+                return new Result(REWRITTEN, span.chrom(), p0 + 1, strand, two[0].toString(), two[1].toString());
+            }
+            if (swap == 1) {
+                return Result.of(SWAP);
+            }
+            StringBuilder[] three = {new StringBuilder(tref), als[0], als[1]};
+            int p0 = dst5 - 1;
+            if (!isLeftAligned(three)) {
+                p0 = leftAlign(three, p0, tgt);
+            }
+            return new Result(REWRITTEN, span.chrom(), p0 + 1, strand, three[0].toString(), three[2].toString());
+        }
+
+        /**
+         * {@link #liftUnmapped}: BCFtools' path for a row whose base it cannot lift on its own, always extended and
+         * realigned, and placed whatever the target reference turns out to be. isSnp is BCFtools' is_snp (single-base
+         * REF and ALT), which changes how find_reference matches a target span longer than the extended alleles.
+         */
+        Result runUnmapped(boolean isSnp) {
+            // BCFtools lifts a tied anchor through one of the blocks; here a row the plain lift did not place is not
+            // placed on a guess
+            tiesUnresolved = true;
+            if (extensionNeeded(ref, alt)) {
+                extend();
+            }
+            int srcPos5 = pos0 + 1;
+            int srcPos3 = pos0 + ref.length();
+            Span span = liftIndel(srcPos5, srcPos3);
+            Lifted l = read(span, srcPos5, srcPos3);
+            StringBuilder[] als = {new StringBuilder(l.r0()), new StringBuilder(l.a0())};
+            Found found = findReference(als, l.tref(), isSnp);
+            int swap = found.swap();
+            StringBuilder[] out;
+            if (swap < 0) {
+                out = new StringBuilder[]{new StringBuilder(found.tref()), als[0], als[1]};
+            } else if (swap == 1) {
+                out = new StringBuilder[]{als[1], als[0]};
+            } else {
+                out = als;
+            }
+            int p0 = l.dst5() - 1 + found.shift();
+            if (!isLeftAligned(out)) {
+                p0 = leftAlign(out, p0, l.tgt());
+            }
+            for (StringBuilder a : out) {
+                if (a.indexOf("N") >= 0) {
+                    // the target has no sequence there (an N run, or past the end of the contig, which reads N): a
+                    // row the plain lift did not place is not placed onto bases the target does not have
+                    throw new Unresolved();
+                }
+            }
+            String strand = span.minus() ? "-" : "+";
+            if (swap < 0) {
+                return new Result(REWRITTEN, span.chrom(), p0 + 1, strand, out[0].toString(), out[2].toString());
+            }
+            if (swap == 1) {
+                // BCFtools writes the ALT as REF; the row keeps the source REF and ALT for the caller's swap check
+                return new Result(SWAP, span.chrom(), p0 + 1, strand, out[1].toString(), out[0].toString());
+            }
+            return new Result(NONE, span.chrom(), p0 + 1, strand, out[0].toString(), out[1].toString());
+        }
+
+        /** The extended alleles lifted onto the target (in its orientation), and the target reference over them. */
+        private record Lifted(int dst5, String r0, String a0, Seq tgt, String tref) {
+        }
+
+        /**
+         * Reads the target reference over the lifted span: the pad realigned (clip_pad) when an anchor was padded,
+         * the alleles and the pad reverse complemented onto a minus-strand chain.
+         */
+        private Lifted read(Span span, int srcPos5, int srcPos3) {
             if (!policy.allowsTarget(span.chrom())) {
                 // the anchors lifted onto a contig -mapped does not accept: keep the plain lift
                 throw new Unresolved();
@@ -246,35 +402,7 @@ public final class AlleleFix {
                 // no target reference here (or the wrong path): nothing to rewrite against
                 throw new Unresolved();
             }
-            StringBuilder[] als = {new StringBuilder(r0), new StringBuilder(a0)};
-            int swap = findReference(als, tref);
-            String strand = span.minus() ? "-" : "+";
-            if (swap == 0) {
-                // The target reference over the span carries the source REF: BCFtools writes the record at the span
-                // (left aligned), which across a gap can be another position than the plain lift's.
-                StringBuilder[] two = {als[0], als[1]};
-                int p0 = dst5 - 1;
-                if (!isLeftAligned(two)) {
-                    p0 = leftAlign(two, p0, tgt);
-                }
-                boolean plainMinus = "-".equals(plainLift.strand());
-                if (LiftEngine.MAPPED.equals(plainLift.status()) && plainLift.chrom().equals(span.chrom())
-                        && plainLift.pos() == p0 + 1
-                        && two[0].toString().equals(plainMinus ? revcomp(srcRef) : srcRef)
-                        && two[1].toString().equals(plainMinus ? revcomp(srcAlt) : srcAlt)) {
-                    return Result.of(NONE);
-                }
-                return new Result(REWRITTEN, span.chrom(), p0 + 1, strand, two[0].toString(), two[1].toString());
-            }
-            if (swap == 1) {
-                return Result.of(SWAP);
-            }
-            StringBuilder[] three = {new StringBuilder(tref), als[0], als[1]};
-            int p0 = dst5 - 1;
-            if (!isLeftAligned(three)) {
-                p0 = leftAlign(three, p0, tgt);
-            }
-            return new Result(REWRITTEN, span.chrom(), p0 + 1, strand, three[0].toString(), three[2].toString());
+            return new Lifted(dst5, r0, a0, tgt, tref);
         }
 
         // ---- source extension (extend_alleles) ----
@@ -397,6 +525,9 @@ public final class AlleleFix {
                 }
             }
             if (i < 0) {
+                if (tiesUnresolved && i == ContigIndex.AMBIGUOUS) {
+                    throw new Unresolved();
+                }
                 return null;
             }
             if (ci.isGap(i) && ci.tEnd(i) - ci.tStart(i) > MAX_SNP_GAP) {
@@ -717,11 +848,20 @@ public final class AlleleFix {
         // ---- the target reference (find_reference) and left alignment ----
 
         /**
-         * BCFtools find_reference for an indel: the allele with the target reference's length whose inner bases
-         * (all but the first and last) match it, 0 (REF) or 1 (ALT), or -1 when none does. Every allele's first and
-         * last base becomes the target reference's.
+         * A find_reference result: the allele that is the target reference (0 REF, 1 ALT, -1 none), the target
+         * reference it was matched against, and how far that starts after the lifted span's first base.
          */
-        private static int findReference(StringBuilder[] als, String tref) {
+        private record Found(int swap, String tref, int shift) {
+        }
+
+        /**
+         * BCFtools find_reference: the allele with the target reference's length whose inner bases (all but the
+         * first and last) match it, 0 (REF) or 1 (ALT), or -1 when none does. For a SNP (isSnp) with no such allele and
+         * a target reference of more than two bases, longer than the extended REF, the one shorter allele that matches
+         * the reference's start or end (anchors aside) is taken, and the reference is cut to its length. Every
+         * allele's first and last base becomes the target reference's.
+         */
+        private static Found findReference(StringBuilder[] als, String tref, boolean isSnp) {
             int refLen = tref.length();
             int swap = -1;
             for (int i = 0; i < als.length; i++) {
@@ -738,13 +878,54 @@ public final class AlleleFix {
                     swap = i;
                 }
             }
+            int shift = 0;
+            if (swap < 0 && isSnp && refLen > 2 && refLen != als[0].length()) {
+                int matches = 0;
+                for (int i = 0; i < als.length; i++) {
+                    String a = als[i].toString();
+                    int len = a.length();
+                    if (len < refLen) {
+                        boolean left = leftMatch(tref, a);
+                        boolean right = rightMatch(tref, a);
+                        matches += (left ? 1 : 0) + (right ? 1 : 0);
+                        if (matches > 1) {
+                            break;
+                        }
+                        if (left || right) {
+                            swap = i;
+                        }
+                    }
+                }
+                if (matches == 1) {
+                    int len = als[swap].length();
+                    if (!leftMatch(tref, als[swap].toString())) {
+                        shift = refLen - len;
+                        tref = tref.substring(refLen - len);
+                    } else {
+                        tref = tref.substring(0, len);
+                    }
+                    refLen = len;
+                } else {
+                    swap = -1;
+                }
+            }
             if (refLen > 1) {
                 for (StringBuilder a : als) {
                     a.setCharAt(0, tref.charAt(0));
                     a.setCharAt(a.length() - 1, tref.charAt(refLen - 1));
                 }
             }
-            return swap;
+            return new Found(swap, tref, shift);
+        }
+
+        /** find_reference's left match: the allele, but for its last base, starts the target reference. */
+        private static boolean leftMatch(String tref, String a) {
+            return tref.regionMatches(true, 0, a, 0, a.length() - 1);
+        }
+
+        /** find_reference's right match: the allele, but for its first base, ends the target reference. */
+        private static boolean rightMatch(String tref, String a) {
+            return tref.regionMatches(true, tref.length() - a.length() + 1, a, 1, a.length() - 1);
         }
 
         /** BCFtools is_left_aligned (Tan et al. 2015). */
