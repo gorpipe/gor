@@ -23,6 +23,7 @@
 package gorsat.Analysis
 
 import gorsat.Commands.Analysis
+import org.gorpipe.exceptions.GorSystemException
 import org.gorpipe.gor.model.Row
 import org.gorpipe.model.gor.RowObj
 
@@ -50,7 +51,8 @@ case class TeeAnalysis(teeStep: Analysis) extends Analysis {
   }
 
   override def finish() : Unit = {
-    teeStep.securedFinish(null)
+    // The tee branch finishes in the same state as this step, so a WRITE in it sees a failure.
+    teeStep.securedFinish(if (isInErrorState) new GorSystemException("Query failed before the tee branch finished", null) else null)
     super.finish()
   }
 }
