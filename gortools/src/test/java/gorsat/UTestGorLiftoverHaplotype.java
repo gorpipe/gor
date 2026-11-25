@@ -213,6 +213,12 @@ public class UTestGorLiftoverHaplotype {
     }
 
     @Test
+    public void gapFillDoesNotChangeTheRewrite() {
+        Assert.assertEquals(haplotype(variants, fwdChain, srcSeq, tgtSeq),
+                liftover(variants, fwdChain, "-nogapfill -haplotype -srcseq " + srcSeq + " -tgtseq " + tgtSeq));
+    }
+
+    @Test
     public void optionErrors() {
         String seqs = " -srcseq " + srcSeq + " -tgtseq " + tgtSeq;
         assertFails("gor " + variants + " | liftover " + fwdChain + " -snp -haplotype" + seqs, "only valid with -var");

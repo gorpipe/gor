@@ -79,18 +79,29 @@ public final class AlleleFix {
                                  Bases tgt, ContigPolicy policy) {
         String r = ref.toUpperCase(Locale.ROOT);
         String a = alt.toUpperCase(Locale.ROOT);
-        if (r.length() == a.length()) {
+        String[] alts = a.split(",", -1);
+        boolean plain = plainBases(r);
+        boolean sameLength = true;
+        for (String x : alts) {
+            plain &= plainBases(x);
+            sameLength &= x.length() == r.length();
+        }
+        if (plain && sameLength) {
+            // SNVs and MNVs, one ALT or several: not indels, the plain lift stands
             return Result.of(NONE);
         }
-        if (!plainBases(r) || !plainBases(a)) {
+        if (!plain || alts.length > 1) {
+            // a symbolic allele, or several ALTs of which one is an indel
             return Result.of(UNRESOLVED);
         }
         Seq s = new Seq(src, chrom);
         if (!s.range(pos, pos + r.length() - 1).equals(r)) {
             return Result.of(REF_MISMATCH);
         }
+        LiftEngine.PointResult plainLift = LiftEngine.liftVarAt(() -> contig -> ci, chrom, pos, r.length(),
+                policy).point();
         try {
-            return new Rewrite(ci, pos - 1, r, a, s, tgt, policy).run();
+            return new Rewrite(ci, pos - 1, r, a, s, tgt, policy, plainLift).run();
         } catch (Unresolved e) {
             return Result.of(UNRESOLVED);
         }
@@ -165,22 +176,28 @@ public final class AlleleFix {
         private final Seq src;
         private final Bases tgtBases;
         private final ContigPolicy policy;
+        /** The plain lift of the row, which a rewrite that changes nothing keeps. */
+        private final LiftEngine.PointResult plainLift;
         /** 0-based position of the first allele base (BCFtools rec->pos). */
         private int pos0;
         private StringBuilder ref;
         private StringBuilder alt;
 
-        Rewrite(ContigIndex ci, int pos0, String ref, String alt, Seq src, Bases tgt, ContigPolicy policy) {
+        Rewrite(ContigIndex ci, int pos0, String ref, String alt, Seq src, Bases tgt, ContigPolicy policy,
+                LiftEngine.PointResult plainLift) {
             this.ci = ci;
             this.src = src;
             this.tgtBases = tgt;
             this.policy = policy;
+            this.plainLift = plainLift;
             this.pos0 = pos0;
             this.ref = new StringBuilder(ref);
             this.alt = new StringBuilder(alt);
         }
 
         Result run() {
+            String srcRef = ref.toString();
+            String srcAlt = alt.toString();
             if (extensionNeeded(ref, alt)) {
                 extend();
             }
@@ -231,8 +248,23 @@ public final class AlleleFix {
             }
             StringBuilder[] als = {new StringBuilder(r0), new StringBuilder(a0)};
             int swap = findReference(als, tref);
+            String strand = span.minus() ? "-" : "+";
             if (swap == 0) {
-                return Result.of(NONE);
+                // The target reference over the span carries the source REF: BCFtools writes the record at the span
+                // (left aligned), which across a gap can be another position than the plain lift's.
+                StringBuilder[] two = {als[0], als[1]};
+                int p0 = dst5 - 1;
+                if (!isLeftAligned(two)) {
+                    p0 = leftAlign(two, p0, tgt);
+                }
+                boolean plainMinus = "-".equals(plainLift.strand());
+                if (LiftEngine.MAPPED.equals(plainLift.status()) && plainLift.chrom().equals(span.chrom())
+                        && plainLift.pos() == p0 + 1
+                        && two[0].toString().equals(plainMinus ? revcomp(srcRef) : srcRef)
+                        && two[1].toString().equals(plainMinus ? revcomp(srcAlt) : srcAlt)) {
+                    return Result.of(NONE);
+                }
+                return new Result(REWRITTEN, span.chrom(), p0 + 1, strand, two[0].toString(), two[1].toString());
             }
             if (swap == 1) {
                 return Result.of(SWAP);
@@ -242,8 +274,7 @@ public final class AlleleFix {
             if (!isLeftAligned(three)) {
                 p0 = leftAlign(three, p0, tgt);
             }
-            return new Result(REWRITTEN, span.chrom(), p0 + 1, span.minus() ? "-" : "+", three[0].toString(),
-                    three[2].toString());
+            return new Result(REWRITTEN, span.chrom(), p0 + 1, strand, three[0].toString(), three[2].toString());
         }
 
         // ---- source extension (extend_alleles) ----
@@ -348,9 +379,23 @@ public final class AlleleFix {
 
         // ---- lifting the anchors (liftover_bp, liftover_indel) ----
 
-        /** Lifts the 1-based source base p, or null when no block (or a merged gap of at most 1 base) holds it. */
+        /**
+         * Lifts the 1-based source base p, or null when no block holds it. A base in an equal gap of at most 1 base
+         * between two blocks of one chain (BCFtools --max-snp-gap 1 merges them) lifts by offset, whether or not the
+         * index filled the gap (-nogapfill); a longer gap does not.
+         */
         private Anchor anchor(int p) {
             int i = ci.findPoint(p);
+            if (i == ContigIndex.UNMAPPED && p > 1) {
+                int j = ci.findPoint(p - 1);
+                if (j >= 0 && !ci.isGap(j) && ci.tEnd(j) == p - 1) {
+                    int k = nextReal(j);
+                    if (k >= 0 && ci.tStart(k) == p && merged(j, k)) {
+                        LiftEngine.Target t = LiftEngine.liftAt(ci, j, p - 1, p);
+                        return new Anchor(j, t.chrom(), t.start0() + 1, ci.minus(j));
+                    }
+                }
+            }
             if (i < 0) {
                 return null;
             }
@@ -482,7 +527,10 @@ public final class AlleleFix {
                 int dstNpad = minus ? pos5 - pos3 : pos3 - pos5;
                 if (b5 == null || !b5.chrom().equals(chrom) || b5.minus() != minus || dstNpad < 0
                         || dstNpad > MAX_INDEL_INC) {
-                    pos5 = minus ? pos3 - npad : pos3 - len + npad;
+                    // the padded anchor does not lift: place it by arithmetic, as BCFtools does. On - BCFtools uses
+                    // pos3 - npad, which leaves out the allele length (a window len bases short); this is the mirror
+                    // of the + case
+                    pos5 = minus ? pos3 + len - npad : pos3 - len + npad;
                 }
             } else if (a3 == null) {
                 chrom = a5.chrom();
@@ -501,7 +549,8 @@ public final class AlleleFix {
                 int dstNpad = minus ? pos5 - pos3 : pos3 - pos5;
                 if (b3 == null || !b3.chrom().equals(chrom) || b3.minus() != minus || dstNpad < 0
                         || dstNpad > MAX_INDEL_INC) {
-                    pos3 = minus ? pos5 - npad : pos5 + len + npad;
+                    // as above: BCFtools' - case (pos5 - npad) leaves out the allele length; mirror the + case
+                    pos3 = minus ? pos5 - len - npad : pos5 + len + npad;
                 }
             } else {
                 if (!followsInChain(a5.block(), a3.block()) || !a5.chrom().equals(a3.chrom())

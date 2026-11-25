@@ -123,6 +123,84 @@ public class UTestAlleleFix {
         Assert.assertEquals(new AlleleFix.Result(AlleleFix.REWRITTEN, "chr1", 100, "+", "A", "ATT"), r);
     }
 
+    @Test
+    public void allelesAreClassifiedBeforeTheLengthCheck() {
+        // a symbolic ALT or several ALTs as long as REF are not SNVs: unresolved, not none
+        Assert.assertEquals(AlleleFix.UNRESOLVED, fix("ACG", "A,C"));
+        Assert.assertEquals(AlleleFix.UNRESOLVED, fix("ACGTA", "<DEL>"));
+        Assert.assertEquals(AlleleFix.UNRESOLVED, fix("A", "AT,ATT"));
+        // SNVs and MNVs, with one ALT or several, keep the plain lift
+        Assert.assertEquals(AlleleFix.NONE, fix("A", "C,G"));
+        Assert.assertEquals(AlleleFix.NONE, fix("AT", "GC"));
+    }
+
+    private static String fix(String ref, String alt) {
+        return AlleleFix.rewrite(forward(), "chr1", 100, ref, alt, bases(SOURCE), bases(TARGET), ANY).fix();
+    }
+
+    @Test
+    public void aOneBaseEqualGapLiftsWithAndWithoutGapFill() {
+        // a 1-base equal gap at source base 103, the 3' anchor of A>AT at 100 (extended to ATTG, 100..103)
+        ChainBlock a = new ChainBlock(0, 101, "chr1", 0, 101, "+", 1000);
+        ChainBlock b1 = new ChainBlock(101, 102, "chr1", 104, 105, "+", 1000);
+        ChainBlock b2 = new ChainBlock(103, 201, "chr1", 106, 204, "+", 1000);
+        ContigIndexBuilder filled = new ContigIndexBuilder("chr1", OverlapPolicy.BEST, "test");
+        ContigIndexBuilder unfilled = new ContigIndexBuilder("chr1", OverlapPolicy.BEST, "test", 0);
+        for (ChainBlock block : new ChainBlock[]{a, b1, b2}) {
+            filled.add(block);
+            unfilled.add(block);
+        }
+        AlleleFix.Result expected = new AlleleFix.Result(AlleleFix.REWRITTEN, "chr1", 101, "+", "TTAA", "TT");
+        Assert.assertEquals(expected, AlleleFix.rewrite(filled.build(), "chr1", 100, "A", "AT", bases(SOURCE),
+                bases(TARGET), ANY));
+        Assert.assertEquals(expected, AlleleFix.rewrite(unfilled.build(), "chr1", 100, "A", "AT", bases(SOURCE),
+                bases(TARGET), ANY));
+    }
+
+    @Test
+    public void aPaddedAnchorTooFarAwayIsPlacedTheSameWayOnBothStrands() {
+        // A 500-base poly-A run ending in a source-only gap: the padded 3' anchor lifts more than 250 bases from the
+        // 5' one, so it is placed by arithmetic. BCFtools gives chr1 2 CA C on +, but on - its formula leaves out the
+        // allele length and it writes chr1 100 G G+T(500) (SWAP=-1), a 500-base insertion the target already has.
+        // The mirror of the + formula gives the same record as the 50-base run on - (chr1 100 GT G).
+        String tail = "CGCATGCATGCGCATGCATG".repeat(5);
+        String src = "GC" + "A".repeat(500) + "TTT" + tail;
+        String tgt = "GC" + "A".repeat(500) + tail;
+        ContigIndex plus = index(new ChainBlock(0, 502, "chr1", 0, 502, "+", 1000),
+                new ChainBlock(505, 605, "chr1", 502, 602, "+", 1000));
+        ContigIndex minus = index(new ChainBlock(0, 502, "chr1", 100, 602, "-", 1000),
+                new ChainBlock(505, 605, "chr1", 0, 100, "-", 1000));
+        Assert.assertEquals(AlleleFix.Result.of(AlleleFix.NONE), AlleleFix.rewrite(plus, "chr1", 2, "CA", "C",
+                bases(src), bases(tgt), ANY));
+        Assert.assertEquals(new AlleleFix.Result(AlleleFix.REWRITTEN, "chr1", 100, "-", "GT", "G"),
+                AlleleFix.rewrite(minus, "chr1", 2, "CA", "C", bases(src), bases(revcomp(tgt)), ANY));
+    }
+
+    @Test
+    public void aSpanAcrossAGapThatKeepsTheSourceRefTakesTheBcftoolsPosition() {
+        // poly-A run ending in a source-only gap (TTT): the target over the span is the source REF (BCFtools no SWAP),
+        // and BCFtools writes the record left aligned over the span
+        String tail = "CGCATGCATGCGCATGCATG".repeat(5);
+        String src = "GC" + "A".repeat(50) + "TTT" + tail;
+        String tgt = "GC" + "A".repeat(50) + tail;
+        ContigIndex plus = index(new ChainBlock(0, 52, "chr1", 0, 52, "+", 1000),
+                new ChainBlock(55, 155, "chr1", 52, 152, "+", 1000));
+        ContigIndex minus = index(new ChainBlock(0, 52, "chr1", 100, 152, "-", 1000),
+                new ChainBlock(55, 155, "chr1", 0, 100, "-", 1000));
+        // BCFtools on +: chr1 2 CA C for both; the plain lift of the first is the same, of the second it is not
+        Assert.assertEquals(AlleleFix.Result.of(AlleleFix.NONE), AlleleFix.rewrite(plus, "chr1", 2, "CA", "C",
+                bases(src), bases(tgt), ANY));
+        Assert.assertEquals(new AlleleFix.Result(AlleleFix.REWRITTEN, "chr1", 2, "+", "CA", "C"),
+                AlleleFix.rewrite(plus, "chr1", 10, "AA", "A", bases(src), bases(tgt), ANY));
+        // BCFtools on -: chr1 100 GT G (FLIP) for both, left aligned in the poly-T run
+        for (int pos : new int[]{2, 10}) {
+            String ref = pos == 2 ? "CA" : "AA";
+            String alt = pos == 2 ? "C" : "A";
+            Assert.assertEquals(new AlleleFix.Result(AlleleFix.REWRITTEN, "chr1", 100, "-", "GT", "G"),
+                    AlleleFix.rewrite(minus, "chr1", pos, ref, alt, bases(src), bases(revcomp(tgt)), ANY));
+        }
+    }
+
     /** A reference over a sequence that counts how often it is closed. */
     private static RefSeq refSeq(String seq, AtomicInteger closed) {
         AlleleFix.Bases b = bases(seq);
