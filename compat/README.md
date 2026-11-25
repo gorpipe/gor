@@ -98,7 +98,7 @@ surface either way; it just is not a claim the documentation supports.
 - **NOR context** — one case per command that is valid in a NOR query as well as a
   GOR one. NOR is a second execution context, not a variation: rows carry synthetic
   position columns, some commands are refused outright, and others take different
-  arguments. 66 of 108 commands accept NOR.
+  arguments. Most commands accept NOR; `:compat:report` gives the current count.
 - **Doc harvest** — self-contained snippets lifted from `documentation/src`.
 - **Nightly only** (`:compat:generateNightly`) — mutants and grammar-fuzz cases.
   Mutants are filtered by coverage feedback: each candidate runs under the JaCoCo

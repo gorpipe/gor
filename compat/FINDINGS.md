@@ -20,13 +20,13 @@ COLUMNSORT, which is called out below.
 | # | Defect | Evidence |
 |---|---|---|
 | 1.1 | `COLUMNSORT`/`COLUMNREORDER` **discarded the columns they were given** when fewer than three were named, duplicating the position columns as `Chromx`/`Posx` instead. `Select.parseArguments` replaced the caller's selection rather than prepending to it, and the exclusion set still held the discarded columns so they vanished from the remainder too. **Reached six commands** — also `HIDE`, `SELECT`, `TRYHIDE`, `TRYSELECT` — found by fixing two and watching 11 baselines move. This is the only change on the branch that alters output of queries that previously ran clean. | `cmd.columnsort.moves_named_columns_to_the_front` |
-| 1.2 | `INVSTUDENT` **hung forever** on a probability outside `[0,1]`: colt's root finder never converges, so the query never returns and takes its worker with it. Tracked separately by [ENGKNOW-3776](https://genedx.atlassian.net/browse/ENGKNOW-3776). | `fn.invstudent.rejects_probability_above_one` |
+| 1.2 | `INVSTUDENT` **hung forever** on a probability outside `[0,1]`: colt's root finder never converges, so the query never returns and takes its worker with it. Tracked separately by [ENGKNOW-3776](https://genedx.atlassian.net/browse/ENGKNOW-3776); the fix that shipped is main's (#182), which also rejects a probability of 0 and a degrees-of-freedom below 1, and supersedes the branch's version. | `fn.invstudent.rejects_probability_above_one` |
 | 1.3 | `LEFTWHERE` **crashed** with `tail of empty list` when the named column was the last one, and — once that was fixed — emitted a row with a trailing tab, one column wider than its own header. The line also sliced the header *string* using column indices. | `cmd.leftwhere.last_column_leaves_nothing_to_blank` |
 | 1.4 | `GAVA -usePhase` was documented and implemented but **absent from the declaration**, so every invocation using it was rejected. | `cmd.gava.usephase_is_accepted` |
 | 1.5 | `GAVA` **crashed** with a bare `ArrayIndexOutOfBoundsException` on an input narrower than the fixed column positions it falls back to. | `cmd.gava.narrow_input_is_rejected_not_crashed` |
 | 1.6 | `GTLD`'s rejection message named `-sumLD`/`-calcLD`, **which are not flags of any command** — the registry has `-sum`/`-calc`. Anyone following the message failed again. | `cmd.gtld.rejection_names_the_real_flags` |
 | 1.7 | `JOIN.rst` and `VARJOIN.rst` documented `-ic` as adding "a column named **overlap**"; the engine appends `OverlapCount`. A column name is compatibility surface. | `cmd.join.ic_adds_an_overlap_column` |
-| 1.8 | The previous compatibility suite **had never compiled** — it imported `com.networknt.schema`, which was on no configuration, so `:gortools:test` did not build on `main` and its 1087 cases had never run. | Removed in the first commit of the engine branch |
+| 1.8 | The previous compatibility suite **had never compiled** — it imported `com.networknt.schema`, which was on no configuration, so `:gortools:test` did not build where it lived and its 1087 cases had never run. It existed only in an unpushed local commit and never reached `origin/main`. | Removed in the first commit of the engine branch |
 
 ---
 
@@ -163,7 +163,7 @@ drift: `cmd.csvsel.hide_blacklists_values_rather_than_tags` asserts what it does
 and `cmd.csvsel.hide_without_tag_is_rejected` asserts that `-hide` without `-tag`
 is refused at parse time rather than ignored.
 
-### 2.11 397 registered flags are absent from their documentation page
+### 2.11 About 400 registered flags are absent from their documentation page
 
 Reported every run by the documentation cross-check, listed in
 `inventory/gaps.txt`. Documentation work rather than code, but it is the largest
@@ -208,8 +208,8 @@ Limitations of the harness, worth knowing before trusting a number from it.
   exactly what makes them useless as behaviour.
 - **Coverage is a poor measure of this suite.** It reaches 25.7% of `:gortools`
   instructions alone, but only **+3.3pp of branch coverage on top of the unit
-  tests** — most of what it executes, they already cover. Its value is the 905
-  committed outputs that fail when behaviour moves, which no ratio can see. Use
+  tests** — most of what it executes, they already cover. Its value is the
+  committed outputs (905 when this was measured) that fail when behaviour moves, which no ratio can see. Use
   `:compat:marginalCoverageReport`, not `:compat:coverageReport`, when quoting a
   number. Note also that 28% of `:gortools` is one generated class,
   `gorsat/parser/FunctionSignature`, whose 3,907 `getSignature` overloads are
@@ -217,8 +217,10 @@ Limitations of the harness, worth knowing before trusting a number from it.
   the figures are 35.4% for this suite against 51.0% for the unit tests.
 - **Gaps are split into excluded and reachable** in the report because most of what
   remains is deliberate; one combined number read as dozens of open leads when
-  there were nine. Both are now zero for commands and for flags, so every pipe
-  command and every flag on one is either covered or excluded with a reason. The
+  there were nine. Both reached zero for commands and for flags, so every pipe
+  command and every flag on one was covered or excluded with a reason. Merging
+  main's LIFTOVER rework reopened 18 reachable flag gaps; `:compat:report` has
+  the current figure. The
   report names the reachable flag gaps outright while there are few of them, since
   a count alone gave no way to find out which they were.
 - **A repeated top-level key in a curated YAML file silently discards the earlier
