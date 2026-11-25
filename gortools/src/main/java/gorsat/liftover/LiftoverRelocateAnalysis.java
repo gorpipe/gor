@@ -6,6 +6,7 @@ import gorsat.parser.ParseUtilities;
 import org.gorpipe.exceptions.GorDataException;
 import org.gorpipe.gor.model.Row;
 import org.gorpipe.model.gor.RowObj;
+import org.gorpipe.model.gor.iterators.RefSeq;
 
 import java.util.List;
 import java.util.Locale;
@@ -35,6 +36,10 @@ import java.util.function.Supplier;
  * With -var -aligned (ENGKNOW-4207) each row also carries its aligned extent ({@link LiftEngine#alignedExtent}): the
  * target bases left and right of the lifted position in the same gap-free alignment, after the status. A row that
  * does not lift through the chain (unmapped, ambiguous, unsupported_contig, passthrough) has 0 and 0.
+ * <p>
+ * With -var -haplotype (ENGKNOW-4224) each row also carries its allele fix ({@link AlleleFix}), last: a mapped indel
+ * next to a build difference is moved to the location and alleles BCFtools +liftover gives it (rewritten), and every
+ * other row keeps the plain lift (none, swap, ref_mismatch or unresolved). The aligned extent stays the plain lift's.
  */
 public class LiftoverRelocateAnalysis extends Analysis {
 
@@ -54,6 +59,10 @@ public class LiftoverRelocateAnalysis extends Analysis {
     private final double tolerance;
     /** -var -aligned: emit the aligned extent of every row. */
     private final boolean aligned;
+    /** -var -haplotype: the reference sequences of the allele fix, null without it. */
+    private final AlleleFixConfig fix;
+    private RefSeq srcSeq;
+    private RefSeq tgtSeq;
     private ChainSource chain;
     private final Supplier<ChainSource> lazyChain = this::resolveChain;
 
@@ -79,11 +88,21 @@ public class LiftoverRelocateAnalysis extends Analysis {
     public LiftoverRelocateAnalysis(RelocateMode mode, boolean all, RelocateColumns cols, RowHeader outHeader,
                                     Supplier<ChainSource> chainFactory, boolean fullStatus, ContigPolicy policy,
                                     Set<String> failOn, double tolerance, boolean aligned) {
+        this(mode, all, cols, outHeader, chainFactory, fullStatus, policy, failOn, tolerance, aligned, null);
+    }
+
+    /** As the step above, and with fix (-var -haplotype, ENGKNOW-4224) each row carries its allele fix. */
+    public LiftoverRelocateAnalysis(RelocateMode mode, boolean all, RelocateColumns cols, RowHeader outHeader,
+                                    Supplier<ChainSource> chainFactory, boolean fullStatus, ContigPolicy policy,
+                                    Set<String> failOn, double tolerance, boolean aligned, AlleleFixConfig fix) {
         if (fullStatus && all) {
             throw new IllegalArgumentException("fullStatus cannot be combined with all");
         }
         if (aligned && mode != RelocateMode.VAR) {
             throw new IllegalArgumentException("aligned is only valid with VAR");
+        }
+        if (fix != null && (mode != RelocateMode.VAR || all)) {
+            throw new IllegalArgumentException("the allele fix is only valid with VAR, without all");
         }
         this.mode = mode;
         this.all = all;
@@ -95,6 +114,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
         this.failOn = failOn == null ? Set.of() : Set.copyOf(failOn);
         this.tolerance = tolerance;
         this.aligned = aligned;
+        this.fix = fix;
         statsSenderName_$eq(STATS_SENDER);
     }
 
@@ -116,7 +136,7 @@ public class LiftoverRelocateAnalysis extends Analysis {
             throw new UnsupportedOperationException("LIFTOVER cannot be cloned inside a connected pipe");
         }
         LiftoverRelocateAnalysis copy = new LiftoverRelocateAnalysis(mode, all, cols, outgoingHeader, chainFactory,
-                fullStatus, policy, failOn, tolerance, aligned);
+                fullStatus, policy, failOn, tolerance, aligned, fix);
         cloned_$eq(copy);
         init(copy);
         return copy;
@@ -207,10 +227,26 @@ public class LiftoverRelocateAnalysis extends Analysis {
         LiftEngine.PointResult p = v.point();
         if (LiftEngine.MAPPED.equals(p.status()) || LiftEngine.PASSTHROUGH.equals(p.status())) {
             LiftEngine.Extent extent = aligned ? LiftEngine.alignedExtent(v, pos, refLen) : LiftEngine.Extent.NONE;
-            emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null, extent);
+            AlleleFix.Result f = fix != null && v.index() != null ? alleleFix(v.index(), r, pos) : NO_FIX;
+            if (AlleleFix.REWRITTEN.equals(f.fix())) {
+                // the strand of the chain the alleles were lifted through, which sets their orientation
+                emit(r, f.chrom(), f.pos(), 0, f.strand(), p.status(), 0.0, null, extent, f);
+            } else {
+                emit(r, p.chrom(), p.pos(), 0, p.strand(), p.status(), 0.0, null, extent, f);
+            }
         } else {
             emitUnplaced(r, reportedStatus(p.status()));
         }
+    }
+
+    /** The allele fix of a mapped -var row, opening the reference sequences on first use. */
+    private AlleleFix.Result alleleFix(ContigIndex ci, Row r, int pos) {
+        if (srcSeq == null) {
+            srcSeq = fix.source().get();
+            tgtSeq = fix.target().get();
+        }
+        return AlleleFix.rewrite(ci, r.chr, pos, r.colAsString(cols.ref()).toString(),
+                r.colAsString(cols.alt()).toString(), srcSeq::getBases, tgtSeq::getBases, policy);
     }
 
     /** -seg is the GOR half-open [start, end), -bam the 1-based inclusive [Pos, End] (N12, N15). */
@@ -348,13 +384,20 @@ public class LiftoverRelocateAnalysis extends Analysis {
                 LiftEngine.Extent.NONE);
     }
 
-    /**
-     * Emits tChrom, a[, b], the input columns after the location (rewritten on the - strand), the source location,
-     * strand and status, the aligned extent under -aligned and the score under -all. mpos replaces the -bam MPOS
-     * column.
-     */
+    private static final AlleleFix.Result NO_FIX = AlleleFix.Result.of(AlleleFix.NONE);
+
     private void emit(Row r, String tChrom, int a, int b, String strand, String status, double score, String mpos,
                       LiftEngine.Extent extent) {
+        emit(r, tChrom, a, b, strand, status, score, mpos, extent, NO_FIX);
+    }
+
+    /**
+     * Emits tChrom, a[, b], the input columns after the location (rewritten on the - strand), the source location,
+     * strand and status, the aligned extent under -aligned, the allele fix under -haplotype and the score under -all.
+     * mpos replaces the -bam MPOS column; a rewritten fix replaces REF and ALT, already in target orientation.
+     */
+    private void emit(Row r, String tChrom, int a, int b, String strand, String status, double score, String mpos,
+                      LiftEngine.Extent extent, AlleleFix.Result f) {
         statsInc(status);
         if (failOn.contains(status)) {
             throw new GorDataException(PREFIX + "status '" + status + "' at " + location(r));
@@ -367,8 +410,15 @@ public class LiftoverRelocateAnalysis extends Analysis {
         if (span) {
             sb.append('\t').append(b);
         }
+        boolean rewritten = AlleleFix.REWRITTEN.equals(f.fix());
         for (int k = span ? 3 : 2; k < n; k++) {
-            sb.append('\t').append(inputColumn(r, k, minus, mpos));
+            if (rewritten && k == cols.ref()) {
+                sb.append('\t').append(f.ref());
+            } else if (rewritten && k == cols.alt()) {
+                sb.append('\t').append(f.alt());
+            } else {
+                sb.append('\t').append(inputColumn(r, k, minus, mpos));
+            }
         }
         sb.append('\t').append(r.chr).append('\t').append(r.colAsString(1));
         if (span) {
@@ -377,6 +427,9 @@ public class LiftoverRelocateAnalysis extends Analysis {
         sb.append('\t').append(strand).append('\t').append(status);
         if (aligned) {
             sb.append('\t').append(extent.left()).append('\t').append(extent.right());
+        }
+        if (fix != null) {
+            sb.append('\t').append(f.fix());
         }
         if (all) {
             sb.append('\t').append(Double.toString(score));
@@ -410,6 +463,14 @@ public class LiftoverRelocateAnalysis extends Analysis {
 
     @Override
     public void finish() {
-        // stateless: nothing to flush
+        // nothing to flush; close the -haplotype reference sequences
+        if (srcSeq != null) {
+            srcSeq.close();
+            srcSeq = null;
+        }
+        if (tgtSeq != null) {
+            tgtSeq.close();
+            tgtSeq = null;
+        }
     }
 }
