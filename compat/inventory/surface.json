@@ -369,6 +369,22 @@
       "norCommand": false
     },
     "LIFTOVER": {
+      "valuelessFlags": ["-aligned", "-all", "-bam", "-nogapfill", "-seg", "-snp", "-var"],
+      "valueFlags": ["-alt", "-build", "-failon", "-mapped", "-passthrough", "-ref", "-tolerance"],
+      "minArgs": 1,
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": false
+    },
+    "LIFTOVER_ANNOTATE": {
+      "valuelessFlags": ["-aligned", "-diag", "-nogapfill", "-seg", "-seg1", "-snp", "-var"],
+      "valueFlags": ["-alt", "-chrom", "-end", "-failon", "-mapped", "-overlap", "-passthrough", "-pos", "-prefix", "-ref", "-tolerance"],
+      "minArgs": 1,
+      "maxArgs": 1,
+      "gorCommand": true,
+      "norCommand": true
+    },
+    "LIFTOVER_LEGACY": {
       "valuelessFlags": ["-all", "-bam", "-seg", "-snp", "-var"],
       "valueFlags": ["-alt", "-build", "-ref"],
       "minArgs": 1,
@@ -690,7 +706,7 @@
     },
     "THROWIF": {
       "valuelessFlags": ["-retriable"],
-      "valueFlags": [],
+      "valueFlags": ["-m"],
       "minArgs": 1,
       "maxArgs": -1,
       "gorCommand": true,
@@ -816,6 +832,14 @@
       "gorCommand": true,
       "norCommand": false
     },
+    "VARNORM_WITH_BUILD": {
+      "valuelessFlags": ["-left", "-right", "-seg", "-trim"],
+      "valueFlags": ["-span"],
+      "minArgs": 3,
+      "maxArgs": 3,
+      "gorCommand": true,
+      "norCommand": false
+    },
     "VERIFYCOLTYPE": {
       "valuelessFlags": [],
       "valueFlags": [],
@@ -858,7 +882,7 @@
     },
     "WRITE": {
       "valuelessFlags": ["-c", "-inferschema", "-m", "-maxseg", "-noheader", "-r"],
-      "valueFlags": ["-card", "-d", "-f", "-i", "-l", "-link", "-linkmeta", "-prefix", "-t", "-tags"],
+      "valueFlags": ["-card", "-d", "-f", "-i", "-l", "-link", "-linkmeta", "-meta", "-prefix", "-t", "-tags"],
       "minArgs": 0,
       "maxArgs": -1,
       "gorCommand": true,
