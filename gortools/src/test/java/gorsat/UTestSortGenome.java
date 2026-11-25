@@ -198,7 +198,7 @@ public class UTestSortGenome {
         Assert.assertEquals(0, Objects.requireNonNull(directory.listFiles()).length);
         FileUtils.deleteDirectory(directory);
         System.setProperty("java.io.tmpdir", origTmpdir);
-        System.setProperty("gor.sort.batchSize", "2000000");
+        System.clearProperty("gor.sort.batchSize");
     }
 
     @Test

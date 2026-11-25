@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Base64;
 import java.util.Map;
@@ -26,6 +27,10 @@ public class HttpJsonServiceClient {
     private String password;
     private String bearerToken;
     protected static final int DEFAULT_RESULT_LIMIT = 128 * 1024 * 1024; // 128MB
+    public static final int DEFAULT_CONNECT_TIMEOUT_MS = 5_000;
+    public static final int DEFAULT_READ_TIMEOUT_MS = 10_000;
+    private int connectTimeoutMs = DEFAULT_CONNECT_TIMEOUT_MS;
+    private int readTimeoutMs = DEFAULT_READ_TIMEOUT_MS;
     private String authPar;
     private String authVal;
 
@@ -45,6 +50,15 @@ public class HttpJsonServiceClient {
         this.httpPath = httpPath;
     }
 
+
+    /**
+     * Set connect and read timeouts. A non-positive value (which HttpURLConnection treats as "wait forever") keeps
+     * the default.
+     */
+    public void setTimeouts(int connectTimeoutMs, int readTimeoutMs) {
+        this.connectTimeoutMs = connectTimeoutMs > 0 ? connectTimeoutMs : DEFAULT_CONNECT_TIMEOUT_MS;
+        this.readTimeoutMs = readTimeoutMs > 0 ? readTimeoutMs : DEFAULT_READ_TIMEOUT_MS;
+    }
 
     public Map<String, Object> jsonGet(String path) throws IOException {
         log.debug("jsonGet on path {}", path);
@@ -89,6 +103,8 @@ public class HttpJsonServiceClient {
     protected HttpURLConnection createUrlConnection(String path) throws IOException {
         final HttpURLConnection http = (HttpURLConnection) new URL(makeUrl(path)).openConnection();
         http.setInstanceFollowRedirects(true);
+        http.setConnectTimeout(connectTimeoutMs);
+        http.setReadTimeout(readTimeoutMs);
         if (user != null) {
             final String userPassword = user + ":" + password;
             final String encoding = Base64.getEncoder().encodeToString(userPassword.getBytes());
@@ -106,6 +122,9 @@ public class HttpJsonServiceClient {
                 throw new GorSystemException("Result exceeded max result size of " + resultLimit, null);
             }
             return result;
+        } catch (SocketTimeoutException e) {
+            // Don't touch the connection again: reading the response message would wait another full timeout.
+            throw e;
         } catch (IOException e) {
             InputStream ie = conn.getErrorStream();
             String headerinfo = conn.getHeaderFields().entrySet().stream().map(entry -> entry.getKey() + ": " + entry.getValue()).collect(Collectors.joining("\n"));

@@ -143,6 +143,16 @@ public class CredentialsHelperMain {
             public String getPassword() {
                 return options.apiPassword;
             }
+
+            @Override
+            public int getConnectTimeoutMs() {
+                return HttpJsonServiceClient.DEFAULT_CONNECT_TIMEOUT_MS;
+            }
+
+            @Override
+            public int getReadTimeoutMs() {
+                return HttpJsonServiceClient.DEFAULT_READ_TIMEOUT_MS;
+            }
         };
         CsaCredentialService service = new CsaCredentialService(config, null, new CredentialsParser(), null);
         BundledCredentials bundle = service.getCredentialsBundle(options.forProject, options.forUsername, options.forUserid, options.forService, options.lookupKey);

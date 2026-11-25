@@ -355,7 +355,13 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
             List<T> newRawLines =  new ArrayList<>();
             if (table.getFileReader().exists(table.getPath())) {
                 try (BufferedReader br = table.getFileReader().getReader(table.getPath())) {
-                  br.lines().parallel()
+                  // Sequential on purpose (ENGKNOW-4267); do not make this parallel.  Callers wait on
+                  // this load while other threads wait on them: synchronized loadLinesAndUpdateIndices,
+                  // and the per-key signature dedupe in BaseScriptExecutionEngine.getOrCompute, which
+                  // is only deadlock-free because computing a signature never waits on ForkJoin tasks.
+                  // A parallel stream here lets a waiting pool worker run other creates' tasks, which
+                  // can then wait on a signature this worker is computing.
+                  br.lines()
                         .map(l -> {
                             String line = l;
                             if (!line.isEmpty() && !line.startsWith("#")) {
@@ -364,7 +370,7 @@ public class DictionaryEntries<T extends DictionaryEntry> implements IDictionary
                             return null;
                         })
                         .filter(e -> e != null)
-                        .forEachOrdered(e -> newRawLines.add(e));
+                        .forEachOrdered(newRawLines::add);
                 }
             }
             return newRawLines;

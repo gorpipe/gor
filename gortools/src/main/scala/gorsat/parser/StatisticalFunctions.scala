@@ -26,6 +26,7 @@ import cern.jet.stat.Probability
 import gorsat.parser.FunctionSignature._
 import gorsat.parser.FunctionTypes.{dFun, iFun}
 import org.apache.commons.math3.distribution.ChiSquaredDistribution
+import org.gorpipe.exceptions.GorDataException
 import org.gorpipe.gor.util.GChiSquared2by2
 
 object StatisticalFunctions {
@@ -123,7 +124,26 @@ object StatisticalFunctions {
 
   def studentTInverse(ex1: dFun, ex2: dFun): dFun = {
     cvp => {
-      Probability.studentTInverse(ex1(cvp), ex2(cvp).toInt)
+      val alpha = ex1(cvp)
+      val df = ex2(cvp)
+      // Probability.studentTInverse takes a two-tailed significance level in
+      // (0,1] and searches for the matching quantile. For alpha > 1 and
+      // df <= 200 that search never converges, so the query hangs and takes the
+      // worker thread with it. For df > 200 colt returns the normal quantile
+      // early, which for alpha > 1 is a meaningless value; that is rejected too
+      // so the valid range does not depend on df. alpha <= 0 and df < 1 made
+      // colt throw a bare IllegalArgumentException. Reject all of these with a
+      // clear message instead. alpha = 1 (returns 0.0) is valid and kept.
+      // A NaN alpha is not rejected: colt returns NaN for it without hanging.
+      if (alpha <= 0.0 || alpha > 1.0) {
+        throw new GorDataException(
+          s"INVSTUDENT: the probability must be in (0,1], but was $alpha")
+      }
+      if (!(df >= 1.0)) {
+        throw new GorDataException(
+          s"INVSTUDENT: the degrees of freedom must be at least 1, but was $df")
+      }
+      Probability.studentTInverse(alpha, df.toInt)
     }
   }
 

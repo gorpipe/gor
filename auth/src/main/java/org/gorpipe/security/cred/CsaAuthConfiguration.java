@@ -12,6 +12,8 @@ public interface CsaAuthConfiguration extends Config {
     String ENDPOINT_KEY = "csa.auth.service.endpoint";
     String USER_KEY = "csa.auth.service.user";
     String PASSWORD_KEY = "csa.auth.service.password";
+    String CONNECT_TIMEOUT_KEY = "csa.auth.service.connect.timeout.ms";
+    String READ_TIMEOUT_KEY = "csa.auth.service.read.timeout.ms";
 
     String[] KEYS = {ENDPOINT_KEY, USER_KEY, PASSWORD_KEY};
 
@@ -29,4 +31,14 @@ public interface CsaAuthConfiguration extends Config {
     @Key(PASSWORD_KEY)
     @Documentation("Password to authenticate  against credential service. Not needed if system can authenticate itself.")
     String getPassword();
+
+    @Key(CONNECT_TIMEOUT_KEY)
+    @DefaultValue("5000")
+    @Documentation("Connect timeout in milliseconds for calls to the credential service. Non-positive values use the default.")
+    int getConnectTimeoutMs();
+
+    @Key(READ_TIMEOUT_KEY)
+    @DefaultValue("10000")
+    @Documentation("Read timeout in milliseconds for calls to the credential service. Non-positive values use the default.")
+    int getReadTimeoutMs();
 }
